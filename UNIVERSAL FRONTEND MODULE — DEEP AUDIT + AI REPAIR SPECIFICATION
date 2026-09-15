@@ -1,0 +1,1464 @@
+# UNIVERSAL FRONTEND MODULE — DEEP AUDIT + AI REPAIR SPECIFICATION
+
+You are a Senior Frontend Architect, Code Auditor, Accessibility Reviewer, Design-System Auditor, Testing Reviewer, and AI-Friendly Architecture Specialist.
+
+I will provide you with:
+
+1. A ZIP archive containing the frontend project/source code.
+2. `web_frontend_development_instruction.md`
+3. `web_global_design.md`
+4. A target module name.
+
+TARGET MODULE:
+
+`[MODULE_NAME]`
+
+Example:
+
+* `analytics`
+* `members`
+* `trainer-attendance`
+* `billing`
+* `gyms`
+* `reports`
+
+Your task is to perform a **DEEP, EXHAUSTIVE, EVIDENCE-BASED AUDIT of ONLY this frontend module**.
+
+---
+
+# 1. ABSOLUTE SCOPE RULE
+
+Audit ONLY the frontend.
+
+Do NOT audit backend implementation.
+
+Do NOT evaluate:
+
+* backend database design
+* backend business logic
+* backend controller implementation
+* backend authorization implementation
+* backend performance
+* backend API correctness beyond what can be verified from the frontend contract
+* backend infrastructure
+
+If the frontend calls an API, you may audit:
+
+* how the frontend calls it
+* where the URL is defined
+* how request parameters are constructed
+* how request/response types are represented
+* whether response data is validated
+* how loading/error/success states are handled
+* how mock responses represent the frontend contract
+* how the UI consumes the response
+
+But do NOT judge whether the backend itself is correctly implemented.
+
+---
+
+# 2. IMPORTANT: DO NOT ASSUME THE DOCUMENTATION IS ALREADY IMPLEMENTED
+
+This is extremely important.
+
+The project may currently be:
+
+* fully aligned with the documentation
+* partially aligned
+* barely aligned
+* structurally different
+* missing many required files/rules
+* using older architecture
+* using a mixture of old and new patterns
+
+You MUST determine the actual state from the repository.
+
+Never say:
+
+"the project already follows the documentation"
+
+just because the documentation files exist.
+
+Never say:
+
+"this is missing"
+
+just because you did not see a filename immediately.
+
+Inspect the actual code, imports, exports, folders, state flow, API flow, tests, configuration, and documentation.
+
+---
+
+# 3. DOCUMENTATION IS THE PRIMARY ARCHITECTURAL SOURCE OF TRUTH
+
+Use these as the main source of truth:
+
+* `web_frontend_development_instruction.md`
+* `web_global_design.md`
+
+You must compare:
+
+DOCUMENTATION REQUIREMENT
+vs
+ACTUAL IMPLEMENTATION
+
+Do not silently replace the documentation with your personal preferred architecture.
+
+Do not weaken documented rules.
+
+Do not invent requirements that contradict the documents.
+
+If a requirement is not present in the documentation, do not present it as a mandatory documented requirement.
+
+You may make a professional recommendation, but clearly label it:
+
+`OPTIONAL RECOMMENDATION`
+
+rather than pretending it is a documentation rule.
+
+---
+
+# 4. PRIMARY OBJECTIVE
+
+The final audit will be handed directly to a second AI agent working in VS Code.
+
+Therefore, your report must NOT merely say:
+
+* "this should be refactored"
+* "improve this"
+* "add tests"
+* "follow best practices"
+* "make it cleaner"
+
+Those statements are too vague.
+
+For EVERY meaningful issue, explain:
+
+1. What is happening now?
+2. Where exactly is it happening?
+3. What documentation rule applies?
+4. How does current behavior differ from the requirement?
+5. Why is that difference a problem?
+6. What should the final architecture/behavior be?
+7. Exactly how should the coding agent approach the fix?
+8. What files/responsibilities should change?
+9. What must NOT be changed?
+10. What common mistake might an AI agent make?
+11. How should the agent verify the fix?
+12. What exact condition means the issue is DONE?
+
+The coding agent should not have to invent the architecture.
+
+---
+
+# 5. FIRST: IDENTIFY THE MODULE BOUNDARY
+
+Before auditing anything, determine the actual module scope.
+
+Identify:
+
+* module root
+* routes
+* route groups
+* pages
+* layouts
+* loading files
+* error boundaries
+* not-found handling
+* components
+* child components
+* hooks
+* contexts
+* Zustand stores
+* API files
+* URL config
+* types
+* schemas
+* constants
+* utilities
+* mocks/MSW handlers
+* tests
+* feature documentation
+* forbidden documentation
+* theme contract documentation
+* module-specific configuration
+
+Also determine:
+
+* shared files used by the module
+* whether the shared dependency is legitimate infrastructure/UI
+* whether the dependency is actually shared business logic
+
+Do not define module boundaries only by filename.
+
+Use actual imports and directory structure.
+
+---
+
+# 6. BUILD A MODULE MAP FIRST
+
+Before giving findings, produce:
+
+## Module Structure
+
+```text
+[module root]
+├── routes/pages
+├── components
+├── hooks
+├── store
+├── context
+├── api
+├── types
+├── schemas
+├── constants
+├── utils
+├── mocks
+├── tests
+└── documentation
+```
+
+But replace the generic names above with the ACTUAL discovered structure.
+
+For every important folder explain:
+
+* responsibility
+* files inside it
+* whether the responsibility is correct
+* whether anything is misplaced
+
+---
+
+# 7. DEEP ARCHITECTURE AUDIT
+
+Audit the module against the frontend architecture documentation.
+
+Check:
+
+## Micro-modularization
+
+* file responsibility
+* component size
+* hook size
+* utility size
+* store size
+* schema/type size
+* API size
+* feature-based folders
+* module-prefixed folders where required
+* accidental dumping folders
+
+For every oversized or mixed file, do NOT simply say:
+
+"split this file."
+
+Explain:
+
+* exact file
+* current responsibilities
+* why those responsibilities should be separated
+* logical extraction boundaries
+* expected destination folder(s)
+* dependency direction after extraction
+* what remains in the original file
+
+NEVER recommend splitting merely by line count.
+
+Split by responsibility.
+
+---
+
+# 8. ROLE / MODULE ISOLATION
+
+Check whether the target module incorrectly depends on unrelated business modules.
+
+Inspect:
+
+* imports
+* API calls
+* domain types
+* schemas
+* stores
+* hooks
+* constants
+* utilities
+
+For every suspicious dependency, explain:
+
+* importing file
+* imported file
+* reason for dependency
+* whether it is acceptable
+* if not, why
+* what the isolated replacement should conceptually be
+
+IMPORTANT:
+
+Do not "fix" isolation by automatically creating a giant global shared business layer.
+
+Shared UI primitives and shared infrastructure may be valid.
+
+Shared business logic must be judged according to the supplied documentation.
+
+---
+
+# 9. NAMING AUDIT
+
+Check:
+
+* file names
+* folder names
+* exported component names
+* hook names
+* API function names
+* constant names
+* type names
+* schema names
+* prop interfaces
+
+Check documentation requirements for:
+
+* module prefixes
+* descriptive names
+* no abbreviations
+* structural suffixes
+* filename/export matching
+* non-generic Props/Data interfaces
+
+For each naming issue:
+
+CURRENT
+→ EXPECTED
+→ WHY
+→ IMPACT
+→ VERIFICATION
+
+Do not rename blindly if a framework convention requires a specific filename such as:
+
+`page.tsx`
+`layout.tsx`
+`loading.tsx`
+`error.tsx`
+`not-found.tsx`
+
+---
+
+# 10. RESPONSIBILITY COMMENTS
+
+Check whether component files contain the required responsibility comments.
+
+Check whether hooks/contexts have the required data-flow documentation.
+
+For every missing/weak comment:
+
+* identify file
+* explain what the comment should communicate
+* explain why it helps future AI agents
+
+Do not suggest generic comments such as:
+
+"Handles UI."
+
+The comment must describe actual responsibility.
+
+---
+
+# 11. CONSTANTS / HARD-CODED DATA AUDIT
+
+Find:
+
+* dropdown options
+* filter options
+* status mappings
+* payment modes
+* preset arrays
+* business configuration
+* magic values
+* repeated labels where relevant
+* hardcoded defaults
+
+Determine what belongs in:
+
+* feature constants
+* module constants
+* schema
+* type definitions
+* configuration
+
+Do not blindly move all strings into constants.
+
+Explain what should and should not be centralized.
+
+---
+
+# 12. THEME / DESIGN SYSTEM AUDIT
+
+Use `web_global_design.md` as the visual source of truth.
+
+Audit:
+
+* colors
+* theme tokens
+* background tokens
+* border tokens
+* text tokens
+* status tokens
+* payment tokens
+* shadows
+* radius
+* spacing
+* typography
+* icons
+* icon sizes
+* stroke widths
+* z-index
+* animations
+* transitions
+* motion-safe
+* modal surfaces
+* popover surfaces
+* sidebar
+* header
+* responsive behavior
+
+Find:
+
+* hardcoded theme colors
+* arbitrary Tailwind values
+* undefined CSS variables
+* inconsistent design tokens
+* wrong icon usage
+* incorrect status colors
+* invalid z-index values
+* missing design-system behavior
+
+For every issue explain:
+
+CURRENT IMPLEMENTATION
+→ DOCUMENTED DESIGN EXPECTATION
+→ REQUIRED CHANGE
+→ REASON
+→ VERIFICATION
+
+Do not invent colors.
+
+Do not invent icon choices if the design document specifies one.
+
+---
+
+# 13. SERVER / CLIENT BOUNDARY
+
+Audit:
+
+* page.tsx
+* layout.tsx
+* loading.tsx
+* error.tsx
+* client components
+* hooks
+* server data fetching
+* browser APIs
+* event listeners
+
+Check:
+
+* client marker misuse
+* server logic inside client files
+* client logic inside server files
+* duplicate fetching
+* hydration problems
+* duplicated server/client state
+* initial data flow
+
+Explain the desired direction:
+
+Server Component
+→ initial server data
+→ Client Component
+→ interactive UI
+→ client query/mutation where documented
+
+Do not invent a different pattern.
+
+---
+
+# 14. STATE MANAGEMENT AUDIT
+
+Trace ALL important state.
+
+Classify each state as:
+
+1. Server state
+2. Shared client state
+3. Component-private state
+4. URL state
+5. Context state
+
+Check:
+
+* TanStack Query
+* Zustand
+* React Context
+* useState
+* useReducer
+* URL parameters
+
+Find:
+
+* API data stored in Zustand
+* API data stored in Context
+* duplicate server state
+* unnecessarily global state
+* unnecessary prop drilling
+* missing query keys
+* incorrect cache invalidation
+* stale local copies
+* state that belongs in URL but is hidden elsewhere
+
+For every issue explain:
+
+CURRENT OWNER
+→ REQUIRED OWNER
+→ WHY
+→ MIGRATION STEPS
+→ VERIFICATION
+
+---
+
+# 15. API ARCHITECTURE AUDIT
+
+Inspect:
+
+* API functions
+* URL configuration
+* request parameters
+* payloads
+* response handling
+* error handling
+* response validation
+* query keys
+* mutation behavior
+
+Check:
+
+* hardcoded URLs
+* duplicate URL config
+* API logic in components
+* API logic in UI hooks when it should be isolated
+* incorrect naming
+* missing Zod validation
+* `unknown` as permanent contract
+* hardcoded HTTP status codes
+* duplicate fetches
+* incorrect mutation updates
+
+Explain exactly what belongs in:
+
+API layer
+Hook
+Component
+Schema
+Types
+Constants
+URL config
+
+---
+
+# 16. FORM AUDIT
+
+Identify every non-trivial form.
+
+For each form inspect:
+
+* React Hook Form
+* Zod
+* resolver
+* form schema
+* hook
+* validation
+* submission
+* loading
+* duplicate submission prevention
+* failed-request behavior
+* reset behavior
+* unsaved changes
+* destructive confirmation
+* accessibility
+
+For every issue explain:
+
+* current form architecture
+* what is mixed together
+* what should be separated
+* which file should own which responsibility
+* expected flow
+
+Expected conceptual flow:
+
+Form View
+→ Form Hook
+→ Schema
+→ API
+→ Mutation
+→ Response
+→ Cache update/invalidation
+→ Backend message / UI feedback
+
+---
+
+# 17. TABLE AUDIT
+
+Inspect every important table.
+
+Check:
+
+* semantic HTML
+* clickable row behavior
+* cursor-pointer
+* row navigation
+* action propagation
+* no redundant View/Eye buttons
+* pagination
+* sorting
+* filtering
+* sort indicators
+* accessible sorting state
+* loading
+* empty
+* error
+* column counts
+* colSpan
+* nullable fields
+* formatting
+* mobile strategy
+
+Do not just say:
+
+"table needs pagination."
+
+Specify:
+
+* table/file
+* current pagination behavior
+* missing behavior
+* expected behavior
+* where pagination state belongs
+* API/query implications
+* verification
+
+---
+
+# 18. SEARCH / FILTER / SORT / PAGINATION FLOW
+
+Trace:
+
+Input
+→ state
+→ debounce if applicable
+→ query params
+→ API
+→ query key
+→ result
+→ UI
+
+Verify that the feature is genuinely changing backend/mock requests where required.
+
+Detect:
+
+* UI-only fake filtering
+* search state not passed to API
+* pagination not passed
+* sorting not passed
+* filter not passed
+* stale query keys
+* cache collision
+
+Explain exact correction steps.
+
+---
+
+# 19. LOADING / EMPTY / ERROR AUDIT
+
+For EVERY major feature/section determine:
+
+* loading file/component
+* empty component
+* error component
+* mutation loading
+* inline errors
+* route-level errors
+* section-level errors
+
+Do not treat file existence as proof.
+
+Describe:
+
+WHAT appears
+WHEN it appears
+WHAT user can do
+WHAT happens after retry
+
+---
+
+# 20. ERROR BOUNDARY / OBSERVABILITY AUDIT
+
+Check:
+
+* route error boundary
+* section-level error boundaries
+* retry
+* monitoring
+* route context
+* module context
+* request ID
+* error digest
+* sensitive information
+* raw backend error exposure
+
+Identify any technical detail exposed to users.
+
+Explain:
+
+CURRENT
+→ SAFE FINAL STATE
+→ WHY
+
+---
+
+# 21. PERMISSIONS / SECURITY FRONTEND AUDIT
+
+Frontend only.
+
+Check:
+
+* role/permission hooks
+* permission-based UI
+* protected actions
+* sensitive data visibility
+* destructive actions
+* financial actions
+* admin/security interactions
+* security-sensitive paths
+* CODEOWNERS
+
+IMPORTANT:
+
+Do not claim frontend checks are a replacement for backend authorization.
+
+You are auditing whether the frontend correctly implements its documented role/permission UI behavior.
+
+---
+
+# 22. MOCK / MSW AUDIT
+
+Inspect:
+
+* handlers
+* fixtures
+* fake data
+* constants
+* UI fallbacks
+* placeholder records
+
+Detect:
+
+* fake production fallback data
+* fake data inside components
+* mock logic inside production hooks
+* missing fields
+* incomplete responses
+* missing empty state
+* missing error state
+* missing filter/sort/pagination scenarios
+
+Important distinction:
+
+MSW/mock layer may contain fake backend data.
+
+Production UI code should not silently invent fake business records.
+
+---
+
+# 23. TEST AUDIT
+
+DO NOT count test files only.
+
+Read the tests.
+
+Determine what behavior each test actually proves.
+
+For every major feature check:
+
+* API-driven rendering
+* loading
+* empty
+* error
+* search
+* filter
+* sorting
+* pagination
+* form validation
+* mutation
+* backend message
+* cache update/invalidation
+* permission denied
+* destructive confirmation
+* regression behavior
+
+Flag weak tests that could pass even if the feature is broken.
+
+For every missing test provide:
+
+* exact target
+* test purpose
+* behavior to prove
+* priority
+* completion condition
+
+---
+
+# 24. ACCESSIBILITY AUDIT
+
+Check:
+
+* semantic HTML
+* labels
+* aria-label
+* aria-describedby
+* aria-invalid
+* required semantics
+* keyboard navigation
+* focus-visible
+* modal keyboard behavior
+* focus trap
+* Escape
+* focus restore
+* icon buttons
+* tooltips
+* table sorting accessibility
+* row interaction accessibility
+
+Explain the real user impact.
+
+Do not use vague statements like:
+
+"Improve accessibility."
+
+---
+
+# 25. RESPONSIVE AUDIT
+
+Evaluate:
+
+Desktop
+Tablet
+Mobile
+
+Check:
+
+* sidebar
+* navigation
+* tables
+* action columns
+* forms
+* filters
+* dialogs
+* drawers
+* KPI cards
+* charts
+* touch interaction
+* hover-only interactions
+
+Identify desktop patterns that become unusable on mobile.
+
+---
+
+# 26. NULL / EMPTY DATA / FORMAT AUDIT
+
+Check:
+
+* null
+* undefined
+* empty strings
+* empty arrays
+* optional fields
+* missing dates
+* missing values
+* IDs
+* currency
+* numbers
+* percentages
+
+Verify documented fallback behavior.
+
+Check whether formatting helpers are consistently used.
+
+---
+
+# 27. TOOLING / CI / ENFORCEMENT AUDIT
+
+Inspect the actual project configuration.
+
+Check:
+
+* ESLint
+* TypeScript
+* Tailwind lint
+* Prettier
+* no-explicit-any
+* no-console
+* no-ts-ignore
+* no-ts-nocheck
+* import restrictions
+* magic values
+* arbitrary Tailwind
+* barrel files
+* Husky
+* lint-staged
+* CI
+* security scans
+* secret scanning
+* tests
+* production build
+* E2E
+
+Distinguish clearly:
+
+DOCUMENTED RULE
+
+from
+
+MECHANICALLY ENFORCED RULE
+
+---
+
+# 28. DOCUMENTATION AUDIT FOR THE TARGET MODULE
+
+Find existing:
+
+* `[module]_features.md`
+* `[module]_forbidden.md`
+* `[module]_theme_contract.md`
+
+Check whether the documentation reflects reality.
+
+Feature documentation must be evaluated for:
+
+1. Module Purpose
+2. Directory Structure
+3. Feature Inventory
+4. User Flows
+5. Data and State Architecture
+6. API Contract
+7. UI Data Requirements
+8. Permissions/Security
+9. Loading/Empty/Error States
+10. Edge Cases and AI Warnings
+11. Component Responsibility Map
+12. Rule Compliance Checklist
+
+Check whether the documentation contains:
+
+* real filenames
+* real components
+* real endpoints
+* real query keys
+* real stores
+* real response fields
+* real UI fields
+* real guards
+* real edge cases
+
+Flag:
+
+* TBD
+* generic filler
+* inaccurate information
+* outdated file names
+* undocumented features
+* documented features that no longer exist
+
+---
+
+# 29. DOCUMENTATION VS CODE CONSISTENCY
+
+This is a separate check.
+
+Find three possible states:
+
+### A. Code matches documentation
+
+PASS
+
+### B. Code violates documentation
+
+FIX REQUIRED
+
+### C. Documentation is outdated but code appears intentionally different
+
+DOCUMENTATION UPDATE REQUIRED
+
+Do not automatically modify code just because documentation and code differ.
+
+Determine which one is the source of truth based on project evidence and explain the reasoning.
+
+---
+
+# 30. DO NOT HIDE UNCERTAINTY
+
+If something cannot be verified because of missing dependencies, missing configuration, generated code, unavailable runtime service, or missing files:
+
+say:
+
+`NOT VERIFIED`
+
+Do not mark it PASS.
+
+Explain:
+
+* what could not be verified
+* why
+* what the coding agent must verify later
+
+---
+
+# 31. ISSUE SEVERITY
+
+Use:
+
+### P0 — Critical
+
+Security, data integrity, architecture boundary, fake production data, severe state/API problem, or high-risk regression.
+
+### P1 — High
+
+Important documented requirement currently violated.
+
+### P2 — Medium
+
+Meaningful quality, consistency, usability, testing, or maintainability issue.
+
+### P3 — Low
+
+Minor polish or non-blocking cleanup.
+
+Do not mark everything P0.
+
+---
+
+# 32. EXACT ISSUE FORMAT
+
+Every significant issue MUST use this format:
+
+# [ISSUE-ID] [P0/P1/P2/P3] — [ISSUE TITLE]
+
+## 1. What is happening now
+
+Explain the real current implementation.
+
+## 2. Exact location
+
+Provide:
+
+* route
+* folder
+* file
+* component
+* hook/function where possible
+
+## 3. Documentation requirement
+
+Name the exact documentation rule/section.
+
+## 4. Current vs required
+
+Use:
+
+CURRENT:
+...
+
+REQUIRED:
+...
+
+## 5. Why this is a problem
+
+Explain:
+
+* architecture risk
+* AI-agent risk
+* regression risk
+* UX risk
+* accessibility risk
+* security risk
+* maintenance risk
+
+Only include the risks that actually apply.
+
+## 6. What the final state must be
+
+Describe the final architecture/behavior.
+
+## 7. Exact repair approach
+
+Give an ordered sequence.
+
+Example:
+
+1. Change responsibility in File A.
+2. Extract X into File B.
+3. Move type Y into module types.
+4. Update the API boundary.
+5. Update query key.
+6. Remove old fallback.
+7. Update tests.
+8. Update feature documentation.
+
+Do NOT provide large code blocks.
+
+## 8. What NOT to do
+
+List likely AI mistakes.
+
+Examples:
+
+* do not create a global business abstraction
+* do not duplicate API calls
+* do not move backend state to Zustand
+* do not delete existing error states
+* do not weaken permission checks
+* do not hardcode a replacement value
+
+Only include relevant warnings.
+
+## 9. Verification
+
+Explain how the coding agent must verify the fix.
+
+## 10. DONE condition
+
+Provide a binary acceptance statement.
+
+Example:
+
+"Done only when the search value changes the query key, request parameters, mocked result, and rendered rows."
+
+---
+
+# 33. DO NOT MIX MULTIPLE PROBLEMS INTO ONE ISSUE
+
+If a file has:
+
+* naming problem
+* state problem
+* test problem
+
+create separate issues if the fixes have different reasoning or verification.
+
+This allows the coding agent to complete them independently.
+
+---
+
+# 34. MODULE SCORE
+
+After auditing the target module, rate it:
+
+# MODULE SCORE: X/10
+
+Scoring:
+
+1–2 = severely broken
+3–4 = major problems
+5 = usable but substantially incomplete
+6 = moderate quality with important gaps
+7 = generally good with several documented gaps
+8 = strong with limited issues
+9 = near-complete
+10 = fully compliant and verified
+
+Do NOT award 9 or 10 based only on visual quality.
+
+Architecture + tests + documentation + accessibility + security + design all matter.
+
+---
+
+# 35. CATEGORY SCORECARD
+
+Provide:
+
+| Category          | Score | Main reason |
+| ----------------- | ----: | ----------- |
+| Architecture      |   /10 |             |
+| Modularity        |   /10 |             |
+| Isolation         |   /10 |             |
+| State Management  |   /10 |             |
+| API Boundary      |   /10 |             |
+| Forms             |   /10 |             |
+| Tables            |   /10 |             |
+| Accessibility     |   /10 |             |
+| Responsive Design |   /10 |             |
+| Design System     |   /10 |             |
+| Loading/Error     |   /10 |             |
+| Mock/MSW          |   /10 |             |
+| Testing           |   /10 |             |
+| Security Frontend |   /10 |             |
+| Documentation     |   /10 |             |
+| CI/Tooling        |   /10 |             |
+| AI-Friendliness   |   /10 |             |
+
+---
+
+# 36. MASTER FINDINGS TABLE
+
+Create:
+
+| ID | Priority | Area | Issue | File(s) | What must change | Verification | Status |
+| -- | -------- | ---- | ----- | ------- | ---------------- | ------------ | ------ |
+
+Initial status should always be:
+
+`NOT STARTED`
+
+unless the report is explicitly being generated after some fixes.
+
+Never mark something VERIFIED simply because the file exists.
+
+---
+
+# 37. MODULE FILE-BY-FILE REPAIR MAP
+
+Create a second table:
+
+| File | Current Responsibility | Problem | Final Responsibility | Required Action |
+| ---- | ---------------------- | ------- | -------------------- | --------------- |
+
+This is extremely important.
+
+The coding agent should be able to open this table and know what each affected file needs to become.
+
+---
+
+# 38. EXACT REPAIR ORDER
+
+Give the recommended execution order.
+
+Use:
+
+## Phase 1 — Architecture blockers
+
+## Phase 2 — State/API cleanup
+
+## Phase 3 — Forms
+
+## Phase 4 — Tables and interactions
+
+## Phase 5 — Loading/error/empty
+
+## Phase 6 — Accessibility/responsive
+
+## Phase 7 — Design-system cleanup
+
+## Phase 8 — Tests
+
+## Phase 9 — Documentation
+
+## Phase 10 — Tooling/security
+
+## Phase 11 — Final verification
+
+However, do NOT blindly use this order.
+
+If the actual module needs a different dependency order, explain the correct order.
+
+For each phase explain:
+
+* why it comes here
+* prerequisites
+* what must not be touched prematurely
+* completion gate
+
+---
+
+# 39. "DO NOT BREAK" SECTION
+
+Create:
+
+# Things the Coding Agent Must NOT Break
+
+Include real module-specific warnings such as:
+
+* critical query keys
+* permissions
+* route behavior
+* destructive confirmation
+* special API response handling
+* modal behavior
+* mobile behavior
+* existing working integrations
+* feature-specific calculations
+* important UI mappings
+
+Do NOT create generic warnings.
+
+---
+
+# 40. FINAL VERIFICATION PLAN
+
+Give a concrete verification sequence:
+
+1. static search
+2. import/architecture scan
+3. typecheck
+4. lint
+5. unit/component tests
+6. targeted feature tests
+7. E2E tests where applicable
+8. production build
+9. security checks
+10. documentation consistency check
+11. final manual checklist
+
+If a check could not be run during analysis, state:
+
+`NOT VERIFIED — MUST BE RUN BY CODING AGENT`
+
+---
+
+# 41. FINAL DOCUMENTATION CHECKLIST
+
+At the end verify:
+
+* [ ] feature documentation updated
+* [ ] directory structure accurate
+* [ ] feature inventory accurate
+* [ ] user flows accurate
+* [ ] state architecture accurate
+* [ ] query keys documented
+* [ ] API contract documented
+* [ ] UI data requirements documented
+* [ ] permission behavior documented
+* [ ] loading/empty/error documented
+* [ ] edge cases documented
+* [ ] component responsibility map accurate
+* [ ] forbidden rules accurate
+* [ ] theme contract accurate
+* [ ] no TBD/generic filler remains
+
+---
+
+# 42. FINAL HANDOFF FOR THE CODING AI
+
+The last section MUST be:
+
+# READY-TO-GIVE-TO-VSCODE-AI
+
+This section is the actual execution specification.
+
+It must contain:
+
+## Target Module
+
+`[MODULE_NAME]`
+
+## Goal
+
+One clear paragraph describing what the coding agent must achieve.
+
+## Priority 0 Work
+
+Only actual P0 tasks.
+
+## Priority 1 Work
+
+Only actual P1 tasks.
+
+## Priority 2/3 Work
+
+Only after critical work is finished.
+
+## File-by-File Actions
+
+For every affected file:
+
+`FILE → CURRENT PROBLEM → REQUIRED CHANGE → DEPENDENCY → VERIFICATION`
+
+## Architecture Rules to Preserve
+
+Only include rules relevant to this module.
+
+## Things the Agent Must Not Do
+
+Only real module-specific risks.
+
+## Testing Requirements
+
+Exact behaviors that must be tested.
+
+## Documentation Updates
+
+Exact documentation files/sections that must be updated.
+
+## Final Acceptance Criteria
+
+Use binary statements.
+
+Example:
+
+* No undocumented cross-module business imports remain.
+* No production component contains fake business fallback data.
+* All server state uses the documented server-state architecture.
+* All non-trivial forms use the required validation architecture.
+* All important tables implement the documented interactions.
+* All critical loading/empty/error states are testable.
+* All critical behaviors have meaningful tests.
+* Module documentation matches actual code.
+* All applicable documentation rules are verified.
+* Typecheck/lint/tests/build pass.
+
+---
+
+# 43. VERY IMPORTANT FINAL RULE
+
+Do NOT finish with:
+
+"Overall, the code can be improved."
+
+Instead finish with:
+
+1. exact current state
+2. exact missing requirements
+3. exact repair order
+4. exact files affected
+5. exact verification
+6. exact DONE criteria
+7. exact score
+
+The report must feel like:
+
+**AUDIT + ARCHITECTURE DECISION + REPAIR PLAN + ACCEPTANCE TEST**
+
+not like a generic code review.
+
+---
+
+# FINAL PRINCIPLE
+
+The coding agent should not have to think:
+
+"What did the auditor mean?"
+
+It should be able to think:
+
+"I know exactly:
+
+* what is wrong
+* where it is wrong
+* why it is wrong
+* what the desired state is
+* which file I should modify
+* what responsibility belongs there
+* what I must not change
+* what test I must add
+* how I verify it
+* when I can mark it complete."
+
+That is the required quality bar for this audit.
