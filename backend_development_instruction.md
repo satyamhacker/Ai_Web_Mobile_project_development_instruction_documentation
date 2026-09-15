@@ -57,7 +57,11 @@ Handling errors with generic `throw new Error()` makes it hard for AI to write p
 ## 7. Isolated Database/Query Layer (The Repository Pattern)
 Never write massive, complex raw SQL or 50-line ORM queries directly inside your business logic services.
 Extract complex queries into a dedicated Repository or Query file (e.g., `member-analytics.repository.ts`).
-* **The Rule:** If the backend is built using a JavaScript/TypeScript framework (NestJS, Express), you MUST use **TypeORM**. For other languages/frameworks (like Django), use the framework's native/standard ORM.
+* **The Rule:** If the backend is built with JavaScript/TypeScript, it MUST use the project's single approved ORM. The repository pattern is mandatory; the specific ORM implementation is an architectural project decision and MUST NOT be changed per module.
+  - If Prisma is selected for the project, ALL modules use Prisma.
+  - If TypeORM is selected for the project, ALL modules use TypeORM.
+  - If another approved ORM is selected, ALL modules use that ORM consistently.
+  AI agents MUST NOT introduce a second ORM into an existing backend. The ORM implementation MUST remain behind the repository/data-access boundary so business services do not become coupled to ORM-specific APIs.
 - **Why?** If the dashboard stats are calculating incorrectly, it's a database query issue. You provide the AI the `repository` file, not the `service` file.
 
 ---
@@ -286,7 +290,7 @@ the exact consequence of violating it — not just "be careful".]
 - [Transaction boundary]: [What must be atomic and why] — see Rule 8B
 
 ## Rule Compliance Checklist
-- [ ] Rule 7: TypeORM used for all DB access (no raw SQL outside QueryBuilder)
+- [ ] Rule 7: Approved project ORM used for all DB access (no raw SQL outside parameterized/prepared queries)
 - [ ] Rule 19: This file updated in same commit as any code change (Freshness Rule)
 - [ ] Rule 23: Heavy tasks (emails, PDFs, bulk ops) moved to background jobs
 - [ ] Rule 28: All responses wrapped in canonical envelope via ResponseInterceptor
@@ -303,6 +307,7 @@ the exact consequence of violating it — not just "be careful".]
 - [ ] Rule 80: JSDoc on all service methods, repositories, and utilities
 - [ ] Rule 83: RBAC enforced at controller layer via @Roles() — never inline in services
 - [ ] Rule 85: Guard clauses used — no nested if/else beyond 2 levels
+- [ ] Rule 82A: Response DTO satisfies complete frontend UI Data Requirements — no missing table columns, KPI fields, chart series, or relationship fields
 - [ ] Rule 86: Verb contract naming applied (createX, findXById, findXByIdOrThrow)
 - [ ] Rule 87: Every service method ≤ 20 lines, single responsibility
 - [ ] Rule 89: Domain objects used in services — ORM entities stay in repository layer
@@ -328,7 +333,7 @@ the exact consequence of violating it — not just "be careful".]
 * **Why:** Use a Message Queue or Task Broker (e.g., BullMQ for Node, Celery for Python/Django, or Spring AMQP/RabbitMQ). The controller should immediately return `202 Accepted: Job Started`, and the background worker handles the heavy lifting safely. This prevents server timeouts and crashed requests.
 
 ## 24. Database Migrations (No Auto-Syncing & Backward Compatibility)
-* **The Rule:** In development, auto-syncing tools (like TypeORM's `synchronize: true` or Hibernate's `update`) are fine. But in an enterprise environment, database schemas must be strictly version-controlled using **Migrations** (e.g., Django `makemigrations`, Flyway/Liquibase for Java, Alembic for Python). 
+* **The Rule:** In development, auto-syncing tools (like Prisma schema push, TypeORM `synchronize: true`, or Hibernate `update`) are fine. But in an enterprise environment, database schemas must be strictly version-controlled using **Migrations** (e.g., Prisma Migrate, Django `makemigrations`, Flyway/Liquibase for Java, Alembic for Python). 
 * **Backward Compatibility Requirement:** Existing v1 clients must be supported during DB migrations. Migrations must be strictly backward-compatible. Never drop a column in the same migration that adds a `NOT NULL` replacement. Do it in two phases. Avoid single-step destructive migrations.
 * **Why:** If the AI needs to add a new column to a table, it should generate a explicit migration file. This guarantees that production databases can be safely upgraded (or rolled back) without data loss or rogue schema syncing breaking the app, and ensures no downtime for legacy clients.
 
@@ -378,7 +383,7 @@ the exact consequence of violating it — not just "be careful".]
   1. **Audit & Recovery:** If an admin accidentally deletes 1,000 members, the data is instantly recoverable.
   2. **Referential Integrity:** Foreign keys referencing a "deleted" record remain valid, preventing cascade failures.
   3. **AI Safety:** An AI asked to "implement the delete endpoint" will set a flag, not wipe database rows. This prevents catastrophic, irreversible data loss.
-* **Implementation:** Add a global query filter (e.g., TypeORM's `@DeleteDateColumn`, Django's `django-softdelete`, or a `WHERE is_deleted = false` scope in a base repository class) so that all standard `find` queries automatically exclude soft-deleted records.
+* **Implementation:** Add a global query filter (e.g., Prisma's `where: { deletedAt: null }` applied in a base repository method, Django's `django-softdelete`, or a `WHERE is_deleted = false` scope in a base repository class) so that all standard `find` queries automatically exclude soft-deleted records. For ORM-specific soft-delete column hooks (TypeORM `@DeleteDateColumn`, Prisma middleware), apply them at the repository layer only — never in services.
 
 ---
 
@@ -424,7 +429,7 @@ the exact consequence of violating it — not just "be careful".]
 
 ## 34. Database Query Optimization (The N+1 Rule & Index Strategy)
 * **The Rule:** The single most common performance killer in any ORM-backed backend is the N+1 query problem. You must proactively prevent it.
-  1. **N+1 Prevention:** Always use eager loading / `JOIN` fetching when you know you'll need related data (e.g., `prefetch_related` in Django, `relations` in TypeORM, `@EntityGraph` in JPA). Never fetch a list of 100 members and then loop to fetch each one's plan separately.
+  1. **N+1 Prevention:** Always use eager loading / `JOIN` fetching when you know you'll need related data (e.g., `prefetch_related` in Django, Prisma `include`, TypeORM `relations`). Never fetch a list of 100 members and then loop to fetch each one's plan separately.
   2. **Index Strategy:** Every foreign key column, every column used in a `WHERE` clause, and every column used in an `ORDER BY` clause MUST have a database index. Indexes should be explicitly defined in migration files — never rely on the ORM to create them automatically.
   3. **Slow Query Logging:** Enable slow query logging in the database (queries > 100ms). Review this log weekly.
 * **Why:** An AI asked to write a "Get all members with their plans" repository method will often produce an N+1 query by default. This rule forces a review gate.
@@ -479,7 +484,7 @@ the exact consequence of violating it — not just "be careful".]
   2. **Tenant Databases:** Every time a new gym registers, the backend must programmatically create a brand-new database (e.g., `tenant_db_101`) and run all schema migrations on it automatically. *(Note: All these logical databases reside within the same single MySQL/PostgreSQL server instance; do not spin up new physical servers/VPS per tenant).*
   3. **Dynamic Connection Routing (Request Scoped):** The backend must intercept every incoming API request. Using a global middleware or interceptor, it must extract the `x-tenant-id` (from HTTP headers or JWT payload) and dynamically construct or switch the database connection to point to that specific tenant's database for the lifecycle of that request. **⚠️ See Rule 63 before implementing this** — the connection pool budget must be calculated across ALL active tenant DataSources combined, not per-tenant. Blindly applying `max: 20` per tenant DataSource will exhaust the database server's connection limit under load.
 * **How to Apply to Different Frameworks:**
-  - **NestJS (Node/TypeScript):** Do not use a static `TypeOrmModule.forRoot`. Use request-scoped providers or custom connection factories that cache and resolve `DataSource` instances based on the request's tenant header.
+  - **NestJS (Node/TypeScript):** Do not use a static, monolithic ORM module root configuration. Use request-scoped providers or custom connection factories that cache and resolve database connection/client instances based on the request's tenant header.
   - **Django (Python):** Use database routers (`db_for_read`, `db_for_write`) paired with thread-local storage or middleware to dynamically route queries to the correct database alias based on the request.
   - **Spring Boot (Java):** Implement `AbstractRoutingDataSource` and use a `ThreadLocal` context holder populated via a HandlerInterceptor to route database connections dynamically.
 * **Why:** If Gym A and Gym B share the same database tables, a single missing `WHERE tenant_id = X` clause in a business query results in a catastrophic cross-tenant data breach. Database-per-tenant completely eliminates this risk at the infrastructure level. Furthermore, queries are infinitely faster because a table only contains the data of one specific gym, avoiding massive billion-row bottlenecks.
@@ -494,7 +499,7 @@ the exact consequence of violating it — not just "be careful".]
 ---
 
 ## 41. Transaction Locks & Race Condition Prevention
-* **The Rule:** For highly concurrent mutations (e.g., deducting wallet balances, booking limited seats, processing inventory), standard database transactions are not enough to prevent race conditions. You MUST implement **Pessimistic Locking** (e.g., `SELECT ... FOR UPDATE` via `QueryBuilder.setLock('pessimistic_write')` in TypeORM or `select_for_update()` in Django) or **Optimistic Locking** (using a `@VersionColumn`).
+* **The Rule:** For highly concurrent mutations (e.g., deducting wallet balances, booking limited seats, processing inventory), standard database transactions are not enough to prevent race conditions. You MUST implement **Pessimistic Locking** (e.g., `SELECT ... FOR UPDATE` via Prisma's `$transaction` with `isolationLevel`, raw SQL in a repository, or `select_for_update()` in Django) or **Optimistic Locking** (using a version/revision column checked on update).
 * **Why:** If two concurrent requests try to deduct money at the exact same millisecond, a standard transaction might allow both to succeed based on stale read data, causing negative balances. Enforcing this rule ensures AI always explicitly handles concurrency.
 
 ---
@@ -566,7 +571,7 @@ the exact consequence of violating it — not just "be careful".]
 * **The Rule:** Every endpoint must declare its SLA category in a comment (`// SLA: FAST`). FAST (< 200ms), STANDARD (< 500ms), HEAVY (> 500ms). Heavy tasks must be moved to background jobs (Rule 23). Enforce via monitoring middleware.
 
 ## 60. Strict Foreign Key Naming Convention
-* **The Rule:** Database columns must use `snake_case` (e.g., `member_id`). TypeScript entity properties must use `camelCase` (e.g., `memberId`). Explicitly map them using `@Column({ name: 'member_id' })`. Foreign key constraints must follow `FK_[table]_[referenced_table]`.
+* **The Rule:** Database columns must use `snake_case` (e.g., `member_id`). TypeScript model/entity properties must use `camelCase` (e.g., `memberId`). Explicitly map them in the ORM model definition (e.g., Prisma `@map("member_id")`, TypeORM `@Column({ name: 'member_id' })`). Foreign key constraints must follow `FK_[table]_[referenced_table]`.
 
 ## 61. Dead Letter Queue (DLQ) for Failed Background Jobs
 * **The Rule:** Every background job queue (BullMQ/Celery) MUST have a configured Dead Letter Queue. If a job fails all retries, it must be moved to the DLQ (not discarded) so admins can manually inspect and retry it.
@@ -586,8 +591,40 @@ the exact consequence of violating it — not just "be careful".]
 ## 66. Strict Database Table Naming Convention
 * **The Rule:** All table names must be `plural_snake_case` (e.g., `payment_transactions`). Junction tables must combine the two table names alphabetically (e.g., `member_plans`). Never use legacy prefixes like `tbl_`. Enforce explicitly via `@Entity('table_name')`.
 
-## 67. API Contract Freeze Before Frontend Development
-* **The Rule:** The backend developer/AI must first write the DTOs and Swagger spec. This contract must be "frozen" and approved by the frontend layer before any backend implementation code is written. This prevents data shape mismatches.
+## 67. API Contract Freeze & Cross-Layer Approval (Mutual Contract Freeze)
+* **The Rule:** The API contract between the frontend and backend MUST be mutually agreed and frozen before backend implementation code is written. This project follows a **frontend-first workflow** — the sequence is:
+
+```text
+Frontend Feature Development
+    ↓
+UI Data Requirements (Frontend Rule 13 / Rule 75A)
+    ↓
+API Contract (endpoints, request shape, response DTO shape)
+    ↓
+Frontend TypeScript types + Zod schema
+    ↓
+MSW handler (frontend mock)
+    ↓
+Mutual Contract Freeze
+    ↓
+Backend DTO + OpenAPI/Swagger documentation
+    ↓
+Backend implementation (services, repositories, DB queries)
+```
+
+* **What "Mutual Contract Freeze" means:**
+  1. The frontend publishes its `## UI Data Requirements` and `## API Contract` in the feature's `_features.md`.
+  2. The backend reviews and agrees that the response DTO shape is feasible from the data model.
+  3. **Both layers freeze** — no unilateral renaming of fields, adding required fields, or changing response structure after this point without updating both sides in the same PR.
+  4. Only then does the backend write DTOs, Swagger docs, and implementation code.
+
+* **What the backend must NOT do:**
+  - Write DTOs in isolation before inspecting the frontend's `UI Data Requirements`.
+  - Return a "minimal" response DTO and expect the frontend to adapt — see Rule 82A.
+  - Rename fields unilaterally (e.g., `ownerName` → `owner_display_name`) after the contract is frozen.
+  - Add or remove required fields without updating the frontend types, Zod schemas, MSW handlers, and tests in the same change.
+
+* **Why:** The previous "backend writes DTOs first" rule conflicted with the frontend-first workflow used in this project. The backend AI writing a DTO without inspecting the frontend's UI Data Requirements produces exactly the minimal-response failure mode that Rules 75A and 82A are designed to prevent.
 
 ## 68. Health Check Depth Levels
 * **The Rule:** Implement 3 levels of health checks: `/health/live` (Process alive? 200 OK), `/health/ready` (DB/Redis reachable? Traffic ready), and `/health/deep` (Full dependency chain check, not exposed publicly).
@@ -744,6 +781,92 @@ the exact consequence of violating it — not just "be careful".]
 
 ---
 
+## 82A. Frontend UI Data Contract Completeness
+* **The Rule:** Every backend response DTO MUST satisfy the **complete data contract** documented by the consuming frontend feature's `## UI Data Requirements` section (Frontend Rule 13 / Rule 75A). The backend MUST NOT intentionally return a reduced or "minimal" DTO merely because the database entity contains only a subset of the fields currently visible in the UI.
+
+Before implementing an endpoint, the backend AI MUST inspect the corresponding frontend feature's:
+1. `_features.md` → `## UI Data Requirements`
+2. `_features.md` → `## API Contract`
+3. Frontend TypeScript/API types
+4. Zod response schema where available
+
+The backend MUST return every field required by the frontend UI, including fields used by:
+- Table columns
+- KPI cards
+- Charts and chart series
+- Filters and search
+- Sorting and pagination
+- Dropdowns and relational references
+- Detail views, modals, and drawers
+- Status badges and timeline/history displays
+
+### Required Contract Chain
+
+```text
+Frontend UI Data Requirements
+    ↓
+Frontend API Contract
+    ↓
+Backend Response DTO
+    ↓
+Service Layer
+    ↓
+Repository / Query
+    ↓
+Database
+```
+
+### Completeness Rule
+
+Every field consumed by the frontend MUST have:
+- An explicitly named Response DTO field
+- A defined source or derivation rule (which DB column or JOIN produces it)
+- The correct nullability matching the frontend's Zod schema
+- An OpenAPI/Swagger `@ApiProperty()` description
+- A corresponding value in the stub response during stub-first development (Rule 81)
+
+The backend MUST NOT return `undefined`, omit required fields, rename fields independently, or change nested response structure without updating the frontend contract first (Rule 67).
+
+### No Frontend Reconstruction Rule
+
+Do not force the frontend to reconstruct business-level values such as:
+- Owner name derived from owner ID alone
+- Plan name derived from plan ID alone
+- Member count derived from a separate list query
+- Revenue totals derived from individual transaction records
+- Status labels assembled from unrelated fields
+
+When the UI contract requires such information, the backend MUST provide it through a **dedicated Response DTO** that assembles the required data via JOINs, aggregations, or dedicated service methods — not by leaving the reconstruction to the frontend.
+
+### Stub Parity Rule
+
+The stub response (Rule 81) MUST contain the **same complete field structure** as the eventual real implementation. A stub is NOT contract-complete if it returns only the fields convenient for initial development. The stub is the frontend's development contract — it must be identical in shape to the final response.
+
+### Minimal DTO Anti-Pattern (Forbidden)
+
+```text
+❌ FORBIDDEN:
+UI requires: name, ownerName, planName, memberCount, revenue, status
+Backend returns: { id, name, status }
+
+✔ REQUIRED:
+Backend returns: { id, name, ownerName, planName, memberCount, revenue, status }
+with all fields assembled via JOIN or dedicated query.
+```
+
+### Contract Change Rule
+
+If a backend implementation cannot provide a field currently required by the frontend:
+1. Do NOT silently omit the field from the response.
+2. Do NOT fabricate a placeholder value in production.
+3. Document the limitation clearly in the `_backend_feature.md`.
+4. Propose the contract change explicitly.
+5. Update the frontend `## UI Data Requirements`, API Contract, TypeScript types, Zod schema, MSW handler, and tests in the same PR before merging the breaking change.
+
+* **Why:** This prevents the exact failure mode where an MSW response or backend API returns only a few fields and the remaining table columns, KPI cards, and chart series render empty or `undefined`. Frontend Rule 75A prevents the frontend from papering over the gap with hardcoded fallback data — so the backend must provide the complete contract instead.
+
+---
+
 ## 83. Centralized RBAC / Permission Guards (Role-Based Access Control)
 * **The Rule:** Role and permission checks must NEVER be done inline inside service methods or repository layers (e.g., `if (user.role === 'admin')`). Permission enforcement is strictly a **controller-layer concern** and must be implemented using centralized, declarative guards or decorators.
 * **How to implement per framework:**
@@ -785,15 +908,20 @@ the exact consequence of violating it — not just "be careful".]
       } else { throw new Error('Not found'); }
     }
     ```
-  - ✅ **GOOD (Guard Clauses):**
+  - ✅ **GOOD (Guard Clauses + Repository-Owned Mutation):**
     ```typescript
-    async suspendMember(id: string) {
-      const member = await this.repo.findByIdOrThrow(id); // throws MemberNotFoundException
-      if (member.status === 'SUSPENDED') throw new MemberAlreadySuspendedException(id);
-      if (!member.hasActiveSubscription) throw new NoActiveSubscriptionException(id);
-      // happy path — completely flat, no nesting
-      member.status = 'SUSPENDED';
-      return this.repo.save(member);
+    async suspendMember(id: string): Promise<MemberDomain> {
+      const member = await this.memberRepo.findByIdOrThrow(id);
+
+      if (member.status === MemberStatus.SUSPENDED) {
+        throw new MemberAlreadySuspendedException(id);
+      }
+
+      if (!member.hasActiveSubscription) {
+        throw new NoActiveSubscriptionException(id);
+      }
+
+      return this.memberRepo.suspendById(id, new Date());
     }
     ```
 * **Maximum Nesting Depth:** No function body may have more than **2 levels of indentation** for conditional logic. If a third level is needed, extract it into a private helper method.
@@ -806,14 +934,19 @@ the exact consequence of violating it — not just "be careful".]
 
   | Operation | Service Layer Verb | Repository Layer Verb |
   |---|---|---|
-  | Create | `create[Entity](dto)` | `save(entity)` |
+  | Create | `create[Entity](dto)` | `create[Entity](data)` |
   | Read single | `find[Entity]ById(id)` | `findById(id)` |
   | Read single (throws) | `find[Entity]ByIdOrThrow(id)` | `findByIdOrThrow(id)` |
   | Read list | `findAll[Entities](filters)` | `findAll(filters)` |
-  | Update | `update[Entity](id, dto)` | `save(entity)` |
+  | Update | `update[Entity](id, dto)` | `updateById(id, dto)` or a domain-specific named mutation |
   | Soft Delete | `delete[Entity](id)` | `softDelete(id)` |
   | Check existence | `does[Entity]Exist(id)` | `existsById(id)` |
   | Count | `count[Entities](filters)` | `count(filters)` |
+
+Repository mutation methods MUST be intention-revealing.
+The generic ORM persistence primitive (`save`, `update`, `create`, etc.) is an implementation detail and MUST NOT be part of the public service-facing contract.
+Services call named repository methods. Repositories alone may call the underlying ORM persistence APIs.
+This rule MUST remain consistent with Rule 99.
 
 * **The `OrThrow` Pattern:** Repository methods that return a single entity MUST have two variants: `findById(id): Entity | null` (returns null if not found) and `findByIdOrThrow(id): Entity` (throws `EntityNotFoundException` if not found). Services must choose explicitly — never let a `null` propagate silently.
 * **Why:** When two different AI agents work on two different modules, they will produce consistent, predictable method signatures. Any AI reading a repository interface instantly knows what methods are available without having to read the implementation. This eliminates the most common AI mistake: calling a method that doesn't exist (hallucinated method names).
@@ -825,7 +958,7 @@ the exact consequence of violating it — not just "be careful".]
 * **The 20-Line Soft Ceiling:** A service method body (excluding JSDoc) should rarely exceed ~20 lines. If a method grows beyond this, it is a signal that it is doing too much and must be decomposed.
 * **Decomposition Pattern:**
   - ❌ **BAD:** A single `registerMember()` method that validates, saves the member, creates a subscription, charges the card, sends a welcome email, and writes an audit log — all in one 80-line function.
-  - ✅ **GOOD:** `registerMember()` is an Orchestrator (Rule 8B) that calls: `this.memberRepo.save(member)`, then emits `EventBus.emit('MEMBER.REGISTERED', ...)`. The subscription creation, payment charging, and email are handled by separate listeners.
+  - ✅ **GOOD:** `registerMember()` is an Orchestrator (Rule 8B) that calls: `this.memberRepo.createMember(data)`, then emits `EventBus.emit('MEMBER.REGISTERED', ...)`. The subscription creation, payment charging, and email are handled by separate listeners.
 * **Private Helper Rule:** If a method needs a private helper for a sub-calculation (e.g., calculating a pro-rated amount), the helper must be a `private` method with its own JSDoc (Rule 80) clearly named for its specific task (e.g., `private calculateProRatedAmount()`).
 * **Why:** An AI asked to "add audit logging to member registration" should be able to do so by touching exactly ONE file and ONE method — the event listener for `MEMBER.REGISTERED`. If the entire registration flow is monolithic, the AI must read and modify a 200-line method, risking collateral damage.
 
@@ -835,7 +968,7 @@ the exact consequence of violating it — not just "be careful".]
 * **The Rule:** All backend TypeScript/JavaScript files MUST enforce a strict, consistent import order. This mirrors Frontend Rule 49. Configure ESLint's `import/order` rule to enforce the following groups in this exact sequence:
   1. **Node.js built-ins** (e.g., `node:fs`, `node:path`)
   2. **Framework core** (e.g., `@nestjs/common`, `express`, `django`)
-  3. **Third-party packages** (e.g., `typeorm`, `class-validator`, `bcrypt`)
+  3. **Third-party packages** (e.g., `@prisma/client`, `class-validator`, `bcrypt`)
   4. **Internal absolute imports — Infrastructure** (e.g., `@/config/`, `@/database/`)
   5. **Internal absolute imports — Module-specific** (e.g., `@/modules/billing/...`)
   6. **Relative imports** (strictly forbidden per Rule 10 — this group must always be empty)
@@ -847,7 +980,7 @@ the exact consequence of violating it — not just "be careful".]
 
   import { Injectable } from '@nestjs/common';
 
-  import { Repository } from 'typeorm';
+  import { PrismaService } from '@/core/database/prisma.service';
   import * as bcrypt from 'bcrypt';
 
   import { DatabaseConfig } from '@/config/database.config';
@@ -864,7 +997,7 @@ the exact consequence of violating it — not just "be careful".]
 ## 89. Domain Object vs. ORM Entity Separation (Anti-Persistence-Leakage Rule)
 * **The Rule:** Never use ORM Entity classes (e.g., TypeORM `@Entity()` classes, Django ORM models) directly inside business logic services. ORM entities are a **persistence infrastructure concern** — they contain database annotations, lazy-loading relations, and schema metadata that have no place in pure business logic.
 * **The Pattern — Two Distinct Objects + Mapper:**
-  1. **ORM Entity** (`member.entity.ts`): Contains only database schema definition — `@Column`, `@ManyToOne`, `@Index` decorators. Lives in the repository layer only.
+  1. **ORM Model / Entity** (`member.entity.ts` or Prisma schema model): Contains only database schema definition. Lives in the repository layer only.
   2. **Domain Object / DTO** (`member.domain.ts` or `member.dto.ts`): A plain TypeScript class/interface with pure business properties and zero ORM imports. This is what services, controllers, and event handlers receive and return.
   3. **Mapper** (`member.mapper.ts`): A dedicated class with `toDomain(entity)` and `toEntity(domain)` static methods that translate between the two. Only the repository layer calls the mapper.
 * **When it's acceptable to use a unified model:** For simple CRUD-only modules with no complex business rules, a unified ORM entity may be used provided: (a) it has no business logic methods on the class itself, and (b) you acknowledge the tradeoff in the module's `_backend_feature.md`.
@@ -894,13 +1027,14 @@ the exact consequence of violating it — not just "be careful".]
 
 ---
 
-## 92. ORM Raw Input Injection Prevention (The TypeORM Safety Rule)
-* **The Rule:** Never interpolate user-controlled input directly into ORM query methods. This is a critical AI-specific risk because AI agents frequently generate "convenient" but insecure query patterns, especially in TypeORM's QueryBuilder.
+## 92. ORM Raw Input Injection Prevention (The Query Safety Rule)
+* **The Rule:** Never interpolate user-controlled input directly into ORM query methods. This is a critical AI-specific risk because AI agents frequently generate "convenient" but insecure query patterns.
 * **The Specific Patterns to BAN:**
-  - ❌ **BAD (SQL Injection via `orderBy`):**
+  - ❌ **BAD (SQL Injection via dynamic sort field):**
     ```typescript
     // NEVER do this — sortField comes from req.query and is unvalidated
-    queryBuilder.orderBy(`member.${req.query.sortField}`, 'ASC');
+    // Works the same way in any ORM with raw query string interpolation
+    db.query(`SELECT * FROM members ORDER BY ${req.query.sortField} ASC`);
     ```
   - ✅ **GOOD (Allowlist Pattern):**
     ```typescript
@@ -909,19 +1043,22 @@ the exact consequence of violating it — not just "be careful".]
     const sortField = ALLOWED_SORT_FIELDS.includes(req.query.sortField as SortField)
       ? req.query.sortField as SortField
       : 'createdAt'; // safe default
-    queryBuilder.orderBy(`member.${sortField}`, 'ASC');
+    // Pass validated sortField to ORM method or parameterized query
     ```
   - ❌ **BAD (Raw SQL with template literals):**
     ```typescript
     // NEVER — classic SQL injection
-    queryBuilder.where(`member.name = '${req.query.name}'`);
+    db.query(`SELECT * FROM members WHERE name = '${req.query.name}'`);
     ```
   - ✅ **GOOD (Parameterized query):**
     ```typescript
-    queryBuilder.where('member.name = :name', { name: req.query.name });
+    // Prisma
+    prisma.member.findMany({ where: { name: req.query.name } });
+    // Raw SQL with parameterization
+    db.query('SELECT * FROM members WHERE name = $1', [req.query.name]);
     ```
 * **Allowlist-First Mandate:** Any query that uses a user-supplied column name, sort field, or filter key MUST validate it against a strict allowlist defined in the module's constants file before passing it to the ORM.
-* **Why:** TypeORM's query builder accepts raw column name strings in `orderBy`, `select`, and `where` which are NOT automatically parameterized. An AI will generate `orderBy(`member.${sortColumn}`)` as a clean, "logical" pattern without realizing it's an injection vulnerability. This rule makes the safe pattern the only acceptable pattern.
+* **Why:** ORM query builders that accept raw column name strings for `orderBy`, `select`, and `where` do NOT automatically parameterize field names. An AI will generate dynamic field interpolation as a clean, "logical" pattern without realizing it's an injection vulnerability. This rule makes the safe pattern the only acceptable pattern.
 
 ---
 
@@ -1005,14 +1142,18 @@ the exact consequence of violating it — not just "be careful".]
   }
   ```
   ```typescript
-  // In the entity: member.entity.ts
-  @Column({ type: 'enum', enum: MemberStatus, default: MemberStatus.PENDING })
-  status: MemberStatus;
+  // In the entity/model: member.entity.ts (TypeORM) or Prisma schema
+  // TypeORM:
+  // @Column({ type: 'enum', enum: MemberStatus, default: MemberStatus.PENDING })
+  // status: MemberStatus;
+  //
+  // Prisma schema:
+  // status MemberStatus @default(PENDING)
   ```
 * **Rules:**
-  - ❌ **BAD:** `@Column({ type: 'varchar' }) status: string;` — accepts any string, including typos.
-  - ❌ **BAD:** `@Column({ type: 'varchar' }) status: 'active' | 'suspended';` — inline union, not reusable, not a runtime guard.
-  - ✅ **GOOD:** `@Column({ type: 'enum', enum: MemberStatus }) status: MemberStatus;` — compile-time AND database-level enforcement.
+  - ❌ **BAD:** A plain string column for status — accepts any string, including typos.
+  - ❌ **BAD:** Inline union type (`'active' | 'suspended'`) — not reusable, not a runtime guard.
+  - ✅ **GOOD:** ORM enum column mapped to the `MemberStatus` enum — compile-time AND database-level enforcement.
   - All enums MUST be defined in the module's `[module].constants.ts` file (Rule 5) — never inline inside the entity file.
   - Enum values MUST be `SCREAMING_SNAKE_CASE` strings (e.g., `'ACTIVE'`, `'IN_PROGRESS'`) so they are human-readable in raw database queries.
   - When adding a new enum value, a database migration MUST be generated to update the DB enum type. Never rely on ORM auto-sync in production (Rule 24).
@@ -1087,7 +1228,7 @@ the exact consequence of violating it — not just "be careful".]
   ```
 * **Enforcement Rules:**
   - Every `axios` / `fetch` / `HttpService` call in an adapter (Rule 8D) MUST pass `timeout: TIMEOUT_CONFIG.EXTERNAL_API_DEFAULT_MS` (or the appropriate tier). No raw `axios.get(url)` without a timeout is permitted.
-  - TypeORM query timeouts must be set via `QueryBuilder.maxExecutionTime(TIMEOUT_CONFIG.DB_QUERY_DEFAULT_MS)` for all non-trivial queries. Report/analytics queries must explicitly use the `DB_QUERY_REPORT_MS` tier.
+  - ORM/DB query timeouts MUST be configured for all non-trivial queries using the appropriate timeout value from `TIMEOUT_CONFIG`. For Prisma, use `$transaction` with a timeout option; for raw queries, set statement_timeout at the connection or query level. Report/analytics queries must explicitly use the `DB_QUERY_REPORT_MS` tier.
   - When a timeout fires, the adapter MUST catch the `ECONNABORTED` / `ETIMEDOUT` error and throw a typed custom exception (Rule 6) — e.g., `PaymentGatewayTimeoutException` — never let the raw Axios error propagate to the service layer.
   - ❌ **BAD:** `await this.httpService.get('https://api.stripe.com/charges').toPromise()`
   - ✅ **GOOD:** `await this.httpService.get('https://api.stripe.com/charges', { timeout: TIMEOUT_CONFIG.PAYMENT_GATEWAY_MS }).toPromise()`
@@ -1190,27 +1331,25 @@ the exact consequence of violating it — not just "be careful".]
   | Check Constraint | `CHK_[table]_[rule_description]` | `CHK_members_age_min_18`, `CHK_wallets_balance_non_negative` |
   | Composite Index | `IDX_[table]_[col1]_[col2]` | `IDX_members_branch_id_status` |
 
-* **Implementation in TypeORM:**
-  ```typescript
-  @Entity('members')
-  @Unique('UQ_members_email', ['email'])
-  @Index('IDX_members_status', ['status'])
-  @Index('IDX_members_branch_id_status', ['branchId', 'status'])
-  export class MemberEntity extends BaseEntity {
+* **Implementation (Prisma-equivalent naming in `schema.prisma`):**
+  ```prisma
+  model Member {
+    id       String @id @default(uuid()) @map("id") // PK_members
+    email    String @unique @map("email")
+                   // @@unique(["email"], name: "UQ_members_email")
+    branchId String @map("branch_id")
+                   // FK: FK_members_branches_branch_id
+    status   MemberStatus @default(PENDING) @map("status")
+                   // IDX: IDX_members_status
+    balance  BigInt @default(0) @map("balance")
+                   // CHK: CHK_wallets_balance_non_negative (enforced via DB migration check)
+    branch   Branch @relation(fields: [branchId], references: [id],
+                              map: "FK_members_branches_branch_id")
 
-    @Column({ unique: false }) // Uniqueness enforced via @Unique above, not inline
-    email: string;
-
-    @ManyToOne(() => BranchEntity)
-    @JoinColumn({
-      name: 'branch_id',
-      foreignKeyConstraintName: 'FK_members_branches_branch_id'
-    })
-    branch: BranchEntity;
-
-    @Check('CHK_wallets_balance_non_negative', '"balance" >= 0')
-    @Column({ type: 'bigint', default: 0 })
-    balance: number;
+    @@unique([email], name: "UQ_members_email")
+    @@index([status], name: "IDX_members_status")
+    @@index([branchId, status], name: "IDX_members_branch_id_status")
+    @@map("members")
   }
   ```
 * **Rules:**
@@ -1233,6 +1372,7 @@ the exact consequence of violating it — not just "be careful".]
    - Is there a missing null check (use `findByIdOrThrow` where needed)?
    - Is a secret hardcoded? (Auto-blocked by pre-commit hook — Rule 91)
    - Is the response wrapped in the standard envelope with a single consistent `data` shape — is `data` a single explicitly typed value, never a polymorphic bag? (Rule 82)
+   - Does the response DTO satisfy the **complete** frontend UI Data Requirements — no missing table columns, KPI fields, chart series, dropdown data, or relationship fields? (Rule 82A)
    - Is the permission guard at the controller layer using typed enums? (Rule 83)
    - Is any ORM `orderBy` or `where` using user input without an allowlist? (Rule 92)
    - Does every paginated endpoint use `PaginationQueryDto` and return the canonical `PaginationMeta` shape via `buildPaginationMeta()`? (Rule 94)
@@ -1242,6 +1382,7 @@ the exact consequence of violating it — not just "be careful".]
    - Does the global `ValidationExceptionFilter` transform `400` errors into the canonical `validationErrors` shape? (Rule 98)
    - Do service methods call named repository mutation methods — never directly mutating entity properties and calling `save()` inline? (Rule 99)
    - Are all DB constraints (FK, UQ, IDX, CHK) explicitly named following the `FK_[table]_[ref]_[col]` convention — never auto-generated? (Rule 100)
+   - Do all AI-generated tests verify real observable behavior — no placeholder assertions, no tests that would pass if the feature were broken? (Rule 101)
    - Are there any barrel file imports or relative path imports?
    - Does every new method follow the verb naming convention with `OrThrow` where needed? (Rule 86)
    - Is every new method ≤ 20 lines using Guard Clauses? (Rule 85/87)
@@ -1254,3 +1395,60 @@ the exact consequence of violating it — not just "be careful".]
 7. Run `pytest` against the live API to confirm contract compliance.
 8. For security-critical modules, ensure `CODEOWNERS` human approval is obtained. (Rule 93)
 9. Review the AI's isolated changes one final time.
+
+---
+
+## 101. AI Test Integrity Gate — Tests Must Prove Real Behavior
+
+A test file existing is NOT sufficient evidence of correctness.
+
+All AI-generated backend tests MUST verify meaningful application behavior and MUST NOT
+exist only to satisfy coverage, file-count, or checklist requirements.
+
+The AI MUST NOT create or keep:
+- Placeholder assertions.
+- Trivial self-evident assertions (e.g. `expect(true).toBe(true)`, `expect(1).toBe(1)`).
+- Empty tests.
+- Tests that only instantiate a class without verifying behavior.
+- Tests that mock the exact business logic under test.
+- Tests that assert implementation details when externally observable behavior can be tested.
+- Tests whose expected value is copied directly from the implementation rather than the business contract.
+- E2E tests that never exercise the actual HTTP endpoint being claimed as covered.
+
+### Unit Test Integrity
+
+For service/repository/validator tests, verify real branches including:
+- successful execution
+- validation failure
+- not-found behavior
+- authorization/permission failure where applicable
+- business-rule violations
+- persistence failure where applicable
+- transaction rollback behavior where applicable
+- idempotency behavior for critical mutations
+- correct repository method invocation
+- correct domain/DTO transformation
+
+### API / E2E Test Integrity
+
+Pytest E2E tests MUST verify:
+- actual HTTP method and endpoint
+- request validation
+- canonical response envelope
+- response data shape
+- required frontend-facing response fields
+- status/error behavior
+- authentication/authorization
+- pagination/filter/sort behavior where applicable
+- mutation side effects where observable
+- regression behavior for fixed bugs
+
+### Anti-False-Passing Rule
+
+A test is invalid if the test would still pass after the behavior it claims to protect
+is deliberately broken.
+
+Before marking a backend feature complete, the AI MUST review its tests and explain
+what real defect each important test would catch.
+
+The build passing is not equivalent to behavioral correctness.
