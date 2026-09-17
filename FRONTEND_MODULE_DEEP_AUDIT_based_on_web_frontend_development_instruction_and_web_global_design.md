@@ -942,7 +942,91 @@ WHAT happens after retry
 
 ---
 
-# 19A. COMPLETE UI INTERACTION / FUNCTIONAL FLOW AUDIT
+# 19A. UI / FEATURE COMPLETENESS AUDIT — MANDATORY
+
+For every target module, the AI MUST first determine what should exist in the UI based on documentation/product requirements, and then compare it to the actual implementation.
+
+For **every route + role/permission + feature**, compare:
+
+EXPECTED UI / FEATURE
+        ↓
+ACTUAL IMPLEMENTATION
+        ↓
+MISSING
+        ↓
+EXTRA / UNDOCUMENTED
+        ↓
+BEHAVIOR
+        ↓
+STATUS
+
+Include EVERYTHING in this completeness inventory:
+* pages / sections
+* KPI/stat cards
+* graphs/charts
+* tables / table columns
+* pagination / sorting / filtering / search
+* dropdowns / dropdown options
+* inputs / form fields / textarea
+* date/time controls
+* checkbox / radio / switch
+* tabs
+* buttons / icon buttons / action menus / bulk actions
+* modals / drawers / confirmation dialogs
+* empty states / loading states / error states / retry
+* export/import / upload/download
+* permission-based controls / role-specific UI
+* detail sections
+* breadcrumbs / navigation
+* mobile-specific controls
+
+For each one, provide:
+
+UI ID: [Identifier]
+Route: [Route]
+Role/Permission: [Context]
+Section: [Section]
+Expected Element: [What should be there]
+Source of Expectation: [Documentation reference]
+Actual Element: [What is actually there]
+Missing?: [YES/NO]
+Extra?: [YES/NO]
+Expected Behavior: [Brief description]
+Actual Behavior: [Brief description]
+Status: [PASS/FAIL/PARTIAL]
+Evidence: [Where in code/UI]
+
+### Important Rule
+Do NOT just scan what exists in the code.
+You MUST answer: "What was supposed to be in this module that is completely missing from the code?"
+
+Example:
+Expected: Dashboard → Revenue Analytics → Monthly Revenue Chart
+Actual: Section exists, Chart missing
+Status: FAIL
+Reason: Documented feature requires chart but no chart component/rendering exists.
+DONE: Chart is present, receives correct data, renders loading/empty/error states, and is covered by verification.
+
+Example:
+Expected: Customers table → Pagination
+Actual: Table exists, Pagination missing
+Status: FAIL
+
+Example:
+Expected: Gym creation form → Contact Email
+Actual: Name ✅ Phone ✅ Email ❌
+Status: FAIL — required form field missing
+
+Example:
+Expected: Admin role → Export button
+Actual: Export button absent
+Status: FAIL
+
+For every documented role/permission context applicable to the target module, audit the complete expected UI and feature surface.
+
+---
+
+# 19B. COMPLETE UI INTERACTION / FUNCTIONAL FLOW AUDIT
 
 ### ACTIONABLE CONTROL INVENTORY — MANDATORY
 
@@ -1239,7 +1323,7 @@ DONE CONDITION:
 
 ---
 
-# 19B. PAGE-BY-PAGE WORKING PRODUCT AUDIT
+# 19C. PAGE-BY-PAGE WORKING PRODUCT AUDIT
 
 The coding agent MUST treat every route as a mini product surface, not merely a rendered page.
 
