@@ -240,6 +240,54 @@ rather than pretending it is a documentation rule.
 
 ---
 
+# 3A. COMPLETE DOCUMENTATION RULE COVERAGE — MANDATORY
+
+The audit MUST verify the target module against EVERY APPLICABLE requirement contained in:
+
+1. The discovered frontend development/architecture instruction document
+2. The discovered global design-system document
+
+Do NOT audit only the major or commonly used sections.
+
+The auditor MUST inspect the complete documentation and determine which rules are applicable to the target module.
+
+Create a Documentation Rule Coverage Matrix:
+
+| Document | Section / Rule | Requirement | Applicable? | Evidence | Status |
+| -------- | -------------- | ----------- | ----------- | -------- | ------ |
+
+Allowed statuses:
+
+* PASS
+* FAIL
+* PARTIAL
+* NOT VERIFIED
+* NOT APPLICABLE
+
+Rules marked NOT APPLICABLE MUST include a reason.
+
+The auditor MUST NOT skip a documented rule merely because:
+
+* it is uncommon
+* the current implementation does not use the related feature
+* the rule is inconvenient
+* another pattern appears cleaner
+
+If a documented rule is applicable, it MUST be explicitly verified.
+
+The final report MUST identify:
+
+* total applicable documented rules
+* total PASS
+* total FAIL
+* total PARTIAL
+* total NOT VERIFIED
+* total NOT APPLICABLE
+
+A module MUST NOT be described as fully compliant unless all applicable documented rules have been verified.
+
+---
+
 # 4. PRIMARY OBJECTIVE
 
 The final audit will be handed directly to a second AI agent working in VS Code.
@@ -291,6 +339,38 @@ If full inspection becomes impossible:
 2. record it as NOT VERIFIED
 3. do not extrapolate unverified results from inspected examples
 4. do not claim the audit is exhaustive
+
+---
+
+# 4A. WORKING BASELINE PRESERVATION RULE
+
+Existing behavior that is already:
+
+* functional
+* documented
+* tested
+* mock-driven
+* architecturally compliant
+* visually compliant
+
+MUST be preserved.
+
+The coding agent MUST NOT refactor, rename, redesign, relocate, or rewrite working code merely because another implementation style appears cleaner or more modern.
+
+A change is justified only when it is required to:
+
+1. fix a verified defect,
+2. satisfy a documented requirement,
+3. restore broken functionality,
+4. remove a documented architectural violation,
+5. remove a security/accessibility problem,
+6. or satisfy an explicit task requirement.
+
+Do NOT introduce unrelated improvements during repair.
+
+Do NOT replace a working implementation with a different pattern without a documented reason.
+
+After every repair, previously passing flows MUST remain passing.
 
 ---
 
@@ -641,6 +721,67 @@ Do not invent icon choices if the design document specifies one.
 
 ---
 
+# 12A. COMPLETE GLOBAL DESIGN-SYSTEM RULE AUDIT
+
+The design audit MUST cover every applicable section of the discovered global design-system document, not only colors and spacing.
+
+Where applicable, inspect:
+
+* semantic color/token usage
+* typography
+* layout and geometry
+* application shell
+* sidebar/header
+* status badges
+* KPI/stat cards
+* tables
+* table accessibility
+* forms and form states
+* dialogs/modals
+* grids/matrices
+* Kanban
+* wizard/stepper
+* timeline
+* command palette
+* confirmation drawers
+* inline editing
+* loading/empty/error states
+* button hierarchy
+* responsive behavior
+* icons and icon sizing
+* chart rules
+* dark/light theme rules
+* micro-interactions
+* accessibility safeguards
+* print/export behavior
+* keyboard shortcuts
+* alert banners
+* data-density modes
+* context menus
+* tooltips
+* disabled/read-only states
+* number/currency formatting
+* table column-width strategy
+* mobile interaction policy
+* async UI state system
+* drag-and-drop behavior
+* loading button behavior
+* mobile card-stack table behavior
+* reduced-motion behavior
+* dark-mode elevation/z-index rules
+* module theme portability contract
+
+For every applicable design-system rule:
+
+DOCUMENTED EXPECTATION
+→ ACTUAL IMPLEMENTATION
+→ EVIDENCE
+→ STATUS
+
+Do NOT mark the module visually compliant merely because its colors and spacing look correct.
+
+---
+
 # 13. SERVER / CLIENT BOUNDARY
 
 Audit:
@@ -943,6 +1084,60 @@ WHAT happens after retry
 ---
 
 # 19A. UI / FEATURE COMPLETENESS AUDIT — MANDATORY
+
+### EXPECTED UI DISCOVERY — BEFORE CODE COMPARISON
+
+Before auditing the implementation, the auditor MUST build the expected UI/feature inventory from ALL available authoritative evidence, including:
+
+1. Current task/product requirements
+2. Frontend development/architecture documentation
+3. Global design-system documentation
+4. Target module feature documentation
+5. Target module user-flow documentation
+6. Documented role/permission requirements
+7. Documented API/data requirements
+8. Documented route/navigation requirements
+
+The auditor MUST determine the expected product surface BEFORE deciding whether the implementation is missing anything.
+
+The expected inventory MUST include, where applicable:
+
+* pages
+* sections
+* cards
+* charts
+* tables and columns
+* search
+* filters
+* sorting
+* pagination
+* dropdowns and dropdown options
+* tabs
+* forms and fields
+* date/time controls
+* action menus
+* buttons and icon actions
+* bulk actions
+* modals/drawers
+* loading/empty/error/retry states
+* create/edit/delete/restore flows
+* export/import/upload/download
+* navigation/breadcrumbs
+* permission-dependent controls
+* responsive/mobile-specific controls
+
+IMPORTANT:
+
+Do NOT infer a missing product feature merely because a similar product commonly has it.
+
+A UI element may be reported as MISSING only when its expected existence is supported by authoritative project evidence.
+
+This prevents both:
+
+* false negatives: missing documented functionality
+* false positives: invented undocumented functionality
+
+---
 
 For every target module, the AI MUST first determine what should exist in the UI based on documentation/product requirements, and then compare it to the actual implementation.
 
@@ -2056,6 +2251,37 @@ Do not mark everything P0.
 
 ---
 
+# 31A. AUDIT REPORT LANGUAGE
+
+The complete audit report MUST be written in clear Roman Hinglish:
+
+* Hindi MUST be written using English/Roman letters.
+* Do NOT use Devanagari script.
+* Technical terms such as React, Next.js, TypeScript, TanStack Query, Zustand, Zod, API, MSW, accessibility, pagination, etc. may remain in English.
+* Keep file names, route names, component names, code symbols, API endpoints, and documentation headings exactly as they appear in the repository.
+* Explanations, findings, reasons, repair instructions, verification steps, and final summary MUST be understandable in Roman Hinglish.
+
+Example:
+
+BAD:
+"Pagination implemented nahi hai."
+
+GOOD:
+"Pagination documented requirement ke according honi chahiye, lekin current implementation me pagination control aur corresponding query-state flow missing hai."
+
+The language requirement applies to:
+
+* audit findings
+* explanations
+* repair instructions
+* verification instructions
+* score explanations
+* final summary
+
+Code, filenames, commands, paths, identifiers, and exact documentation text MUST NOT be translated.
+
+---
+
 # 32. EXACT ISSUE FORMAT
 
 Every significant issue MUST use this format:
@@ -2275,6 +2501,62 @@ IMPROVEMENT: +Z/10
 
 ---
 
+## MOCK-COMPLETE FRONTEND GATE
+
+For the target module, frontend functionality MUST be independently demonstrable through the module-owned mock/MSW layer whenever the backend is unavailable or out of scope.
+
+Every applicable:
+
+* route
+* page section
+* button
+* icon action
+* dropdown
+* tab
+* search
+* filter
+* sort
+* pagination
+* form
+* modal
+* drawer
+* create flow
+* edit flow
+* delete/archive flow
+* restore flow
+* bulk action
+* export/download flow
+* retry flow
+* navigation flow
+
+MUST have a working frontend behavior through the documented mock/API contract.
+
+The following are NOT acceptable as evidence of functionality:
+
+* visible button without working behavior
+* static mock data that never changes
+* toast-only mutation success
+* UI-only filtering
+* UI-only pagination
+* fake navigation
+* hardcoded business fallback data
+* placeholder alerts
+* console-log handlers
+* tests that only prove rendering
+
+Required conceptual proof:
+
+UI
+→ interaction
+→ feature API/mock layer
+→ state/data transition
+→ visible result
+→ next valid action
+
+The module MUST NOT be declared functionally complete while any required mock-driven user flow remains incomplete.
+
+---
+
 ## SCORE GATING RULES
 
 A module MUST NOT receive 9/10 or 10/10 unless:
@@ -2301,6 +2583,42 @@ If any critical runtime verification is unavailable:
 FINAL SCORE MUST REFLECT THAT UNCERTAINTY.
 
 Do NOT claim 10/10 based on static inspection alone.
+
+---
+
+## FINAL FULL-REGRESSION GATE
+
+After completing repairs, the coding agent MUST re-run the complete audit of the target module.
+
+The final verification MUST NOT be limited to the files or controls that were changed.
+
+Re-verify:
+
+* all target routes
+* all actionable controls
+* all major flows
+* all forms
+* all tables
+* all search/filter/sort/pagination flows
+* all loading/empty/error states
+* all permission-sensitive UI
+* all mock mutation flows
+* all navigation and return flows
+* all relevant accessibility behavior
+* all relevant responsive behavior
+* all applicable architecture rules
+* all applicable global design rules
+
+Compare:
+
+BEFORE REPAIR
+→ CHANGES MADE
+→ AFTER REPAIR
+→ REGRESSIONS DETECTED
+
+Any previously passing behavior that becomes broken MUST be treated as a regression defect.
+
+A repair is complete only when the target defect is fixed AND previously passing behavior remains intact.
 
 ---
 
@@ -2403,29 +2721,22 @@ Create:
 
 ### STANDARD STATUS VOCABULARY
 
+REPAIR STATUS:
 NOT STARTED
-Audit/repair has not begun.
-
 IN PROGRESS
-Repair/audit is actively being performed.
+FIXED
+NOT REQUIRED
 
+VERIFICATION STATUS:
 PASS
-Behavior was actually verified.
-
 PARTIAL
-Some behavior works but the complete requirement is not satisfied.
-
 FAIL
-The implementation is proven broken.
-
 NOT VERIFIED
-The environment/tooling/source evidence was insufficient to prove the behavior.
-
 BLOCKED
-A known external dependency prevents completion.
+NOT APPLICABLE
 
-| ID | Priority | Area | Route/Feature | Issue | Evidence | File(s) | Current Flow | Required Flow | What Must Change | Verification | Status |
-| -- | -------- | ---- | ------------ | ----- | -------- | ------- | ------------ | ------------- | ----------------- | ------------ | ------ |
+| ID | Priority | Area | Route/Feature | Issue | Evidence | File(s) | Current Flow | Required Flow | What Must Change | Verification | Repair Status | Verification Status |
+| -- | -------- | ---- | ------------ | ----- | -------- | ------- | ------------ | ------------- | ----------------- | ------------ | ------------- | ------------------- |
 
 Initial status should always be:
 
