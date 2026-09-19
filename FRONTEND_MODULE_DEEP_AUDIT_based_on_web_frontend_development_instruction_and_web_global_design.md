@@ -3172,3 +3172,32 @@ The coding agent must also be able to answer, for every important UI action:
 * what exact condition makes this interaction DONE."
 
 If that answer cannot be established from the repository, the feature is NOT fully audited.
+
+---
+
+# 44. AI EXECUTION & DELIVERY PROTOCOL (MANDATORY)
+
+When this audit transitions into the REPAIR phase, the coding agent MUST adhere to the following execution and delivery rules to ensure stability, prevent context timeouts, and enable external verification.
+
+### PHASE-WISE EXECUTION & CHECKLIST
+1. The AI MUST perform fixes **phase-wise** using a strict, visible **Task List / Checklist**.
+2. Before modifying any code, the AI must output the complete checklist of fixes derived from the audit.
+3. Fixes must be executed in manageable batches (phases). This ensures no requirement is skipped and prevents the AI from hitting conversation length limits or execution timeouts.
+
+### BUILD VERIFICATION LIMITATIONS
+1. **If the AI has access to terminal commands:** It MUST proactively run `npx tsc --noEmit` and `npm run build` to verify its own fixes before delivering the ZIP.
+2. **If the AI does NOT have access to terminal commands:** The AI is not required to run these commands. The human developer will download the code and run the build locally.
+3. In all cases, the AI MUST use extreme caution, rigorous type-checking logic, and strict adherence to the architecture documents to ensure the delivered code is structurally sound. The goal is that when the human runs `npm run build`, it either passes immediately or requires only trivial minor fixes.
+
+### VERSIONED ZIP DELIVERY
+1. The AI MUST deliver the repaired codebase as a downloadable **ZIP archive**.
+2. The ZIP file MUST be explicitly versioned. 
+   - Initial delivery: e.g., `[module_name]_fix_v1.zip`
+3. If the user returns with subsequent feedback (e.g., build errors or missing fixes), the AI will apply the corrections and provide a new versioned ZIP:
+   - Major structural changes: `[module_name]_fix_v2.zip`
+   - Minor tweaks/typo fixes: `[module_name]_fix_v1.1.zip`
+
+### CHANGELOG & VERIFICATION DOCUMENT
+1. Alongside every ZIP delivery, the AI MUST generate a dedicated Markdown file (e.g., `[module_name]_changelog_v1.md`).
+2. This document MUST detail **exactly what was fixed** in this specific version, mapped directly to the original audit findings.
+3. **Purpose:** The human developer will provide this `.md` file and the `v1.zip` to a secondary verification AI. The secondary AI will cross-reference the changelog against the actual code. If the secondary AI reports that a promised fix is missing or incomplete, the developer will feed that feedback back to the primary AI for the `v2` cycle. The changelog must therefore be highly specific and accurate.
