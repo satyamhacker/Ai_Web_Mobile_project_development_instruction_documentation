@@ -523,6 +523,10 @@ Shared UI primitives and shared infrastructure may be valid.
 
 Shared business logic must be judged according to the supplied documentation.
 
+> **CRITICAL WARNING TO AI AGENTS (COMPONENT ISOLATION):**
+> Do NOT create or move "business-aware" components (e.g., Date Filters with presets, Status Badges with hardcoded text) into global folders like `src/components/ui/` just to avoid code duplication. 
+> Global design/UI folders are STRICTLY for zero-business, dumb primitives. Business components MUST be duplicated per feature.
+
 ---
 
 # 8A. DATA IDENTITY / TENANT / RESOURCE SCOPE AUDIT
