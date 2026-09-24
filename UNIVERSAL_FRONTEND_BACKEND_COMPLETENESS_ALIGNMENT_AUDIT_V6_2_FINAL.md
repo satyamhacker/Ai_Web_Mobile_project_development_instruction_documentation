@@ -6450,6 +6450,177 @@ The Selenium files MUST follow Rule 121 exactly — no cross-module imports, no 
 
 ---
 
+## 86.6 COMPLETE-BEFORE-DELIVER RULE — NO BATCH DELIVERY, NO INTERMEDIATE OUTPUTS
+
+> ⛔ THIS SECTION GOVERNS THE REPAIR AND DELIVERY WORKFLOW. READ IT BEFORE WRITING A SINGLE LINE OF REPAIR CODE.
+
+### The Problem This Rule Fixes
+
+When an AI is asked to repair backend issues, it defaults to a "batch delivery" pattern:
+
+```text
+Fix batch 1 → "Here are the files, download them" →
+Fix batch 2 → "Here are the files, download them" →
+Fix batch 3 → "Here are the files, download them" →
+...
+```
+
+This is WRONG. Each intermediate delivery is incomplete. The user cannot determine if the system is actually fixed until all repairs are done and verified as a whole.
+
+### The Only Acceptable Delivery Model
+
+```text
+[SILENT PHASE] Fix ALL issues completely
+        ↓
+[SILENT PHASE] Re-run complete 84-item Anti-Skipping Checklist on the REPAIRED code
+        ↓
+[SILENT PHASE] Verify every previously failing item now passes
+        ↓
+[SINGLE OUTPUT] Deliver everything at once — ONE final output
+```
+
+### Strict Rules
+
+1. **NO intermediate file deliveries.** Do not deliver any repaired file, repaired module, or repaired section until ALL repairs across ALL phases are complete.
+
+2. **NO download links between phases.** Do not produce a download link, a file attachment, a code block labeled "here is the fixed file", or any deliverable until the complete repair is finished and re-verified.
+
+3. **NO "batch complete" messages.** Do not write "Phase 1 complete, here are the changes" or "Batch 1 done — proceeding to batch 2". These are forbidden mid-repair deliveries disguised as progress updates. Silent progress only.
+
+4. **NO per-phase confirmations asked from the user.** Do not ask "Shall I proceed to the next batch?" or "Confirm before I continue". Fix everything without interruption.
+
+5. **After ALL repairs are done, run the COMPLETE re-audit before delivery.** You MUST re-run the full 84-item Anti-Skipping Checklist (Section 84) against the repaired code — not against the original. Confirm every previously failing item now passes.
+
+6. **The final delivery is ONE atomic output.** All repaired files, the Selenium test files, the Stage 3 verdict, and the updated documentation are delivered in a SINGLE response or a SINGLE downloadable bundle.
+
+### What "Complete" Means Before You Deliver
+
+Before you deliver anything, ALL of the following must be true simultaneously:
+
+```text
+[ ] Every issue identified in Stage 1 has a backend repair implemented
+[ ] Every issue identified in Stage 2 has a backend repair implemented
+[ ] Every architecture rule violation has been corrected
+[ ] Every missing endpoint has been created
+[ ] Every missing field in every response DTO is now present
+[ ] Every auth/RBAC gap has been closed
+[ ] Every idempotency gap has been closed
+[ ] Every missing migration/DB field has been added
+[ ] Every missing test has been written
+[ ] Every documentation drift has been corrected
+[ ] All Selenium test files (Section 86.5) have been written
+[ ] The 84-item Anti-Skipping Checklist re-run is complete and clean
+[ ] No previously failing item remains failing
+[ ] No new violation was introduced by a repair
+[ ] The Final Verdict (stage_3_final_verdict.md) is complete
+```
+
+If ANY item above is not yet done, you are NOT done. Do NOT deliver yet.
+
+### The Only Acceptable Mid-Task Communication
+
+While repairs are in progress, the ONLY acceptable communication to the user is a brief, non-deliverable status line such as:
+
+```
+⚙ Repairing: 47/89 issues resolved. Continuing...
+```
+
+No files. No code blocks. No download links. Just a status count.
+
+### Violation Classification
+
+If the repair output contains ANY intermediate batch delivery, download link between phases, or partial file set before all repairs are complete:
+
+```
+DELIVERY_VIOLATION: BATCH_DELIVERY_BEFORE_COMPLETE_REPAIR
+```
+
+This classifies the entire repair output as invalid. The human must reject it and request a restart.
+
+### Final Delivery Structure (MANDATORY)
+
+When you are fully done, your single final response MUST contain:
+
+```
+stage_1_frontend_requirements.md         ← as written during Stage 1
+stage_2_backend_audit.md                 ← as written during Stage 2
+stage_3_final_verdict.md                 ← final verdict after re-audit of repaired code
+[all repaired backend source files]      ← complete, not partial
+backend_selenium/...                     ← all Selenium test files (Section 86.5)
+RE_AUDIT_CHECKLIST_RESULT.md            ← 84-item checklist result on the repaired code
+```
+
+Everything in one delivery. Nothing before. Nothing after.
+
+---
+
+## 86.7 RE-AUDIT AFTER REPAIR — MANDATORY SECOND PASS
+
+After ALL repairs from the Repair Order (Section 80) are complete, you MUST perform a mandatory second audit pass before delivering any output.
+
+### What the Re-Audit Checks
+
+The re-audit is NOT a full repeat of Stage 1 and Stage 2.
+
+It is a targeted verification pass:
+
+1. **For every issue recorded in Stage 2 with status FAIL, PARTIAL, MISSING_BACKEND, REQUEST_MISMATCH, RESPONSE_MISMATCH, AUTHORIZATION_MISMATCH, or SEMANTIC_MISMATCH:**
+   - Confirm the repair was applied.
+   - Confirm the repair is correct against the frontend requirement.
+   - Confirm no new violation was introduced by the repair.
+   - Change the status to PASS or NOT_VERIFIABLE (if runtime-only).
+
+2. **Run the 84-item Anti-Skipping Checklist (Section 84) on the repaired code:**
+   - Every `[ ]` item must be re-evaluated against the repaired state.
+   - Produce the checklist with `[✅]` for passed, `[❌]` for still failing, `[⚠️]` for partially addressed.
+
+3. **Produce the final verdict axes (Section 79):**
+   ```
+   FRONTEND-REQUIRED BACKEND COMPLETENESS: [updated verdict]
+   BACKEND ARCHITECTURE COMPLIANCE:        [updated verdict]
+   RUNTIME VERIFICATION:                   [updated verdict]
+   OVERALL READINESS:                      [updated verdict]
+   ```
+
+4. **If the re-audit reveals any remaining issue:**
+   - Do NOT deliver yet.
+   - Fix the remaining issue.
+   - Re-run the affected checklist items.
+   - Only deliver when the re-audit is fully clean.
+
+### Re-Audit Output File
+
+Write results to `RE_AUDIT_CHECKLIST_RESULT.md`:
+
+```markdown
+# Re-Audit Result — [Role] [Module]
+
+## Summary
+- Issues identified in Stage 2: [count]
+- Issues resolved by repair: [count]
+- Issues remaining: [count]
+- New issues introduced by repair: [count]
+
+## 84-Item Anti-Skipping Checklist (Post-Repair)
+[✅] All four supplied inputs identified
+[✅] Backend documentation fully read
+...
+[❌] [any still-failing item with reason]
+
+## Updated Final Verdict
+FRONTEND-REQUIRED BACKEND COMPLETENESS: ...
+BACKEND ARCHITECTURE COMPLIANCE: ...
+RUNTIME VERIFICATION: ...
+OVERALL READINESS: ...
+
+## Remaining Issues (if any)
+[If count > 0 — fix these before delivering]
+```
+
+This file is a mandatory deliverable alongside the repaired code.
+
+---
+
 ## 86.8 Backend Architecture Final Scorecard (DYNAMIC)
 When outputting Stage 2 and the Final Verdict, include a dynamically generated scorecard derived from the COMPLETE supplied backend architecture document.
 
@@ -6628,5 +6799,7 @@ The V6 audit standard is exhaustive:
 - no endpoint-exists-only acceptance;
 - no frontend business-semantic reconstruction where backend support is required;
 - no frontend file created, edited, renamed, or deleted under any circumstances — the frontend is READ-ONLY evidence (Section 2A); violation of this rule invalidates the entire audit output;
-- no Selenium test generation skipped — Selenium test files are mandatory deliverables in Stage 3, generated from the frontend flows you have read during Stage 1 and Stage 2 (Section 86.5).
+- no Selenium test generation skipped — Selenium test files are mandatory deliverables in Stage 3, generated from the frontend flows you have read during Stage 1 and Stage 2 (Section 86.5);
+- no batch delivery — do NOT deliver any file, code block, or download link until ALL repairs are complete and the full 84-item re-audit passes; every intermediate delivery is a DELIVERY_VIOLATION (Section 86.6);
+- no delivery without re-audit — after all repairs are done, the complete 84-item Anti-Skipping Checklist MUST be re-run on the repaired code and produce a clean RE_AUDIT_CHECKLIST_RESULT.md before ANY output is given to the user (Section 86.7).
 
