@@ -269,6 +269,59 @@ DO determine whether the button requires a real backend mutation and whether tha
 
 ---
 
+# 2A. ABSOLUTE FRONTEND WRITE PROHIBITION — NON-NEGOTIABLE
+
+> ⛔ THIS IS THE MOST IMPORTANT SCOPE RULE IN THIS ENTIRE PROMPT. READ IT CAREFULLY.
+
+You MUST NOT write, edit, create, delete, rename, refactor, or repair ANY file inside the supplied frontend ZIP or frontend source directory under ANY circumstance.
+
+This prohibition is ABSOLUTE and has ZERO exceptions.
+
+It does NOT matter if:
+
+* the frontend has a bug;
+* the frontend has a broken import;
+* the frontend has a type error;
+* the frontend contract looks wrong;
+* the frontend API call points to a wrong URL;
+* the frontend test is failing;
+* the frontend mock does not match the backend;
+* you believe fixing the frontend would be "easier" than fixing the backend;
+* the frontend fix would make the audit finding go away;
+* the user did not explicitly say "do not touch frontend" in this message.
+
+The frontend is a READ-ONLY EVIDENCE SOURCE.
+
+You may:
+
+* read frontend files;
+* search frontend files;
+* reference frontend files in findings;
+* quote frontend code as evidence;
+* describe what the frontend does or needs;
+* report frontend API contracts as requirements.
+
+You MUST NOT:
+
+* create any new frontend file;
+* edit any existing frontend file;
+* suggest a frontend code change as a repair action for a backend issue;
+* "fix" a contract mismatch by modifying the frontend type, Zod schema, MSW handler, or hook;
+* rename a frontend constant or URL to match the backend;
+* silently resolve a frontend/backend mismatch by touching the frontend side.
+
+If a contract mismatch exists between frontend and backend:
+
+* Report it as a FINDING.
+* The repair direction is ALWAYS: fix the BACKEND to match what the frontend requires.
+* If the frontend contract itself appears incorrect, report it as a SOURCE CONFLICT and flag it for human decision — do NOT silently fix the frontend.
+
+VIOLATION OF THIS RULE IS AN AUDIT FAILURE.
+
+If your repair plan touches any frontend file for any reason, the audit output is invalid and must be regenerated.
+
+---
+
 # 3. PRIMARY AUDIT QUESTION
 
 Answer this question:
@@ -6203,6 +6256,200 @@ DO NOT dump massive output tables directly into the chat. You MUST write your fi
 Link to these files in the chat when you ask the user to PROCEED to the next stage.
 
 
+## 86.5 SELENIUM TEST GENERATION MANDATE
+
+This is a mandatory deliverable that runs in parallel with Stage 2 and is finalized in Stage 3.
+
+You have the frontend source code (INPUT 1) in your context.
+
+You are also delivering backend repairs.
+
+Therefore you MUST also generate Selenium test files for the supplied role/module.
+
+### Why
+
+The frontend shows you:
+
+* every user-visible route;
+* every button and form;
+* every expected UI state after backend actions;
+* every navigation flow;
+* every success/error message;
+* every loading state;
+* every table, KPI, chart, and filter control.
+
+The backend shows you the exact API contract.
+
+You have everything required to write complete, realistic Selenium tests without guessing.
+
+### Naming Convention (MANDATORY)
+
+Files MUST follow the exact project naming pattern:
+
+```
+backend_selenium/
+  backend_[role]_selenium/
+    [module]/
+      test_[role]_[module]_ui.py        ← Selenium UI flow tests
+      test_[role]_[module]_ui_edge.py   ← Selenium edge case / negative UI tests  
+      _test_forbidden.md                ← Selenium forbidden patterns doc
+```
+
+Examples:
+
+```
+backend_selenium/backend_admin_selenium/members/test_admin_members_ui.py
+backend_selenium/backend_admin_selenium/members/test_admin_members_ui_edge.py
+backend_selenium/backend_trainer_selenium/attendance/test_trainer_attendance_ui.py
+```
+
+### What Each Selenium Test File MUST Cover
+
+#### `test_[role]_[module]_ui.py` — Happy Path Flows
+
+For every major user-facing feature, cover the complete happy path:
+
+```
+User navigates to route
+→ Page loads
+→ Data appears
+→ User performs primary action (click, fill form, submit)
+→ Loading state appears
+→ Success state appears
+→ UI updates (list refreshes, record appears/disappears)
+→ Navigation works
+```
+
+Each test MUST:
+
+* use real browser automation (Selenium WebDriver);
+* start from a fresh authenticated session;
+* navigate to the actual route;
+* use real element locators (by data-testid, aria-label, role, or visible text — in that priority order);
+* assert on visible UI content, not internal state;
+* verify the result after each action;
+* include a backup locator using CSS selector or XPath as a fallback;
+* verify the post-action URL where navigation is expected.
+
+Mandatory happy-path flows to cover (where applicable to the supplied module):
+
+* list page loads with at least one record;
+* create flow: fill form → submit → new record appears in list;
+* view/detail flow: click record → detail page loads → correct data shown;
+* edit flow: open edit → change field → save → updated value visible in list/detail;
+* delete/archive flow: click delete → confirm → record disappears or status changes;
+* search: type in search → results narrow;
+* filter: apply filter → results change;
+* sort: click column header → order changes;
+* pagination: advance page → different records shown;
+* export: click export → file download initiated or job status shown;
+* tabs: click tab → content changes;
+* modal/drawer: open → interact → close → original state preserved.
+
+#### `test_[role]_[module]_ui_edge.py` — Edge Cases and Negative Flows
+
+For every major feature, cover:
+
+* empty state: no records → empty state UI appears;
+* error state: backend returns error → error message appears;
+* form validation: submit invalid data → field-level errors appear;
+* not found: navigate to invalid ID → 404 or not-found UI;
+* unauthorized action: attempt restricted action → access denied UI;
+* retry: failed operation → retry button → operation re-attempted;
+* cancel: start action → cancel → original state preserved;
+* duplicate submit: submit twice → only one record created (idempotency test);
+* session expiry: token expires → redirect to login (where applicable).
+
+#### `_test_forbidden.md` — Selenium Forbidden Patterns
+
+Document at least 5 patterns that Selenium tests in this module MUST NEVER do:
+
+```markdown
+# [Role] [Module] — Selenium Test Forbidden Patterns
+
+## FORBIDDEN-1: [Pattern Name]
+Pattern: [exact forbidden pattern]
+Consequence: [what breaks]
+Rule: [reference]
+
+## FORBIDDEN-2: ...
+```
+
+Examples of forbidden Selenium patterns:
+
+* using `time.sleep()` for synchronization instead of explicit waits;
+* hardcoding production URLs — must use the base URL from config;
+* sharing state between test classes without resetting;
+* testing internal React/Next.js state directly — only assert visible UI;
+* using element IDs that are auto-generated and non-deterministic;
+* importing locators from another module's test file (WET rule);
+* asserting API response bodies — that belongs in E2E pytest, not Selenium;
+* modifying the database directly from a Selenium test.
+
+### Selenium Test Structure Requirements
+
+Each test file MUST:
+
+```python
+# RESPONSIBILITY: [what this test file validates in one sentence]
+# FLOW: [Browser → Route → UI Interaction → Assert Visible Result]
+# MODULE: [role]_[module]
+# RULE: Rule 121 — Complete E2E/Selenium isolation
+
+import pytest
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
+BASE_URL = "http://localhost:3000"  # Must come from config, not hardcoded
+
+class Test[Role][Module]UI:
+    """Happy path Selenium flows for [role] [module]."""
+
+    @pytest.fixture(autouse=True)
+    def setup(self, driver: webdriver.Chrome):
+        # authenticate, navigate to module root
+        ...
+
+    def test_list_loads_with_records(self, driver):
+        """[route] renders at least one record when data exists."""
+        ...
+
+    def test_create_flow(self, driver):
+        """Create form → submit → new record appears in list."""
+        ...
+```
+
+* No cross-module imports (Rule 121 WET requirement);
+* No shared helper files between modules;
+* Self-contained fixtures;
+* Real browser, real HTTP to backend;
+* Backup locators for every primary locator.
+
+### Selenium Generation Timing
+
+* During Stage 2: identify every frontend user flow that needs a Selenium test.
+* Map each flow to a test function stub.
+* During Stage 3 (Final): write the complete Selenium test files.
+
+### Selenium Output File in Stage 3
+
+In Stage 3, create the actual Selenium test files alongside the final audit:
+
+```
+stage_3_final_verdict.md
+backend_selenium/backend_[role]_selenium/[module]/test_[role]_[module]_ui.py
+backend_selenium/backend_[role]_selenium/[module]/test_[role]_[module]_ui_edge.py
+backend_selenium/backend_[role]_selenium/[module]/_test_forbidden.md
+```
+
+These files are DELIVERABLES, not optional suggestions.
+
+The Selenium files MUST follow Rule 121 exactly — no cross-module imports, no shared utilities, self-contained, behavioral assertions only.
+
+---
+
 ## 86.8 Backend Architecture Final Scorecard (DYNAMIC)
 When outputting Stage 2 and the Final Verdict, include a dynamically generated scorecard derived from the COMPLETE supplied backend architecture document.
 
@@ -6379,5 +6626,7 @@ The V6 audit standard is exhaustive:
 - no outside-scope false positive;
 - no invented architecture;
 - no endpoint-exists-only acceptance;
-- no frontend business-semantic reconstruction where backend support is required.
+- no frontend business-semantic reconstruction where backend support is required;
+- no frontend file created, edited, renamed, or deleted under any circumstances — the frontend is READ-ONLY evidence (Section 2A); violation of this rule invalidates the entire audit output;
+- no Selenium test generation skipped — Selenium test files are mandatory deliverables in Stage 3, generated from the frontend flows you have read during Stage 1 and Stage 2 (Section 86.5).
 
