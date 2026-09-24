@@ -5572,6 +5572,27 @@ The second AI should be able to verify the claim without reconstructing the arch
 
 ---
 
+
+# 43S. AI INTROSPECTION & AGENTIC COMPATIBILITY AUDIT (RULES 22 & 23)
+
+Audit the module for strict AI-Introspection compatibility.
+
+Check Rule 22:
+* Does every interactive element (button, input, select, link) have a strictly formatted `data-testid`?
+* Does every critical status badge, error boundary fallback, and empty state have a `data-testid`?
+* Format expected: `data-testid="[module]-[component]-[action/state]"`
+
+Check Rule 23:
+* Does every Custom Hook have an exhaustive JSDoc describing its state dependencies and intent?
+* Does every complex React Component have a JSDoc explicitly noting edge cases and dependencies?
+* Does every State Store (Zustand) have a JSDoc block?
+
+For every missing AI introspection artifact:
+* Identify the file/element.
+* Explain why an AI E2E Agent (Playwright) or autonomous coder would fail without it.
+* Provide the EXACT `data-testid` or `JSDoc` string that must be added during repair.
+
+
 # 44. AI EXECUTION & DELIVERY PROTOCOL (MANDATORY)
 
 IMPORTANT: The execution protocol MUST obey the source-conflict and source-coverage rules above.

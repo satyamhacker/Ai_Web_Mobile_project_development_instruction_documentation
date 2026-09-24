@@ -6244,6 +6244,20 @@ SCOPE / EVIDENCE COMPLETENESS
 
 ---
 
+
+# 85B. ENTERPRISE AI, RAG & FINANCIAL ARCHITECTURE AUDIT (RULES 122-126)
+
+During the alignment and backend audit, you MUST explicitly verify the following Agentic/Enterprise rules:
+
+1. **AI Docstrings (Rule 122):** Verify every Class, Controller, DTO, Entity, and Service method has a detailed multi-line Docstring capturing Intent, Edge Cases, and AI Notes.
+2. **MCP-Ready APIs (Rule 123):** Verify all REST endpoints and DTOs have exhaustive OpenAPI/Swagger decorators (`@ApiProperty`, `@ApiOperation`, etc.) ensuring 100% strict JSON schema introspectability for AI agents.
+3. **RAG-Ready Projections (Rule 124):** If the module serves Chatbot/AI features, verify it exposes specialized RAG endpoints returning token-optimized markdown/text, not raw deep JSON.
+4. **Immutable Analytics (Rule 125):** For critical entity changes (Billing, Subscriptions, Attendance...etc), verify the backend uses a Zero-Overwrite strategy (emitting domain events to a log/message broker) instead of erasing historical state via standard CRUD updates.
+5. **Double-Entry Ledger (Rule 126):** For ALL financial or wallet mutations, verify the code never updates a balance directly (e.g. `UPDATE balance = balance - X`). It MUST write paired Debit/Credit rows into a `ledger_entries` table.
+
+For every violation, list the file, the missing architectural pattern, and the exact architectural guidance required to repair it.
+
+
 # 86. PROJECT-SPECIFIC STRICT CONSTRAINTS
 
 You MUST verify any additional strict architectural rules that are explicitly supplied by the project documentation or task context. Do NOT invent project-specific rules. Keep project-specific findings separate from universal backend architecture findings.
