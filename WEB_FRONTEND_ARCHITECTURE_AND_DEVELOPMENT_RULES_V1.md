@@ -35,23 +35,25 @@
 
 ## CRITICAL FRONTEND STRUCTURE GATE (NON-NEGOTIABLE)
 
-> ⛔ **HARD STOP — DO NOT PROCEED PAST THIS GATE UNTIL ALL ITEMS BELOW ARE VERIFIED.**
-> **Failing ANY item = ARCHITECTURE FAILURE. Record `NON_COMPLIANT` and STOP. Do NOT generate or repair any code until structure is compliant.**
+> ⛔ **STRUCTURE INVARIANT & REPAIR PROTOCOL:**
+> - **In Audit Mode:** Failing ANY item = ARCHITECTURE FAILURE. Record `NON_COMPLIANT` with file and line evidence.
+> - **In Repair Mode:** Structural violations (folder names, missing documentation trio, duplicate route trees, barrel files) **MUST BE ACTIVELY REPAIRED FIRST (in RBG 1)** before repairing inner feature code.
+> - **ANTI-STALL DIRECTIVE:** Structural non-compliance is the reason repair is required — it is **STRICTLY FORBIDDEN** to use structural violations as an excuse to halt, stall, refuse to repair, or declare code repair impossible.
 
 Before generating, auditing, or repairing ANY frontend role module, verify ALL of the following:
 
 | Verification Item | Requirement | Consequence of Failure |
 |---|---|---|
-| **Role Container** | Must be `src/app/frontend_{role}/` (e.g., `src/app/frontend_admin/`) | **STOP.** Unprefixed role container = ARCHITECTURE VIOLATION. |
-| **Canonical Feature Module** | Must be `{role}_{module}/` inside role container (e.g., `admin_members/`) | **STOP.** Generic name (`members/`) = IMMEDIATE NON_COMPLIANT. |
-| **No Duplicate Route Tree** | Exactly ONE canonical directory represents the feature. No parallel route tree. | **STOP.** Sibling duplicate (e.g. `dashboard/` + `admin_dashboard/`) = INCOMPLETE AUDIT. |
-| **Root Quarantine** | ONLY `page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`, `not-found.tsx`, `template.tsx`, `default.tsx`, `[moduleName]_url_config.ts`, `_features.md`, `_forbidden.md`, `_theme_contract.md` allowed in feature root. | **STOP.** Any other `.ts`/`.tsx` file in root = NON_COMPLIANT. Move to prefixed subfolder. |
-| **Prefixed Sub-Folders** | ALL sub-folders must use single prefix: `[moduleName]_components/`, `[moduleName]_hooks/`, `[moduleName]_api/`, `[moduleName]_types/`, `[moduleName]_schemas/`, `[moduleName]_constants/`, `[moduleName]_store/`, `[moduleName]_utils/`, `[moduleName]_locales/`, `[moduleName]_mocks/`, `[moduleName]_tests/`. | **STOP.** Generic folder (`components/`, `api/`) or double-prefix = NON_COMPLIANT. |
-| **No Barrel Files** | NO `index.ts` or re-export facades. All imports must be direct absolute paths (`@/...`). | **STOP.** Barrel file = CIRCULAR DEPENDENCY RISK. Remove immediately. |
-| **Module Documentation Trio** | Every module MUST contain `[moduleName]_features.md`, `[moduleName]_forbidden.md`, and `[moduleName]_theme_contract.md`. | **STOP.** Missing doc artifact = INCOMPLETE MODULE. Must generate before code completion. |
-| **Centralized URL Config** | `[moduleName]_url_config.ts` MUST exist and define all routes and API endpoints as `as const`. | **STOP.** Missing URL config = HARDCODED ROUTE RISK. |
+| **Role Container** | Must be `src/app/frontend_{role}/` (e.g., `src/app/frontend_admin/`) | Unprefixed role container = ARCHITECTURE VIOLATION. In repair: move to canonical prefix in RBG 1. |
+| **Canonical Feature Module** | Must be `{role}_{module}/` inside role container (e.g., `admin_members/`) | Generic name (`members/`) = NON_COMPLIANT. In repair: rename to prefixed module in RBG 1. |
+| **No Duplicate Route Tree** | Exactly ONE canonical directory represents the feature. No parallel route tree within supplied scope. | Sibling duplicate (e.g. `dashboard/` + `admin_dashboard/`) = ARCHITECTURE VIOLATION. In repair: consolidate into canonical directory in RBG 1. (Do not demand host route trees). |
+| **Root Quarantine** | ONLY `page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`, `not-found.tsx`, `template.tsx`, `default.tsx`, `[moduleName]_url_config.ts`, and the documentation trio (`[moduleName]_features.md`, `[moduleName]_forbidden.md`, `[moduleName]_theme_contract.md` or `_features.md`, `_forbidden.md`, `_theme_contract.md`) allowed in feature root. | Any other `.ts`/`.tsx` file in root = NON_COMPLIANT. In repair: move to prefixed subfolder in RBG 1. |
+| **Prefixed Sub-Folders** | ALL sub-folders must use single prefix: `[moduleName]_components/`, `[moduleName]_hooks/`, `[moduleName]_api/`, `[moduleName]_types/`, `[moduleName]_schemas/`, `[moduleName]_constants/`, `[moduleName]_store/`, `[moduleName]_utils/`, `[moduleName]_locales/`, `[moduleName]_mocks/`, `[moduleName]_tests/`. | Generic folder (`components/`, `api/`) or double-prefix = NON_COMPLIANT. In repair: rename to prefixed folders in RBG 1. |
+| **No Barrel Files** | NO `index.ts` or re-export facades. All imports must be direct absolute paths (`@/...`). | Barrel file = CIRCULAR DEPENDENCY RISK. In repair: remove barrel files and update imports in RBG 1. |
+| **Module Documentation Trio** | Every module MUST contain `[moduleName]_features.md`, `[moduleName]_forbidden.md`, and `[moduleName]_theme_contract.md`. | Missing doc artifact = INCOMPLETE MODULE. In repair: generate missing docs from source in RBG 1. |
+| **Centralized URL Config** | `[moduleName]_url_config.ts` MUST exist and define all routes and API endpoints as `as const`. | Missing URL config = HARDCODED ROUTE RISK. In repair: generate centralized URL config in RBG 1. |
 
-> ⛔ **Skipping this gate invalidates all downstream compliance results.**
+> ⛔ **Skipping this gate in audit invalidates downstream compliance results. In repair, all structural defects must be resolved in RBG 1.**
 
 ---
 
@@ -797,7 +799,7 @@ For example:
 - Mocked server data MUST therefore live in the module's mock/fixture layer, not in component constants.
 
 4. **Theme Independence & Portability Contract (No Inline Colors & No Opacity Modifiers)**: 
-Remove all hardcoded Tailwind color utilities from the JSX. Map all CSS variables (e.g., `--bg-card`, `--text-primary`) in `tailwind.config.ts` as named tokens so you can use standard Tailwind classes like `bg-card` or `text-primary` **without** arbitrary bracket values. **The one canonical pattern is: define the variable in `globals.css`, map it in `tailwind.config.ts`, and use the Tailwind class name (e.g., `bg-card`) in JSX. Never use `bg-[var(--bg-card)]` or `bg-[#1A1A2E]` directly in JSX.**
+Remove all hardcoded Tailwind color utilities from the JSX. Map all CSS variables (e.g., `--bg-card`, `--text-primary`) as named tokens so you can use standard Tailwind classes like `bg-card` or `text-primary` **without** arbitrary bracket values. **The canonical pattern is: define variables in `globals.css`, map them as tokens (in Tailwind v4 via `@theme inline { ... }` directly in `globals.css`; in Tailwind v3 via `tailwind.config.ts`), and use semantic Tailwind class names (e.g., `bg-card`) in JSX. Never use `bg-[var(--bg-card)]` or raw hex `bg-[#1A1A2E]` directly in JSX.**
 **CRITICAL:** Do NOT use opacity modifiers on semantic backgrounds (e.g., NEVER use `bg-success/10` or `bg-danger/5`). These destroy WCAG contrast and Dark/Light mode scaling. Instead, use the exact semantic variant, such as `bg-success-bg` or `bg-danger-bg`. Furthermore, anytime you use a solid background like `bg-success`, you MUST explicitly pair it with `text-on-success` so it doesn't default to unreadable text.
 - **Theme Portability Contract:** Every module must have a small `[moduleName]_theme_contract.md` or a dedicated comment listing exactly which CSS variables it depends on (e.g., `--bg-card`, `--text-primary`, `--danger-text`, `--danger-bg`). This ensures that when copying the module into a new project, we know exactly what variables need to be defined in the new `globals.css`.
 
@@ -2547,8 +2549,10 @@ No PR may merge if a required gate fails.
 > 1. Check `package.json` to verify if an approved library already satisfies the requirement (e.g. React Hook Form, Zod, date-fns, Zustand, socket.io-client, lucide-react, react-apexcharts).
 > 2. Recharts and Chart.js are **FORBIDDEN** (see `global_design_system.md` §10).
 > 3. Introducing a package NOT in the approved registry requires: (a) explicit written developer approval, (b) documentation in `_features.md`.
+> 4. **Isolated Module Audit Scope:** When auditing an isolated module or role folder without root `package.json`, DO NOT demand the host `package.json` or stall the audit. Assume the approved baseline dependencies (React, Next.js, Tailwind v4, Lucide React, TanStack Query v5, Zustand, React Hook Form, Zod, date-fns) are available. Simply verify that the module does not import unapproved libraries (such as Recharts or Chart.js).
 >
 > *Consequence of violation:* Unapproved dependencies introduce duplicate bundles, security vulnerabilities, breaking changes, and licensing risks. Any unauthorized `npm install` = IMMEDIATE TASK REJECTION.
+
 
 63. **Zero Cross-Module Imports & Controlled Infrastructure Dependencies**:
 - **Zero Cross-Module Business Imports:** Module A (e.g., `billing`) is explicitly FORBIDDEN from importing business logic from Module B (e.g., `attendance`) — no business components, hooks, stores, schemas, types, constants, API services, or business utilities. This MUST be mechanically enforced using ESLint (`no-restricted-imports` or `eslint-plugin-boundaries`).
@@ -2604,7 +2608,7 @@ Never assume UI state magically filters backend data. Custom hooks (`use[Module]
 You MUST ensure that the length of the headers array (e.g., `TABLE_HEADERS`) EXACTLY matches the number of rendered `<td>` columns in the `<tbody>` row. This includes custom `<td>`s for avatars, checkboxes, or badges. Any empty state `colSpan` values (e.g., `colSpan={9}`) MUST also statically or dynamically match this exact column count. Mismatched columns will completely break the table alignment across all rows.
 
 69. **Social Brand Color Tokens (No Undefined Variables)**:
-Never use undefined CSS variables (e.g., `var(--members-whatsapp)`) for standard social action buttons. Map social brand colors to design tokens in `tailwind.config.ts` (e.g., `bg-social-whatsapp`). Relying on undefined variables will cause the buttons to become transparent with white text, making them completely invisible in Light Mode.
+Never use undefined CSS variables (e.g., `var(--members-whatsapp)`) for standard social action buttons. Map social brand colors to design tokens (in Tailwind v4 via `@theme inline` in `globals.css`; in Tailwind v3 via `tailwind.config.ts`, e.g., `bg-social-whatsapp`). Relying on undefined variables will cause the buttons to become transparent with white text, making them completely invisible in Light Mode.
 
 70. **Interactive KPI Cards as Filters**:
 KPI cards MUST function as filters when the KPI represents a meaningful filterable subset of the adjacent table. Informational KPIs MAY remain non-interactive. When functioning as interactive filters, clicking a KPI card MUST filter the table below to show only the relevant rows. Include a visual indicator (e.g., a primary colored border or ring) to show which KPI filter is currently active, and always ensure there is a clear way to reset the filter (such as a "Total" card or toggling off).
@@ -3772,9 +3776,12 @@ Every project MUST have a `globals.css` (or equivalent canonical theme styleshee
 
 ## FRONTEND DELIVERY FREEZE GATE (GAP-20 Fix)
 
-> ⛔ **HARD STOP — DO NOT DELIVER OR PACKAGE ZIP UNTIL ALL 14 GATES BELOW PASS WITH PROOF.**
-> **Failing or skipping ANY single gate = BLOCKED_DELIVERY. Record `NON_COMPLIANT` and REPAIR immediately.**
-> **An AI MUST NOT deliver a ZIP with unresolved items under any circumstance.**
+> ⛔ **HARD STOP — ALL 14 SOURCE-LEVEL GATES BELOW MUST BE REPAIRED WITH PROOF.**
+> **Failing or skipping ANY single source-level gate = REPAIR immediately.**
+>
+> ⛔ **DELIVERY MANDATE (NEVER WITHHOLD THE REPAIR ZIP):**
+> When all fixable source-level code within the supplied module scope is complete, the AI **MUST ALWAYS PACKAGE AND DELIVER THE ZIP**.
+> Host-dependent verification steps (`DEFERRED_TO_HOST_RUNTIME`), host infrastructure files (`OUTSIDE_SUPPLIED_SCOPE`), and external product decisions (`EXTERNAL_PRODUCT_DECISION_BLOCKED`) MUST be documented in `RE_AUDIT_CHECKLIST_RESULT.md` and `INTEGRATION_GUIDE.md`, but MUST NEVER trigger `BLOCKED_DELIVERY` or prevent packaging/delivering the repaired ZIP.
 
 | Gate # | Gate Description | Verification Directive | Consequence of Failure |
 |---|---|---|---|
@@ -3793,7 +3800,8 @@ Every project MUST have a `globals.css` (or equivalent canonical theme styleshee
 | **Gate 13** | Complete Async States | Verify loading skeletons, empty states (`[Module]EmptyState.tsx`), and error states implemented | **STOP.** Blank screen on async fetch |
 | **Gate 14** | Changelog & Re-Audit Included | `[module_name]_changelog_vN.md` and `RE_AUDIT_CHECKLIST_RESULT.md` present inside ZIP root | **STOP.** Missing deliverable = REJECTED DELIVERY |
 
-> ⛔ **If ANY box fails: STATUS = `BLOCKED_DELIVERY`. Do NOT package or deliver the ZIP.**
+> ⛔ **If ANY source-level code gate fails: STATUS = `REPAIR_REQUIRED`. Fix the source code. Once all source-level code fixes are written, package and deliver the ZIP with deferred/out-of-scope items explicitly documented.**
+
 
 ---
 
@@ -3806,7 +3814,7 @@ Every project MUST have a `globals.css` (or equivalent canonical theme styleshee
 - [ ] **AI Portability:** Feature folder alone provides complete context for understanding, mocking, testing, and repairing the feature. — *STOP if sibling business files are required.*
 - [ ] **Zero Cross-Module Business Imports:** Zero imports from sibling feature modules. (Verified by ESLint boundaries). — *STOP if `import ... from '../sibling'` found.*
 - [ ] **No Role-Wide Business Buckets:** No generic `superadmin_components/`, `admin_hooks/`, etc., containing feature business logic. — *STOP if unowned bucket exists.*
-- [ ] **Root Quarantine Compliant:** ONLY routing files (`page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`, `not-found.tsx`, `template.tsx`, `default.tsx`), `[moduleName]_url_config.ts`, and the documentation trio (`_features.md`, `_forbidden.md`, `_theme_contract.md`) exist at feature root. All other files (.ts, .tsx) are in prefixed subfolders. — *STOP if any other code file is at root.*
+- [ ] **Root Quarantine Compliant:** ONLY routing files (`page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`, `not-found.tsx`, `template.tsx`, `default.tsx`), `[moduleName]_url_config.ts`, and the documentation trio (`[moduleName]_features.md`, `[moduleName]_forbidden.md`, `[moduleName]_theme_contract.md` or `_features.md`, `_forbidden.md`, `_theme_contract.md`) exist at feature root. All other files (.ts, .tsx) are in prefixed subfolders. — *STOP if any other code file is at root.*
 - [ ] **Feature Map Freshness:** `[moduleName]_features.md` contains real endpoints, data requirements table, component tree, and permissions without placeholder text. — *STOP if generic or outdated.*
 - [ ] **Forbidden Patterns Enforced:** `[moduleName]_forbidden.md` present and specific to this module. — *STOP if missing.*
 - [ ] **Theme Contract Verified:** `[moduleName]_theme_contract.md` lists all consumed design tokens. — *STOP if missing.*

@@ -62,19 +62,21 @@ If a conflict remains unresolved at the same precedence level:
 
 ## CRITICAL STRUCTURE GATE (NON-NEGOTIABLE)
 
-> ⛔ **HARD STOP — DO NOT PROCEED PAST THIS GATE UNTIL ALL ITEMS BELOW ARE VERIFIED.**
-> **Failing ANY item = ARCHITECTURE FAILURE. Record `NON_COMPLIANT` and STOP. Do NOT generate or repair any code until the structure is corrected.**
-> **Consequence of skipping this gate:** All deeper rule compliance results are meaningless because the containing folder structure is architecturally wrong.
+> ⛔ **STRUCTURE INVARIANT & REPAIR PROTOCOL:**
+> - **In Audit Mode:** Failing ANY item = ARCHITECTURE FAILURE. Record `NON_COMPLIANT` with file and line evidence.
+> - **In Repair Mode:** Structural violations (folder layout, missing core wrappers, misplaced feature modules, unprefixed sub-folders) **MUST BE ACTIVELY REPAIRED FIRST (in RBG 1)** before repairing inner feature code.
+> - **ANTI-STALL DIRECTIVE:** Structural non-compliance is the reason repair is required — it is **STRICTLY FORBIDDEN** to use structural violations as an excuse to halt, stall, refuse to repair, or declare code repair impossible.
+> - **ISOLATED MODULE INPUT SCOPE:** When auditing an isolated backend role/feature module (e.g., `superadmin.zip` or `trainer_attendance/`), host-level infrastructure or sibling modules are host responsibilities; their absence outside the supplied module tree MUST NOT be used to halt execution.
 
-Before generating, auditing, or repairing ANY backend role module, verify ALL of the following. Every item MUST pass — there is no partial pass:
+Before generating, auditing, or repairing ANY backend role module, verify ALL of the following within the supplied scope:
 
 ```text
-[ ] backend-{role}/ exists — STOP if missing
-[ ] {role}-core/ exists inside backend-{role}/ — STOP if missing
-[ ] {role}-modules/ exists inside backend-{role}/ — STOP if missing
-[ ] ALL business feature modules exist ONLY inside {role}-modules/ — STOP if any feature is directly under backend-{role}/
-[ ] No feature module exists directly under backend-{role}/ — STOP if violated
-[ ] Every sub-folder inside a feature module follows {module}-{artifact}/ pattern — STOP if unprefixed folders found
+[ ] backend-{role}/ exists (or is created/normalized in RBG 1)
+[ ] {role}-core/ exists inside backend-{role}/ (or host-provided when feature slice is audited)
+[ ] {role}-modules/ exists inside backend-{role}/ (or feature module directory normalized in RBG 1)
+[ ] ALL business feature modules exist ONLY inside {role}-modules/
+[ ] No feature module exists directly under backend-{role}/
+[ ] Every sub-folder inside a feature module follows {module}-{artifact}/ pattern
 ```
 
 **✅ COMPLIANT structure:**
@@ -3269,6 +3271,14 @@ When a rule depends on global infrastructure outside the supplied scope:
 4. Do NOT create mock global infrastructure merely to satisfy the rule.
 
 A feature module CANNOT be declared `COMPLIANT` for a rule if a mandatory global dependency for that rule remains `NOT_VERIFIED` or `BLOCKED_BY_SUPPLIED_SCOPE`. The module's overall readiness MUST reflect this as `NOT_READY_DUE_TO_EXTERNAL_BLOCKER`.
+
+⛔ **ISOLATED ROLE / MODULE SCOPE RULE FOR GLOBAL DEPENDENCIES (NON-NEGOTIABLE):**
+In a modular monolith, individual role modules (e.g., `backend_superadmin/`, `backend_trainer/`) rely on host-level infrastructure (`backend_core`, `@nestjs/common`, TypeORM DataSource, Redis, BullMQ) by architectural contract design.
+- The AI MUST NOT treat missing host-level monolith infrastructure as `BLOCKED_BY_SUPPLIED_SCOPE` or `NOT_READY_DUE_TO_EXTERNAL_BLOCKER`.
+- The AI MUST mark host infrastructure integration as `OUTSIDE_SUPPLIED_SCOPE (HOST_MONOLITH_RESPONSIBILITY)`.
+- If the feature module correctly implements its side of the contract (e.g. `@UseGuards(JwtAuthGuard)`, valid DTO validation, correct entity mapping), the feature module itself is **COMPLIANT** within its supplied modular boundary.
+- The AI MUST NEVER stall, stop, or ask the user to provide host application slices or root bootstrap files.
+
 
 
 
