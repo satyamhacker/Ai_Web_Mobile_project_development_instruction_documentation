@@ -242,6 +242,19 @@ APPLICATION
 **AI Repair Boundary = FEATURE MODULE**
 **Role/Domain Container = NOT the default repair boundary**
 
+### 0A.1 1-TO-1 FRONTEND FEATURE ISOMORPHISM & AI REPAIR HAND-OFF (MANDATORY)
+
+> ⛔ **UNIVERSAL APPLICABILITY ACROSS ALL ROLES: This law applies globally, equally, and strictly to EVERY backend role container (`backend-admin`, `backend-manager`, `backend-superadmin`, `backend-trainer`, and any future role). Any specific module names (such as `manager-attendance`, `admin-billing`, or `superadmin-plans`) referenced below are non-exhaustive concrete illustrations.**
+
+To prevent architectural drift and eliminate monolithic backend sprawl, the backend mandates strict 1-to-1 isomorphism with frontend feature modules:
+1. **1-to-1 Feature Mapping Law (Universal):** Every primary feature module exposed on the frontend across ANY role (e.g., in Manager: Attendance, Finance, HR, Members, Plans; in Admin: Gyms, Billing, Staff; in Superadmin: Tenants, Subscriptions, Platform Analytics; in Trainer: Schedule, Clients) MUST map 1-to-1 to a dedicated autonomous backend feature module under the corresponding role container (e.g., `src/backend-{role}/{role}-modules/{role}-{feature}/`).
+   - Merging separate frontend feature endpoints into a monolithic mega-module (e.g., combining `manager-finance` and `manager-expenses`, or `admin-billing` and `admin-plans`) is STRICTLY PROHIBITED.
+   - Scattering endpoints for a single feature across arbitrary role controllers is STRICTLY PROHIBITED.
+2. **Complete Domain Self-Containment:** 100% of the controllers, services, repositories, entities, DTOs, events, migrations, unit tests, and OpenAPI schemas for that feature MUST live INSIDE that feature module folder (`{role}-{feature}/`). Sibling feature modules MUST NEVER import business logic, services, or internal repositories directly from each other (Zero Cross-Feature Business Coupling).
+3. **Autonomous AI Repair Hand-off:** When an API defect, data calculation bug, or validation issue occurs in ANY feature (e.g. Attendance, Billing, or Schedule):
+   - The developer provides **ONLY** that feature module folder (`src/backend-{role}/{role}-modules/{role}-{feature}/`) to the AI agent.
+   - The AI agent will audit, repair, test, and deliver that module in complete isolation without requiring or modifying sibling modules or host application slices (`app.module.ts`, `main.ts`).
+
 ### 0D. BACKEND NAMESPACE PREFIXING (MANDATORY)
 
 Because the project contains a 1-to-1 mapping of frontend and backend roles, the AI MUST explicitly separate backend folders from frontend folders. 

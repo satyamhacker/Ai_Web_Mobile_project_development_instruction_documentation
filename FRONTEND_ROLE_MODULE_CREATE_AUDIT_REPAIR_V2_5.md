@@ -32,12 +32,11 @@
 > [ ] Step 4: RBG PLAN published + user explicitly approves — not yet started
 > [ ] Step 5: STAGE 3 REPAIRS — execute repair batches — not yet started
 > [ ] Step 6: Section 43P Anti-Skipping Checklist clean on repaired code — not yet started
-> [ ] Step 7: FINAL DELIVERY (ZIP with Changelog + Integration Guide + Playwright E2E) — not yet started
+> [ ] Step 7: FINAL DELIVERY (ZIP with Consolidated Integration Guide + Re-Audit Checklist + Playwright E2E) — not yet started
 >
 > MANDATORY DELIVERABLES ACKNOWLEDGED:
 > - Versioned ZIP: frontend-{role}-v{N}-fix.zip
-> - [module_name]_changelog_vN.md (inside ZIP)
-> - INTEGRATION_GUIDE.md (inside ZIP)
+> - INTEGRATION_GUIDE.md (consolidated master developer guide with Section 1 Changelog inside ZIP)
 > - RE_AUDIT_CHECKLIST_RESULT.md (Section 43P clean result inside ZIP)
 > - playwright_E2E/ test suite (inside ZIP)
 >
@@ -47,7 +46,7 @@
 > ⛔ **You MUST NOT open or edit any implementation file before completing Stage 1 (requirement freeze).**
 > ⛔ **You MUST NOT start repairs before the RBG PLAN is published and the user explicitly approves it.**
 > ⛔ **You MUST NOT deliver the ZIP before the Section 43P Anti-Skipping Checklist is re-evaluated on repaired code. All SOURCE_LEVEL_FIX findings must be resolved. Items requiring host/runtime execution (DEFERRED_TO_HOST_RUNTIME), host infrastructure (OUTSIDE_SUPPLIED_SCOPE), or external product decisions (EXTERNAL_PRODUCT_DECISION_BLOCKED) MUST be documented in RE_AUDIT_CHECKLIST_RESULT.md, but their presence MUST NOT block packaging or delivering the ZIP.**
-> ⛔ **You MUST NOT skip creating `[module_name]_changelog_vN.md`, `INTEGRATION_GUIDE.md`, `RE_AUDIT_CHECKLIST_RESULT.md`, and `playwright_E2E/`. They are mandatory deliverables, not suggestions.**
+> ⛔ **You MUST NOT skip creating `INTEGRATION_GUIDE.md` (containing Section 1 Changelog), `RE_AUDIT_CHECKLIST_RESULT.md`, and `playwright_E2E/`. They are mandatory deliverables, not suggestions.**
 > ⛔ **OFFLINE / STATIC SCORING DIRECTIVE:** When command or runtime test execution is unavailable in the execution environment, ratings (1 to 10) MUST evaluate **Static Architecture & Code Completeness**. The AI MUST NOT penalize, artificially deduct points, or refuse to rate simply because a live browser/runtime is absent. State the Static Compliance Rating directly (up to 10.0), noting runtime execution separately as `DEFERRED_TO_HOST_RUNTIME`.
 >
 > ⛔⛔⛔ **CONTINUE-THROUGH DIRECTIVE — NON-NEGOTIABLE** ⛔⛔⛔
@@ -69,7 +68,7 @@
 >
 > ⛔⛔⛔ **ISOLATED ROLE / FEATURE MODULE SCOPE BOUNDARY (NON-NEGOTIABLE)** ⛔⛔⛔
 >
-> When the user supplies a single feature module or role container ZIP (e.g., `superadmin.zip`, `frontend_superadmin.zip`, `manager_members.zip`):
+> When the user supplies a single feature module or role container ZIP (e.g., `superadmin.zip`, `frontend_superadmin.zip`, `manager_members.zip`, `manager_attendance.zip`, `admin_billing.zip`):
 > 1. **DO NOT DEMAND HOST APPLICATION SLICES:** You MUST NOT stop, pause, stall, refuse to fix, or ask the user to provide:
 >    - Root `package.json` / dependency manifest
 >    - Root `tsconfig.json` / TypeScript path aliases (`@/*`)
@@ -80,6 +79,7 @@
 >    - Path alias `@/*` resolves to `src/*`.
 >    - Standard dependencies (Next.js, React, Tailwind v4, TanStack Query v5, Zustand, React Hook Form, Zod, Lucide React) exist in the host project.
 > 3. **PROCEED TO AUDIT & REPAIR IMMEDIATELY:** You MUST audit, repair, and complete 100% of the supplied in-scope source files, components, hooks, stores, schemas, URL configs, mock fixtures, and tests directly. Demanding host application root slices or declaring repairs "BLOCKED" due to absence of root files is a **CRITICAL SCOPE CREEP VIOLATION & AUDIT FAILURE**.
+> 4. **FEATURE MODULE IS THE PRIMARY AI REPAIR UNIT (THE 1-TO-1 SIDEBAR RULE):** This rule applies universally to EVERY role container (e.g., `frontend_admin`, `frontend_manager`, `frontend_superadmin`, `frontend_trainer`, `frontend_member`). Every primary clickable navigation destination in a role's sidebar/navigation shell maps strictly 1-to-1 to an autonomous feature module folder (`src/app/frontend_{role}/{role}_{feature}/`, e.g., `admin_billing/`, `manager_attendance/`, `superadmin_plans/`, `trainer_schedule/`). When a single feature module is supplied for repair or audit, the AI MUST audit and repair ONLY that module in complete isolation. Requesting, touching, or modifying files in sibling feature modules or root folders is STRICTLY FORBIDDEN.
 
 ---
 
@@ -109,7 +109,7 @@ Every AI agent executing this prompt MUST strictly obey these invariants at all 
 > 4. RBG PLAN published + user explicitly approves → ONLY THEN execute any fix
 > 5. PRIOR RBG DEPENDENCY PRE-CHECK passed → ONLY THEN start next RBG
 > 6. Anti-Skipping Checklist (Section 43P) re-run clean on repaired code → ONLY THEN package ZIP
-> 7. `[module_name]_changelog_vN.md` + `INTEGRATION_GUIDE.md` + `playwright_E2E` + `RE_AUDIT_CHECKLIST_RESULT.md` inside ZIP → ONLY THEN deliver
+> 7. `INTEGRATION_GUIDE.md` (containing Section 1 Changelog) + `playwright_E2E` + `RE_AUDIT_CHECKLIST_RESULT.md` inside ZIP → ONLY THEN deliver
 >
 > **Skipping or reordering any step = INVALID OUTPUT. Restart from the violated step.**
 
@@ -172,7 +172,7 @@ In MODE B, determine the existing version from the supplied artifact name, proje
 1. **If explicit version vN is identified:** Increment it to `v(N+1)-fix` (e.g. `frontend-trainer-v1.zip` → `frontend-trainer-v2-fix.zip`).
 2. **If no explicit version number is present in input filename:**
    - Deterministically default to `v1-fix`: `frontend-{role}-v1-fix.zip`.
-   - Record `VERSION: v1-fix (Default assigned for initial repair release)` inside `INTEGRATION_GUIDE.md` and changelog.
+   - Record `VERSION: v1-fix (Default assigned for initial repair release)` inside `INTEGRATION_GUIDE.md` (Section 1 Changelog).
 3. **ZERO-STALL INVARIANT:** The AI MUST NEVER halt, stall, refuse to name the archive, or refuse to package/deliver the ZIP due to absence of an input version tag. Packaging and delivering the repaired ZIP is MANDATORY.
 
 The AI MUST try so hard in its first pass that the user never needs to come back for a second fix. Treat every delivery as if it is the last chance to get it right.
@@ -209,6 +209,7 @@ Instead, `INTEGRATION_GUIDE.md` serves as the **SINGLE CONSOLIDATED DEVELOPER MA
 ### Section 1: Version Changelog & Scope Summary
 - Version identifier (e.g., `v12-fix`) and summary of all repaired defects, mapped directly to original audit findings.
 - Changed files inventory with exact paths and modification rationale.
+- **Verification Purpose:** The human developer will provide `INTEGRATION_GUIDE.md` and the `vN.zip` to a secondary verification AI. The secondary AI will cross-reference the Section 1 changelog against the actual code. If the secondary AI reports that a promised fix is missing or incomplete, the developer will feed that feedback back to the primary AI for the next cycle. The changelog must therefore be highly specific and accurate.
 
 ### Section 2: Route Preservation & URL Migration Matrix (Section 4B)
 - Mandatory Route Preservation Matrix table: `Old Path | New Path | Change Type | Affected Consumers | Migration Strategy | Backward Compatibility`.
@@ -1037,6 +1038,48 @@ Produce this table for every candidate feature or consolidated route:
 | Candidate Feature | Current Location | Evidence Inspected | Decision (Parent View vs Sibling Module) | Rationale | Moved Artifacts | Routes Preserved | Status |
 |---|---|---|---|---|---|---|---|
 | `[Feature Name]` | `[path]` | [APIs / types / permissions inspected] | `PARENT_VIEW` or `SIBLING_MODULE` | [Explicit architectural rationale] | [List components/hooks moved] | [Rewrite/redirect mapped in Section 4B] | PASS / PENDING |
+
+---
+
+# 5B. THE SIDEBAR NAVIGATION-TO-FEATURE MODULE 1-TO-1 MAPPING & AI ISOLATED REPAIR LAW (CRITICAL INVARIANT)
+
+> ⛔ **NON-NEGOTIABLE ARCHITECTURAL INVARIANT: Every primary clickable navigation destination in a role container's sidebar/navigation shell MUST map strictly 1-to-1 to an autonomous, self-contained Feature Module folder directly under that role container. Violating this 1-to-1 mapping or fracturing an isolated AI repair boundary is a CRITICAL SYSTEM DEFECT.**
+>
+> ⛔ **UNIVERSAL APPLICABILITY ACROSS ALL ROLES: This law applies globally, equally, and strictly to EVERY role container in the system (e.g., `frontend_admin`, `frontend_manager`, `frontend_superadmin`, `frontend_trainer`, `frontend_member`, and any future role). Any specific module names (such as `manager_attendance`, `admin_billing`, or `superadmin_plans`) referenced below are non-exhaustive concrete illustrations.**
+
+### Core Tenets of the 1:1 Navigation-to-Folder Law:
+
+1. **Strict 1-to-1 Primary Navigation Mapping (Universal):**
+   - Every top-level clickable item defined in a role's sidebar/navigation configuration (e.g., in Manager: Dashboard, Inquiries, Members, Attendance, Plans, Finance, HR, Schedule, PT; in Admin: Gyms, Billing, Staff, Settings; in Superadmin: Tenants, Subscriptions, Platform Analytics; in Trainer: Schedule, Clients, Workouts) MUST have an exact corresponding dedicated feature folder directly inside `src/app/frontend_{role}/` (e.g., `src/app/frontend_{role}/{role}_{feature}/`).
+   - **NO MEGA-MODULE MERGING:** Merging separate sidebar destinations (e.g., combining `manager_finance` and `manager_expenses`, or `admin_billing` and `admin_plans`) into a single folder is STRICTLY PROHIBITED.
+   - **NO ROOT-LEVEL FRACTURING:** A single sidebar destination MUST NOT spawn arbitrary multiple top-level folders for its internal tabs or workflows. All internal tabs, secondary workflows, and sub-pages belonging to that sidebar destination MUST be managed via `?view=` inside that module's `_components/` and `_views/`.
+
+2. **100% Domain Self-Containment Inside the Feature Folder:**
+   - When a user clicks a sidebar item (e.g., Attendance ➔ `/frontend_manager/manager_attendance`, Billing ➔ `/frontend_admin/admin_billing`), **100% of the UI, state, and logic for that capability MUST reside INSIDE that single folder**:
+     - `page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`, `not-found.tsx`
+     - `[moduleName]_components/` (Orchestrator, tables, forms, modals, filters, and `[moduleName]_views/` for all `?view=` sub-screens)
+     - `[moduleName]_hooks/` (Feature-specific domain hooks)
+     - `[moduleName]_api/` (Feature REST endpoints and client methods)
+     - `[moduleName]_store/` (Feature Zustand store slice)
+     - `[moduleName]_types/` & `[moduleName]_schemas/` (Feature TypeScript definitions & Zod validation)
+     - `[moduleName]_constants/` & `[moduleName]_utils/` (Feature constants and domain utilities)
+     - `[moduleName]_mocks/` (Feature MSW handlers and mutable mock datasets)
+     - `[moduleName]_tests/` (Feature unit/component test suite)
+     - `[moduleName]_url_config.ts` (Feature canonical routes and parameter definitions)
+     - Local Documentation Trio: `[moduleName]_features.md`, `[moduleName]_forbidden.md`, `[moduleName]_theme_contract.md`
+   - **ZERO CROSS-FEATURE BUSINESS LEAKAGE:** A feature module MUST NEVER import business components, hooks, stores, types, or utilities from a sibling feature module (e.g., `manager_attendance` cannot import from `manager_finance`; `admin_billing` cannot import from `admin_plans`). All business domain logic MUST be duplicated per module (Strict WET Principle).
+
+3. **Autonomous AI Repair Hand-off Law (Single-Folder Boundary):**
+   - **The Golden Operational Invariant:** If a bug, regression, layout defect, or new requirement arises in ANY feature of ANY role (e.g., "Attendance" in Manager, "Billing" in Admin, "Plans" in Superadmin, "Schedule" in Trainer):
+     - The developer or host system MUST provide **ONLY** that single feature module folder (`src/app/frontend_{role}/{role}_{feature}/`) to the AI agent.
+     - The AI agent MUST audit, repair, test, and deliver that module in complete isolation.
+     - The AI agent MUST NOT request, inspect, or modify other feature folders (`{role}_{sibling}/`) or host application root files (`package.json`, root `layout.tsx`).
+     - Modifying any file outside the supplied feature module boundary is a **CRITICAL SCOPE CREEP VIOLATION**.
+
+4. **Navigation Shell & Layout Isolation:**
+   - The Sidebar, Header, Breadcrumbs, Command Palette, and Shell layout themselves MUST reside in that role's own dedicated navigation module (e.g., `src/app/frontend_{role}/{role}_navigation/`).
+   - Navigation components MUST consume ONLY the exported typed URL contracts (`[moduleName]_url_config.ts`) from feature modules. Navigation components MUST NOT import any business components, business stores, or domain hooks from feature modules.
+   - If a bug occurs in the sidebar itself (e.g., collapsing toggle, mobile drawer focus trap, search filtering, menu group ordering, or active link highlighting), the repair context is STRICTLY the navigation module (`{role}_navigation/`), NEVER individual feature modules.
 
 ---
 
@@ -3587,13 +3630,13 @@ Create a second table:
 
 This is extremely important.
 
-The coding agent should be able to open this table and know what each affected file needs to become.
+The coding agent MUST be able to open this table and know what each affected file needs to become.
 
 ---
 
 # 38. EXACT REPAIR ORDER
 
-Give the recommended execution order.
+Give the MANDATORY execution order.
 
 Use:
 
@@ -4170,11 +4213,11 @@ not like a generic code review.
 
 # FINAL PRINCIPLE
 
-The coding agent should not have to think:
+The coding agent MUST NOT have to guess or think:
 
 "What did the auditor mean?"
 
-It should be able to think:
+It MUST know with absolute clarity:
 
 "I know exactly:
 
@@ -4182,7 +4225,7 @@ It should be able to think:
 * where it is wrong
 * why it is wrong
 * what the desired state is
-* which file I should modify
+* which file MUST be modified
 * what responsibility belongs there
 * what I must not change
 * what test I must add
@@ -6566,6 +6609,7 @@ Before final delivery, the AI MUST literally verify:
 [ ] All source conflicts reported
 [ ] Web Rule 1 checked
 [ ] Web Rule 1B & 1C — frontend_ namespace prefix + role container hierarchy checked
+[ ] Web Rule 1C.1 & Section 5B — Sidebar navigation 1-to-1 feature module mapping and isolated AI repair hand-off checked
 [ ] Web Rule 1D — Canonical Next.js routing and filesystem structure checked
 [ ] Web Rule 2 checked
 [ ] Web Rule 3 checked
@@ -8697,7 +8741,7 @@ After all creation work units are complete:
 3. repair any remaining issue;
 4. generate the comprehensive Playwright E2E test suite (`playwright_E2E/...`);
 5. generate final documentation;
-6. generate the changelog;
+6. generate the changelog (inside `INTEGRATION_GUIDE.md` Section 1);
 7. generate the final checklist;
 8. only then package `frontend-{role}-v1.zip`.
 
@@ -8708,7 +8752,7 @@ STAGE 1:
 Freeze:
 
 ```text
-stage_1_frontend_requirements.md
+stage_1_frontend_requirements.md (stored in execution state; excluded from final ZIP per Section 45.7)
 ```
 
 STAGE 2:
@@ -8718,7 +8762,7 @@ Audit the complete supplied target module through bounded work units.
 Generate:
 
 ```text
-stage_2_frontend_audit.md
+stage_2_frontend_audit.md (stored in execution state; excluded from final ZIP per Section 45.7)
 ```
 
 STAGE 3:
@@ -8851,7 +8895,7 @@ Before packaging:
 2. verify every manifest entry exists;
 3. confirm only the required target scope and required final artifacts are included;
 4. confirm no unrelated project files are included;
-5. verify the changelog is consistent with actual changes.
+5. verify the changelog in `INTEGRATION_GUIDE.md` (Section 1) is consistent with actual changes.
 
 Only then package:
 
@@ -8871,7 +8915,7 @@ RE_AUDIT_CHECKLIST_RESULT.md  ← MANDATORY formal audit compliance ledger (Sect
 playwright_E2E/               ← MANDATORY isolated E2E tests for the feature
 └── frontend_[role]_e2e/
     └── [target_feature]/
-frontend-{role}/
+frontend_{role}/
 └── [target_feature_module]/  ← Complete feature module with internal documentation trio (_features.md, _forbidden.md, _theme_contract.md)
 ```
 
@@ -9002,9 +9046,4 @@ COMPLETE-BEFORE-DELIVER
 but it is NOT required to perform all work inside one uninterrupted execution.
 
 Bounded execution improves reliability without weakening completeness.
-
-### CHANGELOG & VERIFICATION CHAPTER IN INTEGRATION_GUIDE.MD
-1. Every ZIP delivery MUST contain a dedicated changelog and verification chapter: **Section 1 of `INTEGRATION_GUIDE.md`**. Delivering a separate loose changelog file is PROHIBITED; the changelog MUST be consolidated into `INTEGRATION_GUIDE.md`.
-2. This chapter MUST detail **exactly what was fixed** in this specific version, mapped directly to the original audit findings.
-3. **Purpose:** The human developer will provide `INTEGRATION_GUIDE.md` and the `vN.zip` to a secondary verification AI. The secondary AI will cross-reference the Section 1 changelog against the actual code. If the secondary AI reports that a promised fix is missing or incomplete, the developer will feed that feedback back to the primary AI for the next cycle. The changelog must therefore be highly specific and accurate.
 

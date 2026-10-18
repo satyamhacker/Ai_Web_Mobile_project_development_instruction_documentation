@@ -51,7 +51,7 @@
 >
 > ⛔⛔⛔ **ISOLATED ROLE / FEATURE MODULE SCOPE BOUNDARY (NON-NEGOTIABLE)** ⛔⛔⛔
 >
-> When the user supplies a single backend feature module or role container ZIP (e.g., `backend_superadmin/`, `backend_trainer/`, `superadmin.zip`):
+> When the user supplies a single backend feature module or role container ZIP (e.g., `backend_superadmin/`, `backend_trainer/`, `superadmin.zip`, `manager-attendance.zip`, `admin-billing.zip`):
 > 1. **DO NOT DEMAND HOST APPLICATION SLICES:** You MUST NOT stop, pause, stall, refuse to fix, or ask the user to provide:
 >    - Root `package.json` / dependency manifest
 >    - Root `tsconfig.json` / TypeScript path aliases (`@/*`)
@@ -63,6 +63,7 @@
 >    - Path alias `@/` resolves to `src/`.
 >    - Standard dependencies (`@nestjs/common`, `@nestjs/core`, `@nestjs/typeorm`, TypeORM/Prisma, Redis, BullMQ) exist in the host monolith.
 > 3. **PROCEED TO AUDIT & REPAIR IMMEDIATELY:** You MUST audit, repair, and complete 100% of the supplied in-scope source files (controllers, services, entities, DTOs, migrations, module definitions, tests, mocks, swagger) directly. Demanding host application root slices or declaring repairs "BLOCKED" due to absence of root files is a **CRITICAL SCOPE CREEP VIOLATION & AUDIT FAILURE**.
+> 4. **FEATURE MODULE IS THE PRIMARY AI REPAIR UNIT (THE 1-TO-1 BACKEND SUB-SERVICE RULE):** This rule applies universally across ALL backend roles (e.g., `backend_admin`, `backend_manager`, `backend_superadmin`, `backend_trainer`). Every primary feature module visible in the frontend sidebar/navigation (e.g., in Manager: Attendance, Finance, HR; in Admin: Billing, Gyms; in Superadmin: Plans, Tenants) maps strictly 1-to-1 to an autonomous backend feature module folder (e.g., `backend-{role}/{role}-modules/{role}-{feature}/`). When a single backend feature module is supplied for repair or audit (e.g. `manager-attendance.zip` or `admin-billing.zip`), the AI MUST audit and repair ONLY that module in complete isolation. Requesting, touching, or modifying files in sibling backend modules or host application root files (`app.module.ts`, `main.ts`, etc.) is STRICTLY FORBIDDEN.
 
 
 ---
@@ -87,7 +88,7 @@ Every AI agent executing this prompt MUST strictly obey these invariants at all 
 > 4. RBG PLAN published + user approves → ONLY THEN execute any fix
 > 5. PRIOR RBG DEPENDENCY PRE-CHECK passed → ONLY THEN start next RBG
 > 6. 112-item Anti-Skipping Checklist re-run clean → ONLY THEN package ZIP
-> 7. `RE_AUDIT_CHECKLIST_RESULT.md` + `INTEGRATION_GUIDE.md` + `CHANGELOG` inside ZIP → ONLY THEN deliver
+> 7. `RE_AUDIT_CHECKLIST_RESULT.md` + `INTEGRATION_GUIDE.md` (consolidating Section 1 Changelog) inside ZIP → ONLY THEN deliver
 >
 > **Skipping or reordering any step = INVALID OUTPUT. Restart from the violated step.**
 
@@ -3302,10 +3303,10 @@ Never claim a ZIP was created, attached, or validated unless that actually occur
 
 ### FINAL DELIVERABLE MANIFEST
 
-Every final delivery MUST include the following. To prevent file clutter, cognitive overload, and fragmented documentation, **do NOT generate separate loose markdown files** (such as `[module_name]_changelog_vN.md`, `stage-1-*.md`, `stage-2-*.md`, `stage-3-*.md`, `architecture-rule-enforcement-matrix.md`, `FRONTEND_CHANGE_REQUIRED.md`, `BLOCKED_BY_SUPPLIED_SCOPE.md`, etc.) at the root of the ZIP. 
+Every final delivery MUST include the following. To prevent file clutter, cognitive overload, and fragmented documentation, **do NOT generate separate loose markdown files** (such as `[module_name]_changelog_vN.md`, `stage-1-*.md`, `stage-2-*.md`, `stage-3-*.md`, `architecture-rule-enforcement-matrix.md`, `BLOCKED_BY_SUPPLIED_SCOPE.md`, etc.) at the root of the ZIP. (Note: `FRONTEND_CHANGE_REQUIRED.md` is permitted ONLY when backend-only resolution is genuinely impossible and frontend code must be changed). 
 
 Instead, `INTEGRATION_GUIDE.md` serves as the **SINGLE CONSOLIDATED BACKEND DEVELOPER MANUAL** structured into:
-- **Section 1: Version Changelog & Scope Summary** (all repaired defects mapped to audit findings, changed files manifest)
+- **Section 1: Version Changelog & Scope Summary** (all repaired defects mapped to audit findings, changed files manifest; human developer feeds this to secondary verification AI to cross-reference fixes against code)
 - **Section 2: Endpoint Preservation & DTO Matrix** (HTTP method, route path, DTO validation, backward compatibility, breaking changes)
 - **Section 3: Database Migrations & Rollback Instructions** (exact SQL / ORM migration steps)
 - **Section 4: Host Module Registration & Strict Aliasing** (NestJS `@Module({ imports: [...] })` wiring, service providers)
@@ -3331,7 +3332,7 @@ STAGE 1:
 Create and freeze:
 
 ```text
-stage-1-frontend-requirements.md
+stage-1-frontend-requirements.md (stored in execution state; excluded from final delivery ZIP)
 ```
 
 STAGE 2:
@@ -3341,7 +3342,7 @@ Audit the supplied backend scope through bounded work units.
 Maintain:
 
 ```text
-stage-2-backend-audit.md
+stage-2-backend-audit.md (stored in execution state; excluded from final delivery ZIP)
 ```
 
 STAGE 3:
@@ -5828,12 +5829,19 @@ APPLICATION
 
 The default AI repair boundary is the FEATURE MODULE.
 
+**THE 1-TO-1 FRONTEND FEATURE ISOMORPHISM & AI REPAIR HAND-OFF LAW (UNIVERSAL):**
+> ⛔ **UNIVERSAL APPLICABILITY: This law applies equally to EVERY backend role container (`backend-admin`, `backend-manager`, `backend-superadmin`, `backend-trainer`, etc.). References to `manager-attendance` or `admin-billing` are illustrative examples only.**
+1. **Strict 1-to-1 Mapping to Frontend Features:** Every primary feature module established on the frontend across ANY role (e.g., in Manager: Attendance, Finance, HR, Members, Plans; in Admin: Gyms, Billing, Staff; in Superadmin: Tenants, Subscriptions, Platform Analytics; in Trainer: Schedule, Clients) MUST have an exact 1-to-1 corresponding autonomous backend feature module (e.g., `backend-{role}/{role}-modules/{role}-{feature}/`). Monolithic aggregation of distinct frontend domains into a single backend mega-module is STRICTLY FORBIDDEN.
+2. **Complete Domain Self-Containment:** 100% of the controllers, services, repositories, entities, DTOs, events, migrations, unit tests, and OpenAPI schemas for that domain MUST reside INSIDE that feature module folder. Zero cross-feature business imports from sibling backend modules.
+3. **Autonomous AI Repair Hand-off:** If a backend defect occurs in ANY feature API or data layer (e.g. Attendance, Billing, or Schedule), the developer provides ONLY that specific feature module folder to the AI agent. The AI agent MUST audit and repair that module in total self-containment.
+
 Detect:
 
 - feature repair performed at role-container scope without necessity;
 - sibling feature coupling;
 - domain-level business logic;
-- unclear ownership boundary.
+- unclear ownership boundary;
+- mega-module mashing multiple frontend feature domains together.
 
 ### 0B — Hard feature write boundary
 
@@ -8293,13 +8301,13 @@ where applicable.
 
 ### File Responsibility Map
 
-Every relevant file should identify:
+Every relevant file MUST identify:
 - what it does;
 - what it MUST NOT do.
 
 ### Permissions and Security
 
-Every endpoint should have:
+Every endpoint MUST have:
 - required roles;
 - resource-level authorization where needed;
 - ownership/tenant/branch rules where applicable;
@@ -9305,7 +9313,7 @@ Classify their purpose.
 
 # 76. RUNTIME VERIFICATION
 
-Runtime verification is OPTIONAL from the AI's perspective.
+Live command/runtime verification is DEFERRED_TO_HOST_RUNTIME when live databases, message queues, or host servers are absent. Source-level code, schemas, migrations, unit tests, and mock fixtures are MANDATORY and MUST NOT be skipped.
 
 ONLY run commands/tests when:
 - the environment is already safely available;
@@ -9875,7 +9883,7 @@ Before producing the final verdict, verify:
 [ ] Relevant authored files inspected
 [ ] Exclusions recorded
 [ ] Unreadable files recorded
-[ ] Rule 0A — AI repair boundary is FEATURE MODULE not role container verified
+[ ] Rule 0A & 0A.1 — AI repair boundary is FEATURE MODULE (1-to-1 frontend feature isomorphism verified)
 [ ] Rule 0B — Hard feature write boundary (no sibling coupling) verified
 [ ] Rule 0C — Change scope failure conditions checked
 [ ] Rule 0D — All backend folders use backend- prefix; ALL internal structural business folders are role/module-prefixed; NO generic modules/, config/, utils/ exist (src/core/ and src/infrastructure/ exceptions verified)
@@ -10134,7 +10142,7 @@ BACKEND FREEZE GATE — ALL ITEMS MUST PASS BEFORE ZIP DELIVERY
 [ ] 8. All seed files are idempotent and wrapped in transactions
 [ ] 9. Redis mechanisms correctly match the decision table (e.g. Streams for critical events, Cache for rate limiting)
 [ ] 10. `progress.json` accurately reflects the final frozen state
-[ ] 11. CHANGELOG inside ZIP is specific and accurate
+[ ] 11. CHANGELOG inside `INTEGRATION_GUIDE.md` (Section 1) is specific and accurate
 
 If ANY box is unchecked: STATUS = REPAIR_REQUIRED — fix the source code. Once all fixable source-level code is implemented, package and deliver the ZIP. Host-dependent verification steps (DEFERRED_TO_HOST_RUNTIME) and out-of-scope files do not prevent ZIP delivery.
 ```
@@ -10620,17 +10628,17 @@ Mode B:
   Do NOT fabricate omitted sibling modules merely to make the ZIP appear to be a complete role container.
   The final ZIP must contain exactly the repaired supplied backend scope plus the required verification/documentation deliverables.
 
-stage-1-frontend-requirements.md         ← requirements extracted from frontend ZIP
-stage-2-backend-audit.md                 ← audit findings (Mode B only; for Mode A: creation log)
-stage-3-final-verdict.md                 ← final verdict after re-audit / after creation verification
-backend-e2e/...                          ← all API E2E test files
-backend-selenium/...                     ← all Selenium test files (Section 86B.2)
-RE_AUDIT_CHECKLIST_RESULT.md            ← 112-item checklist result on the final code
+INTEGRATION_GUIDE.md                    ← MANDATORY CONSOLIDATED GUIDE (Changelog, Endpoints, Migrations, Wiring, Verification)
+RE_AUDIT_CHECKLIST_RESULT.md            ← MANDATORY 112-item checklist result on the final code
 FRONTEND_CHANGE_REQUIRED.md             ← ONLY when backend-only resolution was genuinely impossible
                                             and frontend modification is actually required.
                                             Do NOT create if no frontend change is needed.
                                             INTEGRATION_GUIDE.md must reference this file when it exists.
+backend-e2e/...                         ← all API E2E test files
+backend-selenium/...                    ← all Selenium test files (Section 86B.2)
 ```
+
+> ⛔ **NO LOOSE MARKDOWN CLUTTER RULE:** Do NOT generate separate loose markdown files at the root of the ZIP (such as `[module_name]_changelog_vN.md`, `stage-1-*.md`, `stage-2-*.md`, `stage-3-*.md`, `architecture-rule-enforcement-matrix.md`, etc.). All requirements, audit findings, and changelog notes MUST be consolidated directly into `INTEGRATION_GUIDE.md`. The only markdown files permitted at the ZIP root are `INTEGRATION_GUIDE.md`, `RE_AUDIT_CHECKLIST_RESULT.md`, and conditionally `FRONTEND_CHANGE_REQUIRED.md` (only if frontend changes are genuinely required). Intermediate stage files (`stage-1-*.md`, `stage-2-*.md`, `stage-3-*.md`) are intermediate execution-state artifacts and MUST NOT be placed at the ZIP root.
 
 **The `INTEGRATION_GUIDE.md`, Postman collection, API E2E, and Selenium suites are NOT optional. An output without them is an incomplete delivery.**
 
@@ -10675,7 +10683,7 @@ Do NOT reproduce:
 
 Those belong inside the ZIP.
 
-The final chat response should contain only:
+The final chat response MUST contain only:
 
 1. final status;
 2. final ZIP link;
