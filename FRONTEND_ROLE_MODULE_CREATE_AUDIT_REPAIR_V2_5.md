@@ -138,6 +138,25 @@ When a rule is repeated for convenience:
 > Lack of artifact-generation capability does not block source completion.
 > Lack of device/emulator capability does not block static repair completion.
 >
+## Contract Finding and Delivery Status Taxonomy
+
+### Finding Codes
+- `CONTRACT_NOT_FOUND_IN_WEB_ZIP` — Requested endpoint or data field is completely absent from supplied source evidence.
+- `CONTRACT_AMBIGUOUS` — Evidence contains conflicting, contradictory, or multiple plausible definitions.
+- `CONTRACT_CONFLICT` — Explicit contradiction between supplied contract and normative architecture/security rules.
+- `CONTRACT_INCOMPLETE` — Contract declares an operation but omits required parameters, payload schema, or response model.
+
+### Final Delivery / Blocking Statuses
+- `SOURCE_COMPLETE_AND_ARTIFACT_GENERATED` — All source code is written, verified, and packaged into the requested ZIP artifact.
+- `SOURCE_COMPLETE_ARTIFACT_PENDING_HOST_PACKAGING` — All source code is completely written and verified, but archive creation CLI is unavailable.
+- `SOURCE_COMPLETE_RUNTIME_VERIFICATION_DEFERRED` — Source code is complete, but live runtime (Metro, simulator, device) verification is deferred to host.
+- `BLOCKED_BY_SUPPLIED_CONTRACT` — Module cannot safely proceed because a core business invariant or contract is ambiguous or contradictory.
+- `BLOCKED_BY_EXPLICIT_SCOPE_RESTRICTION` — Requested changes lie strictly outside granted writable boundaries.
+
+A finding code explains the issue.
+A delivery/blocking status explains the final execution outcome.
+
+>
 > ⛔⛔⛔ **CONTINUE-THROUGH DIRECTIVE — NON-NEGOTIABLE** ⛔⛔⛔
 >
 > **Runtime/host/build unavailability is NEVER a reason to pause, stop, or defer SOURCE-LEVEL fixes.**
@@ -239,8 +258,17 @@ This document has exactly four operating modes. Any statement that this prompt h
 |---|---|---|---|---|
 | **A** | Web Create | Web feature specification | Playwright | `frontend-{role}-v1.zip` + `playwright_E2E/` |
 | **B** | Web Audit + Repair | Existing web module ZIP | Playwright | `frontend-{role}-v{N}-fix.zip` + `playwright_E2E/` |
-| **C** | Mobile Create from Web Specification | Web ZIP as specification only | Maestro | `mobile-{role}-v1.zip` + `mobile_e2e/` |
-| **D** | Mobile Audit + Repair | Existing React Native module ZIP | Maestro | `mobile-{role}-v{N}-fix.zip` + `mobile_e2e/` |
+| **C** | Mobile Create from Web Specification | Web ZIP as specification only | Maestro | `mobile-{role}-v1.zip` + `mobile_e2e/` (top-level mirrored Maestro suite; never inside `src/features/`) |
+| **D** | Mobile Audit + Repair | Existing React Native module ZIP | Maestro | `mobile-{role}-v{N}-fix.zip` + `mobile_e2e/` (top-level mirrored Maestro suite; never inside `src/features/`) |
+
+Mobile Maestro E2E tests MUST live only at:
+
+```text
+mobile_e2e/frontend_{role}_e2e/{role}_{module}/
+```
+
+They MUST NOT be stored inside `src/features/`.
+Each module E2E folder is self-contained. Business-specific E2E helpers remain inside that module's `helpers/` folder under strict WET.
 
 > ⛔ **PLATFORM CROSS-CONTAMINATION PROHIBITION:** No mode may use another platform’s test system, UI rules, framework patterns, or delivery naming conventions. Web modes (A & B) use Playwright and web design rules. Mobile modes (C & D) use Maestro and mobile design rules.
 
@@ -539,11 +567,17 @@ The AI MUST:
 - Use tokens.space[N] for all spacing
 - Use tokens.typography.* for all text styles
 - Use tokens.color.statusSuccessText / tokens.color.statusDangerText etc. for status badges (flat camelCase â€” no nested .status.*)
-- Use canonical payment badge tokens: tokens.color.payCashText / payCashBg, tokens.color.payUpiText / payUpiBg, tokens.color.payCardText / payCardBg, tokens.color.payBankText / payBankBg
-- Feature UI MUST consume tokens via 'const tokens = useThemeTokens()'; static import of 'tokens.ts' is FORBIDDEN in feature UI
-- Touch targets MUST resolve via 'getMinTouchTarget()' from '@/core/theme/getMinTouchTarget' (iOS 44pt / Android 48dp)
-- Shadows and elevation MUST resolve via 'getShadowStyle('sm' | 'md' | 'lg' | 'xl')' from '@/core/theme/getShadowStyle'
-- Reference Tokens canonical interface shape for EVERY style value
+- Payment badges MUST use:
+  - `tokens.color.payCashText` / `tokens.color.payCashBg`
+  - `tokens.color.payUpiText` / `tokens.color.payUpiBg`
+  - `tokens.color.payCardText` / `tokens.color.payCardBg`
+  - `tokens.color.payBankText` / `tokens.color.payBankBg`
+- Shadows MUST resolve through:
+  `getShadowStyle('sm' | 'md' | 'lg' | 'xl')`
+- Direct shadow composition and `tokens.shadow.card` are forbidden.
+- Feature UI MUST consume tokens via `const tokens = useThemeTokens()`; static import of `tokens.ts` is FORBIDDEN in feature UI.
+- Touch targets MUST resolve via `getMinTouchTarget()` from `@/core/theme/getMinTouchTarget` (iOS 44pt / Android 48dp).
+- Reference Tokens canonical interface shape for EVERY style value.
 
 SEMANTIC EQUIVALENCE (not value copy):
 Web --primary (#FACC15)     → tokens.color.primary (#FACC15)  <- SAME VALUE, both platforms Gold
@@ -706,7 +740,17 @@ INTEGRATION_GUIDE.md MUST contain:
 4. **Missing app.json** → NOT required. Assume standard RN project structure.
 5. **No Metro bundler available** → NOT a blocker. Write source code; mark runtime verification as `DEFERRED_TO_HOST_RUNTIME`.
 6. **No device/simulator available** → NOT a blocker. Write Maestro YAML; mark execution as `DEFERRED_TO_HOST_RUNTIME`.
-7. **Web ZIP has ambiguous API contract** → Mark specific endpoint as `CONTRACT_AMBIGUOUS`, document both interpretations, implement the safer one, continue.
+7. **Web ZIP has ambiguous API contract** → Apply Ambiguous API Contract Rule below.
+
+### Ambiguous API Contract Rule
+
+If web ZIP evidence for an endpoint, request field, response field, permission, or mutation behavior is ambiguous:
+1. Record the finding as `CONTRACT_AMBIGUOUS`.
+2. Record the exact conflicting evidence and affected files.
+3. Do NOT invent, select, or implement one interpretation.
+4. Mark the affected flow as `BLOCKED_BY_SUPPLIED_CONTRACT`.
+5. Continue only with independent, verified parts of the module.
+6. Do not expose an unverified mutation or data-rendering path to users.
 
 ---
 
@@ -7308,7 +7352,7 @@ NO UNKNOWN REQUIREMENT
 [ ] Mobile Rule 10B — Pull-to-refresh wired on all user-browsable lists
 [ ] Mobile Rule 11 — react-native-haptic-feedback (NOT expo-haptics); reduced motion respected
 [ ] Mobile Rule 14 — Only packages from Locked NPM Package Registry; no expo-* packages
-[ ] Mobile Rule 17 — Co-located tests; Maestro E2E in mobile_e2e/; no placeholder assertions
+[ ] Mobile Rule 17 — Top-level Maestro E2E in mobile_e2e/frontend_{role}_e2e/{role}_{module}/ (never inside src/features/); unit/integration tests co-located in tests/; no placeholder assertions
 [ ] Mobile Rule 24 — _features.md complete with all 18 sections; non-generic content
 [ ] Mobile Rule 25 — accessibilityLabel/Role/State on all interactive elements; 44pt/48dp targets
 [ ] Mobile Rule 28 — Zero cross-feature imports; formatCurrency is feature-local (Rule 63)

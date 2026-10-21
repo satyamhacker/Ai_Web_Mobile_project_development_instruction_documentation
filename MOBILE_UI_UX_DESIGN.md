@@ -307,9 +307,14 @@ All screens and components MUST meet these mobile accessibility standards:
 - Where the platform supports high-contrast mode, verify token pairs maintain sufficient contrast at high-contrast settings.
 - Never use low-contrast muted text for critical information (errors, warnings, primary actions).
 
-### Error and Status Announcements
-- Error messages that appear inline after an async action MUST be announced to screen readers via `accessibilityLiveRegion='polite'` (non-critical) or `'assertive'` (critical errors).
-- Success confirmations MUST also be announced.
+### Async Status Announcement Rule
+
+For asynchronous success, validation, warning, and error updates:
+- **Android:** Use `accessibilityLiveRegion="polite"` (non-critical) or `"assertive"` (critical errors).
+- **iOS:** Use `AccessibilityInfo.announceForAccessibility(localizedMessage)`.
+- Cross-platform critical announcements may use both mechanisms where supported.
+- Announcements MUST use localized, user-safe text.
+- Raw server errors, stack traces, and unvalidated response text MUST NOT be announced.
 - Never rely only on color to communicate an error (pair with icon + text).
 
 ### Reduced Motion (already in Section 7 — cross-reference)
@@ -1190,7 +1195,7 @@ When a custom Android `BackHandler` is required:
 - [ ] **Touch Target Ceilings:** All touch targets ≥ 44pt (iOS) / 48dp (Android); `hitSlop` applied where visual size is smaller. — *STOP if interactive target < 44pt/48dp.*
 - [ ] **Dynamic Type Scaling:** Dynamic Type tested at largest accessibility size without text truncation. — *STOP if text clips or overflows container.*
 - [ ] **Reduced Motion:** Reduced-motion behavior verified; non-animated transitions work when enabled. — *STOP if animation triggers despite reduced-motion preference.*
-- [ ] **Live Regions:** Error/success states announced via `accessibilityLiveRegion`. — *STOP if critical alert omitted from screen reader.*
+- [ ] **Async Announcements:** Error and success states are announced using the appropriate platform mechanism—`accessibilityLiveRegion` on Android and `AccessibilityInfo.announceForAccessibility` on iOS. — *STOP if critical alert omitted from screen reader.*
 - [ ] **Non-Color State Differentiation:** Color is never the sole state differentiator; paired with text or icon. — *STOP if state distinguished only by red/green color.*
 
 ### 4. Design System Compliance Gate

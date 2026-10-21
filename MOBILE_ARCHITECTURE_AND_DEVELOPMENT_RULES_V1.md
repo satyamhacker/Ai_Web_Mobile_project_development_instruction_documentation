@@ -960,6 +960,24 @@ Every feature API contract MUST define:
 - authorization and permission requirements;
 - idempotency behavior (`Idempotency-Key` header on all POST/PATCH/PUT/DELETE mutations).
 
+### Contract Finding and Delivery Status Taxonomy
+
+#### Finding Codes
+- `CONTRACT_NOT_FOUND_IN_WEB_ZIP` — Requested endpoint or data field is completely absent from supplied source evidence.
+- `CONTRACT_AMBIGUOUS` — Evidence contains conflicting, contradictory, or multiple plausible definitions.
+- `CONTRACT_CONFLICT` — Explicit contradiction between supplied contract and normative architecture/security rules.
+- `CONTRACT_INCOMPLETE` — Contract declares an operation but omits required parameters, payload schema, or response model.
+
+#### Final Delivery / Blocking Statuses
+- `SOURCE_COMPLETE_AND_ARTIFACT_GENERATED` — All source code is written, verified, and packaged into the requested ZIP artifact.
+- `SOURCE_COMPLETE_ARTIFACT_PENDING_HOST_PACKAGING` — All source code is completely written and verified, but archive creation CLI is unavailable.
+- `SOURCE_COMPLETE_RUNTIME_VERIFICATION_DEFERRED` — Source code is complete, but live runtime (Metro, simulator, device) verification is deferred to host.
+- `BLOCKED_BY_SUPPLIED_CONTRACT` — Module cannot safely proceed because a core business invariant or contract is ambiguous or contradictory.
+- `BLOCKED_BY_EXPLICIT_SCOPE_RESTRICTION` — Requested changes lie strictly outside granted writable boundaries.
+
+A finding code explains the issue.
+A delivery/blocking status explains the final execution outcome.
+
 The API layer MUST normalize server failures into a shared typed error shape:
 ```typescript
 export interface NormalizedApiError {
