@@ -145,6 +145,11 @@ Document the mapping clearly so an AI cannot confuse `--primary` with `--text-pr
 | `--purple-text` | `#D8B4FE` | `#7E22CE` |
 | `--purple-bg` | `#3B0764` | `#EDE9FE` |
 
+**Semantic Background Rule:**
+Feature JSX must use approved semantic tokens only: `bg-success-bg`, `bg-warning-bg`, `bg-danger-bg`, `bg-info-bg`, `bg-purple-bg`.
+Raw opacity modifiers on semantic colors (e.g., `bg-success/10`, `bg-danger/5`) are strictly forbidden because they destroy WCAG contrast ratios and break light/dark mode scaling.
+Always pair solid background tokens with their corresponding text-on-* token (e.g. `bg-success` with `text-on-success`, `bg-primary` with `text-on-primary`).
+
 ### Payment Mode Tokens
 | Token | Dark Mode (Default) | Light Mode |
 |---|---|---|
@@ -439,10 +444,19 @@ Badges are small pill-shaped labels: `border-radius: var(--radius-full)`, `paddi
 - Sortable headers must expose current sorting state through accessible labels.
 - Row-click navigation must not prevent keyboard users from reaching inline actions.
 - Row actions must be keyboard accessible and visible on `focus-within`. On touch/mobile use always-visible actions or an accessible overflow menu.
-- On mobile, choose one documented pattern:
-  1. Horizontal scroll with frozen primary identifier, or
-  2. Convert each record into an accessible card layout.
 - Never hide essential financial, status, or permission information solely because of viewport size.
+
+### Responsive Table Decision Matrix
+
+On mobile viewports (`<768px`), determine the table responsive strategy deterministically using this matrix:
+
+| Viewport / Data Condition | Required Mobile (<768px) Strategy | Behavior & Safeguards |
+|---|---|---|
+| **1–4 Compact Columns** | Horizontal scroll | Minimal horizontal padding, preserve standard table layout |
+| **Primary Record + Actions** (Members, Staff, Gyms) | Accessible Card Stack (`Mobile Card-Stack Table Pattern`) | Each row becomes a card, primary identifier is title, status badge top-right, remaining columns stacked as `Label: Value` |
+| **Financial / Compliance Data** (Ledger, Invoices, Billing) | Horizontal scroll with sticky frozen primary identifier | Never hide essential monetary amounts, timestamps, or status badges |
+| **Editable Data Table** (Inline cell editing) | Dedicated mobile edit drawer or modal | Do NOT edit inline inside table cells on mobile viewports |
+| **Dense Analytical Table** | Horizontal scroll with clear visual scroll hint | Sticky first column, visual edge shadow indicator on scroll container |
 
 ### 5c. Form Layout
 - **Simple form** (≤6 fields): single column, centered card, max-width 560px
@@ -775,6 +789,22 @@ All UI produced for this application MUST meet **WCAG 2.2 AA** at minimum. This 
    - Status colors must never be the only way to communicate meaning.
    - Respect `prefers-reduced-motion` for non-essential animation.
    - Minimum contrast must meet WCAG AA requirements.
+
+---
+
+## 13A. ACCESSIBILITY AUTOMATION GATE
+
+To guarantee that WCAG 2.2 AA compliance is mechanically verified and regressions are prevented:
+- **Automated Axe-Core Checks:** Run automated accessibility checks with `axe-core` (`@axe-core/playwright` in E2E and `vitest-axe` in component tests) across all feature screens, forms, modals, tables, empty states, and error states.
+- **Keyboard Navigation Automation:** E2E suites must verify keyboard-only workflows:
+  - Tab order follows logical visual layout.
+  - Interactive elements have visible focus outlines (`--focus-ring`).
+  - Escape closes all modals, drawers, and popovers.
+  - Enter / Space activates buttons and accordion toggles.
+- **Focus Restoration Invariant:** Closing a modal, drawer, or dropdown MUST restore keyboard focus to the triggering element.
+- **Form Error Connection:** Form errors must be programmatically connected via `aria-describedby` and invalid inputs must expose `aria-invalid="true"`.
+- **Screen Reader Announcements:** Dynamic state changes (toasts, validation errors, async save success) must use `aria-live="polite"` or `role="alert"`.
+- **Note:** Automated tools catch ~40% of accessibility defects. Manual keyboard verification and zoom testing (up to 200%) remain mandatory before release.
 
 ---
 
@@ -1265,4 +1295,4 @@ A feature screen or component is NOT considered release-ready until ALL applicab
 - [ ] Route JS bundle < 200KB (gzipped) for new routes
 - [ ] Images use `next/image` with explicit dimensions
 - [ ] Heavy components use `next/dynamic` (code-split)
-- [ ] Search/filter inputs debounced ≥ 300ms
+- [ ] Search/filter inputs debounced ≥ 300ms

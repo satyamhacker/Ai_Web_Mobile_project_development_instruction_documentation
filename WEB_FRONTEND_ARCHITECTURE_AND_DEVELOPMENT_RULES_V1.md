@@ -2,7 +2,7 @@
 
 > ⛔⛔⛔ **AI AGENT — MANDATORY ENFORCEMENT & INTEGRITY DIRECTIVE — READ FIRST** ⛔⛔⛔
 >
-> **VIOLATION OF ANY RULE IN THIS DOCUMENT = ARCHITECTURE FAILURE. ALL OUTPUT IS DISCARDED. MUST RESTART.**
+> **ARCHITECTURAL COMPLIANCE IS MANDATORY. FOLLOW THE SEVERITY MODEL AND CANONICAL REPAIR PROTOCOL.**
 >
 > This document is the **absolute normative authority** for all web frontend code in this project. Every rule is MANDATORY unless the rule itself defines a named `NOT_APPLICABLE` condition with explicit evidence. The following words in this document carry their STRICTEST possible meaning:
 >
@@ -27,11 +27,43 @@
 > [ ] ROOT QUARANTINE verified — only permitted files in feature root
 > [ ] FRONTEND DELIVERY FREEZE GATE & DEFINITION OF DONE loaded into context
 > ```
-> **Failure to complete the above = entire output is discarded.**
+> **Failure to confirm the above = verification incomplete. Do not proceed until baseline is verified.**
 >
 > ⛔ **NO-PAUSE ON MISSING RUNTIME / HOST CAPABILITY (MANDATORY ANTI-STALL RULE):**
 > Unavailability of a running web server (Next.js/Vite dev server), live backend API, real browser, or Playwright test runner is NEVER a reason to pause, stall, abort, or declare web frontend code creation, audit, or repair "BLOCKED". The AI MUST fix every issue that can be resolved in source files (pages, layouts, components, custom hooks, Zustand stores, Zod schemas, URL configs, MSW mock fixtures, Playwright test files, documentation trio) in this session. Only live browser automation or live API network execution is designated as `DEFERRED_TO_HOST_RUNTIME`. Missing runtime is strictly forbidden as a reason to pause.
 > ⛔ **OFFLINE / STATIC SCORING DIRECTIVE:** When live browser or runtime test execution is unavailable in the execution environment, ratings (1 to 10) MUST evaluate **Static Architecture & Code Completeness**. The AI MUST NOT penalize, artificially deduct points, or refuse to rate simply because a live browser or server is absent. State the Static Compliance Rating directly (up to 10.0), noting dynamic execution separately as `DEFERRED_TO_HOST_RUNTIME`.
+
+## RULE ENFORCEMENT & SEVERITY MODEL
+
+Rules in this document are classified into three severity levels:
+
+### P0 — Merge Blocker (Architecture Failure)
+Security, authentication, tenant isolation, cross-feature business imports (Rule 63), secret leaks, API contract mismatches, broken routing, typecheck (`tsc --noEmit`) failure, or broken build.
+A P0 failure means the feature MUST NOT be marked complete, approved, or delivered.
+
+### P1 — Required Before Release
+Accessibility (WCAG 2.2 AA), loading/empty/error states (Section 24), co-located test coverage, documentation freshness, responsive collapse, localization (`next-intl`), observability, and performance budgets.
+A P1 failure must be repaired in the current session. If host-dependent verification is required (e.g., live browser E2E execution), it must be explicitly designated as `DEFERRED_TO_HOST_RUNTIME` with CLI verification commands and tracking evidence.
+
+### P2 — Maintainability & Polish
+Descriptive naming, file-size guidance reviews, JSDoc docstrings, organization, and visual consistency.
+A P2 failure must be repaired whenever it materially improves isolation or maintainability.
+
+### Honest Reporting Directive
+The AI MUST NOT claim compliance that it cannot verify.
+If a rule cannot be verified within the provided scope (e.g. missing live backend), report: `NOT_VERIFIED_IN_SCOPE` or `DEFERRED_TO_HOST_RUNTIME` with the exact missing evidence. False-positive compliance claims are strictly prohibited.
+
+### Exception Rule
+A deviation is valid only when documented using:
+- Rule ID
+- Reason
+- Affected files
+- Risk
+- Compensating control
+- Review / expiry date
+- Human approver where required
+
+---
 
 ## CRITICAL FRONTEND STRUCTURE GATE (NON-NEGOTIABLE)
 
@@ -48,7 +80,7 @@ Before generating, auditing, or repairing ANY frontend role module, verify ALL o
 | **Canonical Feature Module** | Must be `{role}_{module}/` inside role container (e.g., `admin_members/`) | Generic name (`members/`) = NON_COMPLIANT. In repair: rename to prefixed module in RBG 1. |
 | **No Duplicate Route Tree** | Exactly ONE canonical directory represents the feature. No parallel route tree within supplied scope. | Sibling duplicate (e.g. `dashboard/` + `admin_dashboard/`) = ARCHITECTURE VIOLATION. In repair: consolidate into canonical directory in RBG 1. (Do not demand host route trees). |
 | **Root Quarantine** | ONLY `page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`, `not-found.tsx`, `template.tsx`, `default.tsx`, `[moduleName]_url_config.ts`, and the documentation trio (`[moduleName]_features.md`, `[moduleName]_forbidden.md`, `[moduleName]_theme_contract.md` or `_features.md`, `_forbidden.md`, `_theme_contract.md`) allowed in feature root. | Any other `.ts`/`.tsx` file in root = NON_COMPLIANT. In repair: move to prefixed subfolder in RBG 1. |
-| **Prefixed Sub-Folders** | ALL sub-folders must use single prefix: `[moduleName]_components/`, `[moduleName]_hooks/`, `[moduleName]_api/`, `[moduleName]_types/`, `[moduleName]_schemas/`, `[moduleName]_constants/`, `[moduleName]_store/`, `[moduleName]_utils/`, `[moduleName]_locales/`, `[moduleName]_mocks/`, `[moduleName]_tests/`. | Generic folder (`components/`, `api/`) or double-prefix = NON_COMPLIANT. In repair: rename to prefixed folders in RBG 1. |
+| **Prefixed Sub-Folders** | ALL business sub-folders must use single prefix: `[moduleName]_components/`, `[moduleName]_hooks/`, `[moduleName]_api/`, `[moduleName]_types/`, `[moduleName]_schemas/`, `[moduleName]_constants/`, `[moduleName]_store/`, `[moduleName]_utils/`, `[moduleName]_locales/`, `[moduleName]_mocks/`, `[moduleName]_tests/`. Next.js framework dynamic routing folders (`[id]`, `[member_id]`, `[...slug]`, `@modal`, `_private`) are approved routing exceptions and may contain route-entry files only. Route groups like `(group)` are STRICTLY FORBIDDEN to prevent route conflicts. | Generic folder (`components/`, `api/`) or double-prefix = NON_COMPLIANT. In repair: rename to prefixed folders in RBG 1. |
 | **No Barrel Files** | NO `index.ts` or re-export facades. All imports must be direct absolute paths (`@/...`). | Barrel file = CIRCULAR DEPENDENCY RISK. In repair: remove barrel files and update imports in RBG 1. |
 | **Module Documentation Trio** | Every module MUST contain `[moduleName]_features.md`, `[moduleName]_forbidden.md`, and `[moduleName]_theme_contract.md`. | Missing doc artifact = INCOMPLETE MODULE. In repair: generate missing docs from source in RBG 1. |
 | **Centralized URL Config** | `[moduleName]_url_config.ts` MUST exist and define all routes and API endpoints as `as const`. | Missing URL config = HARDCODED ROUTE RISK. In repair: generate centralized URL config in RBG 1. |
@@ -340,7 +372,41 @@ To guarantee that any AI agent or human engineer can repair or expand a feature 
 1. **The 1:1 Navigation Law (Universal):**
    - Every top-level clickable item present in ANY role's sidebar (e.g., in Manager: Dashboard, Inquiries, Members, Attendance, Plans, Finance, HR, Schedule, PT; in Admin: Gyms, Billing, Staff, Settings; in Superadmin: Tenants, Subscriptions, Platform Analytics; in Trainer: Schedule, Clients, Workouts) MUST map 1-to-1 to an autonomous feature module folder directly under that role container (e.g., `src/app/frontend_{role}/{role}_{feature}/`).
    - Grouping multiple distinct sidebar destinations into a single mega-folder (e.g., merging `manager_finance` and `manager_expenses`, or `admin_billing` and `admin_plans`) is STRICTLY FORBIDDEN.
-   - Creating ad-hoc top-level folders for sub-views or detail pages belonging to a sidebar feature is STRICTLY FORBIDDEN. Sub-screens and secondary workflows must be contained within that module via `?view=` parameters.
+   - Creating ad-hoc top-level folders outside the owning feature for sub-views or detail pages is STRICTLY FORBIDDEN. All sub-screens and secondary workflows must be owned by that feature module according to the Sub-View Routing Decision Matrix below.
+
+### Sub-View Routing Decision Matrix
+
+Use URL query parameters (`?view=`, `?page=`, `?status=`, `?tab=`) ONLY for state that modifies the view of the SAME resource:
+- Search queries, filters, sorting, and pagination
+- Table density modes and column toggles
+- Selected tab when it does not represent a separate resource lifecycle or permissions boundary
+
+Use nested routes inside the SAME feature module for:
+- Entity detail pages (e.g. `[member_id]/page.tsx`)
+- Create / add / edit flows (e.g. `create/page.tsx`, `[member_id]/edit/page.tsx`)
+- Resource-specific history or activity timeline
+- Workflows requiring distinct route-level permissions or distinct Next.js loading/error boundaries
+- Independently refreshable and deep-linkable URLs
+
+Allowed hierarchical structure inside owning feature module:
+```text
+src/app/frontend_manager/manager_members/
+├── page.tsx                           ← Members list page
+├── loading.tsx
+├── error.tsx
+├── [member_id]/                       ← Dynamic detail route owned by feature module
+│   ├── page.tsx                       ← Member profile view
+│   ├── loading.tsx
+│   ├── error.tsx
+│   └── edit/
+│       └── page.tsx                   ← Member edit workflow
+├── manager_members_components/
+├── manager_members_hooks/
+├── manager_members_api/
+└── ...
+```
+
+**Rule:** One sidebar item = one feature module folder. But one feature module MAY own nested routes for its own entities. No business implementation may exist outside the owning feature module.
 
 2. **Full Domain Encapsulation:**
    - When a user clicks a sidebar item (e.g. Attendance in Manager ➔ `/frontend_manager/manager_attendance`, or Billing in Admin ➔ `/frontend_admin/admin_billing`), **100% of the UI, state, and logic for that capability MUST reside INSIDE that single folder**:
@@ -375,6 +441,10 @@ APPLICATION
 └── ROLE CONTAINER
     └── FEATURE MODULE
         ├── page.tsx / layout.tsx / loading.tsx / error.tsx where required
+        ├── [moduleName]_url_config.ts
+        ├── [moduleName]_features.md
+        ├── [moduleName]_forbidden.md
+        ├── [moduleName]_theme_contract.md
         ├── [moduleName]_components/
         ├── [moduleName]_hooks/
         ├── [moduleName]_api/
@@ -386,11 +456,7 @@ APPLICATION
         ├── [moduleName]_tests/
         ├── [moduleName]_mocks/
         ├── [moduleName]_locales/
-        ├── [moduleName]_features.md
-        ├── [moduleName]_forbidden.md
-        ├── [moduleName]_theme_contract.md
-        ├── [moduleName]_url_config.ts
-        └── ... etc
+        └── [optional dynamic nested routes e.g. [member_id]/page.tsx]
 
 Example:
 
@@ -408,18 +474,32 @@ for the same business feature.
 No parallel route tree, duplicate route tree, mirror directory, compatibility copy,
 or second implementation of the same feature is permitted.
 
+### Next.js Framework Folder Exceptions & Strict Prohibition of Route Groups
+
+The module-prefix folder rule applies to BUSINESS ARTIFACT folders (`[moduleName]_components/`, `[moduleName]_hooks/`, etc.).
+
+The following Next.js App Router folders are approved framework exceptions:
+- dynamic segments: `[id]`, `[member_id]`, `[...slug]`, `[[...slug]]`
+- parallel routes: `@slot_name`
+- private implementation folders: `_folder_name`
+
+These folders may contain ONLY route-entry infrastructure (`page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`, `not-found.tsx`).
+They MUST NOT become a second business implementation.
+All business components, hooks, stores, API clients, schemas, mocks, fixtures, and business constants remain inside the owning module-prefixed folders.
+
+#### STRICT PROHIBITION OF NEXT.JS ROUTE GROUPS `(group_name)`
+Next.js route groups (folders enclosed in parentheses like `(auth)`, `(dashboard)`, `(marketing)`) are **STRICTLY FORBIDDEN**.
+- **Reason for Prohibition:** Route groups omit the folder name from the browser URL path. This creates silent URL collisions/conflicts between different roles and modules, breaks clean 1:1 physical file path mapping, and confuses AI during module isolation and repair.
+- Every route in the application MUST map explicitly 1:1 to its physical role and feature module folder hierarchy (e.g., `src/app/frontend_admin/admin_members/...`).
+- Any folder with parentheses `(group_name)` is an immediate structural violation (`NON_COMPLIANT`).
+
 ### NEXT.JS ROUTING
 
 Next.js route files MUST be physically owned by the corresponding feature module.
 
 A feature's `page.tsx`, `loading.tsx`, `error.tsx`, `not-found.tsx`, dynamic route
 segments, and route-specific layout MUST NOT be duplicated outside that feature module.
-
-If clean public URLs require Next.js route groups, use a route-group structure that
-preserves feature ownership without creating a second business implementation.
-
-Route groups are routing infrastructure only and MUST contain no duplicated business
-components, hooks, APIs, schemas, stores, fixtures, handlers, or feature logic.
+No parallel route tree, duplicate route tree, mirror directory, compatibility copy, or second implementation of the same feature is permitted.
 
 ### SINGLE SOURCE OF TRUTH
 
@@ -756,11 +836,17 @@ Locale files are grouped by module, NOT by language.
 Do NOT create `src/locales/en/` global folders.
 
 ### URL Config Contract (GAP-2 Fix)
-Every feature module MUST have exactly one `[moduleName]_url_config.ts` which MUST export:
-1. All API endpoint URL strings as named constants (UPPER_SNAKE_CASE).
-2. A typed MODULE_URLS object grouping all endpoints.
+Every feature module MUST have exactly one `[moduleName]_url_config.ts` which MUST export two distinct typed contracts:
+1. `[MODULE_NAME]_ROUTES`: Internal UI navigation route paths owned by this module.
+2. `[MODULE_NAME]_API`: Backend API endpoint paths consumed by this module.
 3. NO hardcoded base URLs — only paths relative to API base.
 4. NO business logic — only URL string definitions.
+
+**Usage Restrictions:**
+- Navigation components (sidebar, header, breadcrumbs) may import ONLY `[MODULE_NAME]_ROUTES`.
+- Feature API clients may import ONLY `[MODULE_NAME]_API`.
+- A sibling feature module may NEVER import either object.
+- API endpoint strings must NEVER be consumed by navigation UI.
 
 Example export shape:
 ```typescript
@@ -1199,6 +1285,53 @@ The AI MUST NOT expand context merely because another feature contains similar c
 
 ---
 
+## AI TASK COMPLETION REPORT
+
+Every AI creation, audit, or repair task must conclude with this standardized report:
+
+```markdown
+## AI TASK COMPLETION REPORT
+1. Scope
+   - Owning Feature Module: `[path]`
+   - Allowed Infrastructure Inspected: `[paths]`
+2. Changed Files
+   - Exact path list of modified/created files
+3. Rules Verified
+   - Verified Rule IDs with concrete source line evidence
+4. Deferred to Host Runtime
+   - `DEFERRED_TO_HOST_RUNTIME` items with exact CLI verification commands
+5. Verified Exceptions
+   - Any documented exception with Rule ID, reason, and risk analysis
+6. Test Evidence
+   - Unit/Component/E2E tests created or updated and behavioral proof
+7. Contract Integrity
+   - API, schema, MSW, docs, permissions, routes verified unchanged or updated
+```
+
+---
+
+## APPROVED APPLICATION INFRASTRUCTURE ALLOWLIST
+
+Feature modules may import ONLY from the following approved external application infrastructure areas:
+
+- `src/lib/api.ts` (Global API transport wrapper)
+- `src/config/env.ts` (Validated environment configuration)
+- `src/lib/auth/*` (Authentication/session token management)
+- `src/lib/permissions/*` (Role and permission evaluator utilities)
+- `src/lib/monitoring/*` (Error monitoring and telemetry adapters)
+- `src/lib/telemetry/*` (Logging and telemetry infrastructure)
+- `src/lib/formatters.ts` (`displayValue()` zero-business primitive only)
+- `src/components/ui/*` (Zero-business UI primitives: Button, Input, Dialog, Tooltip, etc.)
+- `src/components/providers/*` (Application-level React context providers)
+- `src/design-system/*` (Global design tokens and theme constants)
+- `src/infrastructure/msw/browser.ts` (Global MSW bootstrap and handler registry)
+- `src/generated/openapi/*` (OpenAPI generated transport types)
+
+Every allowed import path must be classified as transport, auth, security, platform provider, design primitive, generated contract, or observability.
+Any path not in this allowlist is forbidden by default. Sibling feature modules are strictly excluded from this allowlist.
+
+---
+
 ### FEATURE-TO-FEATURE BUSINESS DEPENDENCY FIREWALL
 
 Every feature module is an independent business boundary.
@@ -1533,12 +1666,20 @@ and other data-driven UI element with its exact API response field. This section
 source used to verify MSW fixture completeness. No UI element may be left unlisted.
 Generic entries like "All fields" are forbidden — name every column and field explicitly.]
 
-| UI Element | Required Field(s) | API Endpoint | Response Path | Nullable? | Mocked? |
-|---|---|---|---|---|---|
-| Table: Member Name | `name` | `GET /api/v1/manager/members` | `data.items[].name` | No | Yes |
-| Table: Status Badge | `status` | `GET /api/v1/manager/members` | `data.items[].status` | No | Yes |
-| KPI: Total Members | `totalCount` | `GET /api/v1/manager/members/stats` | `data.totalCount` | No | Yes |
-| Filter: Status | `status` | `GET /api/v1/manager/members` | `data.items[].status` | No | Yes |
+| UI Element | Required Field(s) | API Endpoint | Response Path | Availability | Nullable? | Mocked? | UI Behavior When Unavailable |
+|---|---|---|---|---|---|---|---|
+| Table: Member Name | `name` | `GET /api/v1/manager/members` | `data.items[].name` | `required` | No | Yes | Render fallback text |
+| Table: Status Badge | `status` | `GET /api/v1/manager/members` | `data.items[].status` | `required` | No | Yes | Neutral badge |
+| Table: Phone | `phone` | `GET /api/v1/manager/members` | `data.items[].phone` | `permission_masked` in list | No | Yes | `maskSensitiveData()` |
+| KPI: Total Revenue | `monthlyRevenue` | `GET /api/v1/manager/finance/stats` | `data.monthlyRevenue` | `permission_masked` | No | Yes | Hide KPI, show authorized summary |
+| Filter: Status | `status` | `GET /api/v1/manager/members` | `data.items[].status` | `required` | No | Yes | All options |
+
+Availability values:
+- `required`: Mandatory data for standard view.
+- `nullable`: Legitimate empty field; rendered via `displayValue()`.
+- `permission_masked`: Role-restricted field; hidden or masked without breaking layout or inventing fake data.
+- `feature_flagged`: Conditional field based on tenant feature flag.
+- `not_applicable`: Element does not require API data.
 
 *(Replace the example rows above with the real field names, endpoint names, and response
 paths for this specific module. Every rendered UI element must have a row here.)*
@@ -2201,34 +2342,13 @@ Every **user-browsable data table** MUST implement applicable pagination, sortin
 Do not define module-specific API routes in a giant global file. Every module MUST have its own API file inside a dedicated folder (e.g., `[moduleName]_api/[moduleName]_api.ts`) importing the core base fetcher.
 *Consequence of violation:* Giant monolithic API blobs couple independent features, balloon AI context windows, and create cross-module regression cascades. Finding centralized API blobs = `NON_COMPLIANT`.
 
-32. **The "No Barrel File" Rule — With Controlled Public-API Exception:**
+32. **The "No Barrel File" Rule — No Barrel Files or Re-export Facades:**
 
-**Default rule:** Strictly avoid using `index.ts`, `index.js`, or any other barrel/facade files to re-export modules. Always import directly from the explicitly named file to prevent circular dependencies and maintain clean tree-shaking. You MUST NOT create files like `*Export.ts` or `*Facade.ts` to consolidate exports. Direct absolute imports (`@/`) are mandatory for every file.
-*Consequence of violation:* Barrel files cause circular dependency deadlocks, disable tree-shaking, and inflate JavaScript bundle sizes by up to 400%. Finding unauthorized barrel files (`index.ts`, `*Export.ts`, `*Facade.ts`) = IMMEDIATE `NON_COMPLIANT` AUDIT FAILURE.
+**Default rule:** Strictly avoid using `index.ts`, `index.js`, or any other barrel/facade files to re-export modules. Always import directly from the explicitly named file to prevent circular dependencies and maintain clean tree-shaking. You MUST NOT create files like `*Export.ts`, `*Facade.ts`, or `*public_api.ts` to consolidate exports. Direct absolute imports (`@/`) are mandatory for every file.
+*Consequence of violation:* Barrel files cause circular dependency deadlocks, disable tree-shaking, and inflate JavaScript bundle sizes by up to 400%. Finding unauthorized barrel files (`index.ts`, `*Export.ts`, `*Facade.ts`, `*public_api.ts`) = IMMEDIATE `NON_COMPLIANT` AUDIT FAILURE.
 
-**Controlled exception — Curated public module entry points:**
-A single curated `[moduleName]_public_api.ts` entry-point file is permitted ONLY when ALL of the following conditions are true:
-1. The module exposes approved, stable contracts to other parts of the **application infrastructure** (not to sibling business modules — those imports remain forbidden).
-2. The entry point exposes ONLY explicitly approved public contracts (types, constants, utilities), not all internal files.
-3. The entry point prevents deep imports into internal module implementation files.
-4. The entry point does NOT create circular dependencies.
-5. The entry point is documented in the module's `[moduleName]_features.md` under "Approved External Dependencies".
-
-**This exception does NOT apply to:**
-- Feature-to-feature business imports (still forbidden by Rule 63).
-- Re-exporting all module internals (still forbidden).
-- Replacing absolute imports within the module itself.
-
-```typescript
-// ✅ PERMITTED — approved public entry point exposing stable infrastructure contract
-// src/app/frontend_admin/admin_members/admin_members_public_api.ts
-export type { MemberStatus } from './admin_members_types/AdminMembersTypes';
-// Only export what is explicitly approved for cross-infrastructure use.
-
-// ❌ FORBIDDEN — barrel re-exporting everything
-export * from './admin_members_components/AdminMembersTable';
-export * from './admin_members_hooks/useAdminMembers';
-```
+**Zero Barrel Exception for Business Modules:**
+No public API barrel exception exists for business modules. The allowed root URL contract file (`[moduleName]_url_config.ts`) is a directly imported named contract file, NOT a barrel and NOT a re-export facade. Sibling features must never import from another feature's internal or root files. Cross-module business consumption is strictly prohibited.
 
 33. **Framework-Specific Media Optimization**:
 Make Next.js `<Image>` component (`next/image`) default and mandatory. Permit documented exceptions for third-party controlled markup, emails, SVG assets, or technically incompatible external content where standard `<img>` tags are needed.
@@ -3011,6 +3131,19 @@ When the real backend endpoint becomes available:
 - The feature API client MUST remain the same unless the backend contract legitimately changes.
 - Components MUST NOT require a rewrite merely because mocked responses are replaced by real responses.
 - Any contract change MUST update the corresponding TypeScript types, Zod schemas, MSW handlers, `[moduleName]_features.md` documentation, and tests in the same change.
+
+### API Contract Compatibility Gate
+
+To prevent MSW mock drift and ensure true backend readiness:
+1. The backend OpenAPI contract (`swagger.json` or OpenAPI spec) is the canonical transport contract.
+2. Generated API types (`src/generated/openapi/*`) are regenerated in CI when OpenAPI changes.
+3. Module Zod response schemas must validate against the OpenAPI contract shape.
+4. Each module-owned MSW fixture and mock response must validate against the same Zod response schema.
+5. CI must fail when:
+   - Frontend API client uses removed or renamed fields;
+   - MSW fixture lacks required response fields defined by the OpenAPI schema;
+   - Backend breaking change has no version/migration pathway;
+   - `## UI Data Requirements` in `[moduleName]_features.md` references a nonexistent API field.
 
 Backend integration does NOT require moving module-owned mocks or handlers into a global mock folder.
 
