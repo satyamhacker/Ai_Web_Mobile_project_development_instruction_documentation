@@ -9774,7 +9774,7 @@ The AI MUST evaluate every item below against the created mobile module and reco
 ## 43P-API — API Contract & URL Config
 
 - [ ] **43P-API-01:** `config/{role}_{module}.url_config.ts` exists and exports all endpoint paths as named constants — zero hardcoded URL strings in `*.api.ts`
-- [ ] **43P-API-02:** `api/{role}_{module}.query_keys.ts` exists with canonical factory pattern including resource identity in all keys
+- [ ] **43P-API-02:** `api/{role}_{module}.query_keys.ts` exists with canonical factory pattern including resource identity prefix `[role_module]` (e.g. `['manager_members']`, NOT generic `['members']`) in all keys to prevent cross-role cache collision
 - [ ] **43P-API-03:** Every API endpoint URL in mobile code EXISTS in the web ZIP's API client or URL config — zero invented endpoints (`CONTRACT_NOT_FOUND_IN_WEB_ZIP` if missing)
 - [ ] **43P-API-04:** Every TypeScript interface field in mobile EXISTS in the web ZIP's types or Zod schemas — zero invented fields
 - [ ] **43P-API-05:** All mutations use dedicated named mutation hooks — zero inline `useMutation` in screens or components
@@ -9870,8 +9870,16 @@ The AI MUST evaluate every item below against the created mobile module and reco
 - [ ] **43P-A11Y-01:** Every interactive element has `accessibilityLabel` with human-readable description â€” no empty or undefined labels
 - [ ] **43P-A11Y-02:** Every interactive element has correct `accessibilityRole` (`button`, `link`, `checkbox`, `tab`, etc.)
 - [ ] **43P-A11Y-03:** Stateful controls (toggle, checkbox, tab) set `accessibilityState` (`checked`, `selected`, `disabled`) reactively
-- [ ] **43P-A11Y-04:** All touch targets are minimum 44x44pt â€” no icon-only buttons smaller than 44pt without padding
+- [ ] **43P-A11Y-04:** All touch targets are minimum 44x44pt on iOS and 48x48dp on Android (WCAG AA & Material Design standard) — use hitSlop if visual icon is smaller; zero icon-only buttons smaller without hitSlop/padding
 - [ ] **43P-A11Y-05:** Purely decorative icons have `accessible={false}` and `importantForAccessibility="no-hide-descendants"`
+
+## 43P-FORM — Form Architecture & Field Error Mapping
+
+- [ ] **43P-FORM-01:** Form management uses `react-hook-form` v7 with `@hookform/resolvers/zod` and schema from `schemas/[roleModule].schemas.ts` — zero unmanaged form state
+- [ ] **43P-FORM-02:** Server 400 validation error dictionaries mapped to form fields via `handleValidationErrors()` / `setError()` — never a generic toast when field-specific errors exist
+- [ ] **43P-FORM-03:** All 9 input states handled: default, focused, filled, error, success, disabled, read-only, loading, warning
+- [ ] **43P-FORM-04:** Dirty form navigation guarded by `useUnsavedChangesGuard(isDirty)` with confirmation sheet
+- [ ] **43P-FORM-05:** Numeric inputs constrained via Zod schemas and sanitizers — no raw unvalidated numeric input
 
 ## 43P-PLATFORM â€” Platform & Navigation
 
@@ -10230,6 +10238,15 @@ During Mode C creation, for EVERY interactive element identified in Extraction S
 
 > ⛔ **MODE C & MODE D MANDATORY:** Any data field that may be `null`, `undefined`, or empty string MUST render an en-dash (`—`) via `displayValue()` from `src/core/utils/formatters.ts`. Rendering empty cells, raw `'null'`, `'undefined'`, or `'N/A'` is STRICTLY FORBIDDEN.
 
+## PATCH-14 — Form Architecture, Field Error Mapping & Cross-Platform Touch Targets (Rule 10A, 42, 47 & 48)
+
+> ⛔ **MODE C & MODE D MANDATORY:**
+>
+> 1. **Form State & Schema Validation:** Every form MUST use `react-hook-form` v7 with `@hookform/resolvers/zod` consuming Zod v3 schemas defined in `schemas/[roleModule].schemas.ts`. Manual `useState` tracking for form fields is FORBIDDEN.
+> 2. **Field-Level Validation Error Mapping:** When an API returns a 400 Bad Request with field-level validation errors (e.g. `{ errors: { field: "message" } }`), they MUST be mapped directly to the form fields via `handleValidationErrors()` / `form.setError()`. Showing a generic toast popup when field errors exist is FORBIDDEN.
+> 3. **Cross-Platform Touch Targets:** Touch targets MUST be minimum 44x44pt on iOS and 48x48dp on Android. When visual iconography is smaller, developers MUST apply `hitSlop` (e.g., `hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}`).
+> 4. **Query Key Role/Module Scoping:** Query key factories MUST include the resource identity tuple with role prefix (e.g., `['manager_members']` instead of generic `['members']`) to guarantee 100% cache isolation across different roles.
+
 ---
 
 # INTEGRATION_GUIDE.md — MODE C SECTION STRUCTURE (V2.7 CORRECTED)
@@ -10312,6 +10329,7 @@ The Boot Declaration execution order block now includes Mode D:
 |---|---|
 | V2.5 | Original — Web Modes A + B only |
 | V2.6 | Added Mode C (Cross-Platform Mobile Create from Web ZIP) |
+| V2.10 | **CROSS-PLATFORM FORM & TOUCH TARGET HARMONIZATION:** Added Section 43P-FORM covering react-hook-form v7, Zod v3 integration, and 400 field-level validation mapping via handleValidationErrors(). Clarified Android 48dp touch targets in 43P-A11Y-04. Added PATCH-14 enforcing Query Key role prefixes (preventing multi-role cache collisions) and cross-platform touch target hitSlop. |
 | V2.9 | **MOBILE ARCHITECTURE & DESIGN SYSTEM SYNC:** Fixed stale Indigo references in Mode C Hallucination Prevention (Rules 492-506, 554) to enforce Luxury Premium Gold (#FACC15 / #EAB308, onPrimary #111111). Clarified canonical subfolder names vs Role+Module prefixed files. Added Patches 08 to 13 covering Query Key Factories, Dedicated Mutation Hooks, Single-Flight 401 Refresh, Trusted Tenant Context, Form Keyboard Safety, Button Loading Stability, Feature-Local Currency (WET), and displayValue en-dash fallbacks. Synchronized 100% with MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md and MOBILE_UI_UX_DESIGN.md. |
 | V2.8 | **GOLD MOBILE THEME UPGRADE:** Mode C Boot Declaration updated to V2.8. Mobile primary upgraded from Indigo (#4F46E5) to Gold (#FACC15) matching web theme. Added on-primary = #111111 (dark text on gold). Fixed Translation Matrix Gold row. Fixed 43P-DESIGN-02 to enforce Gold not Indigo. |
 | V2.7 | **MOBILE COMPLETENESS PATCH:** Added Section 43P Mobile Rule Checklist (Gap 1), Added Mode D Mobile Audit+Repair (Gap 2), Fixed duplicate Section headings in Mode C INTEGRATION_GUIDE (Gap 3), Clarified react-i18next vs next-intl for mobile (Gap 4), Added useUnsavedChangesGuard mandate to Mode C (Gap 5), Added Idempotency-Key mandate to Mode C (Gap 6), Added showToast() dedup pattern to Mode C (Gap 7), Added useConfirm()+ConfirmBottomSheet / Alert.alert FORBIDDEN to Mode C (Gap 8), Added RESPONSIBILITY+FLOW header comment mandate to Mode C (Gap 9), Added testID format mandate to Mode C (Gap 10) |

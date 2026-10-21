@@ -3212,7 +3212,10 @@ When auditing React Native, additionally verify:
 - `accessibilityLabel` present and non-empty on every interactive element (Button, TouchableOpacity, Pressable, TextInput)
 - `accessibilityRole` correct for every interactive element (`button`, `link`, `checkbox`, `tab`, `image`, `text`, etc.)
 - `accessibilityState` set reactively on stateful controls: `{ checked }` for checkboxes, `{ selected }` for tabs, `{ disabled }` for disabled controls
-- Touch targets minimum 44x44pt -- use `minWidth`/`minHeight` or padding; icon-only buttons without padding = FAIL
+- Touch targets minimum 44x44pt on iOS and 48x48dp on Android -- use `minWidth`/`minHeight` or `hitSlop`; icon-only buttons without padding/hitSlop = FAIL
+- Primary Gold (#FACC15 / #EAB308) contrast compliance: Any text on Gold background MUST be Dark Charcoal (#111111); White text on Gold = FAIL (WCAG AA contrast violation)
+- Field-level validation error mapping: 400 validation responses must map to form fields via `setError()` / `handleValidationErrors()`; generic toast only when field errors exist = FAIL
+- Query key isolation: Query keys MUST include role+module resource identity tuple (e.g. `['manager_members']`, NOT generic `['members']`); cross-role collision risk = FAIL
 - Decorative icons: `accessible={false}` AND `importantForAccessibility="no-hide-descendants"` -- missing either = screen reader announces decorative noise
 
 ---
