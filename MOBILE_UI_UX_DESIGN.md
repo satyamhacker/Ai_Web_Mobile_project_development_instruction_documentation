@@ -23,9 +23,14 @@
 > [ ] Platform touch targets verified: minimum 44pt (iOS) / 48dp (Android)
 > [ ] Dynamic Type / font scaling verified without clipping text
 > [ ] Safe area handling verified via useSafeAreaInsets / SafeAreaView
-> [ ] Accessibility props wired: accessibilityLabel, accessibilityRole, accessibilityState
+> [ ] Accessibility verified: every interactive element exposes a meaningful
+>     localized accessible name; icon-only/ambiguous controls use
+>     `accessibilityLabel`; `accessibilityRole`, `accessibilityState`,
+>     `accessibilityHint`, and accessibility actions are supplied where relevant.
 > [ ] Reduced motion support implemented via AccessibilityInfo.isReduceMotionEnabled()
-> [ ] Haptic feedback integrated for interactive state changes
+> [ ] Meaningful haptic feedback is implemented only for approved high-value state
+>     transitions; ordinary navigation, passive card taps, scrolling, auto-refresh,
+>     and background actions do not trigger haptics.
 > [ ] Section 22 DEFINITION OF DONE loaded into context
 > ```
 > **Failure to complete the above = entire output is discarded.**
@@ -49,6 +54,14 @@ Android elevation is defined separately by the shadow/elevation token system.
 > → Feature UI
 >
 > The VALUES below and the "no magic values anywhere" discipline are universal.
+>
+> “No magic values” applies to visual design decisions: colors, spacing, typography,
+> radius, icon sizes, touch-target dimensions, shadows, opacity, elevation, z-index,
+> and animation durations.
+>
+> React Native structural values are allowed when they are not design decisions,
+> including Flexbox control values, semantic native component props, Boolean values,
+> `StyleSheet.hairlineWidth`, and documented native-library/runtime requirements.
 
 ---
 
