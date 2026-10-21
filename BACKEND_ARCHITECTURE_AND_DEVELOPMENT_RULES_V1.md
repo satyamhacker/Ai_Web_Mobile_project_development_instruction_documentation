@@ -2,6 +2,9 @@
 
 > ⛔⛔⛔ **AI AGENT — MANDATORY ENFORCEMENT HEADER — READ BEFORE ANYTHING ELSE** ⛔⛔⛔
 >
+> **VIOLATION OF ANY RULE IN THIS DOCUMENT = ARCHITECTURE NON-COMPLIANCE.**
+> The violation MUST be explicitly recorded and handled according to the Failure Handling Protocol: audit it in Audit Mode, repair it within the approved writable scope in Repair Mode, or mark it BLOCKED_BY_SUPPLIED_SCOPE / AUTHORITATIVE_CONFLICT where applicable.
+>
 ## Failure Handling Protocol
 
 A rule violation is never silently ignored.
@@ -40,18 +43,19 @@ The AI MUST NOT silently continue after detecting a violation.
 > | **Optional** (sub-folders) | Only optional when the module **genuinely has no such artifact** — omitting when the artifact exists = VIOLATION |
 > | **except** / **unless** | Only a valid escape when ALL stated conditions for the exception are explicitly met and documented |
 >
-> **RULES APPLY TO THE ENTIRE DOCUMENT.** An AI that reads only the first half of this document and produces output is producing INCOMPLETE and INVALID output. Every rule from Rule 0A through Rule 119 is mandatory. The MINIMUM EVIDENCE STANDARD (near end of document) applies to every audit finding.
+> **RULES APPLY TO THE ENTIRE DOCUMENT.** An AI that reads only the first half of this document and produces output is producing INCOMPLETE and INVALID output. Every rule from Rule 0A through Rule 124 is mandatory, including all lettered rules, the Structure Gate, the Minimum Evidence Standard, and mobile-first rules. The MINIMUM EVIDENCE STANDARD (near end of document) applies to every audit finding.
 >
 > ⛔ **BEFORE WRITING ANY CODE OR AUDIT FINDING, CONFIRM:**
 > ```
-> [ ] Read complete BACKEND_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md (all 100+ rules)
+> [ ] Read complete BACKEND_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md (all rules, including Mobile-First Rules 120–124)
 > [ ] Identified active framework (NestJS or Django) — marked FRAMEWORK_NOT_VERIFIED if unknown
 > [ ] Confirmed PROJECT STACK BASELINE — no unapproved substitutions
 > [ ] CRITICAL STRUCTURE GATE passed — folder tree verified before any deeper rule
 > [ ] CANONICAL RULE INDEX consulted
 > [ ] MINIMUM EVIDENCE STANDARD (bottom of document) loaded into context
 > ```
-> **Failure to complete the above = mandatory compliance stop on affected items.**
+> **Failure to complete the above = the affected item MUST NOT be marked COMPLIANT.**
+> The AI must record the missing evidence and continue only where safe and within scope.
 
 ## The Core Philosophy
 This document outlines the strict architectural rules for building the backend using the approved project framework, primarily **NestJS (TypeScript)** or **Django (Python)**, while preserving the same isolation and architectural principles. The primary goal is **Extreme Isolation**.
@@ -145,8 +149,8 @@ Every AI agent MUST consult this index before beginning any audit or implementat
 | 0H | Canonical Naming Single Source of Truth | Naming | All files and folders | Naming matches Rule 0H table |
 | 2 | Descriptive AI-Contextual Filenames | Naming | All backend files | Files begin with role+module prefix |
 | 82A | Complete UI Data Contract | API Contract | UI-backed endpoints | Response DTO, serializer, frontend contract test |
-| 116 | OpenAPI Documentation | API Documentation | REST endpoints | Controller annotations / spec output |
-| 117 | RAG Format Support | Query/API | Applicable query endpoints | `?format=rag` behavior and tests |
+| 116 | OpenAPI Documentation and MCP-Ready API Design | API Documentation | REST endpoints | Controller annotations / spec output |
+| 117 | Universal RAG-Ready Projections | Query/API | All GET query endpoints | `?format=rag` returns token-optimized text |
 
 > ⛔ **AI MANDATORY NOTE — THIS IS NOT OPTIONAL:**
 > **Every rule in this document is mandatory** — whether or not it appears in the index above.
@@ -559,26 +563,27 @@ The following are the ONLY approved npm packages for backend feature modules. AI
 
 **Django equivalent packages:** `djangorestframework`, `celery`, `django-redis`, `python-jose` or `djangorestframework-simplejwt`, `pytest-django`, `httpx` for E2E.
 
-### Infrastructure Package Approval Matrix
+### Mandatory Infrastructure Package Approval Matrix
 
-The project owner must maintain a version-pinned approved package matrix for mandatory cross-cutting infrastructure, including where applicable:
+The project owner MUST maintain a version-pinned approved infrastructure package matrix. Any dependency required by a mandatory architecture rule MUST appear here before an AI is instructed to implement that rule.
 
-- HTTP security headers (`helmet`)
-- Compression (`compression`)
-- OpenTelemetry instrumentation (`@opentelemetry/api`, `@opentelemetry/sdk-node`)
-- Prometheus metrics (`prom-client`)
-- Password hashing (`bcrypt` or `argon2`)
-- Encryption (`crypto` native or approved AES-256-GCM wrapper)
-- Image processing (`sharp`)
-- Cloud object storage SDK (`@aws-sdk/client-s3`)
-- ESLint architectural-boundary enforcement (`eslint-plugin-boundaries`, `import-linter`)
-- Secrets scanning
-- SAST/SCA tooling
+The approved matrix must include, where applicable:
 
-A rule must not require implementation using a dependency that is absent from the approved package matrix.
+| Concern | Approved Package / Owner-Approved Implementation |
+|---|---|
+| HTTP security headers | Helmet or framework-approved equivalent (`helmet`) |
+| HTTP compression | compression or framework-approved equivalent (`compression`) |
+| Metrics | prom-client or framework-approved equivalent (`prom-client`) |
+| Distributed tracing | OpenTelemetry packages (`@opentelemetry/api`, `@opentelemetry/sdk-node`) |
+| Image processing | Approved image transformation package (`sharp`) |
+| Object storage | Approved cloud object-storage SDK (`@aws-sdk/client-s3`) |
+| Encryption | Approved AES-256 cryptography implementation (`crypto` native or approved wrapper) |
+| Import-boundary enforcement | eslint-plugin-boundaries or no-restricted-imports |
+| Secret scanning | gitleaks |
+| SAST / dependency scanning | Owner-approved CI security tooling |
+| Git hooks | husky and lint-staged, where Node.js is active |
 
-`Zod` is forbidden for business request DTO validation but is explicitly permitted for centralized environment/configuration schema validation only.
-
+Zod is forbidden for business request DTO validation but is explicitly permitted only for centralized environment/configuration schema validation.
 ---
 
 ## 0G-B. SEED FILE SPECIFICATION (GAP-15 Fix)
@@ -1297,9 +1302,9 @@ filters, dropdowns, detail views. Backend MUST return all of them (Rule 82A).]
 - [ ] Rule 28: All responses wrapped in canonical envelope via ResponseInterceptor
 - [ ] Rule 29: Soft-delete by default. (Exception: Immutable event logs (Rule 118) and financial ledgers (Rule 119) are strictly append-only and exempt from standard soft-delete rules. Furthermore, the 90-day tenant hard-delete (Rule 110) must explicitly archive/retain legally required financial/audit ledgers rather than blindly deleting them.)
 - [ ] Rule 115: AI-contextual docstrings added to entities/services/controllers
-- [ ] Rule 116: MCP-Ready API Design conventions followed
-- [ ] Rule 117: RAG-Ready API Projection (`?format=rag`) implemented
-- [ ] Rule 103: Idempotency-Key enforced on all state-mutating endpoints
+- [ ] Rule 116: OpenAPI documentation and MCP-ready conventions implemented where applicable.
+- [ ] Rule 117: Universal RAG projection (`?format=rag`) implemented for all GET query endpoints with automated field masking.
+- [ ] Rule 103: Every mutation endpoint declares its retry-safety classification: naturally idempotent, Idempotency-Key protected, or intentionally non-retriable. Idempotency-Key is implemented wherever Rule 103 requires it.
 - [ ] Rule 34: N+1 queries prevented — eager loading used where needed
 - [ ] Rule 36: Fail-Fast applied — null checks at service layer, DB constraints enforced
 - [ ] Rule 41: Pessimistic locking on all concurrent balance/inventory mutations
@@ -1528,7 +1533,7 @@ Before marking any migration PASS, ALL of the following MUST be verified with ev
 ## 31. Idempotency Keys for Critical Mutations
 * **The Rule:** Any endpoint that triggers a financial transaction, sends a communication, or creates a resource that must never be duplicated MUST support an `Idempotency-Key` request header.
 * **Why:** Networks are unreliable. A client might retry a `POST /payments` request after a timeout, not knowing the first one succeeded. Without idempotency, the member gets double-charged.
-* **Superseded by Rule 103:** *Note: Rule 103 expands this requirement from "critical mutations" to ALL state-mutating endpoints (`POST`, `PATCH`, `PUT`, `DELETE`). Rule 103 is the superseding architectural standard and defines the strict atomic/transactional safety contracts that must be implemented. AI agents must follow Rule 103's broader scope and safety constraints.*
+* **Superseded by Rule 103:** Superseded by Rule 103. Rule 103 defines the retry-safe mutation policy: Idempotency-Key is mandatory for duplicate-sensitive, offline-queueable, financial, communication, bulk, asynchronous, and externally side-effecting actions. Naturally idempotent state-setting operations may omit the header only when repeated requests cannot create duplicate side effects.
 
 ---
 
@@ -1661,20 +1666,25 @@ backend-manager/
 * **Architecture Strategy:**
   1. **Master Database:** A central database (e.g., `smart_gym_master`) must exist solely to manage global resources: Users, Authentication, Tenants (Gyms), Subscriptions, and Feature Flags.
   2. **Tenant Databases:** Every time a new gym registers, the backend must programmatically create a brand-new database (e.g., `tenant_db_101`) and run all schema migrations on it automatically. *(Note: All these logical databases reside within the same single PostgreSQL server infrastructure unless the infrastructure architecture explicitly defines otherwise; do not spin up new physical servers/VPS per tenant).*
-  3. **Trusted Tenant Resolution Flow (Request Scoped):**
-     The client MUST NOT select a tenant database through a raw `x-tenant-id`, query parameter, request body field, or URL segment.
-     The only trusted tenant resolution flow is:
-     `Request → JWT authentication → actor identity validation → server-side tenant authorization → trusted TenantContext creation → tenant database/DataSource resolution`
-     
-     Rules:
-     - `gymId`, `branchId`, and tenant database identity are derived from the verified JWT and server-side authorization only.
-     - A raw client-supplied `x-tenant-id` header MUST NOT be trusted as an authorization source.
-     - If a platform/superadmin user can switch tenant context, the backend must issue a short-lived server-signed tenant-context token or explicitly embed the approved tenant selection in a newly issued JWT.
-     - The selected tenant context must be written to AsyncLocalStorage only after authorization succeeds.
-     - All database routing must use TenantContext, never raw request headers.
-  5. **Connection Pool Limits:** **⚠️ See Rule 63 before implementing this** — the connection pool budget must be calculated across ALL active tenant DataSources combined, not per-tenant. Blindly applying `max: 20` per tenant DataSource will exhaust the database server's connection limit under load.
+### Dynamic Connection Routing (Request Scoped)
+
+The backend must resolve the tenant database only from a previously authorized TenantContext. The TenantContext is created only after JWT verification and server-side tenant authorization.
+
+Raw client headers, request body fields, query parameters, route parameters, and unverified claims MUST NOT select a tenant database.
+
+The only trusted tenant resolution flow is:
+`Request → JWT authentication → actor identity validation → server-side tenant authorization → trusted TenantContext creation → tenant database/DataSource resolution`
+
+Rules:
+1. `gymId`, `branchId`, and tenant database identity are derived from the verified JWT and server-side authorization only.
+2. A raw client-supplied `x-tenant-id` header MUST NOT be trusted as an authorization source.
+3. If a platform/superadmin user can switch tenant context, the backend must issue a short-lived server-signed tenant-context token or explicitly embed the approved tenant selection in a newly issued JWT.
+4. The selected tenant context must be written to AsyncLocalStorage only after authorization succeeds.
+5. All database routing must use TenantContext, never raw request headers.
+6. **Connection Pool Limits:** ⚠️ See Rule 63 before implementing this — the connection pool budget must be calculated across ALL active tenant DataSources combined, not per-tenant. Blindly applying `max: 20` per tenant DataSource will exhaust the database server's connection limit under load.
+
 * **How to Apply to Different Frameworks:**
-  - **NestJS (Node/TypeScript):** Do not use a static, monolithic ORM module root configuration. Use request-scoped providers or custom connection factories that cache and resolve database connection/client instances based on the request's tenant header.
+  - **NestJS (Node/TypeScript):** Do not use a static, monolithic ORM module root configuration. Use request-scoped providers or custom connection factories that cache and resolve database connection/client instances based on the trusted TenantContext created after JWT authentication and tenant authorization.
   - **Django (Python):** Use database routers (`db_for_read`, `db_for_write`) paired with thread-local storage or middleware to dynamically route queries to the correct database alias based on the request.
 * **Why:** If Gym A and Gym B share the same database tables, a single missing `WHERE tenant_id = X` clause in a business query results in a catastrophic cross-tenant data breach. Database-per-tenant completely eliminates this risk at the infrastructure level. Furthermore, it can reduce dataset size per tenant and improve isolation/performance characteristics, avoiding massive multi-tenant table bottlenecks.
 * **Tenant DB vs Query Filters (Belt & Suspenders):** Even though Database-per-Tenant provides physical isolation, ALL ORM queries MUST still strictly include `gymId` and `branchId` filters as mandated by Rule 0G and the Tenant Scope Classification. This double-security approach ensures logic remains perfectly isolated and future-proofs the codebase if tenants are ever merged into a shared DB.
@@ -1849,13 +1859,16 @@ Refresh tokens must rotate on every successful refresh. Reuse of an already-rota
 * Immutable event and financial records MUST bypass soft-delete filtering while remaining permanently append-only.
 
 ## 59. API Response Time SLA Categories
-* **The Rule:** Every API endpoint must be categorized into an SLA tier based on its business complexity, and this MUST be declared in OpenAPI metadata or a central endpoint performance registry (`endpoint-sla.registry.ts`). A code comment may supplement this but is not the authoritative source:
-  - **Tier 1 — Real-Time (< 50ms):** Auth validation, health checks, cached reads, toggle flags.
-  - **Tier 2 — Standard CRUD (< 200ms):** Single-entity CRUD, paginated lists (< 20 items), simple filters.
-  - **Tier 3 — Complex Operations (< 800ms):** Aggregations, multi-table joins, search queries, report previews.
-  - **Tier 4 — Async / Background (> 800ms):** Heavy exports, bulk imports, PDF generation, external API calls. Must return `202 Accepted` immediately with a `jobId`.
-* **Enforcement:** The SLA declaration must be validated by automated tests or CI configuration.
-* **Why:** Defining SLA categories forces the developer and AI to choose the right architecture (caching, queues, indexing) upfront rather than debugging timeouts later.
+
+Every API endpoint must be categorized into an SLA tier and declared in OpenAPI metadata or a central endpoint performance registry (`endpoint-sla.registry.ts`). A code comment is supplementary only and is not authoritative.
+
+SLA Tiers:
+- **Tier 1 — Real-Time (< 50ms):** Auth validation, health checks, cached reads, toggle flags.
+- **Tier 2 — Standard CRUD (< 200ms):** Single-entity CRUD, paginated lists (< 20 items), simple filters.
+- **Tier 3 — Complex Operations (< 800ms):** Aggregations, multi-table joins, search queries, report previews.
+- **Tier 4 — Async / Background (> 800ms):** Heavy exports, bulk imports, PDF generation, external API calls. Must return `202 Accepted` immediately with a `jobId`.
+
+The SLA declaration must be validated by automated tests or CI configuration.
 
 
 ## 60. Strict Foreign Key Naming Convention
@@ -1874,7 +1887,13 @@ Refresh tokens must rotate on every successful refresh. Reuse of an already-rota
 * **The Rule:** Relying on TypeScript implicit `any` or inferred returns is forbidden for async operations. Every service method and repository method MUST have an explicitly declared return type (e.g., `Promise<ManagerMembersDomainModel>`).
 
 ## 63. Database Connection Pool Configuration
-* **The Rule:** The database connection pool MUST be explicitly configured — never rely on framework defaults. Connection-pool settings must use the exact option names supported by the installed TypeORM and PostgreSQL driver versions. The project must configure an explicit total connection budget, pool size, connection acquisition timeout, idle timeout, and statement timeout using the current supported TypeORM/DataSource and PostgreSQL-driver configuration shape. Do not assume one driver option name works across all versions.
+
+Default database connection-pool settings are forbidden.
+
+The project must configure an explicit total connection budget, pool-size limit, connection-acquisition timeout, idle timeout, database statement timeout, and transaction timeout using the exact configuration shape supported by the installed TypeORM and PostgreSQL driver versions.
+
+AI agents MUST verify the installed package versions and official project configuration before selecting option names. They MUST NOT assume that one TypeORM or PostgreSQL pool option name works across every version.
+
 * **NestJS / TypeORM:**
   ```typescript
   // Configure pool options compatible with pg driver & TypeORM DataSource
@@ -1946,6 +1965,14 @@ Backend implementation (services, repositories, DB queries)
 ## 71. UTC Datetime Storage Format
 * **The Rule:** ALL dates and times MUST be stored in the database as UTC. The backend must never store local timezones. Any datetime conversion for display purposes should happen purely on the frontend.
 * **API Transmission:** All dates and timestamps MUST be serialized and returned in API responses strictly as **ISO-8601 formatted strings** (e.g., `2023-10-25T10:30:00Z`). Never return raw Unix epoch milliseconds or local date strings to the frontend.
+
+### Tenant Business Timezone Rule
+
+UTC remains mandatory for timestamp storage and API timestamp transmission.
+
+However, every tenant must have an explicit IANA business timezone, for example `Asia/Kolkata`. Backend business calculations involving attendance day boundaries, membership expiry dates, business opening hours, invoice cutoffs, scheduled notifications, and daily reports MUST use the tenant business timezone, never the individual mobile device timezone.
+
+Date-only business fields MUST use `YYYY-MM-DD` and must not be converted into UTC timestamps merely for storage convenience.
 
 ## 72. Per-Endpoint Payload Size Limits
 * **The Rule:** The default global `1mb` limit (Rule 37) can be overridden per-endpoint for specific use cases. General endpoints must reject payloads >1MB. File-upload endpoints must explicitly declare their own larger limit (e.g., `10mb` for profile images, `50mb` for bulk import CSVs). These overrides must be declared in the endpoint's controller decorator, not scattered in middleware.
@@ -2281,6 +2308,14 @@ If a backend implementation cannot provide a field currently required by the fro
 
 ## 83. Centralized RBAC / Permission Guards (Role-Based Access Control)
 * **The Rule:** Role and permission checks must NEVER be done inline inside service methods or repository layers (e.g., `if (user.role === 'admin')`). Permission enforcement is strictly a **controller-layer concern** and must be implemented using centralized, declarative guards or decorators.
+
+### Non-HTTP Execution Authorization
+
+Controller guards are the primary authorization boundary for HTTP requests.
+
+For workers, event consumers, scheduled jobs, webhooks, retry processors, and internal commands, authorization and tenant scope MUST be validated using a dedicated application-policy service and a trusted execution context.
+
+Services and repositories MUST NOT contain ad-hoc inline role checks. However, critical domain operations may require an explicit trusted actor/context object so the operation cannot execute without verified authorization, tenant scope, correlation ID, and execution source.
 * **How to implement per framework:**
   - **NestJS:** Use a `@Roles(...)` custom decorator paired with a global `RolesGuard` that reads the JWT payload. Never check `req.user.role` inside a service.
   - **Django:** Use Django REST Framework's `IsAuthenticated` + custom `Permission` classes (e.g., `IsAdminOrManager`). Never check `request.user.is_staff` inside a view's business logic.
@@ -2292,10 +2327,6 @@ If a backend implementation cannot provide a field currently required by the fro
 
 ---
 
-### Authorization for Non-HTTP Execution Paths
-Controller guards are the primary authorization boundary for HTTP requests.
-For non-HTTP execution paths such as BullMQ workers, scheduled jobs, event consumers, and webhooks, authorization and tenant scope must be validated through a dedicated application-policy service using a trusted execution context.
-Services must not contain ad-hoc inline role checks. However, critical domain operations may require an explicit trusted actor/context object so they cannot be executed without the required authorization context.
 
 
 ## 84. No Barrel File / Re-Export Index Rule & Facade Naming
@@ -2563,7 +2594,7 @@ If a rule cannot be mechanically enforced, the feature documentation must identi
   3. **Payment & Financial Mutations** — Any code that triggers charges, refunds, wallet deductions, or invoice generation.
   4. **Database Migration Files** — Any migration that adds `NOT NULL`, drops a column, or modifies a primary key. (Rule 24).
   5. **Webhook Signature Verification** — Any code in webhook handlers that verifies HMAC/cryptographic signatures (Rule 45). A bypass here allows forged payment/delivery events to trigger real financial or state-changing actions — the risk is equivalent to a direct payment mutation.
-  6. **Tenant Provisioning & Connection Routing** — Any code that creates a new tenant database, runs migrations programmatically, or resolves the `x-tenant-id` to a DataSource (Rule 39). A bug here risks cross-tenant data leakage — the single most severe failure mode in this architecture. This includes both the provisioning flow AND any modification to the request-scoped connection resolver.
+  6. **Tenant Provisioning & Connection Routing** — Any code that creates a new tenant database, runs migrations programmatically, or resolves an authorized TenantContext to a tenant DataSource (Rule 39). A bug here risks cross-tenant data leakage — the single most severe failure mode in this architecture. This includes both the provisioning flow AND any modification to the request-scoped connection resolver.
 * **Implementation:** In GitHub/GitLab, create a `CODEOWNERS` file mapping these folders to specific human reviewers. PRs touching these paths cannot be merged without a human approval even if all CI gates pass.
 * **PR Description Mandate:** Any PR touching these modules MUST include a section titled `## Security Impact Analysis` explaining what changed, what the risk surface is, and why the change is safe.
 * **Why:** AI code suggestions can frequently introduce security vulnerabilities, especially in security-critical paths. An AI agent might generate a logically correct but cryptographically weak JWT validation, or a permission guard with a subtle bypass. Automated tools cannot catch all semantic security flaws — a human security review is the final, non-negotiable gate.
@@ -3424,30 +3455,26 @@ The AI MUST NOT claim `VERIFIED_DELIVERED_ZIP` unless file-writing tool evidence
   3. **Side Effects:** Mention cache invalidations, webhooks, or event emissions.
   4. **AI Notes (Crucial):** Required documentation metadata, warnings, or routing instructions for future AIs.
 
-## Rule 116 - MCP-Ready API Design & AI Introspection
+## Rule 116 — OpenAPI Documentation and MCP-Ready API Design
 * **The Rule:** The backend must be designed to be "Self-Discoverable" by autonomous AI agents via the **Model Context Protocol (MCP)**. 
 * **NestJS implementation:** Every REST endpoint, DTO, and Response object/schema must be heavily annotated using Swagger decorators (`@ApiProperty`, `@ApiOperation`, `@ApiResponse`).
 * **Django implementation:** Every REST endpoint, Serializer, and Response object/schema must be heavily annotated using OpenAPI decorators (e.g., `drf-spectacular`'s `@extend_schema`).
 * **Framework-independent requirement:** The resulting OpenAPI/Swagger schema must be 100% strictly typed with no missing fields, explicitly documenting the response payload structure.
 * **Why:** This allows an MCP Server to ingest the backend's API specification and dynamically convert all your endpoints into **LLM Tools**. An AI agent can then connect to your backend and intuitively execute commands (e.g., `create_member`, `fetch_dashboard_kpis`) natively, treating your backend as an extension of its own brain rather than just static code.
 
-## Rule 117 - RAG-Ready API Projections (LLM / Chatbot Optimization)
-* **The Problem:** Standard REST JSON responses contain excessive noise (UUIDs, nested metadata, timestamps) that waste LLM tokens and degrade AI comprehension when used by an internal Chatbot.
-* **The Rule:** The backend must support "RAG-Ready" API projections for AI agents and Chatbots. However, you MUST NOT create a generic root-level `_rag` namespace, as this violates Rule 0D (Strict API Namespacing). RAG endpoints must remain strictly within their role and module boundary.
-* **Implementation:** You must expose these endpoints either via a dedicated sub-route within the module (e.g., `/api/v1/manager/members/rag`) or via a strict query parameter on the primary endpoint (e.g., `/api/v1/manager/members?format=rag`). These RAG-ready endpoints must return highly compressed, "Token-Optimized Markdown" or flattened textual representations of the data instead of deep JSON trees. (e.g., Returning `"Member: Rahul | Status: Active | Plan Expires: 5 Days"` instead of a 50-line JSON object).
-* **Why:** This drastically reduces token costs and hallucinations when feeding user context into the LLM context window.
-
-### RAG Projection Scope and Security Guardrails
-RAG projections are conditional, not universal.
-`?format=rag` is allowed only for explicitly approved internal/admin/search endpoints that have documented authorization, tenant filtering, field allowlists, payload limits, PII redaction rules, and audit logging.
-
-RAG projections are forbidden by default for:
-- Mobile application endpoints
-- Financial and billing endpoints
-- Authentication and credential endpoints
-- Health check endpoints
-- Bulk data export endpoints
-- Endpoints returning sensitive personal, medical, payment, or tenant secret data.
+## Rule 117 — Universal RAG-Ready API Projections (All Query Endpoints)
+* **The Problem:** Standard REST JSON responses contain excessive noise (UUIDs, nested metadata, timestamps) that waste LLM tokens and degrade AI comprehension when used by an internal Chatbot or AI agent.
+* **The Rule:** ALL read/query endpoints (`GET`) across all backend modules MUST support RAG-Ready API projections out-of-the-box. This is a universal architectural standard for all query endpoints — AI agents MUST implement this natively without pausing, asking for approval, or delaying development.
+* **Implementation:** 
+  1. Every `GET` endpoint must support the query parameter `?format=rag`.
+  2. When `?format=rag` is omitted or false, the endpoint returns the standard JSON response envelope (`ApiResponse<T>`).
+  3. When `?format=rag=true` (or `?format=rag`) is passed, the endpoint returns a clean, token-optimized Markdown or flattened plain-text representation of the resource (e.g., returning `"Member: Rahul | Status: Active | Plan Expires: 5 Days"` instead of a 50-line nested JSON tree).
+  4. RAG endpoints remain strictly within their role and module boundary; do NOT create a generic root-level `_rag` namespace.
+* **Automated Security & Sanitization (Zero-Delay Built-in Protection):**
+  - Tenant isolation is strictly preserved: RAG projections automatically inherit the query's tenant filter (`gymId`, `branchId` from JWT).
+  - Sensitive fields are automatically excluded: Passwords, password hashes, credit card tokens, secret keys, internal salts, and any field marked with `@Exclude()` or serializer exclusion are stripped automatically.
+  - Read-Only Scope: Mutating endpoints (`POST`, `PUT`, `PATCH`, `DELETE`) do NOT accept `?format=rag` because they are write operations.
+* **Why:** This drastically reduces token costs and hallucinations when feeding entity context into LLMs and Chatbots, while avoiding any human approval bottlenecks during development.
 
 
 ## Rule 118 - Event-Driven Immutable Analytics (Zero-Overwrite Strategy)
