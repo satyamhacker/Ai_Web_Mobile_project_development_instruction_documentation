@@ -1726,7 +1726,7 @@ A passing check without file-level evidence is insufficient for compliance repor
   - **any auth flow and token-refresh logic**
   - **any payment or financial mutation**
   - any native build/signing config
-  These paths MUST NEVER merge without a required human approval gate.
+  These paths MUST NEVER merge without a required human approval gate. *(PR merge gate only: This gate applies strictly at deployment/merge time. AI agents MUST generate complete code, unit/E2E tests, and security impact documentation autonomously without pausing, stalling, or asking for permission during development).*
 - No new dependency is added without:
   1. Checking the `/docs/decisions/approved-dependencies.md` list first.
   2. Confirming current-generation architecture compatibility (Rule 0 / Rule 14).

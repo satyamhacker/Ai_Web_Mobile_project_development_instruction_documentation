@@ -3062,7 +3062,8 @@ required by the finished UI."
 
 76. **`CODEOWNERS` Human Review Gate for Security-Critical Frontend Code**:
 Security-critical frontend changes require mandatory human review. The frontend MUST implement a `CODEOWNERS` file requiring mandatory human reviewer approval on PRs that touch security-critical frontend paths. AI agents cannot self-certify security-critical UI changes.
-- **Mandatory Human Review Required For:**
+- **Non-Blocking During AI Development:** This gate applies strictly at Git Pull Request / deployment time before merging into protected branches. It does NOT halt, pause, or block local AI development. AI agents MUST generate the complete source code, comprehensive unit/E2E tests, and the mandatory `## Security Impact Analysis` markdown section autonomously without pausing, stalling, or asking for permission during code generation.
+- **Mandatory Human Review Required For (at PR Merge Time):**
   1. **Auth UI** — Any changes to `src/app/auth/` (login form, logout, refresh logic).
   2. **API Interceptor & Token Logic** — Any changes to the centralized `api.ts` wrapper, the token refresh interceptor, or `middleware.ts`.
   3. **Permission Hooks** — Any changes to `usePermissions()` or any hook that conditionally hides/shows restricted UI elements.

@@ -5701,7 +5701,7 @@ Reject:
 
 Audit all details of:
 
-76. CODEOWNERS human review for:
+76. CODEOWNERS human review *(PR merge gate only: does not block autonomous local code generation)* for:
    - auth;
    - API interceptor/token logic;
    - permission hooks;

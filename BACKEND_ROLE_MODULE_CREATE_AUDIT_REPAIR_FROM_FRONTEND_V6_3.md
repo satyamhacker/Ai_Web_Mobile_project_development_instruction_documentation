@@ -7471,7 +7471,7 @@ Verify:
 - PR security impact section;
 - no bypass.
 
-This is a merge governance requirement, not something an AI may self-certify.
+This is a merge governance requirement, not something an AI may self-certify. *(Development Note: AI agents write 100% of the code, tests, and security impact analysis autonomously without pausing or asking for permission during development; this gate applies at Git PR merge time).*
 
 ---
 
