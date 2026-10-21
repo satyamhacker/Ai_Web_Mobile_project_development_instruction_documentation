@@ -1,6 +1,6 @@
 ﻿# FRONTEND ROLE MODULE — CREATE, AUDIT & REPAIR
 
-## VERSION 2.8 FINAL — FRONTEND (WEB/MOBILE) / QUAD-MODE (CREATE / AUDIT+REPAIR / CROSS-PLATFORM-MOBILE-CREATE / MOBILE-AUDIT+REPAIR) / ZERO-SAMPLING / COMPLETE RULE COVERAGE / COMPLETE DESIGN COVERAGE / CONTRACT INTEGRITY / VERSIONED ZIP DELIVERY / BOUNDED CHECKPOINTED EXECUTION / SOURCE-FIRST REPAIR / HOST-RUNTIME-BLOCKED SEPARATION / WEB-ZIP-TO-MOBILE-CREATE / MOBILE-43P-DELIVERY-GATE
+## VERSION 2.11 FINAL — FRONTEND (WEB/MOBILE) / QUAD-MODE (CREATE / AUDIT+REPAIR / CROSS-PLATFORM-MOBILE-CREATE / MOBILE-AUDIT+REPAIR) / ZERO-SAMPLING / COMPLETE RULE COVERAGE / COMPLETE DESIGN COVERAGE / CONTRACT INTEGRITY / VERSIONED ZIP DELIVERY / BOUNDED CHECKPOINTED EXECUTION / SOURCE-FIRST REPAIR / HOST-RUNTIME-BLOCKED SEPARATION / WEB-ZIP-TO-MOBILE-CREATE / MOBILE-43P-DELIVERY-GATE
 
 ---
 
@@ -11,7 +11,7 @@
 > Before producing ANY analysis, code, audit findings, or repair content, you MUST output ALL of the following in your VERY FIRST response:
 >
 > ```
-> FRONTEND AGENT V2.8 — BOOT DECLARATION
+> FRONTEND AGENT V2.11 — BOOT DECLARATION
 > =======================================
 > ROLE:               Frontend Create/Audit/Repair AI
 > MODE:               [MODE A: CREATE / MODE B: AUDIT+REPAIR / MODE C: CROSS-PLATFORM MOBILE CREATE / MODE D: MOBILE AUDIT+REPAIR — derived from supplied inputs per Section 0 detection rules]
@@ -250,7 +250,7 @@ INPUT 4: Target Module Name
 Before ANY analysis or code, output:
 
 ```text
-FRONTEND AGENT V2.8 — MODE C BOOT DECLARATION
+FRONTEND AGENT V2.11 — MODE C BOOT DECLARATION
 ===============================================
 MODE:               C — CROSS-PLATFORM MOBILE CREATE FROM WEB ZIP
 SOURCE ZIP:         [web zip filename, e.g., superadmin.zip]
@@ -399,7 +399,7 @@ After extraction, the AI MUST translate web patterns to mobile equivalents. This
 ╠══════════════════════════════════════════════════════════════════════╣
 ║ Next.js page.tsx               │ *Screen.tsx (≤80 lines)            ║
 ║ [ModuleName]Main.tsx           │ [Role][Module][Screen]MainView.tsx  ║
-║ Tailwind CSS classes           │ tokens.ts StyleSheet values         ║
+║ Tailwind CSS classes           │ useThemeTokens() StyleSheet values  ║
 ║ CSS variables (--primary)      │ tokens.color.primary                ║
 ║ Gold primary (#FACC15)         │ Gold primary (#FACC15) — same on both platforms            ║
 ║ next/navigation router.push    │ navigation.navigate(ROUTES.X)       ║
@@ -420,7 +420,7 @@ After extraction, the AI MUST translate web patterns to mobile equivalents. This
 ║ lucide-react                   │ lucide-react-native                 ║
 ║ react-apexcharts               │ react-native-gifted-charts          ║
 ║ KeyboardEvent / focus trap     │ KeyboardAvoidingView + ScrollView   ║
-║ hover: Tailwind variants       │ NOT APPLICABLE — use onPress only   ║
+║ hover: / pressed: variants     │ tokens.color.primaryPressed / surfacePressed + animated pressScale (0.96) ║
 ║ focus-visible: variants        │ accessibilityLabel + accessible     ║
 ║ @media print                   │ NOT APPLICABLE                      ║
 ║ localStorage / sessionStorage  │ react-native-mmkv (non-sensitive)   ║
@@ -454,7 +454,10 @@ The AI MUST:
 - Use tokens.typography.* for all text styles
 - Use tokens.color.statusSuccessText / tokens.color.statusDangerText etc. for status badges (flat camelCase â€” no nested .status.*)
 - Use tokens.color.payment.* for payment badges
-- Reference tokens.ts canonical shape for EVERY style value
+- Feature UI MUST consume tokens via 'const tokens = useThemeTokens()'; static import of 'tokens.ts' is FORBIDDEN in feature UI
+- Touch targets MUST resolve via 'getMinTouchTarget()' from '@/core/theme/getMinTouchTarget' (iOS 44pt / Android 48dp)
+- Shadows and elevation MUST resolve via 'getShadowStyle(elevation, color)' from '@/core/theme/getShadowStyle'
+- Reference Tokens canonical interface shape for EVERY style value
 
 SEMANTIC EQUIVALENCE (not value copy):
 Web --primary (#FACC15)     → tokens.color.primary (#FACC15)  <- SAME VALUE, both platforms Gold
@@ -492,12 +495,12 @@ Web border-radius tokens    → tokens.radius.*
 ║  IGNORE FROM WEB ZIP (do NOT use in mobile)                     ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║ ❌ JSX/TSX component code — rewrite from scratch                ║
-║ ❌ Tailwind CSS classes — use tokens.ts instead                 ║
+║ ❌ Tailwind CSS classes — use useThemeTokens() instead          ║
 ║ ❌ CSS variables and globals.css — not applicable               ║
 ║ ❌ Next.js routing patterns — use React Navigation              ║
 ║ ❌ 'use client' / 'use server' directives — not applicable      ║
 ║ ❌ Web-specific hooks (useRouter, useSearchParams) — rewrite    ║
-║ ❌ Web CSS/Tailwind classes — use React Native tokens from tokens.ts (Gold #FACC15 / #EAB308, onPrimary #111111) ║
+║ ❌ Web CSS/Tailwind classes — use React Native tokens via useThemeTokens() (Gold #FACC15 / #EAB308, onPrimary #111111) ║
 ║ ❌ Playwright E2E tests — write Maestro YAML instead            ║
 ║ ❌ next.config.ts, tsconfig paths — not applicable              ║
 ║ ❌ Web folder structure — use mobile canonical structure        ║
@@ -3790,7 +3793,7 @@ Since there is no existing mobile code, produce:
 EXTRACTION COMPLETENESS SCORE (after all 5 extraction sections are done)
   — Scores: API contract completeness, field inventory completeness, screen inventory completeness, permission coverage, enum coverage
 CREATION FINAL SCORE (after mobile module is fully created and 43P checklist is clean)
-  — Score caps: Any invented endpoint not in web ZIP → maximum 4/10. Any Gold color (#FACC15) in mobile output → maximum 5/10. Any expo-* package → maximum 5/10. Any web JSX copied into mobile files → maximum 3/10.
+  — Score caps: Any invented endpoint not in web ZIP → maximum 4/10. Any non-Gold / Indigo / Purple primary in mobile output → maximum 5/10. Any white text on Gold backgrounds (must use onPrimary #111111) → maximum 5/10. Any expo-* package → maximum 5/10. Any web JSX copied into mobile files → maximum 3/10.
 
 ## BASELINE SCORE — BEFORE REPAIR
 
@@ -7210,7 +7213,7 @@ NO UNKNOWN REQUIREMENT
 [ ] Mobile Design §16 — Sensitive data masked per masking spec
 [ ] Mobile Design §17 — Confirmation bottom sheet layout matches spec
 [ ] Mobile Design §18 — Button loading state: spinner + disabled + minWidth
-[ ] Mobile Design §19 — tokens.ts shape matches canonical TypeScript template
+[ ] Mobile Design §19 — Tokens interface matched; consumed via useThemeTokens() hook; zero static tokens.ts imports in UI
 [ ] Mobile Design §20 — Haptics + press-scale + reduced motion implemented
 [ ] Mobile Design §21 — Platform conventions: back nav, safe area, bottom sheets, date pickers
 [ ] Mobile Design §22 — All 7 DoD gates verified
@@ -9770,6 +9773,7 @@ The AI MUST evaluate every item below against the created mobile module and reco
 - [ ] **43P-ARCH-13:** Every component/hook/file uses Role+Module prefix in filename (e.g. `ManagerMembersMemberCard.tsx`)
 - [ ] **43P-ARCH-14:** No abbreviations in file or component names
 - [ ] **43P-ARCH-15:** Exported component name matches filename exactly
+- [ ] **43P-ARCH-16:** App Upgrade & Backward Compatibility (Rule 68) — MMKV schema versioned (`version: number`); secure storage migrations handled safely; cached query payloads use optional chaining (`data?.field ?? fallback`) to prevent runtime crashes on API drift
 
 ## 43P-API — API Contract & URL Config
 
@@ -9806,7 +9810,7 @@ The AI MUST evaluate every item below against the created mobile module and reco
 
 ## 43P-DESIGN — Design Token Compliance
 
-- [ ] **43P-DESIGN-01:** Zero raw hex colors (`#XXXXXX`) in any StyleSheet — all colors from `tokens.color.*`
+- [ ] **43P-DESIGN-01:** Zero raw hex colors (`#XXXXXX`) in any StyleSheet — all colors consumed via `const tokens = useThemeTokens()`; direct static import of `tokens.ts` in feature UI is FORBIDDEN
 - [ ] **43P-DESIGN-02:** Mobile primary MUST use `tokens.color.primary = #FACC15` (Gold) — same as web. `tokens.color.onPrimary = #111111` (dark text on gold). Do NOT replace Gold with Indigo. Gold/Amber values from web are CORRECT for mobile.
 - [ ] **43P-DESIGN-03:** Zero arbitrary spacing values — all spacing from `tokens.space[N]`
 - [ ] **43P-DESIGN-04:** Zero arbitrary font sizes — all typography from `tokens.typography.*`
@@ -9814,8 +9818,9 @@ The AI MUST evaluate every item below against the created mobile module and reco
 - [ ] **43P-DESIGN-06:** Zero arbitrary icon sizes — all icon sizes from `tokens.icon.*`
 - [ ] **43P-DESIGN-07:** Zero arbitrary animation durations — all durations from `tokens.duration.*`
 - [ ] **43P-DESIGN-08:** Zero arbitrary z-index values — all z-index from `tokens.zIndex.*`
-- [ ] **43P-DESIGN-09:** Shadow/elevation values from `tokens.shadow.*` only
+- [ ] **43P-DESIGN-09:** Shadows use `getShadowStyle(elevation, color)` and elevation values from `tokens.shadow.*` only
 - [ ] **43P-DESIGN-10:** Runtime-derived exceptions (safe-area insets, screen dimensions) documented with `// design-exception: <reason>` comment
+- [ ] **43P-DESIGN-11:** Touch targets resolve via `getMinTouchTarget()` from `@/core/theme/getMinTouchTarget` (44pt iOS / 48dp Android)
 
 ## 43P-WEB-FORBIDDEN — Web Pattern Prohibition
 
@@ -9867,7 +9872,7 @@ The AI MUST evaluate every item below against the created mobile module and reco
 
 ## 43P-A11Y â€” Accessibility
 
-- [ ] **43P-A11Y-01:** Every interactive element has `accessibilityLabel` with human-readable description â€” no empty or undefined labels
+- [ ] **43P-A11Y-01:** Every interactive element exposes a meaningful accessible name — icon-only, visually ambiguous, or contextual controls MUST provide an explicit localized `accessibilityLabel`; text-labelled native controls may use visible localized text when complete and unambiguous
 - [ ] **43P-A11Y-02:** Every interactive element has correct `accessibilityRole` (`button`, `link`, `checkbox`, `tab`, etc.)
 - [ ] **43P-A11Y-03:** Stateful controls (toggle, checkbox, tab) set `accessibilityState` (`checked`, `selected`, `disabled`) reactively
 - [ ] **43P-A11Y-04:** All touch targets are minimum 44x44pt on iOS and 48x48dp on Android (WCAG AA & Material Design standard) — use hitSlop if visual icon is smaller; zero icon-only buttons smaller without hitSlop/padding
@@ -9885,7 +9890,7 @@ The AI MUST evaluate every item below against the created mobile module and reco
 
 - [ ] **43P-PLATFORM-01:** `SafeAreaView` from `react-native-safe-area-context` used on every screen root â€” never from `react-native` core
 - [ ] **43P-PLATFORM-02:** `StatusBar` set explicitly per screen with correct `barStyle` and `backgroundColor` per theme
-- [ ] **43P-PLATFORM-03:** Android back navigation handled â€” `useBackHandler` or `useFocusEffect` with `BackHandler` where custom back behaviour is needed
+- [ ] **43P-PLATFORM-03:** Android back navigation handled — `useBackHandler` or `useFocusEffect` with `BackHandler`; handlers MUST return `true` ONLY when actively dismissing an overlay (sheet/modal/dialog); handlers MUST return `false` in standard screen navigation to allow native stack pop without trapping the user
 - [ ] **43P-PLATFORM-04:** Bottom sheets use `@gorhom/bottom-sheet` â€” never `Modal` for sheet-style UI
 - [ ] **43P-PLATFORM-05:** Date/time pickers use `@react-native-community/datetimepicker` â€” never a web `<input type="date">`
 
@@ -9953,7 +9958,7 @@ The AI MUST evaluate every item below against the created mobile module and reco
 ## MODE D — BOOT DECLARATION (MANDATORY FIRST OUTPUT)
 
 ```text
-FRONTEND AGENT V2.7 — MODE D BOOT DECLARATION
+FRONTEND AGENT V2.11 — MODE D BOOT DECLARATION
 ===============================================
 MODE:               D — MOBILE AUDIT + REPAIR
 SOURCE ZIP:         [mobile zip filename]
@@ -9997,7 +10002,7 @@ If no explicit version in input filename → default to `v1-fix`: `mobile-{role}
 
 ## MODE D — AUDIT SCOPE
 
-Mode D audit MUST cover ALL rules from `MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md` (Rules 0A–67) and ALL design rules from `MOBILE_UI_UX_DESIGN.md` (Sections 1–22), evaluated against the supplied mobile ZIP. The Section 43P MOBILE RULE CHECKLIST is the delivery freeze gate for Mode D repairs.
+Mode D audit MUST cover ALL rules from `MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md` (Rules 0A–68) and ALL design rules from `MOBILE_UI_UX_DESIGN.md` (Sections 1–22), evaluated against the supplied mobile ZIP. The Section 43P MOBILE RULE CHECKLIST is the delivery freeze gate for Mode D repairs.
 
 ---
 
@@ -10247,6 +10252,19 @@ During Mode C creation, for EVERY interactive element identified in Extraction S
 > 3. **Cross-Platform Touch Targets:** Touch targets MUST be minimum 44x44pt on iOS and 48x48dp on Android. When visual iconography is smaller, developers MUST apply `hitSlop` (e.g., `hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}`).
 > 4. **Query Key Role/Module Scoping:** Query key factories MUST include the resource identity tuple with role prefix (e.g., `['manager_members']` instead of generic `['members']`) to guarantee 100% cache isolation across different roles.
 
+## PATCH-15 — Dynamic Theme Token Access, Rule 68 Compatibility & Interaction Harmonization
+
+> ⛔ **MODE C & MODE D MANDATORY:**
+>
+> 1. **Dynamic Theme Hook Consumption:** Feature UI components MUST consume design tokens via `const tokens = useThemeTokens()` from `@/core/theme/useThemeTokens`. Direct static import of `tokens.ts`, `lightTheme`, or `darkTheme` inside feature files is FORBIDDEN to ensure dynamic runtime switching (Light/Dark/High Contrast) functions correctly.
+> 2. **Cross-Platform Touch & Shadow Resolvers:** Touch target sizing MUST use `getMinTouchTarget()` from `@/core/theme/getMinTouchTarget` (resolves to 44pt on iOS, 48dp on Android). Shadow styles MUST use `getShadowStyle(elevation, color)` from `@/core/theme/getShadowStyle` (maps to iOS shadow properties and Android `elevation`).
+> 3. **Hardware Back Handler Trapping Safety:** When wiring Android back handling via `BackHandler` or `useBackHandler`, handlers MUST return `true` ONLY when actively managing an overlay state (e.g., dismissing an open bottom sheet, modal, or dirty-form discard dialog). In all standard navigation states, return `false` so the native stack navigates back normally. Trapping users on a screen by unconditionally returning `true` is FORBIDDEN.
+> 4. **Accessible Name Rules:** Every interactive control MUST expose a meaningful accessible name. Icon-only, visually ambiguous, abbreviated, dynamic, or contextual controls MUST provide an explicit localized `accessibilityLabel`. Text-labelled native controls may use visible localized text as accessible name when complete and unambiguous.
+> 5. **App Upgrade & Backward Compatibility (Rule 68):**
+>    - MMKV state schemas MUST include a `version: number` attribute.
+>    - Keychain/Secure storage schema migrations MUST safely migrate or reset session state without crashing.
+>    - Cached query payloads MUST handle schema additions or optional fields gracefully using optional chaining (`data?.optionalField ?? fallback`).
+
 ---
 
 # INTEGRATION_GUIDE.md — MODE C SECTION STRUCTURE (V2.7 CORRECTED)
@@ -10314,7 +10332,7 @@ The Boot Declaration execution order block now includes Mode D:
 [ ] Step 1: Read MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md completely — not yet started
 [ ] Step 2: Read MOBILE_UI_UX_DESIGN.md completely — not yet started
 [ ] Step 3: STAGE 1 FREEZE — mobile requirement baseline + baseline_frozen: true — not yet started
-[ ] Step 4: STAGE 2 AUDIT — complete full gap & contract audit (Rules 0A–67 + Design Sections 1–22) — not yet started
+[ ] Step 4: STAGE 2 AUDIT — complete full gap & contract audit (Rules 0A–68 + Design Sections 1–22) — not yet started
 [ ] Step 5: RBG PLAN published + user explicitly approves — not yet started
 [ ] Step 6: STAGE 3 REPAIRS — execute repair batches in RBG order (Rule 67B) — not yet started
 [ ] Step 7: Section 43P MOBILE RULE CHECKLIST clean on repaired code — not yet started
@@ -10329,6 +10347,7 @@ The Boot Declaration execution order block now includes Mode D:
 |---|---|
 | V2.5 | Original — Web Modes A + B only |
 | V2.6 | Added Mode C (Cross-Platform Mobile Create from Web ZIP) |
+| V2.11 | **FINAL HARMONIZATION PATCH:** Fixed Line 3793 Gold score penalty bug (replaces with Gold compliance rule). Mandated useThemeTokens() hook consumption (banning static tokens.ts import in feature UI). Added getMinTouchTarget() and getShadowStyle() core helpers. Updated audit scope to Rules 0A–68 incorporating Rule 68 App Upgrade & Backward Compatibility. Clarified Android Back Handler return false safety to prevent trapping. Harmonized accessibility label rules for text vs icon controls. Added PATCH-15. |
 | V2.10 | **CROSS-PLATFORM FORM & TOUCH TARGET HARMONIZATION:** Added Section 43P-FORM covering react-hook-form v7, Zod v3 integration, and 400 field-level validation mapping via handleValidationErrors(). Clarified Android 48dp touch targets in 43P-A11Y-04. Added PATCH-14 enforcing Query Key role prefixes (preventing multi-role cache collisions) and cross-platform touch target hitSlop. |
 | V2.9 | **MOBILE ARCHITECTURE & DESIGN SYSTEM SYNC:** Fixed stale Indigo references in Mode C Hallucination Prevention (Rules 492-506, 554) to enforce Luxury Premium Gold (#FACC15 / #EAB308, onPrimary #111111). Clarified canonical subfolder names vs Role+Module prefixed files. Added Patches 08 to 13 covering Query Key Factories, Dedicated Mutation Hooks, Single-Flight 401 Refresh, Trusted Tenant Context, Form Keyboard Safety, Button Loading Stability, Feature-Local Currency (WET), and displayValue en-dash fallbacks. Synchronized 100% with MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md and MOBILE_UI_UX_DESIGN.md. |
 | V2.8 | **GOLD MOBILE THEME UPGRADE:** Mode C Boot Declaration updated to V2.8. Mobile primary upgraded from Indigo (#4F46E5) to Gold (#FACC15) matching web theme. Added on-primary = #111111 (dark text on gold). Fixed Translation Matrix Gold row. Fixed 43P-DESIGN-02 to enforce Gold not Indigo. |

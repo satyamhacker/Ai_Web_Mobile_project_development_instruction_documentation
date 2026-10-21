@@ -1,4 +1,4 @@
-﻿# React Native Global Design System — Token Source
+# React Native Global Design System — Token Source
 
 > ⛔⛔⛔ **AI AGENT — MANDATORY DESIGN ENFORCEMENT & INTEGRITY DIRECTIVE — READ FIRST** ⛔⛔⛔
 >
@@ -230,11 +230,11 @@ All screens and components MUST meet these mobile accessibility standards:
 
 ### Screen Reader (VoiceOver / TalkBack)
 - Every interactive element MUST expose a meaningful accessible name.
-  - Icon-only or visually ambiguous controls MUST provide `accessibilityLabel`.
-  - Text-labelled native controls may use their visible text as the accessible name
-    when it is complete, unambiguous, and localized.
-  - Provide `accessibilityLabel` whenever visible text is abbreviated, contextual,
-    dynamic, non-textual, or insufficient to describe the action.
+  - Icon-only, visually ambiguous, abbreviated, dynamic, or contextual controls
+    MUST provide an explicit localized `accessibilityLabel`.
+  - A text-labelled native control may use its visible localized text as its
+    accessible name when that text fully and unambiguously describes the action.
+  - Never rely on visible text alone for icon-only controls.
 - Use `accessibilityHint` to describe the outcome of an action where the label alone is insufficient (e.g., `accessibilityLabel="Delete member"` + `accessibilityHint="Permanently removes the member and all their data"`).
 - Use `accessibilityRole` to communicate the semantic role: `button`, `link`, `header`, `checkbox`, `switch`, `image`, `text`, `none`, etc.
 - Use `accessibilityState` to communicate dynamic states: `{ disabled, selected, checked, busy, expanded }`.
@@ -899,6 +899,15 @@ export interface Tokens {
 // tokens.color.onPrimary         ✅  (= #111111 — dark text on gold)
 ```
 
+Feature UI MUST access the active token value only through:
+
+```ts
+const tokens = useThemeTokens();
+```
+
+Feature UI MUST NOT import `lightTheme`, `darkTheme`, `tokenDefinitions`, or a
+static `tokens` object directly. Those imports are restricted to `src/core/theme/`.
+
 **Workflow rule (when a new token is needed):**
 1. Add the token to THIS file first — with light + dark values and a usage description.
 2. Implement it in the React Native theme module (Rule 3).
@@ -932,7 +941,14 @@ CI MUST fail when:
 - deprecated tokens are used;
 - defined text/background semantic pairs fail WCAG AA contrast requirements;
 - interactive controls fail the required minimum touch-target size (44pt/48dp);
-- any screen component imports a raw color value or arbitrary size value without a `// design-exception:` comment.
+- any screen component introduces a raw visual design value for color, spacing,
+  typography, radius, icon size, touch target, shadow, opacity, duration,
+  z-index, or elevation without using an approved token or a documented
+  `// design-exception:`.
+
+Structural React Native values are permitted where they are not visual design
+choices, including Flexbox control values, Boolean props, semantic native props,
+`StyleSheet.hairlineWidth`, and documented runtime/native-library requirements.
 
 **Token Validation Tooling (Required):**
 A token-sync script MUST be included in the CI pipeline that:
@@ -952,6 +968,28 @@ To ensure the application feels like a world-class, premium native app, **every 
 
 1. **Universal Micro-Animations:** Use the motion tokens (Section 7) universally. Press states MUST scale down slightly (`press-scale = 0.96`). Bottom sheets MUST slide in smoothly. **Reduced-Motion Compliance:** Always respect the OS-level reduced-motion preference as strictly outlined in Section 7. Remove non-essential motion and never use animation as the sole indicator of a state change.
 2. **Haptic Feedback:** Pair visual feedback with tactile feedback.
+
+Haptic feedback is a progressive enhancement, not a mandatory response to every
+tap or navigation event.
+
+Use haptics only for meaningful state transitions such as:
+- successful submit, confirmation, or completion;
+- destructive action confirmation;
+- validation failure or blocked action;
+- selection/toggle state change where tactile confirmation adds value.
+
+Do NOT use haptics for:
+- ordinary navigation;
+- list scrolling;
+- passive card presses;
+- automatic refreshes;
+- repeated rendering;
+- background sync;
+- automatic retries.
+
+Haptic failure or unsupported-device behavior MUST safely no-op and MUST NOT
+delay, block, or change the user action.
+
    - **Light Impact:** Minor UI changes (switches, dropdown toggles, pulling to refresh).
    - **Success Notification:** Completing a wizard, saving a form, processing payment.
    - **Error Notification:** Destructive actions, or when validation fails.
