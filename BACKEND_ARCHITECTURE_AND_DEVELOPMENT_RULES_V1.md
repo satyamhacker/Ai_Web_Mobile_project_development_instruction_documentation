@@ -2,7 +2,31 @@
 
 > ⛔⛔⛔ **AI AGENT — MANDATORY ENFORCEMENT HEADER — READ BEFORE ANYTHING ELSE** ⛔⛔⛔
 >
-> **VIOLATION OF ANY RULE IN THIS DOCUMENT = ARCHITECTURE FAILURE. ALL OUTPUT IS DISCARDED. MUST RESTART.**
+## Failure Handling Protocol
+
+A rule violation is never silently ignored.
+
+### Audit Mode
+- Record the violation as `NON_COMPLIANT`.
+- Provide rule ID, exact evidence, affected file/path, impact, and remediation.
+- Continue auditing unrelated rules where evidence is available.
+- Do not mark the affected item as compliant.
+
+### Repair Mode
+- Repair violations that are inside the supplied writable scope.
+- Repair structural violations before business-logic violations.
+- Do not halt solely because a repair is required.
+- If the fix requires files outside the supplied writable scope, record `BLOCKED_BY_SUPPLIED_SCOPE` and provide the exact owner action required.
+
+### Hard Stop Conditions
+The AI must stop only when:
+1. A security-sensitive action is ambiguous and could cause data exposure, tenant leakage, financial loss, or irreversible deletion.
+2. A required owner decision is missing due to an authoritative conflict.
+3. The requested implementation requires an unapproved dependency.
+4. The task requires production secrets, credentials, or live infrastructure access.
+
+Previously verified and unaffected work remains valid and MUST NOT be discarded.
+The AI MUST NOT silently continue after detecting a violation.
 >
 > This document is the **absolute normative authority** for all backend code in this project. Every rule is MANDATORY unless the rule itself defines a named `NOT_APPLICABLE` condition with explicit evidence. The following words in this document carry their STRICTEST possible meaning:
 >
@@ -27,7 +51,7 @@
 > [ ] CANONICAL RULE INDEX consulted
 > [ ] MINIMUM EVIDENCE STANDARD (bottom of document) loaded into context
 > ```
-> **Failure to complete the above = entire output is discarded.**
+> **Failure to complete the above = mandatory compliance stop on affected items.**
 
 ## The Core Philosophy
 This document outlines the strict architectural rules for building the backend using the approved project framework, primarily **NestJS (TypeScript)** or **Django (Python)**, while preserving the same isolation and architectural principles. The primary goal is **Extreme Isolation**.
@@ -38,25 +62,21 @@ Tomorrow, if you ask an AI to fix a specific bug in "Payment Processing", the pr
 
 **Minimum-Context Principle:** Prefer the smallest coherent change set. Single-file repair is the goal when the dependency graph permits it. Multi-file changes are **allowed — and expected** when required by architectural contracts such as transactions (Orchestrator → services → repositories), API contract updates, co-located tests, or shared infrastructure extensions. The AI MUST NOT expand context beyond the minimum required set. If a bug fix genuinely requires touching an Orchestrator, an internal sub-service, and a repository together, that is correct — not a sign of bad architecture. If it requires touching 10 unrelated files, the architecture is too coupled.
 
-## GLOBAL AUTHORITATIVE PRECEDENCE ORDER
+## Master Cross-Document Precedence Order
 
-When multiple supplied sources conflict, resolve them in the following order:
+When instructions conflict across documents or layers, apply this exact order of authority:
 
 1. Security, privacy, authorization, tenant isolation, legal/compliance, and data-integrity requirements
-2. Explicit architecture and framework rules
-3. Explicit API/domain contracts
-4. Repository conventions within the supplied writable scope
-5. Frontend API-client/network behavior
-6. Frontend schemas, hooks, tests, mocks, fixtures, and static UI behavior
-7. AI inference or general framework conventions
+2. Database constraint, migration backward compatibility, and transactional integrity rules
+3. Explicit user-approved scope and verified API / domain contracts
+4. `BACKEND_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md`
+5. `BACKEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_FROM_FRONTEND_V6_3.md` for audit sequencing, RBG planning, and repair execution
+6. Frontend API client/network behavior and verified contract fixtures
+7. Feature-local documentation (`_features.md`, `_forbidden.md`)
+8. Existing repository implementation conventions
 
-If a conflict remains unresolved at the same precedence level:
-- Do NOT guess
-- Do NOT silently choose
-- Record `AUTHORITATIVE_CONFLICT`
-- Record both sources
-- Record impact
-- Record required owner decision
+A lower-priority rule MUST NOT override a higher-priority rule.
+Any unresolved conflict MUST be recorded as `BLOCKED_BY_SUPPLIED_CONTRACT` or `AUTHORITATIVE_CONFLICT` rather than resolved through invention.
 
 ---
 
@@ -98,7 +118,8 @@ backend-admin/
 └── admin-members/   ← WRONG: must be inside admin-modules/ — RECORD NON_COMPLIANT
 ```
 
-> **Failing ANY item above = ARCHITECTURE FAILURE. Record it. Stop. Do not proceed.**
+> **Failing ANY item above in Audit Mode = ARCHITECTURE FAILURE. Record `NON_COMPLIANT` with file and line evidence.**
+> **In Repair Mode, structural violations (folder layout, missing core wrappers, misplaced feature modules, unprefixed sub-folders) MUST BE ACTIVELY REPAIRED FIRST (in RBG 1) before repairing inner feature code.**
 > AI agents MUST verify this gate BEFORE evaluating any deeper architecture rule.
 > This check takes priority over all other structural evaluations.
 
@@ -130,9 +151,10 @@ Every AI agent MUST consult this index before beginning any audit or implementat
 > ⛔ **AI MANDATORY NOTE — THIS IS NOT OPTIONAL:**
 > **Every rule in this document is mandatory** — whether or not it appears in the index above.
 > This index is a navigation aid only. Unlisted rules are NOT lower priority — they have equal authority.
-> **You MUST read and apply every rule from Rule 0A through Rule 119 and the MINIMUM EVIDENCE STANDARD.**
-> **Stopping after Section 100 or "not having time" to read the full document = incomplete output = task failure.**
-> **Consequence of partial reading:** You will miss Rules 101-119, the MINIMUM EVIDENCE STANDARD, and the RULE APPLICABILITY CRITERIA TEMPLATE — all of which contain mandatory gates that will cause your output to be rejected.
+>
+> ## Canonical Rule Reference Policy
+> Audit and repair workflows MUST reference rules by their official canonical names and section titles rather than fragile numerical spans alone. Audits evaluate against all currently numbered and lettered rules in `BACKEND_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md`, including the Structure Gate, Multi-Tenancy Contract, Mobile-First Rules (Rules 120–124), and Minimum Evidence Standard.
+> **Stopping early or "not having time" to read the full document = incomplete output = task failure.**
 
 ---
 
@@ -254,6 +276,19 @@ To prevent architectural drift and eliminate monolithic backend sprawl, the back
 3. **Autonomous AI Repair Hand-off:** When an API defect, data calculation bug, or validation issue occurs in ANY feature (e.g. Attendance, Billing, or Schedule):
    - The developer provides **ONLY** that feature module folder (`src/backend-{role}/{role}-modules/{role}-{feature}/`) to the AI agent.
    - The AI agent will audit, repair, test, and deliver that module in complete isolation without requiring or modifying sibling modules or host application slices (`app.module.ts`, `main.ts`).
+
+### Cross-Feature Workflow Exception
+
+Feature modules must not directly import sibling feature repositories, services, entities, or internal business logic.
+
+If a genuinely atomic workflow spans multiple bounded contexts, it must be owned by an explicitly named workflow/orchestration module under `src/infrastructure/` or an approved application-workflow boundary.
+
+Rules:
+1. The workflow must depend only on published feature interfaces/contracts, never sibling internal repositories.
+2. The workflow must be documented in every affected module's `{role}-{module}-dependencies.md`.
+3. The workflow owner must define the transaction boundary, failure behavior, idempotency behavior, and emitted events.
+4. A direct sibling import remains forbidden.
+5. If atomicity is not genuinely required, use an outbox-backed domain event instead.
 
 ### 0D. BACKEND NAMESPACE PREFIXING (MANDATORY)
 
@@ -422,6 +457,25 @@ This application is **multi-tenant**. Every feature module across every role MUS
 | `gymId` | JWT payload ONLY | Primary tenant identifier (the gym/organization) |
 | `branchId` | JWT payload ONLY | Sub-tenant identifier (the gym branch) |
 
+### Tenant Scope Classification
+
+Not every record has the same tenant scope. Every entity and repository method must declare one of these scopes:
+
+| Scope | Required filter | Description |
+|---|---|---|
+| `MASTER_GLOBAL` | Master database only; no gym/branch business data | Global users, tenants registry, system feature flags |
+| `GYM_SCOPED` | `gymId` is mandatory | Subscription plans, membership types, roles/permissions |
+| `BRANCH_SCOPED` | `gymId` and `branchId` are mandatory | Attendance logs, local equipment, shift schedules |
+| `PLATFORM_SCOPED` | Superadmin-only master data | SaaS billing, platform analytics, tenant provisioning |
+| `IMMUTABLE_AUDIT` | Scope follows originating record | Audit logs, security events, compliance archives |
+
+Rules:
+1. `branchId` must not be forced onto gym-wide entities where it has no meaning.
+2. Every repository method must declare its expected tenant scope in its method documentation or responsibility map.
+3. A repository query must apply the filters required by its declared scope.
+4. A missing required scope filter is a P0 security failure.
+5. A repository method handling a master/global entity must use the master DataSource and must never accidentally run against a tenant DataSource.
+
 **ABSOLUTE RULES — NO EXCEPTIONS:**
 1. `gymId` and `branchId` MUST be extracted from the authenticated JWT payload — NEVER from the request body, URL query string, or client-supplied headers. **Consequence of violation:** Client-controlled tenant ID = complete tenant isolation bypass — any user can forge access to any gym's data.
 2. Services MUST NOT accept `gymId`/`branchId` as input parameters from controllers — they receive them from the auth context/JWT payload resolved by the auth guard. **Consequence of violation:** Business logic becomes responsible for tenant enforcement — a missed parameter causes cross-tenant leakage.
@@ -504,6 +558,26 @@ The following are the ONLY approved npm packages for backend feature modules. AI
 | E2E Testing | Python `pytest` + `httpx` | Jest E2E, Supertest |
 
 **Django equivalent packages:** `djangorestframework`, `celery`, `django-redis`, `python-jose` or `djangorestframework-simplejwt`, `pytest-django`, `httpx` for E2E.
+
+### Infrastructure Package Approval Matrix
+
+The project owner must maintain a version-pinned approved package matrix for mandatory cross-cutting infrastructure, including where applicable:
+
+- HTTP security headers (`helmet`)
+- Compression (`compression`)
+- OpenTelemetry instrumentation (`@opentelemetry/api`, `@opentelemetry/sdk-node`)
+- Prometheus metrics (`prom-client`)
+- Password hashing (`bcrypt` or `argon2`)
+- Encryption (`crypto` native or approved AES-256-GCM wrapper)
+- Image processing (`sharp`)
+- Cloud object storage SDK (`@aws-sdk/client-s3`)
+- ESLint architectural-boundary enforcement (`eslint-plugin-boundaries`, `import-linter`)
+- Secrets scanning
+- SAST/SCA tooling
+
+A rule must not require implementation using a dependency that is absent from the approved package matrix.
+
+`Zod` is forbidden for business request DTO validation but is explicitly permitted for centralized environment/configuration schema validation only.
 
 ---
 
@@ -848,6 +922,37 @@ For events that require durable delivery or cross-instance processing, the appli
 In-process event emitters MUST NOT be treated as the durable transport for critical domain events.
 
 Redis Pub/Sub is reserved for transient real-time fan-out and MUST NOT replace Redis Streams for durable events. The Finance and Email modules listen to this event independently. Now, the modules are 100% decoupled.
+
+### Edge Case A.1: Transactional Outbox for Durable Domain Events
+
+A database mutation and publication of its critical domain event must never rely on two separate non-atomic operations.
+
+Forbidden flow:
+1. Save database record
+2. Commit transaction
+3. Publish Redis Stream event
+4. Process crashes before publish (Permanent Event Loss)
+
+Required flow:
+1. Start database transaction.
+2. Perform domain mutation.
+3. Insert a versioned event record into an `events_outbox` table in the same transaction.
+4. Commit once.
+5. A dedicated outbox relay worker publishes pending events to Redis Streams.
+6. Mark the outbox event as published only after publish acknowledgement.
+7. Consumers must be idempotent because delivery is at-least-once, not exactly-once.
+
+Every critical event must include:
+- `eventId`: UUID v4
+- `eventName`: Standardized screaming snake case event name
+- `eventVersion`: Monotonically increasing schema version
+- `tenantScope`: `gymId` and `branchId` (where applicable)
+- `aggregateId`: Primary entity ID
+- `occurredAt`: ISO 8601 UTC timestamp
+- `correlationId`: Request tracking ID
+- `payload`: Versioned event JSON payload
+
+Redis Streams provide durable delivery. The transactional outbox prevents the database/event dual-write failure before the event reaches Redis Streams.
 
 ### Edge Case B: Database Transactions (All-or-Nothing Operations)
 *Scenario:* You split your logic into `BillingService` and `MembershipService`. But creating a member and charging their card MUST happen in the same database transaction.
@@ -1209,7 +1314,7 @@ filters, dropdowns, detail views. Backend MUST return all of them (Rule 82A).]
 - [ ] Rule 82A: Response DTO satisfies complete frontend UI Data Requirements from the Frozen API Contract section in this `-backend-feature.md` — no missing table columns, KPI fields, chart series, or relationship fields
 - [ ] Rule 82A-SYNC: Frozen API Contract section in this file is up-to-date with frontend `_features.md` API contract
 - [ ] Rule 86: Verb contract naming applied (createX, findXById, findXByIdOrThrow)
-- [ ] Rule 87: Every service method ≤ 20 lines, single responsibility
+- [ ] Rule 87: Service methods have one clear responsibility; methods above the 20-line soft ceiling include a documented reason or are decomposed where complexity requires it.
 - [ ] Rule 89: Domain objects used in services — ORM entities stay in repository layer
 - [ ] Rule 92: All ORM orderBy/where with user input validated against allowlist
 - [ ] Rule 93: If module touches auth/billing/webhooks/tenant — CODEOWNERS human review required
@@ -1221,12 +1326,27 @@ filters, dropdowns, detail views. Backend MUST return all of them (Rule 82A).]
   2. **Response Compression:** Enable gzip/Brotli compression at the framework level (e.g., `compression` middleware in Node.js, `GZipMiddleware` in Django) to drastically reduce JSON response sizes and save bandwidth.
 * **Why:** This ensures the backend remains highly available under load and saves massive amounts of egress bandwidth costs.
 
-## 21. Asset Optimization (The WebP Rule)
-* **The Rule:** Never store unoptimized images (like `.png`, `.jpg`, `.jpeg`, `.bmp`) on the server disk or cloud storage. When an image is uploaded (e.g., a member profile picture), it must immediately be processed, compressed, and converted to `.webp` format before saving.
-* **Why:** WebP reduces image file sizes by up to 80% compared to JPEG/PNG without visible quality loss. This drastically reduces cloud storage costs and speeds up frontend loading times, resulting in a much faster app.
+## 21. Asset Optimization (Modern Delivery Pipeline)
+* **The Rule:** Publicly delivered raster images must use an optimized delivery format selected by the asset pipeline, such as WebP or AVIF, with compatibility fallback only where required.
+* **Why:** Modern compression formats offer 25-50% smaller file sizes than legacy formats at equivalent quality, dramatically improving mobile and web page load speeds, reducing mobile data consumption, and lowering CDN bandwidth costs.
+* **Rules:**
+  1. SVG remains permitted for vector logos, diagrams, and icons.
+  2. Original uploads may be retained privately only when required for legal, reprocessing, or quality purposes.
+  3. Public delivery must use optimized derivatives, never unrestricted raw original uploads.
+  4. Orientation normalization, stripping of unsafe EXIF metadata, malware scanning (Rule 65), and MIME validation are mandatory.
+  5. Mobile clients must receive image variants appropriate to requested dimensions and device/network constraints.
+
 
 ## 22. Security Headers, CORS, & Protection
 * **The Rule:** An enterprise app cannot go to production naked. Always implement security middleware (NestJS: Helmet / framework-approved security middleware, Django: SecurityMiddleware / framework-approved security middleware) to set strict HTTP headers. Configure strict CORS policies (only allowing exact frontend domains). Ensure inputs are stripped of executable scripts (XSS protection) and standard ORMs are used to natively prevent SQL injection.
+
+### Native Mobile CORS Clarification
+CORS is a browser enforcement mechanism. Native React Native clients are not protected by browser CORS in the same way as web clients.
+Therefore:
+- CORS must be strict for browser/web origins.
+- Native app security must rely on JWT/session security, certificate/TLS validation, API authorization, tenant isolation, rate limits, app-version policy, and request abuse controls.
+- CORS must never be treated as a security boundary for native mobile clients.
+
 
 ## 23. Background Jobs & Queues (No Hanging Requests)
 * **The Rule:** An HTTP request should respond in under 500ms. If a user triggers a heavy task (e.g., "Send 1,000 promotional emails", "Generate a 50-page PDF report", "Process a video"), DO NOT process it in the main HTTP thread.
@@ -1541,14 +1661,38 @@ backend-manager/
 * **Architecture Strategy:**
   1. **Master Database:** A central database (e.g., `smart_gym_master`) must exist solely to manage global resources: Users, Authentication, Tenants (Gyms), Subscriptions, and Feature Flags.
   2. **Tenant Databases:** Every time a new gym registers, the backend must programmatically create a brand-new database (e.g., `tenant_db_101`) and run all schema migrations on it automatically. *(Note: All these logical databases reside within the same single PostgreSQL server infrastructure unless the infrastructure architecture explicitly defines otherwise; do not spin up new physical servers/VPS per tenant).*
-  3. **Dynamic Connection Routing (Request Scoped):** The backend must intercept every incoming API request. Using a global middleware or interceptor, it must extract the `x-tenant-id` (from HTTP headers or JWT payload) and dynamically construct or switch the database connection to point to that specific tenant's database for the lifecycle of that request.
-  4. **Strict Tenant Authorization (CRITICAL):** `x-tenant-id` MUST NOT be trusted merely because the client supplied it. The server MUST verify that the authenticated actor is explicitly authorized to access that tenant in the master database before selecting the tenant DataSource. The flow must be: `Request → Authentication → Tenant Authorization → Trusted Tenant Context → DataSource Resolver`.
+  3. **Trusted Tenant Resolution Flow (Request Scoped):**
+     The client MUST NOT select a tenant database through a raw `x-tenant-id`, query parameter, request body field, or URL segment.
+     The only trusted tenant resolution flow is:
+     `Request → JWT authentication → actor identity validation → server-side tenant authorization → trusted TenantContext creation → tenant database/DataSource resolution`
+     
+     Rules:
+     - `gymId`, `branchId`, and tenant database identity are derived from the verified JWT and server-side authorization only.
+     - A raw client-supplied `x-tenant-id` header MUST NOT be trusted as an authorization source.
+     - If a platform/superadmin user can switch tenant context, the backend must issue a short-lived server-signed tenant-context token or explicitly embed the approved tenant selection in a newly issued JWT.
+     - The selected tenant context must be written to AsyncLocalStorage only after authorization succeeds.
+     - All database routing must use TenantContext, never raw request headers.
   5. **Connection Pool Limits:** **⚠️ See Rule 63 before implementing this** — the connection pool budget must be calculated across ALL active tenant DataSources combined, not per-tenant. Blindly applying `max: 20` per tenant DataSource will exhaust the database server's connection limit under load.
 * **How to Apply to Different Frameworks:**
   - **NestJS (Node/TypeScript):** Do not use a static, monolithic ORM module root configuration. Use request-scoped providers or custom connection factories that cache and resolve database connection/client instances based on the request's tenant header.
   - **Django (Python):** Use database routers (`db_for_read`, `db_for_write`) paired with thread-local storage or middleware to dynamically route queries to the correct database alias based on the request.
 * **Why:** If Gym A and Gym B share the same database tables, a single missing `WHERE tenant_id = X` clause in a business query results in a catastrophic cross-tenant data breach. Database-per-tenant completely eliminates this risk at the infrastructure level. Furthermore, it can reduce dataset size per tenant and improve isolation/performance characteristics, avoiding massive multi-tenant table bottlenecks.
-* **Tenant DB vs Query Filters (Belt & Suspenders):** Even though Database-per-Tenant provides physical isolation, ALL ORM queries MUST still strictly include `gymId` and `branchId` filters as mandated by Rule 0G. This double-security approach ensures logic remains perfectly isolated and future-proofs the codebase if tenants are ever merged into a shared DB.
+* **Tenant DB vs Query Filters (Belt & Suspenders):** Even though Database-per-Tenant provides physical isolation, ALL ORM queries MUST still strictly include `gymId` and `branchId` filters as mandated by Rule 0G and the Tenant Scope Classification. This double-security approach ensures logic remains perfectly isolated and future-proofs the codebase if tenants are ever merged into a shared DB.
+
+### Tenant Database Lifecycle and Provisioning
+
+Tenant provisioning must be a resumable, auditable state machine:
+`REQUESTED → PROVISIONING → MIGRATING → VERIFYING → ACTIVE`
+
+Failure states: `PROVISIONING_FAILED`, `MIGRATION_FAILED`, `SUSPENDED`, `DELETION_PENDING`.
+
+Rules:
+1. No tenant traffic may be accepted until migration and version verification are complete.
+2. Provisioning must be idempotent; retries must not create duplicate databases.
+3. The master database must store tenant database identifier, schema version, status, provisioning attempt ID, backup policy, and lifecycle audit history.
+4. Tenant migrations must be versioned and executed through a controlled migration runner.
+5. Tenant DataSource caching must have bounded size, idle eviction, and a total connection-budget calculation across active tenants.
+6. Backup, restore, tenant suspension, archival, legal retention, and deletion flows must be explicitly documented.
 
 ---
 
@@ -1580,7 +1724,7 @@ backend-manager/
 ---
 
 ## 43. True E2E Test Database Isolation & Lifecycle Verification
-* **The Rule:** End-to-End (E2E) test suites must NEVER run against your local development or production databases. Instead, the test suite setup (e.g., `conftest.py`) must dynamically hit the API to create a brand-new, isolated Test Tenant/Database specifically for that test run. All subsequent tests must inject this test tenant's ID into the `x-tenant-id` headers.
+* **The Rule:** End-to-End (E2E) test suites must NEVER run against your local development or production databases. Instead, the test suite setup (e.g., `conftest.py`) must dynamically hit the API to create a brand-new, isolated Test Tenant/Database specifically for that test run. All E2E tests must authenticate using a test JWT whose verified claims contain the test tenant identity. Test code may never use `x-tenant-id` as an authorization source.
 * **The Data Lifecycle Rule:** True E2E tests must verify the full CRUD lifecycle within that isolated database. Tests cannot rely on stub IDs. They must:
   1. **POST**: Create a uniquely identifiable record and extract its real ID from the `201` response.
   2. **GET by ID**: Fetch that exact ID and assert `200 OK`.
@@ -1642,8 +1786,30 @@ When a new event is needed, the AI MUST add it to the existing `src/core/event-r
 ## 51. API Changelog, Deprecation Policy & Consolidated Integration Guide
 * **The Rule:** When an endpoint changes destructively, do not delete it immediately. Return a `Deprecation` header with a sunset date, track it in Section 2 (Endpoint Preservation & DTO Matrix) and Section 1 (Changelog) of the consolidated `INTEGRATION_GUIDE.md` at the root of the delivery ZIP, and maintain it for the deprecation window. Never scatter separate loose changelog or migration markdown files at the root of the delivery package.
 
-## 52. JWT Refresh Token Rotation & Revocation
-* **The Rule:** Access tokens must be short-lived. Refresh tokens must be stored in HttpOnly cookies. On every refresh, the old token must be rotated/invalidated. A Redis denylist must exist for immediate manual revocation.
+## 52. JWT Session, Refresh Rotation, Revocation, and Mobile Storage Policy
+
+Access tokens must be short-lived (e.g., 15 minutes).
+
+Refresh tokens must rotate on every successful refresh. Reuse of an already-rotated refresh token must revoke the affected device session, flag the event, and initiate the breach-containment protocol.
+
+### Web client policy
+- Refresh tokens must use Secure, HttpOnly, SameSite cookies.
+- The browser must never access refresh-token values through JavaScript.
+
+### React Native / native mobile policy
+- Refresh tokens must be stored only in the operating system secure credential store such as iOS Keychain or Android Keystore-backed secure storage (`react-native-keychain`).
+- Refresh tokens must never be stored in AsyncStorage, Redux/Zustand state, logs, crash reports, plain files, screenshots, or deep-link URLs.
+- Each refresh token must be bound to a device session identifier (`deviceSessionId`).
+- The backend must support per-device session revocation and global user-session revocation.
+- Access tokens should remain in memory where practical and must not be persisted unless a documented platform security decision explicitly approves it.
+
+### Common backend requirements
+1. Store refresh-token hashes only; never persist raw refresh tokens in the database.
+2. Maintain token/session revocation state in Redis with durable database reconciliation.
+3. Include token family, device session ID, issued time, expiry, and rotation metadata.
+4. Log token reuse and forced session revocation in the immutable audit trail.
+5. Never return refresh tokens in logs, error responses, analytics events, or Swagger examples.
+
 
 ## 53. Sensitive Field Encryption at Rest
 * **The Rule:** Aadhaar numbers, bank accounts, and medical notes MUST be encrypted at the application layer (AES-256) before hitting the DB. Use an `@Encrypted` decorator or EncryptionService. Hash is not enough.
@@ -1683,13 +1849,14 @@ When a new event is needed, the AI MUST add it to the existing `src/core/event-r
 * Immutable event and financial records MUST bypass soft-delete filtering while remaining permanently append-only.
 
 ## 59. API Response Time SLA Categories
-* **The Rule:** Every endpoint MUST declare its SLA category in a comment at the top of the controller method body:
-  - NestJS: `// SLA: FAST` / `// SLA: STANDARD` / `// SLA: HEAVY`
-  - Django: `# SLA: FAST` / `# SLA: STANDARD` / `# SLA: HEAVY`
-  - FAST = target < 200ms, STANDARD = target < 500ms, HEAVY = target > 500ms
-* **Consequence of omission:** Missing SLA declarations make it impossible for AI agents to detect when a feature violates its response budget — leading to undetected performance regressions in production.
-* **Enforcement gate:** Any endpoint marked `HEAVY` that is NOT backed by a background job (Rule 23) = `NON_COMPLIANT`. A synchronous `HEAVY` endpoint MUST be refactored to return `202 Accepted` + background job before it can be marked `COMPLIANT`.
-* **Timeout alignment (Rule 97):** The SLA category MUST align with the timeout configuration — a `FAST` endpoint cannot have a downstream call with a 5-second timeout.
+* **The Rule:** Every API endpoint must be categorized into an SLA tier based on its business complexity, and this MUST be declared in OpenAPI metadata or a central endpoint performance registry (`endpoint-sla.registry.ts`). A code comment may supplement this but is not the authoritative source:
+  - **Tier 1 — Real-Time (< 50ms):** Auth validation, health checks, cached reads, toggle flags.
+  - **Tier 2 — Standard CRUD (< 200ms):** Single-entity CRUD, paginated lists (< 20 items), simple filters.
+  - **Tier 3 — Complex Operations (< 800ms):** Aggregations, multi-table joins, search queries, report previews.
+  - **Tier 4 — Async / Background (> 800ms):** Heavy exports, bulk imports, PDF generation, external API calls. Must return `202 Accepted` immediately with a `jobId`.
+* **Enforcement:** The SLA declaration must be validated by automated tests or CI configuration.
+* **Why:** Defining SLA categories forces the developer and AI to choose the right architecture (caching, queues, indexing) upfront rather than debugging timeouts later.
+
 
 ## 60. Strict Foreign Key Naming Convention
 * **The Rule:** Database columns must use `snake_case` (e.g., `member_id`). TypeScript model/entity properties must use `camelCase` (e.g., `memberId`). Explicitly map them in the ORM model definition.
@@ -1707,7 +1874,20 @@ When a new event is needed, the AI MUST add it to the existing `src/core/event-r
 * **The Rule:** Relying on TypeScript implicit `any` or inferred returns is forbidden for async operations. Every service method and repository method MUST have an explicitly declared return type (e.g., `Promise<ManagerMembersDomainModel>`).
 
 ## 63. Database Connection Pool Configuration
-* **The Rule:** Default ORM connection pools are forbidden. The `database.config.ts` must explicitly define `max` connections (e.g., 20), `acquireTimeout` (30000ms), and `idleTimeoutMillis` (10000ms). **CRITICAL for Multi-Tenancy (Rule 39):** This pool configuration applies to the GLOBAL connection manager, not per-tenant DataSource. With N tenants on the same DB server, the total active connections across all tenant DataSources must be budgeted carefully. Do NOT blindly apply `max: 20` per tenant DataSource or you will exhaust the database server's connection limit.
+* **The Rule:** The database connection pool MUST be explicitly configured — never rely on framework defaults. Connection-pool settings must use the exact option names supported by the installed TypeORM and PostgreSQL driver versions. The project must configure an explicit total connection budget, pool size, connection acquisition timeout, idle timeout, and statement timeout using the current supported TypeORM/DataSource and PostgreSQL-driver configuration shape. Do not assume one driver option name works across all versions.
+* **NestJS / TypeORM:**
+  ```typescript
+  // Configure pool options compatible with pg driver & TypeORM DataSource
+  extra: {
+    max: 20,                       // Maximum connections in pool per active DataSource
+    min: 5,                        // Minimum idle connections
+    idleTimeoutMillis: 30000,      // Close idle connections after 30s
+    connectionTimeoutMillis: 5000, // Fail if connection not acquired in 5s
+    statement_timeout: 10000,      // Terminate any query that takes longer than 10 seconds
+  }
+  ```
+* **Critical for Multi-Tenancy (Rule 39):** The connection pool budget must be calculated across ALL active tenant DataSources combined, not per-tenant. Applying `max: 20` blindly per tenant DataSource will exhaust the PostgreSQL server's `max_connections` ceiling. Tenant pools must use smaller pools (e.g. `max: 5-10`), idle eviction, and bounded LRU DataSource caching.
+
 
 ## 64. Structured Machine-Readable Error Codes
 * **The Rule:** Error responses must include a machine-readable `errorCode` string following `DOMAIN.ENTITY.REASON` (e.g., `BILLING.SUBSCRIPTION.EXPIRED`). The frontend relies on this code to trigger specific UI logic (e.g., redirecting to a payment page).
@@ -1793,6 +1973,17 @@ Backend implementation (services, repositories, DB queries)
 | Entity/DTO (`*.entity.ts`, `*.dto.ts`) | **150 lines** | Split into multiple focused DTOs |
 | Module Config (`*.module.ts`) | **100 lines** | Review imports — barrel file may have crept in (Rule 84) |
 | Utilities/Mappers | **120 lines** | Split into focused mapper/utility files |
+
+### Controlled File-Size Exception Process
+
+When a complex domain service, atomic transaction sequence, state machine, or data mapper legitimately requires exceeding the line ceiling, the AI MUST NOT perform an uncontrolled, arbitrary split.
+
+Instead, the AI MUST follow this controlled exception process:
+1. Document the exception in the feature's `_features.md` under `## Architecture Exceptions`;
+2. Record the exact justification (e.g., preserving atomic database transaction boundary, state transition table);
+3. Cap the exception at a strict maximum of 1.5x the standard ceiling (e.g., maximum 450 lines for a Service, 300 lines for a Controller);
+4. Flag the file with `// ARCHITECTURE-EXCEPTION: Rule 75 [justification] [review-date]`;
+5. Any file exceeding 1.5x of the ceiling is `NON_COMPLIANT` without exception and must be structurally refactored.
 
 ## 76. Strict File Responsibility Contract
 * **The Rule:** Every backend controller, service, or repository MUST start with a single-line comment at the very top of the file explicitly defining its boundary. (e.g., `// RESPONSIBILITY: Processes incoming Stripe webhooks and emits EVENT_PAYMENT_SUCCESS. No direct DB writes.`). This instantly grounds the AI's context when reading the file.
@@ -1973,6 +2164,15 @@ Backend implementation (services, repositories, DB queries)
 
 ---
 
+### Production Safety Constraints for Stubs
+A stub endpoint must never be enabled in staging or production when it can mutate data, simulate payment success, return misleading security-sensitive data, or create a false operational expectation.
+Stub endpoints must:
+- Be read-only unless explicitly approved for non-production sandboxes.
+- Return an explicit non-production/stub indicator header (`X-Stub-Response: true`) in development environments.
+- Be disabled or replaced before production release.
+- Have contract tests proving response parity with the final endpoint.
+
+
 ## 82. Strict Discriminated Union Response Rule (No Ambiguous `data` Shapes)
 * **The Rule:** The `data` field in the standardized API envelope (Rule 28) MUST always be a **single, explicitly typed value** — never a polymorphic bag of mixed objects. The shape of `data` on success MUST be identical in structure regardless of the execution path.
   - ❌ **BAD (Ambiguous):** `data: { member: ManagerMembersResponseDto, invoice: AdminBillingInvoiceResponseDto }` — the frontend `ApiResponse<T>` generic breaks because `T` is not a single entity.
@@ -2091,6 +2291,12 @@ If a backend implementation cannot provide a field currently required by the fro
 * **Why:** Client-side visibility is not authorization. The backend MUST independently enforce authentication, role, resource, and tenant authorization. An AI writing a new endpoint will forget to add auth checks if there is no standard, centralized pattern to follow. A declarative decorator is impossible to forget because it's visible at the route definition.
 
 ---
+
+### Authorization for Non-HTTP Execution Paths
+Controller guards are the primary authorization boundary for HTTP requests.
+For non-HTTP execution paths such as BullMQ workers, scheduled jobs, event consumers, and webhooks, authorization and tenant scope must be validated through a dedicated application-policy service using a trusted execution context.
+Services must not contain ad-hoc inline role checks. However, critical domain operations may require an explicit trusted actor/context object so they cannot be executed without the required authorization context.
+
 
 ## 84. No Barrel File / Re-Export Index Rule & Facade Naming
 * **The Rule:** Strictly avoid using `index.ts` or `index.js` files to re-export modules (barrel files). This restriction exists to preserve AI context isolation and prevent dependency expansion. Always import directly from the explicitly named source file.
@@ -2267,6 +2473,25 @@ All domain models MUST live inside the owning module's `{module}-domain/` sub-fo
 * **Why:** The backend requires the same discipline as the frontend but with an added focus on security. An AI writing authentication or payment code must have its output automatically vetted before it reaches production.
 
 ---
+
+## AI Enforcement Principle
+
+No AI agent can be trusted to enforce architecture rules by instruction alone.
+
+Every high-risk architecture requirement must have at least one mechanical control:
+- ESLint/import boundary rule
+- TypeScript strict compilation
+- unit test
+- API contract test
+- E2E tenant-isolation test
+- database constraint
+- migration validation
+- CI gate
+- CODEOWNERS review
+- pre-commit secret scan
+
+If a rule cannot be mechanically enforced, the feature documentation must identify the responsible human review gate.
+
 
 ## 91. Mandatory Backend Pre-Commit Hooks (Blocking Gates Before Commit)
 * **The Rule:** The backend repository MUST configure pre-commit hooks using `husky` (Node.js) or `pre-commit` framework (Python) to run fast, blocking checks before every `git commit`. A pre-push hook is an optional additional gate, but pre-commit is mandatory. These hooks run locally on the developer/AI agent's machine — they are the first line of defense before code reaches CI.
@@ -2772,27 +2997,32 @@ All imports and file paths MUST exactly match the casing of the actual file on d
 * **Django implementation:** Use `class Meta: db_table = 'prefix_table'`. Always explicitly hardcode the name rather than relying on app-label prefixing defaults.
 * **Why:** A global Naming Strategy (like implicit global naming strategies) blindly prefixes all tables based on folder structure. This breaks **shared tables** (like `tenants` or `audit_logs`) by splitting them into multiple disconnected tables (`admin_tenants`, `superadmin-gyms`, etc.). Explicit hardcoding ensures shared tables remain central (`core_tenants` or `tenants`) while module-specific tables remain safely isolated and clearly identifiable in code.
 
-## Rule 103 — Strict Mutational Idempotency (The `@RequireIdempotencyKey` Rule)
+## Rule 103 — Retry-Safe Mutation and Idempotency Contract
 
-All state-mutating endpoints (`POST`, `PATCH`, `PUT`, `DELETE`) across the entire backend architecture MUST enforce strict idempotency.
-This is a non-negotiable enterprise requirement designed to prevent duplicate payments, duplicate record creation, and partial transaction failures from network retries.
+Every mutation endpoint must declare whether it is naturally idempotent, idempotency-key protected, or intentionally non-retriable.
 
-### NestJS implementation
-Use the centralized `@RequireIdempotencyKey()` decorator/interceptor. The decorator automatically intercepts the request, checks for the `Idempotency-Key` HTTP header, and rejects requests that omit it with a `400 Bad Request`.
+### Idempotency-Key is mandatory for:
+- Financial mutations (payments, refunds, wallet top-ups, deductions)
+- Payment initiation, capture, refund, wallet top-up, and wallet deduction
+- Resource creation where retry could create duplicates (member registration, plan creation)
+- Communication sending (SMS, WhatsApp, Email, Push)
+- Bulk batch actions
+- Offline-queueable mobile mutations
+- Any endpoint that triggers an external side effect (Stripe, payment gateway webhooks)
+- Any endpoint returning `202 Accepted` for asynchronous work
 
-### Django implementation
-Use the project's centralized middleware/decorator/request enforcement mechanism to enforce the same Idempotency-Key contract.
+### Naturally idempotent operations
+A PUT, PATCH, or DELETE endpoint may omit `Idempotency-Key` only if repeated requests with the same desired state cannot create duplicate side effects (e.g., updating a member's profile address to fixed values, setting `is_active = false`).
 
-### Framework-independent requirements
-- all POST/PATCH/PUT/DELETE mutations require the key
-- missing key is rejected
-- request-body hash must match on retry
-- same key = same operation
-- Atomic Concurrency Lock: perform an atomic check-and-set (e.g., using Redis `SETNX`) to establish an "in-progress" lock. Concurrent requests with the same key MUST wait or be rejected immediately with `409 Conflict`.
-- completion recorded only after DB commit (storing the final response payload)
-- fail closed if the idempotency store is unavailable (return `503 Service Unavailable`)
-- Idempotency must be enforced at the Command Controller level (e.g. `[role]-[module]-command.controller.ts`), never buried inside the service layer.
-- `GET` endpoints must NEVER require an idempotency key, as they are natively safe and read-only.
+### Server-side requirements
+1. Idempotency records must be stored durably in PostgreSQL (`idempotency_keys` table), not only in Redis.
+2. Enforce a unique constraint on: `actorId + tenantScope + endpoint + idempotencyKey`.
+3. Store request fingerprint (body hash), final status, and complete final response.
+4. A repeated matching request returns the original cached response with `X-Cache: IDEMPOTENCY_HIT`.
+5. A repeated key with a different payload returns HTTP 409 Conflict with `errorCode: IDEMPOTENCY.KEY.PAYLOAD_MISMATCH`.
+6. Redis distributed locking (`SETNX` with TTL) must be used to prevent race conditions while the first request executes, but PostgreSQL remains the durable source of truth.
+7. Payment provider idempotency keys must also be propagated where supported.
+8. `GET` endpoints must NEVER require an idempotency key.
 
 ## Rule 104 — WebSockets & Real-Time Communication
 * **The Rule:** Any real-time push functionality (like live messaging, active session counts, or live notifications) MUST be implemented using a horizontally scalable WebSocket architecture. 
@@ -3149,9 +3379,28 @@ The "Extreme Isolation" and "WET over DRY" principles apply just as strictly to 
 
 **Why:** E2E and Selenium tests frequently become a tangled, brittle web of shared fixtures and helpers. If an AI agent modifies a shared authentication helper to fix a broken Manager test, it risks silently breaking the entire Admin E2E suite. Complete isolation ensures that test fixes remain highly localized and AI context is minimized. Tests must be real and resilient, not just "green" checkboxes.
 
-## Rule 113 — No AI Runtime Verification Requirement
+## Rule 113 — No AI Runtime Verification Requirement & Capability-Truth Delivery Rule
 * **The Rule:** AI agents are NOT required to execute code, run servers, or perform runtime verification to validate their changes, as they often lack the necessary local environment variables, database connections, or API keys.
 * **The Expectation:** Instead of failing or complaining about missing environments, the AI MUST rely on its deep knowledge of the framework, TypeScript, and these architectural guidelines to write syntactically and logically correct code. The AI should aim to write code that is "correct by construction" so that when the human developer runs it locally, it works with zero or minimal issues. Do not attempt to spin up local servers or run `npm run start` if the environment is incomplete.
+
+### Capability-Truth Delivery Resolution Rule
+
+AI agents MUST declare delivery truth based strictly on actual tool execution evidence:
+
+1. Test Execution Truth:
+   - The AI MUST NEVER fabricate, simulate, or hallucinate test execution results, coverage metrics, or CI pipeline success.
+   - If Jest or pytest was not executed via a terminal command tool in the current session, the AI MUST report status as `DEFERRED_TO_HOST_RUNTIME` or `STATIC_STRUCTURE_VERIFIED`.
+   - Claiming tests passed without terminal execution evidence is a P0 Compliance Failure.
+
+2. Artifact Delivery Truth:
+   Every backend repair or delivery MUST declare exactly one delivery status:
+   - `VERIFIED_DELIVERED_ZIP`: Valid ZIP archive generated, written to disk, and verified.
+   - `SOURCE_COMPLETE_ARTIFACT_PENDING_HOST_PACKAGING`: All source files, migrations, DTOs, and tests created/modified in workspace tree; host packaging deferred.
+   - `SOURCE_COMPLETE_LOCAL_TREE_VERIFIED`: Source tree verified in-place; no ZIP requested.
+   - `PARTIALLY_DELIVERED_BLOCKED`: Some deliverables blocked by missing contracts or unresolvable imports.
+   - `FAILED_DELIVERY_ENVIRONMENT_LIMITATION`: Tooling or file-system error prevented delivery.
+
+The AI MUST NOT claim `VERIFIED_DELIVERED_ZIP` unless file-writing tool evidence confirms the ZIP exists on disk.
 
 ## Rule 114 — Dashboard & UI Data APIs (Avoid "Mega APIs")
 * **The Rule:** Never create a single "Mega API" endpoint that fetches an entire dashboard's worth of data (e.g., all KPIs, all charts, and all recent table lists) in one massive response payload. You MUST fragment complex dashboards into **widget-based / feature-sliced APIs** (e.g., `/dashboard/kpis`, `/dashboard/charts`, `/dashboard/recent-members`).
@@ -3188,6 +3437,19 @@ The "Extreme Isolation" and "WET over DRY" principles apply just as strictly to 
 * **Implementation:** You must expose these endpoints either via a dedicated sub-route within the module (e.g., `/api/v1/manager/members/rag`) or via a strict query parameter on the primary endpoint (e.g., `/api/v1/manager/members?format=rag`). These RAG-ready endpoints must return highly compressed, "Token-Optimized Markdown" or flattened textual representations of the data instead of deep JSON trees. (e.g., Returning `"Member: Rahul | Status: Active | Plan Expires: 5 Days"` instead of a 50-line JSON object).
 * **Why:** This drastically reduces token costs and hallucinations when feeding user context into the LLM context window.
 
+### RAG Projection Scope and Security Guardrails
+RAG projections are conditional, not universal.
+`?format=rag` is allowed only for explicitly approved internal/admin/search endpoints that have documented authorization, tenant filtering, field allowlists, payload limits, PII redaction rules, and audit logging.
+
+RAG projections are forbidden by default for:
+- Mobile application endpoints
+- Financial and billing endpoints
+- Authentication and credential endpoints
+- Health check endpoints
+- Bulk data export endpoints
+- Endpoints returning sensitive personal, medical, payment, or tenant secret data.
+
+
 ## Rule 118 - Event-Driven Immutable Analytics (Zero-Overwrite Strategy)
 * **The Problem:** Standard CRUD operations (like updating a subscription status from 'Active' to 'Cancelled') overwrite historical state, completely destroying the ability to perform deep, time-series analytics (e.g., "How many users cancelled exactly on day 14?").
 * **The Rule:** For any critical domain entity (Billing, Attendance, Subscription, Member Lifecycle), apply a **Zero-Overwrite** rule for analytics. 
@@ -3202,6 +3464,91 @@ While the ledger is the absolute source of truth and balances must never be muta
 * **The Rule:** NEVER update a financial balance directly. Any monetary transaction (POS purchase, subscription prorating, refund, wallet top-up) MUST follow the **Immutable Double-Entry Ledger Pattern**. 
 * **Implementation:** You must insert rows into a `ledger_entries` table for every transaction. Ledger rows are immutable (no `UPDATE` or `DELETE`); corrections require a reversal journal entry. The schema must require: `journal_id` (unique reference for atomicity), `account_id`, `direction` (DEBIT | CREDIT), and `amount_minor_units` (always > 0). The transaction must guarantee `total_debits == total_credits`. The current balance is dynamically calculated. 
 * **Why:** This provides a strong accounting control and makes unbalanced journals detectable/preventable when enforced transactionally, providing a perfect, tamper-proof audit trail for accounting.
+
+---
+
+## 120. Mobile Client Compatibility Contract
+
+The backend must support released mobile app versions for a documented compatibility window. A backend change must never silently break an installed React Native app.
+
+Every mobile request may include:
+- `X-Client-Platform`: `IOS` or `ANDROID`
+- `X-Client-Version`: semantic app version (e.g., `1.4.2`)
+- `X-Request-Id`: client-generated UUID for support and correlation
+
+Rules:
+1. These headers are observability/compatibility metadata only and must never decide authorization or tenant identity.
+2. Breaking API changes require a new API version (`/api/v2/`) or a documented deprecation period.
+3. If an app version must be blocked for security or data-integrity reasons, return a canonical error response with:
+   `errorCode: CLIENT.APP.UPGRADE_REQUIRED` (HTTP 426 Upgrade Required).
+4. The response must contain the minimum supported version and an optional store URL only when defined by the frozen API contract.
+5. Mobile app version information must be included in structured logs and traces but must not include device secrets or personal data.
+
+---
+
+## 121. Offline Sync, Delta Synchronization, and Conflict Resolution
+
+Any feature intended for offline or unstable-network use must define an explicit sync contract in its `{role}-{module}-backend-feature.md`.
+
+The contract must define:
+- Whether offline writes are supported
+- Sync cursor format and expiry
+- Delta endpoint behavior
+- Deletion/tombstone behavior
+- Conflict strategy
+- Retry/idempotency behavior
+- Maximum sync page size
+- Sensitive data excluded from offline storage
+
+Rules:
+1. Sync endpoints must return deltas, not full historical datasets by default.
+2. Soft-deleted records must be represented as tombstones (`is_deleted: true`, `deleted_at: string`) so the mobile client can cleanly purge local cached data.
+3. Every offline mutation must use Rule 103 retry-safe idempotency.
+4. Conflicting writes must return a canonical `409 Conflict` response with a stable error code such as `SYNC.ENTITY.VERSION_CONFLICT`.
+5. The feature documentation must explicitly declare one conflict strategy: server-wins, client-wins, last-write-wins with versioning, merge-by-field, or manual-resolution-required.
+6. Use server-controlled version/revision fields for conflict detection. Do not trust client timestamps as the authoritative ordering source.
+7. Cursor pagination should be available for large feeds, timelines, activity logs, and synchronization endpoints. Offset pagination remains acceptable for normal administrative tables.
+
+---
+
+## 122. Mobile Upload and Download Resilience
+
+Mobile upload endpoints must account for slow networks, application backgrounding, network switching, retry behavior, and duplicate completion callbacks.
+
+Rules:
+1. Uploads above the normal request payload threshold must use an approved resumable or pre-authorized upload flow (S3 signed URLs).
+2. File metadata creation and file binary upload completion must be separate, idempotent steps.
+3. The backend must verify MIME type, file size, checksum where applicable, ownership, and tenant scope before marking an upload usable.
+4. Files must remain in `PENDING_UPLOAD`, `PROCESSING`, `READY`, or `FAILED` states.
+5. The client must not assume an upload is ready immediately after binary transfer.
+6. Signed upload/download URLs must be short-lived (e.g. 15 minutes) and scoped to one actor and one object.
+7. Original filenames must not be used as storage keys.
+8. Any file-processing failure must expose a stable machine-readable error code.
+
+---
+
+## 123. Mobile Push Notification Device Registration
+
+Push device registration must be treated as a tenant-scoped and user-scoped security resource, not as an anonymous string.
+
+Rules:
+1. A device push token must be associated with authenticated user ID, tenant scope, platform, app version, device session ID, and updated timestamp.
+2. Re-registering the same device must be idempotent.
+3. Invalid, expired, or provider-rejected tokens must be deactivated automatically upon receipt of provider feedback.
+4. Logout and device-session revocation must deactivate the device registration immediately.
+5. Push notification payloads must not expose sensitive health, payment, identity, or confidential business data on the device lock screen.
+6. Actual notification content must be fetched from an authenticated API endpoint when sensitive details are required.
+
+---
+
+## 124. Mobile Time, Currency, and Locale Semantics
+
+1. Database timestamps must be stored as UTC timestamps.
+2. Every tenant must have an explicit IANA business timezone, for example `Asia/Kolkata`.
+3. Backend business calculations such as attendance day, membership expiry day, billing cycle, cutoff time, and scheduled-job timing must use the tenant business timezone, not the mobile device timezone.
+4. Date-only business fields must use `YYYY-MM-DD` and must not be converted into a timestamp merely for storage convenience.
+5. Monetary API values must use integer minor units (paise/cents) and include ISO-4217 currency code.
+6. Do not assume all currencies use two decimal places. Currency minor-unit formatting belongs to the client presentation layer.
 
 ---
 
@@ -3286,7 +3633,7 @@ When a rule depends on global infrastructure outside the supplied scope:
 A feature module CANNOT be declared `COMPLIANT` for a rule if a mandatory global dependency for that rule remains `NOT_VERIFIED` or `BLOCKED_BY_SUPPLIED_SCOPE`. The module's overall readiness MUST reflect this as `NOT_READY_DUE_TO_EXTERNAL_BLOCKER`.
 
 ⛔ **ISOLATED ROLE / MODULE SCOPE RULE FOR GLOBAL DEPENDENCIES (NON-NEGOTIABLE):**
-In a modular monolith, individual role modules (e.g., `backend_superadmin/`, `backend_trainer/`) rely on host-level infrastructure (`backend_core`, `@nestjs/common`, TypeORM DataSource, Redis, BullMQ) by architectural contract design.
+In a modular monolith, individual role modules (e.g., `backend-superadmin/`, `backend-trainer/`) rely on host-level infrastructure (`backend-core`, `@nestjs/common`, TypeORM DataSource, Redis, BullMQ) by architectural contract design.
 - The AI MUST NOT treat missing host-level monolith infrastructure as `BLOCKED_BY_SUPPLIED_SCOPE` or `NOT_READY_DUE_TO_EXTERNAL_BLOCKER`.
 - The AI MUST mark host infrastructure integration as `OUTSIDE_SUPPLIED_SCOPE (HOST_MONOLITH_RESPONSIBILITY)`.
 - If the feature module correctly implements its side of the contract (e.g. `@UseGuards(JwtAuthGuard)`, valid DTO validation, correct entity mapping), the feature module itself is **COMPLIANT** within its supplied modular boundary.
