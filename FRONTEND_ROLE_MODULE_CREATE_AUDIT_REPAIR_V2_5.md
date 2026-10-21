@@ -497,7 +497,7 @@ Web border-radius tokens    → tokens.radius.*
 ║ ❌ Next.js routing patterns — use React Navigation              ║
 ║ ❌ 'use client' / 'use server' directives — not applicable      ║
 ║ ❌ Web-specific hooks (useRouter, useSearchParams) — rewrite    ║
-║ ❌ Web design tokens (Gold #FACC15) — use Indigo tokens         ║
+║ ❌ Web CSS/Tailwind classes — use React Native tokens from tokens.ts (Gold #FACC15 / #EAB308, onPrimary #111111) ║
 ║ ❌ Playwright E2E tests — write Maestro YAML instead            ║
 ║ ❌ next.config.ts, tsconfig paths — not applicable              ║
 ║ ❌ Web folder structure — use mobile canonical structure        ║
@@ -551,13 +551,14 @@ src/features/frontend_{role}/{role}_{module}/
 
 3. **NO WEB PATTERNS IN MOBILE:** If the AI finds itself writing `className=`, `'use client'`, `next/`, `<div>`, or Tailwind classes → STOP. These are web patterns. Rewrite using React Native primitives.
 
-4. **NO GOLD COLORS IN MOBILE:** If the AI finds itself using `#FACC15`, `yellow-400`, or any gold/amber color → STOP. Mobile uses Indigo. Check `MOBILE_UI_UX_DESIGN.md`.
+4. **MOBILE THEME IS LUXURY PREMIUM GOLD (MANDATORY):** Both Web and Mobile surfaces use the **Luxury Premium Gold** theme (`tokens.color.primary = #FACC15` Dark / `#EAB308` Light). On Gold backgrounds, the text/icon color MUST be **`onPrimary = #111111` (dark charcoal) — NEVER white** (WCAG AA 4.5:1 requirement). Indigo/Purple as brand primary is FORBIDDEN. Aggressive gradients are restricted to landing page hero CTAs only; never use inside ERP dashboard screens. Check `MOBILE_UI_UX_DESIGN.md`.
 
 5. **NO EXPO PACKAGES:** If the AI finds itself importing `expo-*` or `@expo/*` → STOP. This is a bare-metal React Native project. Use only packages from the approved locked registry in `MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md`.
 
 6. **NO BACKEND GUESSING:** If the web ZIP does not contain evidence of an API endpoint → do NOT guess it from backend naming conventions. Mark as `BLOCKED_BY_SUPPLIED_SCOPE`.
 
 7. **NO TOAST-ONLY MOCKS:** Mobile MSW fixtures MUST be mutable in-memory arrays. Create → adds to array. Delete → removes from array. Static fixtures that never change = CRITICAL VIOLATION.
+8. **CANONICAL SUBFOLDERS & PREFIXED FILES (NO MODULE PREFIX ON FOLDERS):** Subfolders MUST use standard names (`components/`, `hooks/`, `schemas/`, `types/`, `api/`, `config/`, `mocks/`, `state/`, `tests/`, `utils/`, `_locales/`). Naming subfolders as `{module}_components/` or `{module}_hooks/` is FORBIDDEN. The Role+Module prefix MUST be placed on the **files** inside them (e.g., `TrainerMembersMemberCard.tsx`, `useTrainerMembers.ts`).
 
 ---
 
@@ -10176,6 +10177,59 @@ During Mode C creation, for EVERY interactive element identified in Extraction S
 - `[component]` = lowercase component identifier (e.g. `addform`, `membercard`, `searchinput`)
 - `[action/state]` = lowercase action or state (e.g. `submit`, `delete`, `press`, `active`, `loading`)
 
+
+## PATCH-08 — Canonical Subfolder Naming vs Role+Module Prefixed Files
+
+> ⛔ **MODE C & MODE D MANDATORY:** Feature modules MUST use standard subfolder names (`screens/`, `components/`, `hooks/`, `schemas/`, `types/`, `api/`, `config/`, `mocks/`, `state/`, `tests/`, `utils/`, `_locales/`). Naming subfolders as `{module}_components/` or `{module}_hooks/` is FORBIDDEN.
+>
+> In contrast, every source file INSIDE those subfolders MUST carry the `[Role][Module]` prefix (PascalCase for components/screens, camelCase with `use` for hooks, dot-notation lowercase for types/schemas/api/store/mocks/locales).
+>
+> Feature root is strictly quarantined: it MUST contain ONLY the three documentation files (`{role}_{module}_features.md`, `{role}_{module}_forbidden.md`, `{role}_{module}_theme_contract.md`).
+
+## PATCH-09 — Dedicated Mutation Hook & Resource-Identified Query Key Factory (Rule 7C & 60)
+
+> ⛔ **MODE C & MODE D MANDATORY:** Components and screens MUST NEVER call `useMutation` directly or inline mutation logic inside JSX.
+>
+> 1. **Query Key Registry:** Every feature module MUST own `api/{role}_{module}.query_keys.ts` with explicit resource identity in all keys:
+>    ```typescript
+>    export const MANAGER_MEMBERS_QUERY_KEYS = {
+>      all:     ['manager_members'] as const,
+>      lists:   () => [...MANAGER_MEMBERS_QUERY_KEYS.all, 'list'] as const,
+>      list:    (filters: Record<string, unknown>) => [...MANAGER_MEMBERS_QUERY_KEYS.lists(), filters] as const,
+>      details: () => [...MANAGER_MEMBERS_QUERY_KEYS.all, 'detail'] as const,
+>      detail:  (id: string) => [...MANAGER_MEMBERS_QUERY_KEYS.details(), id] as const,
+>    };
+>    ```
+> 2. **Dedicated Mutation Hooks:** All mutations MUST be encapsulated in named hooks (e.g., `useCreateManagerMember.ts`, `useDeleteManagerMember.ts`).
+> 3. **Canonical Cache Invalidation:** The mutation hook MUST invalidate affected queries inside `useMutation({ onSuccess: () => queryClient.invalidateQueries(...) })`.
+
+## PATCH-10 — Single-Flight 401 Refresh & Trusted Tenant Context (Rule 54 & 55)
+
+> ⛔ **MODE C & MODE D MANDATORY:**
+>
+> 1. **Single-Flight Token Refresh:** If multiple concurrent requests fail with 401 Unauthorized, they MUST share a single refresh promise. Creating multiple concurrent refresh calls is FORBIDDEN.
+> 2. **Trusted Tenant Header:** The `x-tenant-id` header MUST be derived strictly from the authenticated session context inside `src/core/network/networkClient.ts`. Deriving `x-tenant-id` from route parameters or client payload is FORBIDDEN.
+
+## PATCH-11 — Form Keyboard Safety & Loading Width Stability (Rule 10A & 39)
+
+> ⛔ **MODE C & MODE D MANDATORY:**
+>
+> 1. **Keyboard Safety:** Every form screen and form bottom sheet MUST be wrapped in `KeyboardAvoidingView` (`behavior={Platform.OS === 'ios' ? 'padding' : 'height'}`) with a `ScrollView` configured with `keyboardShouldPersistTaps="handled"`. Using a bare `View` as the root of a form screen is FORBIDDEN.
+> 2. **Button Loading Width Stability:** Every async button MUST lock its width via `minWidth: tokens.layout.buttonMinWidth` (120dp) to prevent layout shift when label text is replaced with an ActivityIndicator during in-flight states.
+
+## PATCH-12 — Feature-Local Currency Formatter with Self-Contained Metadata (Strict WET — Rule 63)
+
+> ⛔ **MODE C & MODE D MANDATORY:** Currency formatting is a DOMAIN_UTILITY and MUST be feature-local (`utils/{roleModule}FormatCurrency.ts`). Importing `formatCurrency` or `currencyMetadata` from `src/core/` is FORBIDDEN.
+>
+> 1. The formatter MUST maintain self-contained approved `currencyMetadata` (e.g., `INR: { divisor: 100 }`).
+> 2. Amounts in minor units (paise/cents) are divided by the divisor.
+> 3. Nullable amounts MUST return an en-dash (`—`), never blank or `'N/A'`.
+> 4. Unsupported currency codes MUST throw an explicit Error — never silently default to divisor 100.
+
+## PATCH-13 — En-Dash Null Fallback via displayValue() (Rule 38)
+
+> ⛔ **MODE C & MODE D MANDATORY:** Any data field that may be `null`, `undefined`, or empty string MUST render an en-dash (`—`) via `displayValue()` from `src/core/utils/formatters.ts`. Rendering empty cells, raw `'null'`, `'undefined'`, or `'N/A'` is STRICTLY FORBIDDEN.
+
 ---
 
 # INTEGRATION_GUIDE.md — MODE C SECTION STRUCTURE (V2.7 CORRECTED)
@@ -10258,6 +10312,7 @@ The Boot Declaration execution order block now includes Mode D:
 |---|---|
 | V2.5 | Original — Web Modes A + B only |
 | V2.6 | Added Mode C (Cross-Platform Mobile Create from Web ZIP) |
+| V2.9 | **MOBILE ARCHITECTURE & DESIGN SYSTEM SYNC:** Fixed stale Indigo references in Mode C Hallucination Prevention (Rules 492-506, 554) to enforce Luxury Premium Gold (#FACC15 / #EAB308, onPrimary #111111). Clarified canonical subfolder names vs Role+Module prefixed files. Added Patches 08 to 13 covering Query Key Factories, Dedicated Mutation Hooks, Single-Flight 401 Refresh, Trusted Tenant Context, Form Keyboard Safety, Button Loading Stability, Feature-Local Currency (WET), and displayValue en-dash fallbacks. Synchronized 100% with MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md and MOBILE_UI_UX_DESIGN.md. |
 | V2.8 | **GOLD MOBILE THEME UPGRADE:** Mode C Boot Declaration updated to V2.8. Mobile primary upgraded from Indigo (#4F46E5) to Gold (#FACC15) matching web theme. Added on-primary = #111111 (dark text on gold). Fixed Translation Matrix Gold row. Fixed 43P-DESIGN-02 to enforce Gold not Indigo. |
 | V2.7 | **MOBILE COMPLETENESS PATCH:** Added Section 43P Mobile Rule Checklist (Gap 1), Added Mode D Mobile Audit+Repair (Gap 2), Fixed duplicate Section headings in Mode C INTEGRATION_GUIDE (Gap 3), Clarified react-i18next vs next-intl for mobile (Gap 4), Added useUnsavedChangesGuard mandate to Mode C (Gap 5), Added Idempotency-Key mandate to Mode C (Gap 6), Added showToast() dedup pattern to Mode C (Gap 7), Added useConfirm()+ConfirmBottomSheet / Alert.alert FORBIDDEN to Mode C (Gap 8), Added RESPONSIBILITY+FLOW header comment mandate to Mode C (Gap 9), Added testID format mandate to Mode C (Gap 10) |
 
