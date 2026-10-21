@@ -9,7 +9,7 @@ When instructions conflict across documents, apply this exact order of authority
 3. Explicit user-approved scope and verified API contracts
 4. `MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md`
 5. `MOBILE_UI_UX_DESIGN.md` for visual/token decisions
-6. `FRONTEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_V2_5.md` for execution workflow, audit sequencing, delivery artifacts, and reporting
+6. `FRONTEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_V2_11.md` for execution workflow, audit sequencing, delivery artifacts, and reporting
 7. Feature-local documentation trio (`_features.md`, `_forbidden.md`, `_theme_contract.md`)
 8. Existing implementation conventions
 
@@ -53,11 +53,11 @@ When a rule is repeated for convenience:
 > | **Optional** (sub-folders) | Only optional when the feature **genuinely has no such artifact** — omitting when the artifact exists = VIOLATION |
 > | **except** / **unless** | Only a valid escape when ALL stated conditions for the exception are explicitly met and documented |
 >
-> **RULES APPLY TO THE ENTIRE DOCUMENT.** An AI that reads only the first half of this document and produces output is producing INCOMPLETE and INVALID output. Every rule from Rule 0A through Rule 67, the MOBILE DELIVERY FREEZE GATE, and the DEFINITION OF DONE is mandatory.
+> **RULES APPLY TO THE ENTIRE DOCUMENT.** An AI that reads only the first half of this document and produces output is producing INCOMPLETE and INVALID output. Audit against all currently numbered rules in `MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md`, including the Mobile Delivery Freeze Gate and Definition of Done.
 >
 > ⛔ **BEFORE WRITING ANY CODE OR AUDIT FINDING, CONFIRM:**
 > ```text
-> [ ] Read complete MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md (all 67+ rules)
+> [ ] Read complete MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md (all numbered rules, Delivery Freeze Gate, and Definition of Done)
 > [ ] Read complete MOBILE_UI_UX_DESIGN.md (all 22 sections)
 > [ ] Confirmed TECHNOLOGY BASELINE — React Native Bare-Metal (New Architecture / Fabric + TurboModules)
 > [ ] CRITICAL MOBILE STRUCTURE GATE passed — folder tree verified before any deeper rule
@@ -106,7 +106,20 @@ This document defines the canonical architecture and development rules for a Rea
 
 ## BARE-METAL REACT NATIVE — LOCKED NPM PACKAGE REGISTRY
 
-> ⛔ **AI AGENTS: Only packages listed in this registry may be directly imported. Any package not listed requires explicit human approval before installation or import. A feature's `_features.md` must document the approval, justification, compatibility impact, and intended usage, but documentation alone does not authorize the dependency. Expo packages (`expo-*`, `@expo/*`) are STRICTLY FORBIDDEN in bare-metal projects unless the specific package is listed below.**
+> ⛔ **AI AGENTS: Only packages listed in this registry may be directly imported.**
+>
+> Any package not listed requires explicit human approval before installation or import.
+>
+> The feature's `_features.md` MUST document:
+> - the approval reference;
+> - business justification;
+> - New Architecture compatibility impact;
+> - security review outcome;
+> - intended scope.
+>
+> Documentation alone does not authorize a dependency.
+>
+> Expo packages (`expo-*`, `@expo/*`) are STRICTLY FORBIDDEN in bare-metal projects unless the specific package is listed below.
 
 | Category | Approved Package | Notes |
 |---|---|---|
@@ -3851,7 +3864,7 @@ Checkpointing MUST NOT become permission to:
 - skip documentation requirements;
 - skip functional closure verification.
 
-The final result MUST still satisfy the complete applicable mobile architecture rules (Rules 0A–66) and the supplied `MOBILE_UI_UX_DESIGN.md`.
+The final result MUST still satisfy all currently numbered rules in `MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md`, including the Mobile Delivery Freeze Gate and Definition of Done, and the supplied `MOBILE_UI_UX_DESIGN.md`.
 
 ---
 

@@ -1,4 +1,4 @@
-﻿# FRONTEND ROLE MODULE — CREATE, AUDIT & REPAIR
+# FRONTEND ROLE MODULE — CREATE, AUDIT & REPAIR
 
 ## VERSION 2.11 FINAL — FRONTEND (WEB/MOBILE) / QUAD-MODE (CREATE / AUDIT+REPAIR / CROSS-PLATFORM-MOBILE-CREATE / MOBILE-AUDIT+REPAIR) / ZERO-SAMPLING / COMPLETE RULE COVERAGE / COMPLETE DESIGN COVERAGE / CONTRACT INTEGRITY / VERSIONED ZIP DELIVERY / BOUNDED CHECKPOINTED EXECUTION / SOURCE-FIRST REPAIR / HOST-RUNTIME-BLOCKED SEPARATION / WEB-ZIP-TO-MOBILE-CREATE / MOBILE-43P-DELIVERY-GATE
 
@@ -13,7 +13,7 @@ When instructions conflict across documents, apply this exact order of authority
 3. Explicit user-approved scope and verified API contracts
 4. `MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md`
 5. `MOBILE_UI_UX_DESIGN.md` for visual/token decisions
-6. `FRONTEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_V2_5.md` for execution workflow, audit sequencing, delivery artifacts, and reporting
+6. `FRONTEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_V2_11.md` for execution workflow, audit sequencing, delivery artifacts, and reporting
 7. Feature-local documentation trio (`_features.md`, `_forbidden.md`, `_theme_contract.md`)
 8. Existing implementation conventions
 
@@ -261,6 +261,8 @@ This document has exactly four operating modes. Any statement that this prompt h
 | **C** | Mobile Create from Web Specification | Web ZIP as specification only | Maestro | `mobile-{role}-v1.zip` + `mobile_e2e/` (top-level mirrored Maestro suite; never inside `src/features/`) |
 | **D** | Mobile Audit + Repair | Existing React Native module ZIP | Maestro | `mobile-{role}-v{N}-fix.zip` + `mobile_e2e/` (top-level mirrored Maestro suite; never inside `src/features/`) |
 
+## Canonical Mobile Maestro E2E Location
+
 Mobile Maestro E2E tests MUST live only at:
 
 ```text
@@ -268,7 +270,10 @@ mobile_e2e/frontend_{role}_e2e/{role}_{module}/
 ```
 
 They MUST NOT be stored inside `src/features/`.
-Each module E2E folder is self-contained. Business-specific E2E helpers remain inside that module's `helpers/` folder under strict WET.
+
+Each module E2E folder is self-contained.
+Business-specific E2E helpers MUST remain inside that module's `helpers/` folder under strict WET.
+No global shared business E2E helper directory is permitted.
 
 > ⛔ **PLATFORM CROSS-CONTAMINATION PROHIBITION:** No mode may use another platform’s test system, UI rules, framework patterns, or delivery naming conventions. Web modes (A & B) use Playwright and web design rules. Mobile modes (C & D) use Maestro and mobile design rules.
 
@@ -744,13 +749,14 @@ INTEGRATION_GUIDE.md MUST contain:
 
 ### Ambiguous API Contract Rule
 
-If web ZIP evidence for an endpoint, request field, response field, permission, or mutation behavior is ambiguous:
-1. Record the finding as `CONTRACT_AMBIGUOUS`.
-2. Record the exact conflicting evidence and affected files.
-3. Do NOT invent, select, or implement one interpretation.
-4. Mark the affected flow as `BLOCKED_BY_SUPPLIED_CONTRACT`.
-5. Continue only with independent, verified parts of the module.
-6. Do not expose an unverified mutation or data-rendering path to users.
+If web ZIP evidence for an endpoint, request field, response field, permission, business rule, or mutation behavior is ambiguous:
+
+1. Record the finding as `CONTRACT_AMBIGUOUS`;
+2. Record the conflicting evidence and affected files;
+3. Do NOT invent, select, or implement one interpretation;
+4. Mark the affected flow as `BLOCKED_BY_SUPPLIED_CONTRACT`;
+5. Continue only with independently verified parts of the module;
+6. Do not expose an unverified API-driven flow to the user.
 
 ---
 
@@ -768,7 +774,7 @@ If web ZIP evidence for an endpoint, request field, response field, permission, 
 - Do NOT introduce Web, Next.js, Tailwind, Playwright, DOM, or browser patterns.
 - Read the existing feature documentation trio before reviewing implementation files.
 - Preserve all verified mobile API contracts, route identities, testIDs, permissions, role boundaries, and feature-local business behavior unless the repair explicitly requires a contract correction.
-- Audit the existing React Native module against all mobile architecture, design, accessibility, security, documentation, and Maestro requirements (Rules 0A–68 + Design Sections 1–22).
+- Audit the existing React Native module against all currently numbered rules in MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md, including the Mobile Delivery Freeze Gate and Definition of Done, and MOBILE_UI_UX_DESIGN.md (Sections 1–22).
 - Publish the RBG plan and obtain required user approval before applying repairs.
 - Re-run the Mobile Delivery Freeze Gate (Section 43P) after repairs.
 
@@ -10208,7 +10214,7 @@ If no explicit version in input filename → default to `v1-fix`: `mobile-{role}
 
 ## MODE D — AUDIT SCOPE
 
-Mode D audit MUST cover ALL rules from `MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md` (Rules 0A–68) and ALL design rules from `MOBILE_UI_UX_DESIGN.md` (Sections 1–22), evaluated against the supplied mobile ZIP. The Section 43P MOBILE RULE CHECKLIST is the delivery freeze gate for Mode D repairs.
+Mode D audit MUST cover all currently numbered rules in `MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md`, including the Mobile Delivery Freeze Gate and Definition of Done, and all design rules from `MOBILE_UI_UX_DESIGN.md` (Sections 1–22), evaluated against the supplied mobile ZIP. The Section 43P MOBILE RULE CHECKLIST is the delivery freeze gate for Mode D repairs.
 
 ---
 
@@ -10538,7 +10544,7 @@ The Boot Declaration execution order block now includes Mode D:
 [ ] Step 1: Read MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md completely — not yet started
 [ ] Step 2: Read MOBILE_UI_UX_DESIGN.md completely — not yet started
 [ ] Step 3: STAGE 1 FREEZE — mobile requirement baseline + baseline_frozen: true — not yet started
-[ ] Step 4: STAGE 2 AUDIT — complete full gap & contract audit (Rules 0A–68 + Design Sections 1–22) — not yet started
+[ ] Step 4: STAGE 2 AUDIT — complete full gap & contract audit against all currently numbered rules and design sections — not yet started
 [ ] Step 5: RBG PLAN published + user explicitly approves — not yet started
 [ ] Step 6: STAGE 3 REPAIRS — execute repair batches in RBG order (Rule 67B) — not yet started
 [ ] Step 7: Section 43P MOBILE RULE CHECKLIST clean on repaired code — not yet started
@@ -10553,7 +10559,7 @@ The Boot Declaration execution order block now includes Mode D:
 |---|---|
 | V2.5 | Original — Web Modes A + B only |
 | V2.6 | Added Mode C (Cross-Platform Mobile Create from Web ZIP) |
-| V2.11 | **FINAL HARMONIZATION PATCH:** Fixed Line 3793 Gold score penalty bug (replaces with Gold compliance rule). Mandated useThemeTokens() hook consumption (banning static tokens.ts import in feature UI). Added getMinTouchTarget() and getShadowStyle() core helpers. Updated audit scope to Rules 0A–68 incorporating Rule 68 App Upgrade & Backward Compatibility. Clarified Android Back Handler return false safety to prevent trapping. Harmonized accessibility label rules for text vs icon controls. Added PATCH-15. |
+| V2.11 | **FINAL HARMONIZATION PATCH:** Fixed Line 3793 Gold score penalty bug (replaces with Gold compliance rule). Mandated useThemeTokens() hook consumption (banning static tokens.ts import in feature UI). Added getMinTouchTarget() and getShadowStyle() core helpers. Updated audit scope to all currently numbered rules in `MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md`, including the Mobile Delivery Freeze Gate and Definition of Done, incorporating Rule 68 App Upgrade & Backward Compatibility. Clarified Android Back Handler return false safety to prevent trapping. Harmonized accessibility label rules for text vs icon controls. Added PATCH-15. |
 | V2.10 | **CROSS-PLATFORM FORM & TOUCH TARGET HARMONIZATION:** Added Section 43P-FORM covering react-hook-form v7, Zod v3 integration, and 400 field-level validation mapping via handleValidationErrors(). Clarified Android 48dp touch targets in 43P-A11Y-04. Added PATCH-14 enforcing Query Key role prefixes (preventing multi-role cache collisions) and cross-platform touch target hitSlop. |
 | V2.9 | **MOBILE ARCHITECTURE & DESIGN SYSTEM SYNC:** Fixed stale Indigo references in Mode C Hallucination Prevention (Rules 492-506, 554) to enforce Luxury Premium Gold (#FACC15 / #EAB308, onPrimary #111111). Clarified canonical subfolder names vs Role+Module prefixed files. Added Patches 08 to 13 covering Query Key Factories, Dedicated Mutation Hooks, Single-Flight 401 Refresh, Trusted Tenant Context, Form Keyboard Safety, Button Loading Stability, Feature-Local Currency (WET), and displayValue en-dash fallbacks. Synchronized 100% with MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md and MOBILE_UI_UX_DESIGN.md. |
 | V2.8 | **GOLD MOBILE THEME UPGRADE:** Mode C Boot Declaration updated to V2.8. Mobile primary upgraded from Indigo (#4F46E5) to Gold (#FACC15) matching web theme. Added on-primary = #111111 (dark text on gold). Fixed Translation Matrix Gold row. Fixed 43P-DESIGN-02 to enforce Gold not Indigo. |

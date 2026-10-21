@@ -15,7 +15,7 @@ When instructions conflict across documents or supplied sources, apply this exac
 3. Explicit user-approved scope and verified API contracts
 4. Normative architecture rules (`MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md` / `WEB_FRONTEND_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md` / `BACKEND_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md`)
 5. Design-system rules (`MOBILE_UI_UX_DESIGN.md` / `FRONTEND_UI_UX_DESIGN.md`) for visual/token decisions
-6. Execution workflow documents (`FRONTEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_V2_5.md` / `BACKEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_FROM_FRONTEND_V6_3.md`) for audit sequencing, delivery artifacts, and reporting
+6. Execution workflow documents (`FRONTEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_V2_11.md` / `BACKEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_FROM_FRONTEND_V6_3.md`) for audit sequencing, delivery artifacts, and reporting
 7. Feature-local documentation trio (`_features.md`, `_forbidden.md`, `_theme_contract.md`)
 8. Existing implementation conventions
 
@@ -34,10 +34,17 @@ When a rule is repeated for convenience:
 
 > ⛔⛔⛔ **AI MANDATORY BOOT SEQUENCE — EXECUTE BEFORE ANYTHING ELSE** ⛔⛔⛔
 >
-> **COMPLIANCE FAILURE HANDLING (EVIDENCE-BASED AUDIT):**
-> A compliance violation triggers a mandatory stop only for the affected work path.
-> The violation must be recorded, repaired, and rechecked before continuation.
-> Previously verified and unaffected work remains valid and must not be discarded.
+> **COMPLIANCE FAILURE HANDLING — FORENSIC AUDIT MODE:**
+> A forensic-process violation triggers a mandatory stop only for the affected audit path.
+>
+> The auditor MUST:
+> 1. Record the violated forensic rule;
+> 2. Identify the affected audit section and evidence gap;
+> 3. Correct the audit process or report classification;
+> 4. Re-run the affected audit checks;
+> 5. Preserve previously verified, unaffected findings.
+>
+> The auditor MUST NOT silently continue after a forensic-process violation.
 >
 > Before producing ANY analysis, findings, or audit content, you MUST output ALL of the following in your VERY FIRST response:
 >
@@ -64,12 +71,49 @@ When a rule is repeated for convenience:
 >
 > FIRST ACTION:      Phase 1 Combined Discovery Scan (Section 13A)
 > SECOND ACTION:     Publish Audit Chunk Map (Section 13A Step 3)
-> MODE D (MOBILE AUDIT+REPAIR) DETECTION: If the supplied input contains React Native source files (*Screen.tsx, react-navigation imports, .ios.ts/.android.ts files, react-native imports) AND the user requests audit or repair of existing mobile code, this is a MOBILE AUDIT. Apply Section 39A fully. Apply all mobile-specific checks in Section 80. Apply the 43P Mobile Rule Checklist as the delivery freeze gate.
+> MOBILE FORENSIC AUDIT DETECTION:
+> If the supplied input contains React Native source files, such as:
+> - react-native imports;
+> - *Screen.tsx files;
+> - @react-navigation imports;
+> - .ios.ts, .android.ts, or .native.ts files;
+> - ios/ or android/ project files;
+> and the user requests an audit, review, validation, or repair-ready report:
+>
+> AUDIT TARGET: MOBILE_REACT_NATIVE
+> AUDIT MODE: MOBILE_FORENSIC_AUDIT_ONLY
+>
+> The forensic auditor MUST:
+> - inspect mobile source and supplied configuration;
+> - apply the mobile audit matrix;
+> - report evidence, severity, affected file, and repair-handoff guidance;
+> - assess the Mobile Delivery Freeze Gate only as an evidence matrix.
+>
+> The forensic auditor MUST NOT:
+> - edit source code;
+> - create or modify ZIPs;
+> - apply repair batches;
+> - update Maestro tests;
+> - claim Mode D repair completion;
+> - declare artifact delivery complete.
+>
+> Repair execution belongs only to: FRONTEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_V2_11.md.
 > ```
 >
 > ⛔ **You MUST NOT output any audit finding, rule check, or code analysis before completing this boot declaration.**
 > ⛔ **You MUST NOT skip the Chunk Map (Section 13A Step 3) even if the repo looks small.**
-> ⛔ **You MUST NOT begin code inspection until the user replies "Begin Batch 1".**
+## Audit Start Authorization Rule
+
+If the user explicitly requests a complete audit and has supplied a clear target scope, the auditor MUST:
+1. output the Boot Declaration;
+2. publish the Audit Chunk Map;
+3. begin Batch 1 in the same execution sequence.
+
+The auditor MUST wait for explicit `Begin Batch 1` approval only when:
+- the user requests checkpoint-by-checkpoint approval;
+- the source scope is ambiguous;
+- multiple independent modules are supplied without a selected target;
+- the user asks for an audit plan only rather than execution.
 > ⛔ **NO-PAUSE ON MISSING RUNTIME:** Unavailability of host/runtime (dev server, live database, test runner, build tool, browser automation) is NEVER a reason to pause, stall, abort, or mark the audit blocked. You MUST proceed with 100% full-depth static source code audit.
 > ⛔ **ISOLATED ROLE / FEATURE MODULE SCOPE BOUNDARY:** When the user supplies an isolated role module or feature container ZIP (e.g., `superadmin.zip`, `frontend_superadmin.zip`, `backend_superadmin/`): The absence of host application root configuration files (`package.json`, root `tsconfig.json`, `next.config.js`, root route tree / `layout.tsx`, root providers) is EXPECTED in a modular architecture. You MUST NOT pause, stall, or output messages asking the user to provide host slices, package manifests, or TypeScript aliases. Proceed to audit the supplied source files immediately within modular monolith conventions.
 > ⛔ **You are a READ-ONLY audit agent. You MUST NOT edit, create, rename, or delete any file. Violation = output is INVALID.**
@@ -321,7 +365,7 @@ When multiple supplied sources or rules conflict, resolve them in this exact can
 3. Explicit user-approved scope and verified API contracts
 4. Normative architecture rules (`MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md` / `WEB_FRONTEND_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md` / `BACKEND_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md`)
 5. Design-system rules (`MOBILE_UI_UX_DESIGN.md` / `FRONTEND_UI_UX_DESIGN.md`) for visual/token decisions
-6. Execution workflow documents (`FRONTEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_V2_5.md` / `BACKEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_FROM_FRONTEND_V6_3.md`) for execution workflow, audit sequencing, delivery artifacts, and reporting
+6. Execution workflow documents (`FRONTEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_V2_11.md` / `BACKEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_FROM_FRONTEND_V6_3.md`) for execution workflow, audit sequencing, delivery artifacts, and reporting
 7. Feature-local documentation trio (`_features.md`, `_forbidden.md`, `_theme_contract.md`)
 8. Existing implementation conventions
 
@@ -911,6 +955,34 @@ Verification modes available:
    - The auditor MUST assume standard modular conventions: path alias `@/*` resolves to `src/*`, and framework/platform dependencies are provided by the host.
    - The auditor MUST proceed to audit the supplied source files immediately and exhaustively.
 
+## 12B — Evidence and Scope Classification Contract
+
+Every passed check and every forensic finding MUST use exactly one status:
+
+- **VERIFIED:**
+  Supported directly by inspected source, configuration, test artifact, native project file, command output, or runtime evidence.
+
+- **INFERRED:**
+  Derived from conventions or imports. The inference basis MUST be stated and MUST NOT be reported as verified fact.
+
+- **NON_COMPLIANT:**
+  A verified rule violation with exact evidence.
+
+- **NOT_VERIFIABLE_IN_SUPPLIED_SCOPE:**
+  Required files, credentials, runtime access, or host configuration are absent from the supplied scope.
+
+- **OUT_OF_SUPPLIED_SCOPE:**
+  The concern belongs to an unsupplied host app, sibling feature, backend, CI environment, or native project area.
+
+- **CONTRACT_AMBIGUOUS:**
+  Supplied artifacts contain conflicting or insufficient contract evidence.
+
+- **DEFERRED_TO_HOST_RUNTIME:**
+  Requires a device, emulator, Metro, build pipeline, backend, or Maestro run.
+
+Absence of evidence MUST NOT be classified as compliant.
+Out-of-scope host concerns MUST NOT be reported as feature-level defects.
+
 ---
 
 
@@ -1054,6 +1126,38 @@ During Phase 1 combined scan:
 8. Group smaller modules into "Safe Batches" using the Dynamic Batch Sizing Rule below.
 
 This Phase 1 scan PRODUCES the Chunk Map. Do not produce the Chunk Map from memory.
+
+## Mobile Zero-Sampling Inventory Rule
+
+For React Native audits, zero-sampling means:
+1. Create a complete inventory of every supplied auditable file;
+2. Classify every file as one of:
+   - feature UI;
+   - hooks;
+   - API/query/schema;
+   - feature state;
+   - core infrastructure;
+   - tests;
+   - Maestro E2E;
+   - iOS native;
+   - Android native;
+   - app configuration;
+   - documentation;
+3. Inspect every in-scope auditable file at least once;
+4. Record every excluded path and exclusion reason.
+
+Default generated exclusions:
+- `node_modules/`
+- `Pods/`
+- Gradle build output
+- Xcode build output
+- `dist/`
+- `build/`
+- coverage output
+
+However, package manifests, Podfile, Gradle configuration, AndroidManifest, Info.plist, entitlements, and native configuration remain auditable when supplied.
+
+Zero-sampling does not mean treating generated output as application source.
 
 ## STEP 2: DYNAMIC BATCH SIZING RULE
 
