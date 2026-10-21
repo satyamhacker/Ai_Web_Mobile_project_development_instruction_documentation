@@ -222,7 +222,10 @@ Every AI agent executing this prompt MUST strictly obey these invariants at all 
 > 6. Section 43P MOBILE RULE CHECKLIST + MODE C EXTRACTION CHECKLIST clean → ONLY THEN package ZIP
 > 7. `INTEGRATION_GUIDE.md` + `RE_AUDIT_CHECKLIST_RESULT.md` + `mobile_e2e/` inside ZIP → ONLY THEN deliver `mobile-{role}-v1.zip`
 >
-> **Skipping or reordering any step = INVALID OUTPUT. Restart from the violated step.**
+> **Skipping or reordering any step = COMPLIANCE VIOLATION.**
+> A compliance violation triggers a mandatory stop only for the affected work path.
+> The violation must be recorded, repaired, and rechecked before continuation.
+> Previously verified and unaffected work remains valid and must not be discarded.
 
 ---
 
@@ -365,7 +368,11 @@ MANDATORY DELIVERABLES:
 - mobile-{role}-v1.zip (complete React Native feature module)
 - INTEGRATION_GUIDE.md (Web ZIP extraction summary + navigation wiring + npm install + host verification)
 - RE_AUDIT_CHECKLIST_RESULT.md (Section 43P MOBILE RULE CHECKLIST result — every item evaluated)
-- mobile_e2e/{role}_{module}/{role}_{module}.yaml (Maestro E2E test suite)
+Mobile Maestro E2E tests MUST live only at:
+mobile_e2e/frontend_{role}_e2e/{role}_{module}/
+
+They MUST NOT be stored inside src/features/.
+- mobile_e2e/frontend_{role}_e2e/{role}_{module}/{role}_{module}.yaml (Maestro E2E test suite)
 
 FIRST ACTION: Read MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md completely, then MOBILE_UI_UX_DESIGN.md completely, then begin extraction from web ZIP
 ```
@@ -532,10 +539,10 @@ The AI MUST:
 - Use tokens.space[N] for all spacing
 - Use tokens.typography.* for all text styles
 - Use tokens.color.statusSuccessText / tokens.color.statusDangerText etc. for status badges (flat camelCase â€” no nested .status.*)
-- Use tokens.color.payment.* for payment badges
+- Use canonical payment badge tokens: tokens.color.payCashText / payCashBg, tokens.color.payUpiText / payUpiBg, tokens.color.payCardText / payCardBg, tokens.color.payBankText / payBankBg
 - Feature UI MUST consume tokens via 'const tokens = useThemeTokens()'; static import of 'tokens.ts' is FORBIDDEN in feature UI
 - Touch targets MUST resolve via 'getMinTouchTarget()' from '@/core/theme/getMinTouchTarget' (iOS 44pt / Android 48dp)
-- Shadows and elevation MUST resolve via 'getShadowStyle(elevation, color)' from '@/core/theme/getShadowStyle'
+- Shadows and elevation MUST resolve via 'getShadowStyle('sm' | 'md' | 'lg' | 'xl')' from '@/core/theme/getShadowStyle'
 - Reference Tokens canonical interface shape for EVERY style value
 
 SEMANTIC EQUIVALENCE (not value copy):
@@ -545,7 +552,7 @@ Web --bg-card               → tokens.color.card
 Web --text-primary          → tokens.color.foreground
 Web --success-bg            → tokens.color.statusSuccessBg
 Web --danger-text           → tokens.color.statusDangerText
-Web shadow-card             → tokens.shadow.card
+Web shadow-card             → tokens.shadow.sm | tokens.shadow.md | tokens.shadow.lg | tokens.shadow.xl via getShadowStyle('sm' | 'md' | 'lg' | 'xl')
 Web border-radius tokens    → tokens.radius.*
 ```
 
@@ -7270,7 +7277,7 @@ NO UNKNOWN REQUIREMENT
 [ ] Mode C — INTEGRATION_GUIDE.md Section 1 contains Web ZIP Extraction Summary table
 [ ] Mode C — INTEGRATION_GUIDE.md Section 1 documents all CONTRACT_NOT_FOUND_IN_WEB_ZIP items
 [ ] Mode C — Deliverable ZIP named mobile-{role}-v1.zip
-[ ] Mode C — Maestro E2E YAML present in mobile_e2e/{role}_{module}/{role}_{module}.yaml
+[ ] Mode C — Maestro E2E YAML present in mobile_e2e/frontend_{role}_e2e/{role}_{module}/{role}_{module}.yaml (never stored inside src/features/)
 [ ] Mode C — RE_AUDIT_CHECKLIST_RESULT.md present with all Mode C + Mobile Rule items individually evaluated
 ```
 
@@ -7565,6 +7572,9 @@ Every Mode C or Mode D mobile delivery MUST include a machine-readable complianc
 The manifest MUST NOT claim an executed check unless command execution evidence exists.
 
 ⛔ **DELIVERY MANDATE (NEVER WITHHOLD THE REPAIR ZIP):**
+> This requirement is subject to the Capability-Truth Delivery Rule. If archive generation
+is unavailable, the AI MUST report SOURCE_COMPLETE_ARTIFACT_PENDING_HOST_PACKAGING
+and MUST NOT claim that a ZIP was generated.
 - Unavailability of live runtime verification (`DEFERRED_TO_HOST_RUNTIME`), missing out-of-scope host files (`OUTSIDE_SUPPLIED_SCOPE`), or documented specification conflicts requiring external product decisions (`EXTERNAL_PRODUCT_DECISION_BLOCKED`) MUST NOT trigger `BLOCKED_DELIVERY` or cause the AI to withhold the ZIP.
 - When 100% of fixable in-scope `SOURCE_LEVEL_FIX` items are implemented, the AI MUST deliver the final output per the Artifact Delivery Resolution Rule (package the versioned fix ZIP if archive tools exist, or deliver full source with `SOURCE_COMPLETE_ARTIFACT_PENDING_HOST_PACKAGING` status).
 - The AI MUST NOT refuse to deliver the ZIP, nor declare delivery blocked because host/external checks remain deferred.
@@ -9966,7 +9976,7 @@ The AI MUST evaluate every item below against the created mobile module and reco
 - [ ] **43P-DESIGN-06:** Zero arbitrary icon sizes — all icon sizes from `tokens.icon.*`
 - [ ] **43P-DESIGN-07:** Zero arbitrary animation durations — all durations from `tokens.duration.*`
 - [ ] **43P-DESIGN-08:** Zero arbitrary z-index values — all z-index from `tokens.zIndex.*`
-- [ ] **43P-DESIGN-09:** Shadows use `getShadowStyle(elevation, color)` and elevation values from `tokens.shadow.*` only
+- [ ] **43P-DESIGN-09:** Shadows use `getShadowStyle('sm' | 'md' | 'lg' | 'xl')` and elevation values from `tokens.shadow.*` only
 - [ ] **43P-DESIGN-10:** Runtime-derived exceptions (safe-area insets, screen dimensions) documented with `// design-exception: <reason>` comment
 - [ ] **43P-DESIGN-11:** Touch targets resolve via `getMinTouchTarget()` from `@/core/theme/getMinTouchTarget` (44pt iOS / 48dp Android)
 
@@ -10134,7 +10144,11 @@ MANDATORY DELIVERABLES:
 - mobile-{role}-v{N}-fix.zip (repaired React Native feature module)
 - INTEGRATION_GUIDE.md (changelog + navigation wiring + npm install + host verification)
 - RE_AUDIT_CHECKLIST_RESULT.md (Section 43P MOBILE RULE CHECKLIST result)
-- mobile_e2e/{role}_{module}/{role}_{module}.yaml (Maestro E2E test suite)
+Mobile Maestro E2E tests MUST live only at:
+mobile_e2e/frontend_{role}_e2e/{role}_{module}/
+
+They MUST NOT be stored inside src/features/.
+- mobile_e2e/frontend_{role}_e2e/{role}_{module}/{role}_{module}.yaml (Maestro E2E test suite)
 
 FIRST ACTION: Read MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md completely
 ```
@@ -10405,7 +10419,7 @@ During Mode C creation, for EVERY interactive element identified in Extraction S
 > ⛔ **MODE C & MODE D MANDATORY:**
 >
 > 1. **Dynamic Theme Hook Consumption:** Feature UI components MUST consume design tokens via `const tokens = useThemeTokens()` from `@/core/theme/useThemeTokens`. Direct static import of `tokens.ts`, `lightTheme`, or `darkTheme` inside feature files is FORBIDDEN to ensure dynamic runtime switching (Light/Dark/High Contrast) functions correctly.
-> 2. **Cross-Platform Touch & Shadow Resolvers:** Touch target sizing MUST use `getMinTouchTarget()` from `@/core/theme/getMinTouchTarget` (resolves to 44pt on iOS, 48dp on Android). Shadow styles MUST use `getShadowStyle(elevation, color)` from `@/core/theme/getShadowStyle` (maps to iOS shadow properties and Android `elevation`).
+> 2. **Cross-Platform Touch & Shadow Resolvers:** Touch target sizing MUST use `getMinTouchTarget()` from `@/core/theme/getMinTouchTarget` (resolves to 44pt on iOS, 48dp on Android). Shadow styles MUST use `getShadowStyle('sm' | 'md' | 'lg' | 'xl')` from `@/core/theme/getShadowStyle` (maps to iOS shadow properties and Android `elevation`).
 > 3. **Hardware Back Handler Trapping Safety:** When wiring Android back handling via `BackHandler` or `useBackHandler`, handlers MUST return `true` ONLY when actively managing an overlay state (e.g., dismissing an open bottom sheet, modal, or dirty-form discard dialog). In all standard navigation states, return `false` so the native stack navigates back normally. Trapping users on a screen by unconditionally returning `true` is FORBIDDEN.
 > 4. **Accessible Name Rules:** Every interactive control MUST expose a meaningful accessible name. Icon-only, visually ambiguous, abbreviated, dynamic, or contextual controls MUST provide an explicit localized `accessibilityLabel`. Text-labelled native controls may use visible localized text as accessible name when complete and unambiguous.
 > 5. **App Upgrade & Backward Compatibility (Rule 68):**

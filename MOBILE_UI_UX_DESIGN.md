@@ -1071,7 +1071,7 @@ Do NOT use haptics for:
 Haptic failure or unsupported-device behavior MUST safely no-op and MUST NOT
 delay, block, or change the user action.
 
-   - **Light Impact:** Minor UI changes (switches, dropdown toggles, pulling to refresh).
+   - **Light Impact:** Minor UI changes (switches, dropdown toggles).
    - **Success Notification:** Completing a wizard, saving a form, processing payment.
    - **Error Notification:** Destructive actions, or when validation fails.
 3. **Custom Scroll/Pull-to-Refresh:** Use native refresh controls tinted with the `primary` token.
@@ -1160,7 +1160,14 @@ When a custom Android `BackHandler` is required:
 > ⛔ **RELEASE CRITERIA & SOURCE DELIVERY MANDATE:**
 > **Every item MUST be verified against actual code with file and line evidence. Record `NON_COMPLIANT` for any failure in audit.**
 > **In Repair Mode:** If any code defect is found, repair the code. Once all fixable source-level code is implemented, package and deliver the ZIP.
-> **Dynamic/runtime verification steps (`DEFERRED_TO_HOST_RUNTIME`) do NOT trigger `BLOCKED_RELEASE` and must never prevent delivering the repaired ZIP.**
+> Packaging is mandatory only when archive-generation capability is available.
+> Otherwise, apply the Capability-Truth Delivery Rule and report `SOURCE_COMPLETE_ARTIFACT_PENDING_HOST_PACKAGING`.
+>
+> This requirement is subject to the Capability-Truth Delivery Rule. If archive generation
+> is unavailable, the AI MUST report SOURCE_COMPLETE_ARTIFACT_PENDING_HOST_PACKAGING
+> and MUST NOT claim that a ZIP was generated.
+>
+> **Dynamic/runtime verification steps (`DEFERRED_TO_HOST_RUNTIME`) do NOT trigger `BLOCKED_RELEASE` and must never prevent delivering the repaired source.**
 
 ### 1. Functional Completeness Gate
 - [ ] **End-to-End User Flows:** All documented user flows work end-to-end with verified navigation transitions. — *STOP if broken navigation or orphaned screen.*

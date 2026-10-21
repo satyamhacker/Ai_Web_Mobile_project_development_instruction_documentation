@@ -28,14 +28,18 @@ When a rule is repeated for convenience:
 
 > ⛔⛔⛔ **AI AGENT — MANDATORY ENFORCEMENT & INTEGRITY DIRECTIVE — READ FIRST** ⛔⛔⛔
 >
-> **COMPLIANCE FAILURE HANDLING (EVIDENCE-BASED REPAIR):
-On detecting a violation of any rule in this document, the AI MUST:
-1. Stop the affected implementation path immediately;
-2. Record the violated rule, affected file, and concrete evidence;
-3. Repair the violation in source code before continuing downstream work;
-4. Re-run relevant static compliance checks;
-5. Mark the final status as compliant ONLY after file-level evidence is established.
-The AI MUST NOT silently continue after detecting a violation, and MUST NOT claim compliance without verifiable file evidence.**
+> **COMPLIANCE FAILURE HANDLING (EVIDENCE-BASED REPAIR):**
+> A compliance violation triggers a mandatory stop only for the affected work path.
+> The violation must be recorded, repaired, and rechecked before continuation.
+> Previously verified and unaffected work remains valid and must not be discarded.
+>
+> On detecting a violation of any rule in this document, the AI MUST:
+> 1. Stop the affected implementation path immediately;
+> 2. Record the violated rule, affected file, and concrete evidence;
+> 3. Repair the violation in source code before continuing downstream work;
+> 4. Re-run relevant static compliance checks;
+> 5. Mark the final status as compliant ONLY after file-level evidence is established.
+> The AI MUST NOT silently continue after detecting a violation, and MUST NOT claim compliance without verifiable file evidence.
 >
 > This document is the **absolute normative authority** for all React Native mobile code in this project. Every rule is MANDATORY unless the rule itself defines a named `NOT_APPLICABLE` condition with explicit evidence. The following words in this document carry their STRICTEST possible meaning:
 >
@@ -102,7 +106,7 @@ This document defines the canonical architecture and development rules for a Rea
 
 ## BARE-METAL REACT NATIVE — LOCKED NPM PACKAGE REGISTRY
 
-> ⛔ **AI AGENTS: You MUST ONLY use packages from this table. Adding any package NOT listed here requires explicit written justification in `_features.md` under `## Approved External Dependencies`. Expo packages (`expo-*`, `@expo/*`) are STRICTLY FORBIDDEN in bare-metal projects unless the specific package is listed below.**
+> ⛔ **AI AGENTS: Only packages listed in this registry may be directly imported. Any package not listed requires explicit human approval before installation or import. A feature's `_features.md` must document the approval, justification, compatibility impact, and intended usage, but documentation alone does not authorize the dependency. Expo packages (`expo-*`, `@expo/*`) are STRICTLY FORBIDDEN in bare-metal projects unless the specific package is listed below.**
 
 | Category | Approved Package | Notes |
 |---|---|---|
@@ -3983,6 +3987,9 @@ Requirements:
 > **Failing or skipping ANY single source-level gate = REPAIR immediately.**
 >
 > ⛔ **DELIVERY RESOLUTION MANDATE (CAPABILITY-TRUTH & ZERO-STALL):**
+> This requirement is subject to the Capability-Truth Delivery Rule. If archive generation
+is unavailable, the AI MUST report SOURCE_COMPLETE_ARTIFACT_PENDING_HOST_PACKAGING
+and MUST NOT claim that a ZIP was generated.
 > When all fixable source-level code within the supplied mobile scope is complete, the AI MUST deliver the final output per the Artifact Delivery Resolution Rule:
 > - If repository write access and archive-generation capability are available: create the required versioned ZIP artifact (`mobile-{role}-v{N}-fix.zip` or `mobile-{role}-v1.zip`) and report its exact file name and contents.
 > - If repository write access or archive-generation capability is unavailable: do NOT claim that a ZIP was created; provide the complete source-level repair or generated file content within the interface; report status as `SOURCE_COMPLETE_ARTIFACT_PENDING_HOST_PACKAGING`; list the exact required archive name and artifact layout.
