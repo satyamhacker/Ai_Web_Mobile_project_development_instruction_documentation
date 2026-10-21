@@ -1,8 +1,35 @@
 # React Native Global Design System — Token Source
 
+## Master Cross-Document Precedence Order
+
+When instructions conflict across documents, apply this exact order of authority:
+
+1. Security, privacy, legal, authorization, tenant isolation, and data-protection rules
+2. Accessibility and platform-native safety requirements
+3. Explicit user-approved scope and verified API contracts
+4. `MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md`
+5. `MOBILE_UI_UX_DESIGN.md` for visual/token decisions
+6. `FRONTEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_V2_5.md` for execution workflow, audit sequencing, delivery artifacts, and reporting
+7. Feature-local documentation trio (`_features.md`, `_forbidden.md`, `_theme_contract.md`)
+8. Existing implementation conventions
+
+A lower-priority rule MUST NOT override a higher-priority rule.
+Any unresolved conflict MUST be recorded as `BLOCKED_BY_SUPPLIED_CONTRACT` rather than resolved through invention.
+
+## Canonical Rule Reference Policy
+
+When a rule is repeated for convenience:
+- The first named canonical section is authoritative;
+- Repeated copies must link to or reference the canonical rule;
+- Repeated copies must not redefine, weaken, or conflict with the canonical wording;
+- Any conflicting duplicate wording is obsolete and must be removed during the next document revision.
+
+---
+
 > ⛔⛔⛔ **AI AGENT — MANDATORY DESIGN ENFORCEMENT & INTEGRITY DIRECTIVE — READ FIRST** ⛔⛔⛔
 >
-> **VIOLATION OF ANY RULE IN THIS DOCUMENT = DESIGN & UI FAILURE. ALL OUTPUT IS DISCARDED. MUST RESTART.**
+> **COMPLIANCE FAILURE HANDLING (EVIDENCE-BASED REPAIR):**
+> Failure to establish required token evidence triggers a mandatory compliance stop for the affected work path. The violation must be recorded, repaired in source code, and rechecked before continuation. Previously valid, unaffected work does not need to be discarded.
 >
 > This document is the **absolute normative visual authority** and **AI-readable token catalogue** for all React Native mobile styling in this project. Every token and design rule is MANDATORY unless the rule itself defines an explicit design exception with `// design-exception: <reason>`. The following words in this document carry their STRICTEST possible meaning:
 >
@@ -289,14 +316,18 @@ All screens and components MUST meet these mobile accessibility standards:
 - Non-essential animations MUST respect `AccessibilityInfo.isReduceMotionEnabled()`.
 - See Section 7 for full reduced-motion rules.
 
-### Mandatory Accessibility Testing Contract
-Every feature module containing interactive controls MUST include tests for:
-- accessible name / `accessibilityLabel` presence on icon-only and ambiguous controls;
-- correct `accessibilityRole` on all tappable elements;
-- `accessibilityState` (`disabled`, `selected`, `checked`, `busy`) reactive updates;
-- modal and bottom-sheet focus containment and restoration;
-- Dynamic Type behavior for primary text and action controls;
-- reduced-motion fallback for all non-essential animations.
+## Accessibility Test Requirement
+
+For every interactive component, tests MUST verify as applicable:
+- accessible name / localized `accessibilityLabel` presence on icon-only and ambiguous controls;
+- `accessibilityRole` (`button`, `link`, `header`, `checkbox`, `switch`, etc.);
+- `accessibilityState` for disabled, selected, checked, expanded, or busy states;
+- `accessibilityHint` where an action outcome is non-obvious;
+- focus containment and focus restoration after modal or bottom-sheet dismissal;
+- readable behavior at increased system font scaling (Dynamic Type);
+- reduced-motion fallback for all non-essential animation.
+
+Critical user journeys must include Maestro accessibility-oriented assertions where supported by the runner environment.
 
 ## 1. Color Tokens — "Luxury Premium Gold" Theme
 

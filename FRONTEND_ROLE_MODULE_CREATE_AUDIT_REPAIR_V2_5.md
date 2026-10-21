@@ -4,6 +4,33 @@
 
 ---
 
+## Master Cross-Document Precedence Order
+
+When instructions conflict across documents, apply this exact order of authority:
+
+1. Security, privacy, legal, authorization, tenant isolation, and data-protection rules
+2. Accessibility and platform-native safety requirements
+3. Explicit user-approved scope and verified API contracts
+4. `MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md`
+5. `MOBILE_UI_UX_DESIGN.md` for visual/token decisions
+6. `FRONTEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_V2_5.md` for execution workflow, audit sequencing, delivery artifacts, and reporting
+7. Feature-local documentation trio (`_features.md`, `_forbidden.md`, `_theme_contract.md`)
+8. Existing implementation conventions
+
+A lower-priority rule MUST NOT override a higher-priority rule.
+Any unresolved conflict MUST be recorded as `BLOCKED_BY_SUPPLIED_CONTRACT` rather than resolved through invention.
+
+## Canonical Rule Reference Policy
+
+When a rule is repeated for convenience:
+- The first named canonical section is authoritative;
+- Repeated copies must link to or reference the canonical rule;
+- Repeated copies must not redefine, weaken, or conflict with the canonical wording;
+- Any conflicting duplicate wording is obsolete and must be removed during the next document revision.
+
+---
+
+
 > ⛔⛔⛔ **AI MANDATORY BOOT SEQUENCE — EXECUTE BEFORE ANYTHING ELSE** ⛔⛔⛔
 >
 > **COMPLIANCE FAILURE HANDLING (EVIDENCE-BASED REPAIR):**
@@ -57,15 +84,28 @@
 > [ ] Step 4: STAGE 1 FREEZE — mobile requirement baseline frozen — not yet started
 > [ ] Step 5: STAGE 2 CREATE — build complete React Native module from scratch — not yet started
 > [ ] Step 6: Section 43P MOBILE RULE CHECKLIST clean on created mobile code — not yet started
-> [ ] Step 7: FINAL DELIVERY (mobile-{role}-v1.zip + INTEGRATION_GUIDE.md + RE_AUDIT_CHECKLIST_RESULT.md + Maestro E2E) — not yet started
+> [ ] Step 7: FINAL DELIVERY (mobile-{role}-v1.zip + compliance_manifest.json + INTEGRATION_GUIDE.md + RE_AUDIT_CHECKLIST_RESULT.md + Maestro E2E) — not yet started
+>
+> ── MODE D (MOBILE AUDIT+REPAIR) EXECUTION ORDER ─────────────────────────────
+> [ ] Step 1: Read MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md completely — not yet started
+> [ ] Step 2: Read MOBILE_UI_UX_DESIGN.md completely — not yet started
+> [ ] Step 3: Read target feature documentation trio and read-only Core Contract Pack — not yet started
+> [ ] Step 4: STAGE 1 FREEZE — mobile audit baseline + baseline_frozen: true — not yet started
+> [ ] Step 5: STAGE 2 AUDIT — complete full gap & contract audit against mobile architecture and design rules — not yet started
+> [ ] Step 6: RBG PLAN published + user explicitly approves — not yet started
+> [ ] Step 7: STAGE 3 REPAIRS — execute repair batches in RBG order — not yet started
+> [ ] Step 8: Section 43P MOBILE RULE CHECKLIST clean on repaired mobile code — not yet started
+> [ ] Step 9: FINAL DELIVERY (mobile-{role}-v{N}-fix.zip + compliance_manifest.json + INTEGRATION_GUIDE.md + RE_AUDIT_CHECKLIST_RESULT.md + Maestro E2E) — not yet started
 >
 > MANDATORY DELIVERABLES ACKNOWLEDGED:
 > - Mode A/B Web ZIP: frontend-{role}-v{N}[-fix].zip
 > - Mode C Mobile ZIP: mobile-{role}-v1.zip
+> - Mode D Mobile Fix ZIP: mobile-{role}-v{N}-fix.zip
+> - compliance_manifest.json (machine-readable compliance manifest for Mobile Modes C/D)
 > - INTEGRATION_GUIDE.md (consolidated master developer guide with Section 1 Changelog inside ZIP)
 > - RE_AUDIT_CHECKLIST_RESULT.md (Section 43P clean result inside ZIP)
 > - **Web mode (A/B):** `playwright_E2E/` test suite (inside ZIP)
-> - **Mobile mode (C):** `mobile_e2e/` Maestro YAML test suite (inside ZIP)
+> - **Mobile mode (C/D):** `mobile_e2e/` Maestro YAML test suite (top-level mirrored; never stored inside src/features/)
 >
 > FIRST ACTION: [State exact first action — e.g., Read supplied design and architecture rules]
 > ```
@@ -92,7 +132,8 @@
 > - `SOURCE_COMPLETE_AND_ARTIFACT_GENERATED` (when file writing and packaging tools are available and executed)
 > - `SOURCE_COMPLETE_ARTIFACT_PENDING_HOST_PACKAGING` (when source code is complete but ZIP packaging tool is absent)
 > - `SOURCE_COMPLETE_RUNTIME_VERIFICATION_DEFERRED` (when source code is complete but live device/simulator is absent)
-> - `BLOCKED_BY_MISSING_CONTRACT` (when external spec is ambiguous and unresolvable)
+> - `BLOCKED_BY_SUPPLIED_CONTRACT` (when verified external contract contradicts requirements or lacks essential data)
+> - `BLOCKED_BY_EXPLICIT_SCOPE_RESTRICTION` (when requested changes lie strictly outside granted writable scope)
 >
 > Lack of artifact-generation capability does not block source completion.
 > Lack of device/emulator capability does not block static repair completion.
@@ -135,7 +176,8 @@
 
 Every AI agent executing this prompt MUST strictly obey these invariants at all times. They supersede any other instruction.
 
-> ⛔ **INVARIANT ENFORCEMENT: Violating ANY invariant = STOP immediately, discard output, restart from violated step.**
+> ⛔ **COMPLIANCE FAILURE HANDLING (EVIDENCE-BASED REPAIR):**
+> Failure to establish required evidence triggers a mandatory compliance stop for the affected work path. The violation must be recorded, repaired in source code, and rechecked before continuation. Previously valid, unaffected work does not need to be discarded.
 
 1. **DO NOT GUESS:** If a design token, layout constraint, or contract type is missing or ambiguous, rely on explicit documented rules or mark it `NOT_VERIFIED`. Do not invent styles or APIs. **VIOLATION = fabricated compliance = task failure.**
 2. **DO NOT FABRICATE:** Never invent fake component imports, fake CSS variables, fake mock data, fake test results, or fake design token compliance. **VIOLATION = entire output is invalid.**
@@ -144,7 +186,7 @@ Every AI agent executing this prompt MUST strictly obey these invariants at all 
 5. **FUNCTIONAL CLOSURE MANDATE:** Every interactive control (button, link, dropdown, form, filter, tab, modal, pagination) MUST do something real. Visible controls that do nothing or log to console without user feedback are SEVERE defects. **VIOLATION = rejected UI.**
 6. **MUTABLE MOCK STATE MANDATE:** When backend is absent, mocks MUST simulate real mutable state (create actually adds to list, edit updates list, delete removes from list). Static read-only mocks violate the functional closure requirement. **VIOLATION = incomplete repair.**
 7. **NO PLACEHOLDER CODE OR TRUNCATION:** Every generated or repaired component, hook, or screen MUST be 100% complete and fully implemented. Writing placeholder comments such as `// ... rest of code remains the same ...`, `// ... existing methods ...`, or `// TODO` inside deliverables is STRICTLY FORBIDDEN. Deliverables must be drop-in ready with zero ellipsis. **VIOLATION = broken build = immediate task failure.**
-8. **SOURCE-FIRST REPAIR MANDATE:** Runtime/host/build unavailability is NEVER a reason to stop fixing source-level issues. The AI MUST push through the complete audit and repair ALL source-level findings before declaring any blocking. Pausing the audit mid-way due to runtime unavailability = **INVARIANT VIOLATION = must restart from the paused section and continue through.** Only genuine `BLOCKED — EXTERNAL PRODUCT DECISION REQUIRED` items may pause a repair. `HOST_RUNTIME_BLOCKED_VERIFICATION` items keep the repair moving — only the verification step is deferred.
+8. **SOURCE-FIRST REPAIR MANDATE:** Runtime/host/build unavailability is NEVER a reason to stop fixing source-level issues. The AI MUST push through the complete audit and repair ALL source-level findings before declaring any blocking. Pausing the audit mid-way due to runtime unavailability = **INVARIANT VIOLATION.** Record the affected check as `DEFERRED_TO_HOST_RUNTIME` and continue through all remaining source-level sections. Only genuine `BLOCKED — EXTERNAL PRODUCT DECISION REQUIRED` items may pause a repair. `HOST_RUNTIME_BLOCKED_VERIFICATION` items keep the repair moving — only the verification step is deferred.
 
 ---
 
@@ -188,14 +230,14 @@ Every AI agent executing this prompt MUST strictly obey these invariants at all 
 
 ## Canonical Mode Registry
 
-This document has **exactly four operating modes**. Any reference to “three modes” is invalid.
+This document has exactly four operating modes. Any statement that this prompt has three modes is obsolete and invalid.
 
 | Mode | Purpose | Source Scope | Test System | Delivery Artifacts |
 |---|---|---|---|---|
 | **A** | Web Create | Web feature specification | Playwright | `frontend-{role}-v1.zip` + `playwright_E2E/` |
 | **B** | Web Audit + Repair | Existing web module ZIP | Playwright | `frontend-{role}-v{N}-fix.zip` + `playwright_E2E/` |
-| **C** | Mobile Create from Web Spec | Web ZIP as specification only | Maestro | `mobile-{role}-v1.zip` + `mobile_e2e/` (co-located `e2e/`) |
-| **D** | Mobile Audit + Repair | Existing React Native module ZIP | Maestro | `mobile-{role}-v{N}-fix.zip` + `mobile_e2e/` (co-located `e2e/`) |
+| **C** | Mobile Create from Web Specification | Web ZIP as specification only | Maestro | `mobile-{role}-v1.zip` + `mobile_e2e/` |
+| **D** | Mobile Audit + Repair | Existing React Native module ZIP | Maestro | `mobile-{role}-v{N}-fix.zip` + `mobile_e2e/` |
 
 > ⛔ **PLATFORM CROSS-CONTAMINATION PROHIBITION:** No mode may use another platform’s test system, UI rules, framework patterns, or delivery naming conventions. Web modes (A & B) use Playwright and web design rules. Mobile modes (C & D) use Maestro and mobile design rules.
 
@@ -565,7 +607,6 @@ src/features/frontend_{role}/{role}_{module}/
 ├── mocks/            ← {role}_{module}.fixtures.ts + handlers.ts (MUTABLE)
 ├── state/            ← {role}_{module}.store.ts
 ├── tests/            ← integration tests
-├── e2e/              ← {role}_{module}.yaml (co-located Maestro E2E)
 ├── utils/            ← {role}{Module}FormatCurrency.ts (WET)
 ├── _locales/         ← {role}_{module}_en.json + _hi.json
 ├── {role}_{module}_features.md
@@ -606,14 +647,19 @@ src/features/frontend_{role}/{role}_{module}/
 ### MODE C — DELIVERABLES
 
 ```text
-VERSIONED ZIP: mobile-{role}-v1.zip
+VERSIONED ARTIFACT: mobile-{role}-v1.zip (or source-level delivery per Capability-Truth Rule)
 
-Contents:
+Contents Layout:
 ├── src/features/frontend_{role}/{role}_{module}/  ← complete mobile module
 ├── mobile_e2e/frontend_{role}_e2e/{role}_{module}/
-│   └── {role}_{module}.yaml                       ← Maestro E2E tests
+│   ├── {role}_{module}.yaml                       ← Maestro E2E tests (top-level mirrored; never stored inside src/features/)
+│   └── helpers/
+│       └── login.yaml                             ← feature-local E2E helper (strict WET)
+├── compliance_manifest.json                       ← machine-readable compliance manifest
 ├── INTEGRATION_GUIDE.md                           ← consolidated developer guide
 └── RE_AUDIT_CHECKLIST_RESULT.md                   ← mobile delivery freeze gate results
+
+> ⛔ **E2E LOCATION CONTRACT:** The feature's `[feature]_features.md` MUST reference its corresponding Maestro suite, but MUST NOT contain executable E2E YAML files inside `src/features/`. Each `mobile_e2e/frontend_{role}_e2e/{role}_{module}/` folder is self-contained. Business-specific E2E helpers MUST be duplicated at module level under strict WET. No shared global `mobile_e2e` helper directory is permitted.
 
 INTEGRATION_GUIDE.md MUST contain:
   Section 1: Web ZIP Extraction Summary
@@ -657,6 +703,41 @@ INTEGRATION_GUIDE.md MUST contain:
 
 ---
 
+## MODE D — MOBILE AUDIT + REPAIR (Existing React Native Module Supplied)
+
+### Inputs
+1. Existing React Native mobile module ZIP or repository scope.
+2. `MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md`.
+3. `MOBILE_UI_UX_DESIGN.md`.
+4. Target role/module identifier (e.g. `manager_members`).
+5. Explicit writable scope, if repository access is restricted.
+
+### Mode D Rules
+- Do NOT use Web extraction protocol.
+- Do NOT introduce Web, Next.js, Tailwind, Playwright, DOM, or browser patterns.
+- Read the existing feature documentation trio before reviewing implementation files.
+- Preserve all verified mobile API contracts, route identities, testIDs, permissions, role boundaries, and feature-local business behavior unless the repair explicitly requires a contract correction.
+- Audit the existing React Native module against all mobile architecture, design, accessibility, security, documentation, and Maestro requirements (Rules 0A–68 + Design Sections 1–22).
+- Publish the RBG plan and obtain required user approval before applying repairs.
+- Re-run the Mobile Delivery Freeze Gate (Section 43P) after repairs.
+
+### Mode D Execution Order
+1. Read `MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md` completely.
+2. Read `MOBILE_UI_UX_DESIGN.md` completely.
+3. Read target feature documentation trio and read-only Core Contract Pack.
+4. Freeze the mobile audit baseline (`baseline_frozen: true`).
+5. Complete the full mobile audit.
+6. Publish RBG plan and await required user approval.
+7. Apply approved source-level repairs in dependency order (RBG order).
+8. Re-audit all repaired files against Section 43P checklist.
+9. Update module documentation trio and Maestro E2E test suite.
+10. Deliver source-level completion result and artifact status truthfully per the Capability-Truth Delivery Rule.
+
+### Mode D Delivery Name
+`mobile-{role}-v{N}-fix.zip`
+
+---
+
 ## MODE B — AUDIT + REPAIR (Existing Frontend ZIP Supplied)
 
 **Inputs given:**
@@ -693,7 +774,11 @@ In MODE B, determine the existing version from the supplied artifact name, proje
 2. **If no explicit version number is present in input filename:**
    - Deterministically default to `v1-fix`: `frontend-{role}-v1-fix.zip`.
    - Record `VERSION: v1-fix (Default assigned for initial repair release)` inside `INTEGRATION_GUIDE.md` (Section 1 Changelog).
-3. **ZERO-STALL INVARIANT:** The AI MUST NEVER halt, stall, refuse to name the archive, or refuse to package/deliver the ZIP due to absence of an input version tag. Packaging and delivering the repaired ZIP is MANDATORY.
+3. **ARTIFACT DELIVERY RESOLUTION RULE (ZERO-STALL):**
+The AI MUST complete all source-level work that is within its granted scope.
+- If repository write access and archive-generation capability are available: create the required versioned ZIP artifact and report its exact name and contents.
+- If repository write access or archive-generation capability is unavailable: do NOT claim that a ZIP was created; provide the complete source-level repair or generated file content within the interface; report status as `SOURCE_COMPLETE_ARTIFACT_PENDING_HOST_PACKAGING`; list the exact required archive name and artifact layout.
+Missing host packaging capability MUST NOT downgrade valid source-level completion.
 
 **MODE C VERSION ASSIGNMENT (ZERO-STALL):**
 - First mobile creation: always `mobile-{role}-v1.zip`. No version detection needed — it is always v1.
@@ -7454,9 +7539,34 @@ Before final delivery, the AI MUST literally verify:
 
 The evaluation of Section 43P is complete when every single item is evaluated and recorded individually with concrete file/line evidence in `RE_AUDIT_CHECKLIST_RESULT.md` as [PASS / FAIL / NOT_APPLICABLE / DEFERRED_TO_HOST_RUNTIME / OUTSIDE_SUPPLIED_SCOPE / EXTERNAL_PRODUCT_DECISION_BLOCKED]. Documenting an open spec ambiguity under `EXTERNAL_PRODUCT_DECISION_BLOCKED` satisfies the "Source conflicts reported" check as PASS (evidence preserved).
 
+
+## Section 6: Compliance Evidence Manifest (`compliance_manifest.json`)
+
+Every Mode C or Mode D mobile delivery MUST include a machine-readable compliance summary (`compliance_manifest.json`) at artifact root:
+
+```json
+{
+  "mode": "MODE_C | MODE_D",
+  "target_role": "{role}",
+  "target_module": "{module}",
+  "source_scope": "src/features/frontend_{role}/{role}_{module}/",
+  "changed_files": [],
+  "static_checks_run": [],
+  "checks_passed": [],
+  "checks_deferred_to_host_runtime": [],
+  "blocked_by_supplied_contract": [],
+  "architecture_exceptions": [],
+  "design_exceptions": [],
+  "artifact_status": "SOURCE_COMPLETE_AND_ARTIFACT_GENERATED | SOURCE_COMPLETE_ARTIFACT_PENDING_HOST_PACKAGING",
+  "runtime_verification_status": "DEFERRED_TO_HOST_RUNTIME"
+}
+```
+
+The manifest MUST NOT claim an executed check unless command execution evidence exists.
+
 ⛔ **DELIVERY MANDATE (NEVER WITHHOLD THE REPAIR ZIP):**
 - Unavailability of live runtime verification (`DEFERRED_TO_HOST_RUNTIME`), missing out-of-scope host files (`OUTSIDE_SUPPLIED_SCOPE`), or documented specification conflicts requiring external product decisions (`EXTERNAL_PRODUCT_DECISION_BLOCKED`) MUST NOT trigger `BLOCKED_DELIVERY` or cause the AI to withhold the ZIP.
-- When 100% of fixable in-scope `SOURCE_LEVEL_FIX` items are implemented, the AI **MUST ALWAYS PACKAGE AND DELIVER THE VERSIONED FIX ZIP**.
+- When 100% of fixable in-scope `SOURCE_LEVEL_FIX` items are implemented, the AI MUST deliver the final output per the Artifact Delivery Resolution Rule (package the versioned fix ZIP if archive tools exist, or deliver full source with `SOURCE_COMPLETE_ARTIFACT_PENDING_HOST_PACKAGING` status).
 - The AI MUST NOT refuse to deliver the ZIP, nor declare delivery blocked because host/external checks remain deferred.
 Bundling multiple rules into a single check, skipping individual rule evaluation, or delivering without `RE_AUDIT_CHECKLIST_RESULT.md` = FRAUDULENT AUDIT & IMMEDIATE DELIVERY FAILURE.
 

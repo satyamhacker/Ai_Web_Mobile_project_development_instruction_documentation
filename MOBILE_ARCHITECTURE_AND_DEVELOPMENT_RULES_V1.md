@@ -1,4 +1,30 @@
-﻿# React Native Mobile Development Instructions — Enterprise / Industry Scale
+# React Native Mobile Development Instructions — Enterprise / Industry Scale
+
+## Master Cross-Document Precedence Order
+
+When instructions conflict across documents, apply this exact order of authority:
+
+1. Security, privacy, legal, authorization, tenant isolation, and data-protection rules
+2. Accessibility and platform-native safety requirements
+3. Explicit user-approved scope and verified API contracts
+4. `MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md`
+5. `MOBILE_UI_UX_DESIGN.md` for visual/token decisions
+6. `FRONTEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_V2_5.md` for execution workflow, audit sequencing, delivery artifacts, and reporting
+7. Feature-local documentation trio (`_features.md`, `_forbidden.md`, `_theme_contract.md`)
+8. Existing implementation conventions
+
+A lower-priority rule MUST NOT override a higher-priority rule.
+Any unresolved conflict MUST be recorded as `BLOCKED_BY_SUPPLIED_CONTRACT` rather than resolved through invention.
+
+## Canonical Rule Reference Policy
+
+When a rule is repeated for convenience:
+- The first named canonical section is authoritative;
+- Repeated copies must link to or reference the canonical rule;
+- Repeated copies must not redefine, weaken, or conflict with the canonical wording;
+- Any conflicting duplicate wording is obsolete and must be removed during the next document revision.
+
+---
 
 > ⛔⛔⛔ **AI AGENT — MANDATORY ENFORCEMENT & INTEGRITY DIRECTIVE — READ FIRST** ⛔⛔⛔
 >
@@ -112,6 +138,27 @@ This document defines the canonical architecture and development rules for a Rea
 | **Fonts** | `react-native` font linking | Link fonts via native build — no expo-font |
 | **Crash Reporting** | `@sentry/react-native` | Crash monitoring |
 | **i18n** | `react-i18next` + `i18next` | Internationalization |
+| **Date & Time** | `date-fns` | Locale-aware date and time formatting |
+| **Native SVG** | `react-native-svg` | Allowed only for approved native libraries or explicit direct SVG requirements |
+
+### Dependency Classification Contract
+
+#### A. Directly Approved Dependencies
+Only packages listed in the locked package registry above may be directly imported by application source code.
+
+#### B. Transitive Dependencies
+Packages installed only because an approved package depends on them MUST NOT be directly imported by application source code unless they are explicitly promoted to Category A.
+
+#### C. Approval-Required Dependencies
+Any package not in the locked registry requires:
+1. Explicit human approval before installation or import;
+2. New Architecture compatibility evidence (Fabric / TurboModules);
+3. Security and vulnerability review;
+4. Entry in `docs/decisions/approved-dependencies.md`;
+5. Formal update to the locked registry table;
+6. `_features.md` justification if feature-specific.
+
+A `_features.md` justification alone does NOT authorize a dependency.
 
 > ⛔ **FORBIDDEN packages (common AI hallucination traps):**
 > `expo-font`, `expo-status-bar`, `expo-haptics`, `expo-permissions`, `expo-date-picker`, `@expo/vector-icons`, `react-native-vector-icons` (use `lucide-react-native` instead), `react-native-elements`, `native-base`
@@ -487,21 +534,27 @@ extraction would worsen coupling, and the reason is documented in the feature
 - Store: target ≤180 lines; split by independent UI concern.
 - Utility: target ≤120 lines; split only when functions have unrelated responsibility.
 
-## File Size Exception Rule
+## File-Size Exception Process
 
-File size ceilings are default architectural limits, not an invitation to split
-one cohesive responsibility into artificial fragments.
+File-size ceilings are default architectural limits. They MUST NOT cause artificial
+fragmentation of one cohesive responsibility.
 
-An exception is permitted only when:
-1. The file has exactly one responsibility;
-2. Splitting would create prop drilling, circular dependencies, or fragmented logic;
-3. The reason is documented at the top of the file:
-   `// architecture-exception: <reason>`
-4. The feature's `_features.md` explicitly records the exception;
-5. The file remains reviewable, testable, and under 300 lines total.
+An exception is allowed only when all conditions are met:
+1. The file has one clear responsibility;
+2. Splitting it would introduce prop drilling, duplicate logic, circular imports,
+   or reduce readability;
+3. The file has a top-level comment:
+   `// architecture-exception: <specific reason>`
+4. The exception is documented in `[feature]_features.md` under
+   `## Architecture Exceptions`;
+5. The file remains independently testable.
 
-No exception is allowed for Screens containing direct API calls, business calculations,
-or mixed presentation/data-fetching responsibilities.
+Exceptions are forbidden for:
+- Screens that directly call APIs;
+- Screens containing business transformations;
+- Components managing server state;
+- API modules containing UI logic;
+- stores importing components or screens.
 
 | File Type | Target Threshold | Decompose Strategy | Enforcement Nature |
 |---|---|---|---|
@@ -597,8 +650,6 @@ src/
         ├── config/
         │   ├── trainer_members.url_config.ts   ← internal routes + API endpoints
         │   └── trainer_members.navigation.ts   ← feature navigation descriptor
-        ├── e2e/
-        │   └── trainer_members.yaml            ← co-located Maestro E2E test suite
         ├── mocks/
         │   ├── trainer_members.fixtures.ts    ← initial seed data (mutable in-memory)
         │   └── trainer_members.handlers.ts    ← MSW handlers that mutate in-memory state
@@ -917,6 +968,13 @@ export interface NormalizedApiError {
 ```
 
 Features MUST NOT parse Axios/fetch error objects directly inside screen components.
+
+### User Message Source Rule
+
+- Backend-originated success, validation, error, or business-result messages MUST display the verified server `response.message` when supplied.
+- Client-owned static UI labels, button text, offline messages, empty states, permission instructions, confirmations, and accessibility labels MUST use `t('namespace.KEY')`.
+- Backend response messages MUST NOT be passed through `t()` unless the API contract explicitly sends translation keys instead of final display text.
+- Components MUST NOT invent hardcoded business-success or backend-error text.
 
 ### Mutation Execution Standards
 
@@ -1414,7 +1472,18 @@ For each offline-enabled feature document:
   multi-file feature flows, API/mock integration, state coordination, and critical
   feature behavior.
 - **E2E tests (Maestro) - AI Zip Principle:**
-  1. **Top-Level Mirrored Folders:** E2E tests MUST live in a completely separate top-level `mobile_e2e/` directory, entirely decoupled from the application code. The canonical path is `mobile_e2e/frontend_{role}_e2e/{role}_{feature}/{role}_{feature}.yaml` (e.g., `mobile_e2e/frontend_manager_e2e/manager_members/manager_members.yaml`). Never dump E2E tests into the feature folders.
+  1. **Top-Level Mirrored Folders (Canonical Maestro E2E Location):** E2E tests MUST live in a completely separate top-level `mobile_e2e/` directory, entirely decoupled from the application code:
+```text
+mobile_e2e/
+└── frontend_{role}_e2e/
+    └── {role}_{module}/
+        ├── {role}_{module}.yaml
+        └── helpers/
+            └── login.yaml
+```
+The canonical path is `mobile_e2e/frontend_{role}_e2e/{role}_{feature}/{role}_{feature}.yaml`.
+Never dump executable E2E YAML files into the `src/features/` folder. The feature's `_features.md` MUST reference its corresponding Maestro suite, but executable E2E assets remain exclusively in `mobile_e2e/`.
+Each `mobile_e2e/frontend_{role}_e2e/{role}_{module}/` folder is self-contained. Business-specific E2E helpers MUST be duplicated at module level under strict WET. No shared global `mobile_e2e` helper directory is permitted.
   2. **WET Over DRY (Module-Level Isolation):** Mobile E2E tests must be 100% self-contained at the **MODULE level**. Do NOT create a global `shared/` or `utils/` folder for E2E. If both the `manager_members` test and `manager_dashboard` test need a login helper script, duplicate it directly into BOTH folders.
      - **Why:** If a bug occurs in the manager_members mobile flow, a developer must be able to ZIP only the `mobile_e2e/frontend_manager_e2e/manager_members/` folder and feed it to an AI. If the AI is missing parent helpers, it loses context and breaks the test.
   3. **No Cross-Module Imports:** A test script in `frontend_manager_e2e/manager_members/` MUST NOT import a fixture or helper from `frontend_manager_e2e/manager_dashboard/`. Isolation is absolute.
@@ -1571,6 +1640,33 @@ Every pull request affecting mobile code MUST run and pass:
 13. Dependency vulnerability scan (SCA)
 14. Documentation-trio presence and freshness check
 15. Feature API/query-key/url-config presence check
+
+### Required CI Script Contract
+
+The repository MUST expose these stable scripts or equivalent CI jobs:
+- `npm run typecheck` (`tsc --noEmit`)
+- `npm run lint` (`eslint .`)
+- `npm run test:unit` (`jest --testPathPattern=tests/.*\.test\.tsx?`)
+- `npm run test:integration` (`jest --testPathPattern=tests/.*\.integration\.test\.tsx?`)
+- `npm run architecture:boundaries` (verifies zero sibling feature imports)
+- `npm run architecture:naming` (verifies Role+Module prefix conventions)
+- `npm run architecture:file-size` (verifies line ceilings and architecture-exception tags)
+- `npm run architecture:no-barrels` (verifies zero index.ts/tsx files)
+- `npm run design:tokens` (verifies zero raw hex colors and 100% token usage)
+- `npm run design:contrast` (verifies WCAG AA 4.5:1 contrast on semantic pairs)
+- `npm run accessibility:static` (verifies accessible names, roles, and touch targets)
+- `npm run docs:validate` (verifies presence and freshness frontmatter of _features.md, _forbidden.md, _theme_contract.md)
+- `npm run security:secrets` (verifies zero committed credentials or keys)
+- `npm run security:dependencies` (runs npm audit / SCA scan)
+- `npm run e2e:maestro` (executes Maestro YAML suites)
+
+Every CI job MUST report:
+1. Rule / check name;
+2. Affected file;
+3. Line number or import path where available;
+4. Remediation guidance.
+
+A passing check without file-level evidence is insufficient for compliance reporting.
 
 ### Mechanical CI Failure Conditions (FAIL if):
 - `../../frontend_*` imports a sibling feature
@@ -3135,15 +3231,38 @@ Every `_features.md` MUST begin with this structured YAML frontmatter header to 
 
 ```yaml
 ---
-feature: manager_members
-owner_role: manager
+feature: "{role}_{module}"
+owner_role: "{role}"
 module_version: 1
-last_verified_against_commit: <commit-sha-or-host-placeholder>
-last_verified_date: YYYY-MM-DD
-api_contract_version: <version-or-not-supplied>
-navigation_contract_version: <version-or-not-supplied>
+api_contract_source: "verified-api-contract | web-zip-extraction | supplied-scope"
+last_verified_date: "YYYY-MM-DD"
+last_verified_commit: "commit-sha-or-host-unavailable"
+documentation_status: "current"
 ---
 ```
+
+### Mandatory Sections in `_features.md`:
+Every feature's `_features.md` MUST define these sections with non-generic content:
+1. `## Scope and Non-Scope`
+2. `## Screen Inventory`
+3. `## Navigation Contract`
+4. `## API Contract`
+5. `## Query Key Registry`
+6. `## Mutation Inventory`
+7. `## Permissions and Role Rules`
+8. `## State Ownership`
+9. `## Offline and Reconnect Behavior`
+10. `## Security and PII Rules`
+11. `## Accessibility Requirements`
+12. `## Background Tasks`
+13. `## Feature Flags`
+14. `## Cache Invalidation`
+15. `## Migration and Rollback`
+16. `## Test Coverage Map`
+17. `## Architecture Exceptions` (documents any `// architecture-exception:` comments)
+18. `## Known Contract Gaps`
+
+CI MUST fail when a changed feature source file does not have a corresponding update to its `[feature]_features.md`, unless the change is test-only or a documented no-behavior-change refactor.
 
 Every time a component is added, an API endpoint changes, a new screen is added, or a user flow changes, the `_features.md` for that feature MUST be updated in the same commit with updated `last_verified_date`.
 
@@ -3863,9 +3982,12 @@ Requirements:
 > ⛔ **HARD STOP — ALL 14 SOURCE-LEVEL GATES BELOW MUST BE REPAIRED WITH PROOF.**
 > **Failing or skipping ANY single source-level gate = REPAIR immediately.**
 >
-> ⛔ **DELIVERY MANDATE (NEVER WITHHOLD THE REPAIR ZIP):**
-> When all fixable source-level code within the supplied mobile scope is complete, the AI **MUST ALWAYS PACKAGE AND DELIVER THE ZIP**.
-> Host-dependent verification steps (`DEFERRED_TO_HOST_RUNTIME`), host infrastructure files (`OUTSIDE_SUPPLIED_SCOPE`), and external product decisions (`EXTERNAL_PRODUCT_DECISION_BLOCKED`) MUST be documented in `RE_AUDIT_CHECKLIST_RESULT.md` and `INTEGRATION_GUIDE.md`, but MUST NEVER trigger `BLOCKED_DELIVERY` or prevent packaging/delivering the repaired ZIP.
+> ⛔ **DELIVERY RESOLUTION MANDATE (CAPABILITY-TRUTH & ZERO-STALL):**
+> When all fixable source-level code within the supplied mobile scope is complete, the AI MUST deliver the final output per the Artifact Delivery Resolution Rule:
+> - If repository write access and archive-generation capability are available: create the required versioned ZIP artifact (`mobile-{role}-v{N}-fix.zip` or `mobile-{role}-v1.zip`) and report its exact file name and contents.
+> - If repository write access or archive-generation capability is unavailable: do NOT claim that a ZIP was created; provide the complete source-level repair or generated file content within the interface; report status as `SOURCE_COMPLETE_ARTIFACT_PENDING_HOST_PACKAGING`; list the exact required archive name and artifact layout.
+> Missing host packaging capability MUST NOT downgrade valid source-level completion.
+> Host-dependent verification steps (`DEFERRED_TO_HOST_RUNTIME`), host infrastructure files (`OUTSIDE_SUPPLIED_SCOPE`), and external product decisions (`EXTERNAL_PRODUCT_DECISION_BLOCKED`) MUST be documented in `RE_AUDIT_CHECKLIST_RESULT.md` and `INTEGRATION_GUIDE.md`, but MUST NEVER trigger `BLOCKED_DELIVERY` or prevent source-level delivery.
 
 | Gate # | Gate Description | Verification Directive | Consequence of Failure |
 |---|---|---|---|
@@ -3884,7 +4006,7 @@ Requirements:
 | **Gate 13** | Complete Async States | Verify loading skeletons (`[Feature]Skeleton.tsx`), empty states (`[Feature]EmptyState.tsx`), and error fallbacks implemented | **STOP.** Blank screen on async fetch |
 | **Gate 14** | Consolidated Integration Guide & Re-Audit Included | `INTEGRATION_GUIDE.md` (consolidating changelog, navigation route registry, host integration steps, and verification commands), `RE_AUDIT_CHECKLIST_RESULT.md`, and Maestro E2E test suite present inside ZIP root | **STOP.** Missing deliverable = REJECTED DELIVERY |
 
-> ⛔ **If ANY source-level code gate fails: STATUS = `REPAIR_REQUIRED`. Fix the source code. Once all source-level code fixes are written, package and deliver the ZIP with deferred/out-of-scope items explicitly documented.**
+> ⛔ **If ANY source-level code gate fails: STATUS = `REPAIR_REQUIRED`. Fix the source code. Once all source-level code fixes are written, deliver the output per the Artifact Delivery Resolution Rule with deferred/out-of-scope items explicitly documented.**
 >
 > ⛔ **NOTE ON OFFLINE VERIFICATION & MAESTRO TEST RUNS:**
 > Gate 14 and DoD Gate 5 require the Maestro YAML test suite files (`mobile_e2e/`) to be fully authored, structured, and included in the ZIP. If the local environment lacks a mobile device/emulator or Maestro runner, the YAML files are verified statically as PASS, and dynamic execution is recorded as `DEFERRED_TO_HOST_RUNTIME`. Device/runner absence MUST NOT trigger `BLOCKED_DELIVERY` or block delivery when the YAML test suite is fully authored and present.
