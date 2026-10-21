@@ -454,9 +454,22 @@ tests, and the context file — lives inside that single folder. Zero need to op
   exists outside it.
 - **Screen + MainView Pattern (80-line ceiling compliance):** `*Screen.tsx` (≤80 lines) renders ONLY `<SafeAreaView>`, `<StatusBar>`, route param extraction, and ONE `[Role][Module][Screen]MainView.tsx` component (inside `components/`, ≤200 lines). The MainView orchestrates all hooks, loading/empty/error states, and child components. This is the mobile equivalent of Web's `page.tsx` + `[ModuleName]Main.tsx` pattern.
 
-### File Size Governance (Review Thresholds & Responsibility Bounds)
+### File Size Governance
 
-Line limits are review thresholds and cognitive complexity bounds, not an excuse for artificial fragmentation.
+The following are target review thresholds, not reasons for artificial splitting:
+
+- Screens: target ≤80 lines; hard requirement remains: no direct API calls and no
+  business/state calculation beyond route-param extraction.
+- Components: target ≤200 lines; split when the file owns more than one visual
+  responsibility.
+- Hooks/API modules: target ≤150 lines; split when the file owns more than one
+  independent data/action responsibility.
+- Stores: target ≤180 lines; split by separate UI concern.
+- Utilities: target ≤120 lines; split only when utilities are unrelated.
+
+A file may exceed a target only where it has one coherent responsibility,
+extraction would worsen coupling, and the reason is documented in the feature
+`_features.md`.
 
 - Screen: target ≤80 lines; hard rule remains: no business logic or direct API calls.
 - Component: target ≤200 lines; split when it owns more than one visual responsibility.
@@ -472,16 +485,16 @@ A file may exceed its target only when:
 
 The real hard limit is responsibility leakage, not mechanical line wrapping.
 
-| File Type | Maximum Lines | Action When Exceeded | Consequence of Violation |
+| File Type | Target Threshold | Decompose Strategy | Enforcement Nature |
 |---|---|---|---|
-| Screen / Route entry point (`*Screen.tsx`) | **80 lines** | Extract widgets, layout wrappers, and query calls into feature sub-components and custom hooks | **HARD STOP** — PR/Task Blocked |
-| Feature Component / Widget | **200 lines** | Extract sub-components (e.g., `MembersHeader`, `MembersCard`, `MembersList`) | **HARD STOP** — PR/Task Blocked |
-| Custom Hook / Service Hook / Controller | **150 lines** | Split query, mutation, and local UI state into focused single-responsibility hooks | **HARD STOP** — PR/Task Blocked |
-| Validation Schema / Validator class | **150 lines** | Split form schemas by sub-step or domain entity (e.g., `memberBaseSchema`, `memberBillingSchema`) | **HARD STOP** — PR/Task Blocked |
-| API service file (`.api.ts`) | **150 lines** | Separate queries from mutations or split by sub-resource endpoint | **HARD STOP** — PR/Task Blocked |
-| State Store / Context Provider / Notifier | **180 lines** | Decompose giant slices into atomic domain slices; use selector hooks | **HARD STOP** — PR/Task Blocked |
-| Type / Model file (`.types.ts`) | **150 lines** | Split entity models, request payload types, and UI state types | **HARD STOP** — PR/Task Blocked |
-| Utility / Formatter file | **120 lines** | Extract pure formatting functions into single-purpose utility modules | **HARD STOP** — PR/Task Blocked |
+| Screen / Route entry point (`*Screen.tsx`) | **≤80 lines** | Route orchestrator only; zero business logic or direct API calls | **HARD STOP** — Composition only |
+| Feature Component / Widget | **≤200 lines** | Extract sub-components when owning multiple visual concerns | **Target Review Threshold** |
+| Custom Hook / Controller | **≤150 lines** | Split query, mutation, and UI state concerns | **Target Review Threshold** |
+| Validation Schema (`.schemas.ts`) | **≤150 lines** | Split by sub-step or domain entity | **Target Review Threshold** |
+| API service file (`.api.ts`) | **≤150 lines** | Separate queries from mutations or sub-resources | **Target Review Threshold** |
+| State Store (`.store.ts`) | **≤180 lines** | Decompose into atomic domain slices | **Target Review Threshold** |
+| Type file (`.types.ts`) | **≤150 lines** | Split payload, entity, and UI types | **Target Review Threshold** |
+| Utility file (`.utils.ts`) | **≤120 lines** | Extract pure single-purpose functions | **Target Review Threshold** |
 
 If a file exceeds its ceiling: split by **feature responsibility**, not randomly by line count.
 Never create dumping folders named `helpers/`, `common/`, or `misc/`.
@@ -851,8 +864,12 @@ stored data and route it accordingly:
   ```
   This matches the backend's canonical envelope exactly. There is NO second or partial mobile version.
   Every feature's API layer returns this shape — never raw, un-normalized responses.
-- User-facing error messages come from the API `message` field —
-  never hardcoded strings duplicated across screens.
+- User-facing error messages: Client-authored UI text MUST use i18n keys (`t('...')`).
+  Backend `ApiResponse.message` may be shown directly only when the backend
+  contract guarantees it is safe for users and localized according to the active
+  request locale. If this guarantee is absent, show a translated feature fallback
+  and send sanitized diagnostic context to observability only. Never expose raw Axios
+  errors, JavaScript errors, stack traces, or unvalidated server text.
 - Authentication expiry (401) is handled by ONE centralized
   logout/token-refresh interceptor — never ad-hoc inside individual screens.
 
@@ -1236,6 +1253,10 @@ Rules:
   DOM/SVG/Canvas-web-only charting library, none of which render on mobile.
 - Chart color palettes must pull from the design system's chart tokens — never
   hardcoded hex values per chart instance.
+- “Never DOM/SVG/Canvas-web-only” means browser-only rendering libraries are forbidden.
+  Native-rendered React Native SVG through an approved dependency (e.g. `react-native-svg`)
+  is permitted only when it is required by an approved React Native library and renders through
+  native React Native primitives rather than a WebView or browser DOM.
 
 ## Rule 13 — Platform-Specific Code
 

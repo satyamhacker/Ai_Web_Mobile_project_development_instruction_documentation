@@ -250,7 +250,11 @@ All screens and components MUST meet these mobile accessibility standards:
 
 ### Dynamic Type / Font Scaling
 - All `<Text>` components MUST support `allowFontScaling={true}` (the RN default).
-- Set `maxFontSizeMultiplier` where needed to prevent layout breakage, with a documented maximum of 1.5× before requiring layout accommodation.
+- Do not cap font scaling for general content. `maxFontSizeMultiplier` is permitted
+  only for tightly measured secondary UI where full text remains accessible through
+  an alternate layout or accessible label. Every cap requires a documented
+  `// design-exception:` and an entry in the owning feature's `_features.md`.
+  See Section 3 for the complete Dynamic Type policy.
 - Test all screens at the largest accessibility text size on both platforms.
 
 ### High Contrast Support
@@ -294,7 +298,7 @@ All screens and components MUST meet these mobile accessibility standards:
 | `focus-ring` | `#A16207` | `#FACC15` | Input focus and keyboard focus ring |
 | `skeleton-base` | `#E4E4E7` | `#111111` | Skeleton shimmer base |
 | `skeleton-highlight` | `#F4F4F5` | `#1A1A1A` | Skeleton shimmer highlight |
-| `surface-hover` | `rgba(234,179,8,0.08)` | `rgba(250,204,21,0.08)` | List item press highlight |
+| `surface-pressed` | `rgba(234,179,8,0.08)` | `rgba(250,204,21,0.08)` | List item pressed-state highlight |
 | `overlay-backdrop` | `rgba(0,0,0,0.6)` | `rgba(0,0,0,0.6)` | Modal/sheet background dim |
 
 ### Opacity Tokens
@@ -571,7 +575,7 @@ No component may ship without its loading, empty, and error states.
 |---|---|---|
 | **Loading / skeleton** | Data fetch in progress | A skeleton component that mimics the exact layout of the real content. Use `skeleton-base` for shimmer base, `skeleton-highlight` for shimmer highlight. **Never a full-screen spinner for content areas** — spinner only for button-level actions. |
 | **Empty** | Fetch succeeded, zero results | A dedicated `[Feature]EmptyState` component with a contextual icon, a short human-readable message, and a primary CTA (e.g. "Add your first member"). Never a blank white screen. |
-| **Error** | Fetch failed or network error | A `[Feature]ErrorFallback` component showing a brief message from `response.message` (backend-driven), a "Try again" retry button, and optionally a help link. Never expose raw error objects. |
+| **Error** | Fetch failed or network error | A `[Feature]ErrorFallback` component showing a safe user-facing message, a "Try again" retry button, and optionally a help link. Use backend `response.message` only when the API contract explicitly guarantees that it is user-safe and localized for the active app locale. Otherwise show a feature-specific translated fallback through `t('...')`. Never expose raw Axios errors, JavaScript errors, stack traces, raw `error.message`, or unvalidated server text. |
 | **Permission denied** | User lacks role access to the resource | A `[Feature]PermissionDenied` component explaining the access restriction. Never show a blank screen or a cryptic error code. |
 | **Offline** | No network detected (if offline is a declared feature) | An inline `OfflineBanner` (not a full-screen takeover) with the last-cached data still visible. Only for features that explicitly declare offline support in `_features.md`. |
 | **Offline Blocker** | No network AND feature has no cached data to show | A full-screen `[Feature]OfflineBlocker` component that blocks interaction and explains the feature requires connectivity. Use ONLY when the feature cannot function at all without network (e.g., payment processing). Never use `OfflineBlocker` for features that can show cached data — use `OfflineBanner` instead. |
@@ -747,9 +751,11 @@ src/core/theme/
 > ⛔ **AI AGENTS: ALL token property access in components MUST use EXACTLY this object shape. Never guess token names. If you write `theme.colors.primary` when the shape is `tokens.color.primary`, TypeScript will fail. Use this as your reference.**
 
 ```typescript
-// src/core/theme/tokenDefinitions.ts — token type/scale source
-// src/core/theme/useThemeTokens.ts — returns the active light/dark token object
-export const tokens = {
+// This is a TypeScript contract shape, not a directly imported static theme object.
+// src/core/theme/tokenDefinitions.ts defines stable scales and Tokens type.
+// src/core/theme/useThemeTokens.ts returns the active light/dark Tokens value.
+
+export interface Tokens {
   color: {
     // Core surfaces (Section 1)
     background:          string,
@@ -774,7 +780,7 @@ export const tokens = {
     focusRing:           string,
     skeletonBase:        string,
     skeletonHighlight:   string,
-    surfaceHover:        string,  // 'surface-hover'
+    surfacePressed:      string,  // 'surface-pressed'
     overlayBackdrop:     string,  // 'overlay-backdrop'
     // Status tokens (Section 8)
     statusSuccessText:   string,
@@ -879,9 +885,7 @@ export const tokens = {
     toast:       60,
     overlay:     70,
   },
-} as const;
-
-export type Tokens = typeof tokens;
+}
 
 // Usage in components:
 // tokens.color.primary          ✅
@@ -979,8 +983,19 @@ Mobile users expect familiar native behavior. UI that ignores platform conventio
 | Convention | iOS | Android |
 |---|---|---|
 | Back navigation | Swipe-right gesture (native stack) + back button in nav bar | Hardware/software back button + swipe-right |
-| Gesture navigation | Always use `react-navigation` native stack — never block gestures | Back handler MUST be wired for Android hardware back button |
+| Gesture navigation | Always use `react-navigation` native stack — never block gestures | React Navigation default hardware/software back behavior MUST work correctly. Use a custom `BackHandler` only for documented interception cases such as a dirty form, active selection mode, or an open sheet/modal. Never register a custom back handler on ordinary stack screens. |
 | Confirmation before back | Show a bottom sheet confirmation when the user tries to go back from a dirty (unsaved) form | Same behavior |
+
+### Android Back Interception Safety
+
+When a custom Android `BackHandler` is required:
+
+- It MUST be registered only while the interception state is active.
+- It MUST be removed during cleanup/unmount.
+- First back press behavior, repeated back press, sheet/modal dismissal, and
+  app-root behavior MUST be tested.
+- A custom handler MUST NOT block React Navigation's normal stack pop unless a
+  documented unsaved-change or critical-flow reason exists.
 
 ### Safe Area & Status Bar
 
