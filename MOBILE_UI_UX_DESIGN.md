@@ -195,6 +195,16 @@ CI/design validation MUST fail when an approved text/background pair falls below
 
 Ensure `primary` (`#FACC15` dark / `#EAB308` light) and `destructive` (#DC2626) against `on-primary` (#111111) and `on-destructive` (#FFFFFF) pass this contrast validation before final theme lock.
 
+The project default is 4.5:1 minimum for all text, including large text, to
+avoid subjective classification errors. WCAG's lower large-text threshold must
+not be used as an automatic exception.
+
+Any exception below 4.5:1 requires:
+1. documented legal/accessibility approval;
+2. explicit token-level exception in this document;
+3. an alternative non-color communication method;
+4. accessibility review evidence.
+
 ## 1B. React Native Accessibility Interaction Tokens
 
 React Native does not use web CSS `:focus-visible`. The design system must support
@@ -219,7 +229,12 @@ Do not add web-only ARIA or CSS terminology to React Native implementation rules
 All screens and components MUST meet these mobile accessibility standards:
 
 ### Screen Reader (VoiceOver / TalkBack)
-- Every interactive element MUST have a meaningful `accessibilityLabel` prop. Never rely on visible text alone when the element is an icon or has ambiguous purpose.
+- Every interactive element MUST expose a meaningful accessible name.
+  - Icon-only or visually ambiguous controls MUST provide `accessibilityLabel`.
+  - Text-labelled native controls may use their visible text as the accessible name
+    when it is complete, unambiguous, and localized.
+  - Provide `accessibilityLabel` whenever visible text is abbreviated, contextual,
+    dynamic, non-textual, or insufficient to describe the action.
 - Use `accessibilityHint` to describe the outcome of an action where the label alone is insufficient (e.g., `accessibilityLabel="Delete member"` + `accessibilityHint="Permanently removes the member and all their data"`).
 - Use `accessibilityRole` to communicate the semantic role: `button`, `link`, `header`, `checkbox`, `switch`, `image`, `text`, `none`, etc.
 - Use `accessibilityState` to communicate dynamic states: `{ disabled, selected, checked, busy, expanded }`.
@@ -264,7 +279,7 @@ All screens and components MUST meet these mobile accessibility standards:
 | `overlay` | `#FFFFFF` | `#242424` | Modals, dialogs |
 | `popover` | `#F4F4F5` | `#2E2E2E` | Dropdowns, tooltips |
 | `primary` | `#EAB308` | `#FACC15` | Primary buttons, active nav item, FAB |
-| `primary-hover` | `#CA8A04` | `#EAB308` | Primary button pressed state |
+| `primary-pressed` | `#CA8A04` | `#EAB308` | Primary button pressed state |
 | `primary-subtle` | `rgba(234,179,8,0.15)` | `rgba(250,204,21,0.15)` | Soft badge backgrounds, selected row highlight |
 | `primary-text` | `#EAB308` | `#FACC15` | Text links, primary text buttons |
 | `destructive` | `#B91C1C` | `#B91C1C` | Errors, delete actions |
@@ -330,7 +345,14 @@ All typography values MUST be expressed as explicit React Native unit properties
 **Font Scaling — Dynamic Type (iOS) and Font Size (Android):**
 - The theme MUST handle Dynamic Type and Android font scaling properly.
 - Set `allowFontScaling={true}` (default) on all `<Text>` components unless a specific measured UI element has a documented exception.
-- Set `maxFontSizeMultiplier` where allowing unbounded scaling would break a critical UI element. The maximum allowed multiplier before requiring layout accommodation is `1.5`.
+- Do not apply `maxFontSizeMultiplier` to general body content, form labels,
+  validation messages, legal text, or primary action labels by default.
+- A cap may be used only for tightly measured secondary UI such as a compact badge,
+  tab label, or decorative KPI label where the full text remains available through
+  an accessible label or alternate layout.
+- Any cap requires a `// design-exception:` comment and must be listed in the
+  owning feature's `_features.md`.
+- The application must remain usable at the platform's largest accessibility text size.
 - Developers MUST test all screens at the largest accessibility text size on both iOS and Android.
 - NEVER hardcode pixel-specific layout dimensions that assume a fixed font size — use `flexShrink`, `flexWrap`, and `minHeight` to accommodate text growth.
 
@@ -552,7 +574,7 @@ No component may ship without its loading, empty, and error states.
 | **Error** | Fetch failed or network error | A `[Feature]ErrorFallback` component showing a brief message from `response.message` (backend-driven), a "Try again" retry button, and optionally a help link. Never expose raw error objects. |
 | **Permission denied** | User lacks role access to the resource | A `[Feature]PermissionDenied` component explaining the access restriction. Never show a blank screen or a cryptic error code. |
 | **Offline** | No network detected (if offline is a declared feature) | An inline `OfflineBanner` (not a full-screen takeover) with the last-cached data still visible. Only for features that explicitly declare offline support in `_features.md`. |
-| **Offline Blocker** | No network AND feature has no cached data to show | A full-screen `[Feature]OfflineBlocker` component that blocks interaction and explains the feature requires connectivity. Use ONLY when the feature cannot function at all without network (e.g., payment processing). Never use `OfflineBlocker` for features that can show cached data â€” use `OfflineBanner` instead. |
+| **Offline Blocker** | No network AND feature has no cached data to show | A full-screen `[Feature]OfflineBlocker` component that blocks interaction and explains the feature requires connectivity. Use ONLY when the feature cannot function at all without network (e.g., payment processing). Never use `OfflineBlocker` for features that can show cached data — use `OfflineBanner` instead. |
 
 ## 14. Safe Area & Notch Handling
 
@@ -716,15 +738,17 @@ src/core/theme/
   ThemeProvider.tsx
   useThemeTokens.ts
   getMinTouchTarget.ts
+  getShadowStyle.ts
   animationConfig.ts
 ```
 
-### CANONICAL `tokens.ts` TYPESCRIPT OBJECT SHAPE (LOCKED)
+### CANONICAL ACTIVE TOKEN OBJECT SHAPE (LOCKED)
 
 > ⛔ **AI AGENTS: ALL token property access in components MUST use EXACTLY this object shape. Never guess token names. If you write `theme.colors.primary` when the shape is `tokens.color.primary`, TypeScript will fail. Use this as your reference.**
 
 ```typescript
-// src/core/theme/tokens.ts  — canonical shape (implement values from tables above)
+// src/core/theme/tokenDefinitions.ts — token type/scale source
+// src/core/theme/useThemeTokens.ts — returns the active light/dark token object
 export const tokens = {
   color: {
     // Core surfaces (Section 1)
@@ -735,7 +759,7 @@ export const tokens = {
     overlay:             string,
     popover:             string,
     primary:             string,
-    primaryHover:        string,  // 'primary-hover'
+    primaryPressed:      string,  // 'primary-pressed'
     primarySubtle:       string,  // 'primary-subtle'
     primaryText:         string,  // 'primary-text'
     destructive:         string,
@@ -823,13 +847,14 @@ export const tokens = {
     stroke: 1.75,
   },
   layout: {
-    buttonMinWidth:   120,
-    minTouchTarget:   44,   // iOS pt; Android uses 48dp
-    headerHeight:     56,
-    bottomTabHeight:  60,
-    contentPadding:   16,
-    cardPadding:      16,
-    fabSize:          56,
+    buttonMinWidth:        120,
+    minTouchTargetIos:      44,
+    minTouchTargetAndroid:  48,
+    headerHeight:           56,
+    bottomTabHeight:        60,
+    contentPadding:         16,
+    cardPadding:            16,
+    fabSize:                56,
   },
   duration: {
     fast:   150,

@@ -109,11 +109,62 @@ This document defines the canonical architecture and development rules for a Rea
 > ⛔ **FORBIDDEN packages (common AI hallucination traps):**
 > `expo-font`, `expo-status-bar`, `expo-haptics`, `expo-permissions`, `expo-date-picker`, `@expo/vector-icons`, `react-native-vector-icons` (use `lucide-react-native` instead), `react-native-elements`, `native-base`
 
+### Package Version Authority
+
+The repository lockfile and `package.json` are the only authority for installed
+package versions.
+
+AI MUST:
+- use only APIs compatible with the installed version;
+- never assume the newest package API;
+- never upgrade, downgrade, or add dependencies unless explicitly approved;
+- update lockfile only when an approved dependency change is part of the task;
+- document the reason and compatibility impact in the feature `_features.md`
+  when an approved dependency is added or changed.
+
+### Native Project Boundary
+
+Changes to native project files are infrastructure changes, not feature-local changes.
+
+This includes:
+- `android/` Gradle files, AndroidManifest permissions, Proguard/R8 rules;
+- `ios/` Podfile, Info.plist usage descriptions, privacy manifests, entitlements;
+- React Native codegen, Fabric, TurboModule, Hermes, build scripts;
+- push notification, deep-link, biometric, camera, location, and file-access setup.
+
+AI MUST NOT modify these files unless the task explicitly authorizes native work.
+Every approved native change requires:
+1. iOS and Android impact assessment;
+2. required permission/privacy declaration;
+3. rollback plan;
+4. device validation evidence;
+5. update to the relevant feature documentation.
+
 ## CODE & COMPONENT ISOLATION DECISION MATRIX (STRICT WET PRINCIPAL)
 
 > ⛔ **AI AGENTS: Before deciding whether to share or duplicate any component, hook, utility, or constant across roles or modules, you MUST consult this matrix. Guessing is PROHIBITED.**
 >
 > **THE WET PRINCIPAL:** "Write Everything Twice" (WET) is the mandatory default for all business-aware code. Traditional DRY principles MUST NOT override the project's AI isolation requirement. Over-isolation is always compliant; sharing business logic is NEVER permitted.
+
+### Non-Negotiable DRY Exceptions
+
+WET applies to business-aware feature code only.
+
+The following MUST remain centralized and MUST NEVER be duplicated per feature:
+- authentication, session restoration, token refresh, logout;
+- secure storage and encryption adapters;
+- API transport, retry, timeout, cancellation, and error normalization;
+- permission request and Settings redirection infrastructure;
+- telemetry, PII redaction, crash reporting, audit logging;
+- global theme/token resolution, shadow/touch-target/motion helpers;
+- i18n initialization and locale handling;
+- generic accessibility primitives;
+- navigation shell and deep-link authorization guard;
+- global offline/network status service;
+- generic date/currency/number formatting utilities.
+
+Business-specific formatting, status mapping, field validation, workflow rules,
+and feature UI remain WET and feature-local.
 
 | Scenario | Classification | Required Decision |
 |---|---|---|
@@ -1435,6 +1486,27 @@ or debug it without reading any other part of the codebase.
 **Before modifying a feature, read its `_features.md` in full first.**
 If it is missing or stale, updating it is part of the same change — a feature
 is never "done" while its context file is out of date.
+
+### Read-Only Core Contract Pack
+
+AI editable scope is limited to the target feature folder by default.
+
+However, each AI task MUST also receive a read-only Core Contract Pack containing
+only public interfaces required to safely compile and integrate the feature:
+
+- `src/core/auth/` public session and authorization contracts;
+- `src/core/network/` public network-client and API response contracts;
+- `src/core/theme/` public `useThemeTokens`, token types, and visual helper APIs;
+- `src/core/navigation/` public route-registration and route-param contracts;
+- `src/core/permissions/` public permission service contracts;
+- `src/core/i18n/` translation function and locale contracts;
+- TypeScript path alias configuration;
+- approved dependency registry.
+
+AI MUST NOT modify Core Contract Pack files unless the task explicitly authorizes
+a core/infrastructure change and required ownership review is present.
+
+AI MUST NOT read or modify sibling feature business logic by default.
 
 ### The Documentation Quality Standard
 
@@ -3538,6 +3610,22 @@ Every feature's `_features.md` MUST include this Edge Case Matrix:
 | **Accessibility** | 1.5x font scaling, reduced motion active, screen reader announcements |
 | **Security** | PII masking in lists, clipboard restrictions, no credentials in logs/breadcrumbs, session expiration |
 | **Platform** | Android hardware back, iOS swipe back, notch/safe-area insets, app background/resume |
+
+## Rule 68 — App Upgrade, Migration, and Backward Compatibility
+
+Any persisted local state, cached data, route payload, or feature flag must have
+a versioned migration strategy.
+
+Requirements:
+- Version MMKV keys and persisted Zustand state.
+- Validate and safely discard incompatible cached schemas.
+- Clear tenant-bound and user-bound caches on logout, tenant switch, and role change.
+- Maintain backward-compatible deep-link parsing for supported app versions.
+- Never assume all users update simultaneously.
+- Remove feature flags only after rollout completion, telemetry confirmation, and
+  cleanup of inactive code paths.
+- Document migration, rollback, and cache invalidation behavior in the feature
+  `_features.md`.
 
 ## MOBILE DELIVERY FREEZE GATE
 
