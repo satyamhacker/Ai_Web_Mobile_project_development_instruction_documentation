@@ -135,6 +135,21 @@ This document defines the canonical architecture and development rules for a Rea
 - `formatCurrency` is ALWAYS `DOMAIN_UTILITY` — it MUST be feature-local (`[feature]/utils/[module]FormatCurrency.ts`), never in `src/core/`.
 - When in doubt, DUPLICATE. Over-isolation is always compliant; sharing business logic is NEVER permitted.
 
+### WET vs DRY Governance Boundary
+
+| Code Category | Rule | Location |
+|---|---|---|
+| Business workflows, feature statuses, filters, cards, mutations, forms | **WET / feature-local** | Owning feature only |
+| Security-sensitive logic | **DRY / central only** | `src/core/security`, `auth`, `storage` |
+| Network client, token refresh, retry policy | **DRY / central only** | `src/core/network` |
+| Permissions and notification registration | **DRY / central only** | `src/core/permissions`, `notifications` |
+| Theme/token resolver, animation presets, haptic adapter | **DRY / central only** | `src/core/theme`, `src/core/interaction` |
+| Generic UI primitives with zero business meaning | **DRY allowed** | `src/core/ui` |
+| Generic type-safe utilities such as `displayValue`, formatting, debounce | **DRY / central only** | `src/core/utils` |
+| Feature formatters involving business rules (`formatCurrency`) | **WET / local** | Owning feature `utils/` |
+
+> ⛔ **MANDATORY BOUNDARY RULE:** WET applies strictly to business-aware code. It MUST NOT duplicate security, authentication, authorization, token refresh, storage, privacy redaction, telemetry sanitization, network transport, permissions, notification infrastructure, or generic accessibility primitives. Those are centralized because inconsistency creates security, compliance, and regression risk.
+
 ---
 
 ## NO ROLE-WIDE BUSINESS BUCKETS
@@ -314,11 +329,20 @@ To guarantee that any AI agent or mobile developer can repair, test, or expand a
      - Local contract documentation: `[role_module]_features.md`, `[role_module]_forbidden.md`, `[role_module]_theme_contract.md`
    - ZERO cross-feature business imports: It is STRICTLY PROHIBITED for any feature module to import business components, hooks, stores, or types from any sibling feature (Rule 28).
 
-3. **Isolated AI Repair Hand-Off (Single-Folder Boundary):**
-   - If a bug, UI regression, or data issue occurs in ANY feature:
-     - The developer or host system MUST provide **ONLY** that single feature module folder (`src/features/frontend_{role}/{role}_{feature}/`) to the AI agent.
-     - The AI agent will audit, repair, test, and package that module in complete isolation.
-     - Demanding host application root files (`package.json`, root `tsconfig.json`, `app.json`, root navigation container) or sibling feature folders is a **CRITICAL SCOPE CREEP VIOLATION**.
+3. **Isolated AI Repair Hand-Off & AI Repair Context Boundary:**
+   - The editable scope remains one owning feature module by default (`src/features/frontend_{role}/{role}_{feature}/`).
+   - However, every AI repair hand-off MUST include a read-only **Core Contract Pack**:
+     - `src/core/contracts/` public type contracts
+     - `src/core/network/networkClient.ts` public API surface only
+     - `src/core/theme/` public token and theme API surface only
+     - `src/core/navigation/` route registration interface only
+     - `src/core/auth/` session and authorization public interface only
+     - `src/core/permissions/` public permission API only
+     - `src/core/i18n/` translation API and locale setup only
+     - approved dependency manifest
+     - TypeScript path alias configuration
+   - The AI MUST NOT modify Core Contract Pack files unless the task explicitly authorizes an infrastructure change and CODEOWNERS review is required.
+   - The AI MUST NOT request sibling feature business code by default.
 
 4. **Feature-Owned Route Config & Stack Navigator (AI Zip Principle):**
    - Every feature module MUST own its internal screen route names and param types inside `config/{role_module}.url_config.ts` (e.g., `config/manager_members.url_config.ts`). This file exports both internal `SCREEN_ROUTES` constants and the feature's `ParamList` type.
@@ -379,9 +403,23 @@ tests, and the context file — lives inside that single folder. Zero need to op
   exists outside it.
 - **Screen + MainView Pattern (80-line ceiling compliance):** `*Screen.tsx` (≤80 lines) renders ONLY `<SafeAreaView>`, `<StatusBar>`, route param extraction, and ONE `[Role][Module][Screen]MainView.tsx` component (inside `components/`, ≤200 lines). The MainView orchestrates all hooks, loading/empty/error states, and child components. This is the mobile equivalent of Web's `page.tsx` + `[ModuleName]Main.tsx` pattern.
 
-### File Size Ceilings (Hard Ceilings — Zero Exceptions)
+### File Size Governance (Review Thresholds & Responsibility Bounds)
 
-Any file exceeding its ceiling triggers an immediate `FILE_SIZE_VIOLATION` gate stop. Decompose immediately into focused sub-components or sub-hooks within the same feature folder. Never bypass this rule with artificial line wrapping or minification.
+Line limits are review thresholds and cognitive complexity bounds, not an excuse for artificial fragmentation.
+
+- Screen: target ≤80 lines; hard rule remains: no business logic or direct API calls.
+- Component: target ≤200 lines; split when it owns more than one visual responsibility.
+- Hook/API: target ≤150 lines; split when it owns more than one data/action concern.
+- Store: target ≤180 lines; split by independent UI concern.
+- Utility: target ≤120 lines; split only when functions have unrelated responsibility.
+
+A file may exceed its target only when:
+1. It has one coherent responsibility,
+2. Extracting would create unnecessary prop drilling or cyclic coupling,
+3. The reason is documented in the feature `_features.md`,
+4. Code review approves it.
+
+The real hard limit is responsibility leakage, not mechanical line wrapping.
 
 | File Type | Maximum Lines | Action When Exceeded | Consequence of Violation |
 |---|---|---|---|
@@ -398,12 +436,51 @@ If a file exceeds its ceiling: split by **feature responsibility**, not randomly
 Never create dumping folders named `helpers/`, `common/`, or `misc/`.
 Keep all split files inside the **same feature folder**.
 
-### Canonical Feature Folder Structure
+### Canonical Architecture & Folder Structure
 
-All application source examples in this document use React Native TypeScript:
-`*.ts` / `*.tsx`.
-```
-src/features/
+```text
+src/
+  core/
+    auth/
+      authSession.ts
+      authRefresh.ts
+    network/
+      networkClient.ts
+      apiResponse.types.ts
+      timeoutConfig.ts
+    navigation/
+      RootNavigator.tsx
+      routeRegistry.ts
+    permissions/
+      permissionsService.ts
+    storage/
+      secureStorage.ts
+      appStorage.ts
+    theme/
+      tokenDefinitions.ts
+      lightTheme.ts
+      darkTheme.ts
+      ThemeProvider.tsx
+      useThemeTokens.ts
+      getMinTouchTarget.ts
+      getShadowStyle.ts
+      animationConfig.ts
+    interaction/
+      haptics.ts
+      toast.ts
+    i18n/
+      i18n.ts
+      useTranslation.ts
+    utils/
+      displayValue.ts
+      formatNumber.ts
+      useDebounce.ts
+      handleValidationErrors.ts
+    observability/
+      sentry.ts
+      sanitizeTelemetry.ts
+
+  features/
 ├── frontend_admin/
 │   └── admin_members/
 ├── frontend_manager/
@@ -564,6 +641,20 @@ features/
 ## Rule 1A — Architectural Dependency & Interaction Rules
 
 - **NO FAKE INTERACTION RULE:** A visible user interaction MUST produce its documented downstream behavior. Empty `onPress` handlers, `console.log`-only handlers, TODO handlers, fake success messages, and filters that do not affect data are explicitly **forbidden**. A user interaction is complete only when it triggers a handler → state change → API/domain action → success/error feedback → UI update.
+
+### Interaction Verification Requirements
+For every interactive control, the feature documentation must record:
+- `testID`
+- Triggering event (e.g. `onPress`)
+- Expected state/API/navigation outcome
+- Success feedback (toast, haptic, visual state transition)
+- Error feedback (inline validation, error banner, fallback)
+- Test file and test case name verifying the interaction
+
+Critical interactions must have:
+1. A component/integration test proving tap → expected result;
+2. A Maestro E2E flow where the user journey is critical;
+3. Zero `console.log`, TODO, placeholder alert, or no-op callback in production code.
 - **Circular Dependency Rule:** The following architectural loops are forbidden: `A -> B -> A`, `Hooks -> Store -> Hooks`, `Components -> Components -> Parent`, and `API -> Hook -> API`. Every dependency chain MUST remain acyclic.
 - **Dependency Direction Rule:** Dependency flow within a module MUST be unidirectional: `Screen -> Hooks -> API` OR `Screen -> Store`. Forbidden flows: `API -> Component`, `Store -> Component`, `Schema -> Component` (bypassing the hook).
 - **Separation of Logic and UI:** Do not mix complex React logic (`useEffect`, data transformations) with JSX markup. Extract all heavy logic into a custom hook. The `Screen.tsx` or `Component.tsx` acts purely as a View layer consuming the hook.
@@ -581,6 +672,22 @@ features/
 - Modals, bottom sheets, and nested tab/stack navigators must be defined once at
   the top of the navigation tree, not re-implemented per screen.
 
+### Android Hardware Back Button Governance
+
+Android hardware back behavior MUST work correctly across all flows.
+
+Do NOT register `BackHandler` on ordinary screens where React Navigation's default stack behavior is correct. Register a custom `BackHandler` ONLY for documented interception cases, such as:
+- Dirty/unsaved form flow (triggers `useUnsavedChangesGuard`)
+- Open bottom sheet or modal (closes sheet before popping screen)
+- Temporary selection mode / multi-select action bar
+- Custom nested multi-step wizard requiring explicit exit confirmation
+
+Every custom back interception must be removed on cleanup and tested for:
+- First back press behavior
+- Repeated back press
+- Modal/sheet dismissal
+- App-root exit behavior
+
 ## Rule 3 — Styling & Design Tokens (No Magic Values, Anywhere)
 
 - `MOBILE_UI_UX_DESIGN.md` serves as the single source of truth for both design specification and the executable token contract. Every color, spacing value, font size, radius, and shadow used in the code MUST come from the tokens defined in `MOBILE_UI_UX_DESIGN.md`. No raw hex codes, no arbitrary pixel/dp values typed directly into a component.
@@ -593,6 +700,16 @@ features/
   component ever branches manually on "is dark mode" — the token resolves itself.
 
 ## Rule 4 — State Management (Server State vs Client State — Explicit Matrix)
+
+### Query Status Standard (TanStack Query v5)
+
+Use the status flags exposed by the installed and approved TanStack Query v5 version. The codebase standard is:
+- Initial query state: `isPending`
+- Background refresh: `isFetching` / `isRefetching`
+- Failure: `isError`
+- Mutation in progress: `isPending` on the mutation result
+
+Do not create parallel `isLoading` booleans in Zustand or local state for server requests. A local variable named `isLoading` is permitted only when it derives directly from the query/mutation result (e.g., `const isLoading = query.isPending || mutation.isPending;`) and does not become a second source of truth.
 
 **Two state ownership categories exist: Server State and Client State.**
 Client state may be further subdivided into shared or local depending on scope.
@@ -713,6 +830,17 @@ assignTrainer(memberId, trainerId)  // POST /api/v1/members/:id/assign-trainer
 
 AI agents must never invent arbitrary function names like `loadData()`, `getData()`,
 `handleAction()`, or `doMemberThing()`. The mobile API function MUST strictly mirror the documented endpoint operation intent — no arbitrary aliasing.
+
+### Request Lifecycle and Cancellation
+
+Every fetch/mutation hook must use the cancellation mechanism supported by the central network client and TanStack Query.
+
+Requirements:
+- Query functions receive and forward `AbortSignal` to `networkClient`.
+- Screen unmount, parameter change, and replaced searches must not update stale UI.
+- Debounced search must cancel the prior scheduled request before issuing the next one.
+- Aborted requests must not show an error toast or error fallback.
+- Retry policy must NOT retry 400 validation errors, 401/403 authorization errors, or user-cancelled requests.
 
 ## Rule 7A — Complete API Contract & UI Data Coverage
 
@@ -1101,6 +1229,24 @@ Rules:
 - **OfflineBanner vs OfflineBlocker distinction (MANDATORY):**
   - `[Feature]OfflineBanner` — inline non-blocking banner shown when network is lost BUT cached data is still visible. User can still browse stale data.
   - `[Feature]OfflineBlocker` — full-screen blocking component shown ONLY when the feature has NO cached data AND requires network to function at all (e.g., payment processing). Never use `OfflineBlocker` when cached data can be shown. Only for features that explicitly declare offline support in `_features.md`.
+
+### Offline Support Contract
+
+Offline support is declared feature-by-feature in `_features.md`.
+
+For each offline-enabled feature document:
+- Readable resources eligible for cache;
+- Cache TTL / staleness policy;
+- Tenant and user binding;
+- Encryption requirement if cached data contains sensitive content (encrypted via MMKV encryption key stored in Keychain);
+- Invalidation triggers: logout, tenant switch, role change, schema version change, app upgrade, explicit refresh;
+- Empty-cache offline behavior (`OfflineBlocker`);
+- Whether writes are blocked or queued;
+- Conflict strategy: server-wins, client-wins, merge, or manual resolution;
+- UI components: `OfflineBanner` (when cache exists) and/or `OfflineBlocker` (when no cache exists);
+- Retry behavior and idempotency requirements.
+
+**CRITICAL SECURITY INVARIANT:** Never retain cached data after logout or tenant change. Clear all feature cache upon session invalidation.
 
 ## Rule 17 — Testing (Full Pyramid)
 
@@ -2587,6 +2733,21 @@ export async function processPaymentApi(
 }
 ```
 
+### Complete Mutation Safety Contract
+
+For every POST/PATCH/PUT/DELETE/domain mutation:
+- Create one idempotency key per user intent (generated via `generateIdempotencyKey()`).
+- Retain that key for retry of the same intent.
+- Disable the initiating control while pending (`disabled={isPending}`).
+- Show an in-place loading state with width locking (`minWidth: tokens.layout.buttonMinWidth`).
+- Prevent duplicate navigation or repeated haptics while in-flight.
+- Invalidate or update every affected query key after confirmed success.
+- Use pessimistic updates by default for financial, destructive, permission, and role-sensitive actions.
+- Optimistic updates require explicit rollback logic and must be documented in `_features.md`.
+- Map server validation errors to form fields where applicable via `handleValidationErrors()`.
+- Announce success/error accessibly.
+- Ensure repeated API completion callbacks cannot produce duplicate toast or navigation.
+
 ### B. Double Verification for Financial / Irreversible Actions (Extending Rule 31)
 
 Financial mutations require the strict double-verification flow in addition to the generic idempotency key.
@@ -2624,6 +2785,15 @@ The mobile architecture MUST enforce the following security and robustness const
 - **Deep-Link Authorization**: Matching a route is not enough. Deep-link resolution MUST re-evaluate auth status, role, tenant, and resource authorization before rendering the target screen.
 - **Notification Payload Validation**: Treat all push notification payloads as untrusted user input. Validate the payload against a schema before triggering any navigation or side effects.
 - **Clipboard Policy**: Sensitive IDs, credentials, reset tokens, OTPs, and full Aadhaar/bank identifiers MUST be excluded from copy-to-clipboard functionality.
+
+### Mobile Privacy and App-Switcher Protection
+
+For sensitive screens:
+- Prevent sensitive data from appearing in screenshots / app switcher previews where platform or project requirements demand it (e.g. using native secure-flag or blur on background).
+- Do not place tokens, OTPs, bank details, national IDs, or unmasked PII in logs, analytics, breadcrumbs, crash reports, toast text, navigation params, or clipboard.
+- Clear sensitive in-memory state immediately on logout and tenant switch.
+- Re-authorize deep links and notification routes before rendering protected data.
+- Never trust role, tenant, permission, or record ownership coming from local route parameters.
 
 ---
 
@@ -2798,6 +2968,13 @@ t('members.PAGE_TITLE'); // MUST use t('NAMESPACE.KEY')
 
 ### Network Client Header
 `src/core/network/networkClient.ts` remains the only network transport and must automatically add the `Accept-Language` header from the active locale state.
+
+### Backend Error Messages vs Client Localization
+
+- Client-authored UI strings MUST use `t('namespace.key')`.
+- Backend-supplied `response.message` may be shown without translation only when the backend contract guarantees it is user-safe and localized for the current `Accept-Language` request.
+- If the backend message is missing, unsafe, technical, or not localized: show a feature-specific translated fallback and send only sanitized diagnostics to observability.
+- Never display raw `error.message`, stack traces, Axios errors, or unvalidated server text to users.
 
 ## Rule 62 — Centralized Feature Flags
 
@@ -3248,6 +3425,119 @@ Checkpointing MUST NOT become permission to:
 The final result MUST still satisfy the complete applicable mobile architecture rules (Rules 0A–66) and the supplied `MOBILE_UI_UX_DESIGN.md`.
 
 ---
+
+### 67D — AI-Safe Development Workflow (5-Phase Execution Blueprint)
+
+When an AI agent or engineer implements or repairs a mobile feature, they MUST follow this 5-Phase sequence strictly:
+
+#### Phase 1: Understand, Don't Code
+AI must read in order:
+1. `MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md`
+2. `MOBILE_UI_UX_DESIGN.md`
+3. Target feature's `_features.md`
+4. Target feature's `_forbidden.md`
+5. Target feature's `_theme_contract.md`
+6. Read-only Core Contract Pack (`src/core/`)
+
+Produce an internal change plan before modifying code:
+- Exact files to create/change;
+- Expected UI, state, and data impact;
+- Whether API contract is complete;
+- Whether a new token is strictly necessary;
+- Whether core modification needs approval.
+
+#### Phase 2: Scope Gate
+Before any code change:
+- Feature-local business change → editable.
+- Core security/network/theme/permission change → requires explicit authorization.
+- Sibling feature change → FORBIDDEN.
+- Missing requirement/API behavior → record `CONTRACT_MISSING`, do not invent.
+
+#### Phase 3: Implement Per Layer
+Strict file creation order:
+1. Types (`types/*.types.ts`);
+2. Schemas (`schemas/*.schemas.ts`);
+3. Config (`config/*.url_config.ts`, `api/*.query_keys.ts`);
+4. API service (`api/*.api.ts`);
+5. Hooks & Mutations (`hooks/use*.ts`);
+6. State store (`state/*.store.ts` — only if shared UI state);
+7. Components (`components/*.tsx`);
+8. Screens (`screens/*Screen.tsx`, `*Navigator.tsx`);
+9. Tests (unit co-located, integration in `tests/`);
+10. Documentation trio update (`_features.md`, `_forbidden.md`, `_theme_contract.md`);
+11. Maestro E2E test (`mobile_e2e/...`).
+
+#### Phase 4: Static Verification Gates
+Must pass before packaging:
+- TypeScript strict check (`npm run typecheck`);
+- ESLint (`npm run lint`);
+- Circular dependency check (`madge`);
+- Forbidden import check (no cross-feature, no bare AsyncStorage);
+- Token / magic-value check;
+- i18n string check (no raw English text in JSX);
+- testID completeness check;
+- Documentation freshness check;
+- Secret scan.
+
+#### Phase 5: Runtime & Device Gates
+Verify on emulator/device or record as `DEFERRED_TO_HOST_RUNTIME`:
+- iOS & Android layout on smallest screen (360dp) & large screen;
+- Dynamic Type / Android largest accessibility font scaling;
+- Dark & Light mode contrast compliance;
+- Offline banner & blocker behavior;
+- Reduced motion setting;
+- TalkBack / VoiceOver traversal;
+- Keyboard appearance & avoidance;
+- Android hardware back button;
+- Single-flight 401 token refresh.
+
+### 67E — CI Verification: Automated Static vs Runtime/Device Division
+
+Static CI verifies declared minimum dimensions and component contracts.
+Actual hit-area, safe-area, screen-reader traversal, keyboard interaction, and
+native gesture correctness require device/emulator verification and Maestro/manual
+accessibility evidence.
+
+- **Fully Automatable in CI:**
+  - Zero cross-feature imports
+  - Zero barrel files (`index.ts`)
+  - No `any`, `@ts-ignore`, `@ts-nocheck`
+  - Feature folder required files and subdirectories
+  - URL config and query-key file presence
+  - Forbidden package scan
+  - Hardware secure storage validation (no AsyncStorage for tokens)
+  - Direct Axios instance creation restricted to `src/core/network/`
+  - Raw color and arbitrary sizing checks
+  - `testID` presence on interactive elements
+  - Locale key usage
+  - Documentation freshness
+  - Contrast validation against design tokens
+
+- **Device / Runtime Required (`DEFERRED_TO_HOST_RUNTIME`):**
+  - Physical touch target usability
+  - Screen reader traversal order
+  - Dynamic Type layout overflow
+  - Native date picker presentation
+  - Runtime permission dialog handling
+  - Android hardware back stack pop
+  - Native gesture handler conflicts
+
+### 67F — Mandatory Feature Edge Case Matrix Template
+
+Every feature's `_features.md` MUST include this Edge Case Matrix:
+
+| Category | Documented Handling |
+|---|---|
+| **API** | Timeout (30s), No internet, 401 (single-flight refresh), 403 (PermissionDenied), 404, 409 Conflict, 429 Rate Limit, 5xx |
+| **Data** | Null fields (render en-dash `—`), missing optional fields, long text strings, duplicate records, stale cache |
+| **Mutations** | Double tap disabled, retry reuse idempotency key, app backgrounded mid-request, duplicate callback prevention |
+| **Navigation** | Deep link unauthenticated, unauthorized, deleted entity ID, expired route params |
+| **Forms** | Keyboard overlap, dirty exit guard, validation error mapping to fields, date/time timezone handling |
+| **Permissions** | Denied once, denied permanently (link to Settings), partial capability |
+| **Offline** | No cache (`OfflineBlocker`), cached data exists (`OfflineBanner`), tenant switch, logout cache wipe |
+| **Accessibility** | 1.5x font scaling, reduced motion active, screen reader announcements |
+| **Security** | PII masking in lists, clipboard restrictions, no credentials in logs/breadcrumbs, session expiration |
+| **Platform** | Android hardware back, iOS swipe back, notch/safe-area insets, app background/resume |
 
 ## MOBILE DELIVERY FREEZE GATE
 

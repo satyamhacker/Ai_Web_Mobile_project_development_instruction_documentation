@@ -98,6 +98,30 @@ No feature/screen/component may contain:
 
 Every visual value must resolve through a documented global token.
 
+### Design-Magic-Value Boundary
+
+“Zero magic values” applies to visual design decisions that could diverge across
+screens: colors, spacing, typography scale, radius, icon size, touch dimensions,
+shadows, opacity, motion durations, z-index, and elevation.
+
+The following React Native structural or platform API values are permitted and do
+not require design tokens when they are not visual design choices:
+
+- Flexbox control values: `flex: 1`, `flexDirection`, `alignItems`, `justifyContent`,
+  `flexGrow`, `flexShrink`, `flexWrap`
+- Boolean component props: `disabled`, `accessible`, `scrollEnabled`
+- React Native semantic props: `numberOfLines`, `ellipsizeMode`, `keyboardType`,
+  `autoCapitalize`, `returnKeyType`
+- Accessibility states and role strings
+- List configuration values required by a native component, when documented
+- Runtime values explicitly covered by the design-exception process
+
+A numeric visual value is permitted only when:
+1. it is read from a global token,
+2. it is a documented runtime-derived exception, or
+3. it is mandated by a React Native/native library API and is documented with
+   `// design-exception: native API requirement`.
+
 **Exception Process — Controlled Runtime Values:**
 Locally derived layout values are permitted ONLY when the value cannot be expressed as a static token AND an explicit `// design-exception: <reason>` comment documents why. Permitted exception categories:
 - Safe-area insets (from `useSafeAreaInsets()`) — device-dependent at runtime
@@ -171,9 +195,24 @@ CI/design validation MUST fail when an approved text/background pair falls below
 
 Ensure `primary` (`#FACC15` dark / `#EAB308` light) and `destructive` (#DC2626) against `on-primary` (#111111) and `on-destructive` (#FFFFFF) pass this contrast validation before final theme lock.
 
-## 1B. Semantic Accessibility Tokens
+## 1B. React Native Accessibility Interaction Tokens
 
-Mobile UI quality requires proper focus states, screen-reader semantics, and contrast targets. The theme MUST define and consume accessibility tokens (e.g., `focus-visible`, `focus-ring-width`, `focus-ring-offset`, and disabled-state semantics) to ensure screen-reader feedback, keyboard/switch-control navigation, and error/success announcements are universally consistent.
+React Native does not use web CSS `:focus-visible`. The design system must support
+native accessibility interaction through:
+
+- `focusRingColor`
+- `focusRingWidth`
+- `focusRingOffset`
+- `disabledOpacity`
+- semantic selected/checked/expanded/busy states
+- accessibility announcement patterns
+- focus restoration after modal, sheet, and error-state dismissal
+
+Focus-ring visuals are required only where the component supports hardware keyboard,
+switch control, TV focus, or a custom focusable implementation. Native controls
+should preserve their platform-native focus behavior.
+
+Do not add web-only ARIA or CSS terminology to React Native implementation rules.
 
 ## 1C. Mobile Accessibility Requirements (Comprehensive)
 
@@ -295,6 +334,22 @@ All typography values MUST be expressed as explicit React Native unit properties
 - Developers MUST test all screens at the largest accessibility text size on both iOS and Android.
 - NEVER hardcode pixel-specific layout dimensions that assume a fixed font size — use `flexShrink`, `flexWrap`, and `minHeight` to accommodate text growth.
 
+### Text Resilience Rules
+
+Every text-bearing layout must be tested with:
+- longest translated string (Hindi/other languages can be 40-100% longer than English),
+- long user-entered name/address,
+- Dynamic Type / Android largest font setting,
+- RTL locale when supported,
+- null/undefined display fallback.
+
+Rules:
+- Use `flexShrink: 1` for text sharing a row with icons or actions.
+- Use `minWidth: 0` in horizontal containers when required for truncation to work.
+- Never truncate primary legal, financial, validation, or destructive-action text.
+- For essential content that cannot fit, allow wrapping or navigate to a detail view.
+- Numeric data must use locale-aware formatting and tabular alignment where comparison matters.
+
 ## 4. Radius Scale
 `radius-sm (4)`, `radius-md (8)`, `radius-lg (12)`, `radius-xl (16)`, `radius-full`
 — cards default to `radius-lg`, buttons/inputs to `radius-md`.
@@ -304,7 +359,9 @@ All typography values MUST be expressed as explicit React Native unit properties
 | Token | Value | Usage |
 |---|---|---|
 | `button-min-width` | 120 | Minimum button width to prevent layout shift on loading |
-| `min-touch-target` | 44 | iOS pt minimum; Android uses 48dp |
+| `min-touch-target-ios` | 44 | Minimum interactive target on iOS |
+| `min-touch-target-android` | 48 | Minimum interactive target on Android |
+| `min-touch-target` | platform-resolved | Use through `getMinTouchTarget()` only |
 | `header-height` | 56 | Top navigation bar height |
 | `bottom-tab-height` | 60 | Bottom tab bar height |
 | `content-padding` | 16 | Standard screen horizontal padding |
@@ -321,6 +378,12 @@ Use named `icon-*` size tokens. Introduce a new token when a supported icon libr
 ## 6. Touch Targets
 `min-touch-target = 44` (iOS pt) / `48` (Android dp) — every tappable element
 must meet this via minimum height/width or padding.
+
+Do not use `tokens.layout.minTouchTargetIos` or `tokens.layout.minTouchTargetAndroid` directly inside feature UI.
+Feature UI MUST use the central helper:
+`src/core/theme/getMinTouchTarget.ts`
+
+This helper returns the correct platform target (`44` on iOS, `48` on Android). This avoids repeated `Platform.OS` checks inside feature components.
 
 ## 7. Motion
 - **Press configuration:** 
@@ -421,6 +484,13 @@ Series color order (applied consistently across every chart in the app). Charts 
 | `shadow-md` | opacity 0.1, radius 6 | elevation 3 | Standard card, list item |
 | `shadow-lg` | opacity 0.15, radius 12 | elevation 8 | Bottom sheet, modal |
 | `shadow-xl` | opacity 0.2, radius 20 | elevation 16 | FAB, prominent overlays |
+
+Shadow tokens must be implemented through a central `getShadowStyle(level)` helper (`src/core/theme/getShadowStyle.ts`).
+Feature UI MUST NOT manually compose `shadowColor`, `shadowOpacity`, `shadowRadius`, `shadowOffset`, or `elevation`.
+
+The helper resolves:
+- iOS: complete native shadow style (`shadowColor`, `shadowOffset`, `shadowOpacity`, `shadowRadius`)
+- Android: `elevation` and any supported visual treatment
 
 ## 11. Core Semantic Color Usage (How to Apply Tokens — No Guessing)
 
@@ -560,6 +630,19 @@ from real data without being invisible.
 
 **Z-index:** `z-bottom-sheet` (40) from Section 15.
 
+### Bottom Sheet Accessibility and Interaction Rules
+
+Every bottom sheet must:
+- Expose a meaningful accessible title via `accessibilityLabel` and `accessibilityRole="header"`.
+- Provide an explicit accessible close/cancel action unless closure is intentionally blocked during in-flight mutations.
+- Announce opening context to screen readers via `AccessibilityInfo.announceForAccessibility()`.
+- Prevent interaction with obscured background content while visible (backdrop absorbs taps).
+- Restore focus to the triggering control after dismissal where supported.
+- Handle keyboard appearance for form sheets via keyboard-aware scroll wrappers.
+- Avoid nested bottom sheets: close the parent before opening a replacement sheet.
+- Disable duplicate confirmation presses while the mutation is pending (`disabled={isPending}`).
+- Distinguish swipe-to-dismiss from confirmed destructive action (swipe dismiss = cancel).
+
 ---
 
 ## 18. Button Visual Hierarchy & Loading State
@@ -603,6 +686,37 @@ MOBILE_UI_UX_DESIGN.md   ← this file (values + catalogue)
 React Native theme module  ← implements the token values from this file
        ↓
 Feature UI                 ← consumes semantic tokens ONLY; never hardcodes values
+```
+
+### Theme Implementation Model
+
+The design document owns token names and light/dark values.
+
+The application implementation must have three separate layers:
+
+1. `tokenDefinitions.ts`
+   - Stable token names and non-theme scales.
+   - Spacing, typography, radius, durations, icon sizes, z-index, layout.
+
+2. `lightTheme.ts` and `darkTheme.ts`
+   - Each implements the complete `color` object using exactly the same keys.
+
+3. `useThemeTokens()` / `ThemeProvider`
+   - Resolves the active theme and exposes one typed `tokens` object to UI.
+
+Feature UI MUST consume tokens through the theme resolver. It must not directly
+branch on `isDarkMode` to choose colors.
+
+Recommended structure under `src/core/theme/`:
+```text
+src/core/theme/
+  tokenDefinitions.ts
+  lightTheme.ts
+  darkTheme.ts
+  ThemeProvider.tsx
+  useThemeTokens.ts
+  getMinTouchTarget.ts
+  animationConfig.ts
 ```
 
 ### CANONICAL `tokens.ts` TYPESCRIPT OBJECT SHAPE (LOCKED)
@@ -813,6 +927,22 @@ To ensure the application feels like a world-class, premium native app, **every 
    - **Success Notification:** Completing a wizard, saving a form, processing payment.
    - **Error Notification:** Destructive actions, or when validation fails.
 3. **Custom Scroll/Pull-to-Refresh:** Use native refresh controls tinted with the `primary` token.
+
+### Haptic Failure Safety & Progressive Enhancement
+
+Haptic feedback is a progressive enhancement:
+- A haptic failure MUST NOT block navigation, submit, mutation, or UI state changes.
+- Haptics must be triggered through one central adapter (`src/core/interaction/haptics.ts`).
+- The adapter must safely no-op when unsupported, disabled by user preference, or unavailable.
+- Haptics must not fire repeatedly during rapid re-renders, list scrolling, or automatic retries.
+
+**Haptic Hierarchy (Prevent UI Fatigue):**
+- Primary user action (wizard complete, primary submit) → clear visual pending state + haptic notification.
+- Minor toggle / switch → light impact haptic.
+- Error → visual text/icon first, haptic notification second.
+- Background refresh / pull-to-refresh completion → NO haptic.
+- Auto-updating dashboard / KPI chart → NO haptic.
+- Repeated list rows / cards tap → subtle press scale (0.96) only, NO haptic.
 
 ---
 
