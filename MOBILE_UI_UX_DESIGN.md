@@ -33,7 +33,13 @@
 >     and background actions do not trigger haptics.
 > [ ] Section 22 DEFINITION OF DONE loaded into context
 > ```
-> **Failure to complete the above = entire output is discarded.**
+> **COMPLIANCE FAILURE HANDLING (EVIDENCE-BASED REPAIR):**
+> On detecting a violation, the AI MUST:
+> 1. Stop the affected styling/implementation path immediately;
+> 2. Record the violated token/design rule, affected component, and evidence;
+> 3. Repair the violation before continuing;
+> 4. Re-run relevant static design and contrast compliance checks;
+> 5. Mark final status as compliant ONLY after file-level token evidence is established.
 
 Spacing / radius / icon / touch-target values → dp-equivalent React Native layout units.
 Typography → React Native text scale / fontSize.
@@ -282,6 +288,15 @@ All screens and components MUST meet these mobile accessibility standards:
 ### Reduced Motion (already in Section 7 — cross-reference)
 - Non-essential animations MUST respect `AccessibilityInfo.isReduceMotionEnabled()`.
 - See Section 7 for full reduced-motion rules.
+
+### Mandatory Accessibility Testing Contract
+Every feature module containing interactive controls MUST include tests for:
+- accessible name / `accessibilityLabel` presence on icon-only and ambiguous controls;
+- correct `accessibilityRole` on all tappable elements;
+- `accessibilityState` (`disabled`, `selected`, `checked`, `busy`) reactive updates;
+- modal and bottom-sheet focus containment and restoration;
+- Dynamic Type behavior for primary text and action controls;
+- reduced-motion fallback for all non-essential animations.
 
 ## 1. Color Tokens — "Luxury Premium Gold" Theme
 
@@ -920,6 +935,28 @@ const tokens = useThemeTokens();
 
 Feature UI MUST NOT import `lightTheme`, `darkTheme`, `tokenDefinitions`, or a
 static `tokens` object directly. Those imports are restricted to `src/core/theme/`.
+
+### Machine-Readable Token Authority & Sync
+
+`MOBILE_UI_UX_DESIGN.md` is the canonical human-readable design specification.
+`src/core/theme/tokenDefinitions.ts` is the executable machine-readable authority.
+Both MUST remain synchronized through automated CI tooling.
+
+A CI token-sync script compares:
+- token property names and hierarchy;
+- light and dark value pairs;
+- deprecated token aliases;
+- WCAG AA contrast compliance (4.5:1 for normal text, 3:1 for large text/icons).
+
+### Theme Consumption Performance Rule
+
+Feature UI MUST obtain tokens through `useThemeTokens()`.
+
+For render-heavy components:
+- token-dependent StyleSheet creation MUST be memoized via `useMemo(() => StyleSheet.create({...}), [tokens])`;
+- list item components (e.g. inside `FlashList`) MUST avoid recreating style objects on every render;
+- memoization MUST NOT bypass dynamic theme switching;
+- static token imports remain strictly forbidden outside `src/core/theme/`.
 
 **Workflow rule (when a new token is needed):**
 1. Add the token to THIS file first — with light + dark values and a usage description.

@@ -2,7 +2,14 @@
 
 > ⛔⛔⛔ **AI AGENT — MANDATORY ENFORCEMENT & INTEGRITY DIRECTIVE — READ FIRST** ⛔⛔⛔
 >
-> **VIOLATION OF ANY RULE IN THIS DOCUMENT = ARCHITECTURE FAILURE. ALL OUTPUT IS DISCARDED. MUST RESTART.**
+> **COMPLIANCE FAILURE HANDLING (EVIDENCE-BASED REPAIR):
+On detecting a violation of any rule in this document, the AI MUST:
+1. Stop the affected implementation path immediately;
+2. Record the violated rule, affected file, and concrete evidence;
+3. Repair the violation in source code before continuing downstream work;
+4. Re-run relevant static compliance checks;
+5. Mark the final status as compliant ONLY after file-level evidence is established.
+The AI MUST NOT silently continue after detecting a violation, and MUST NOT claim compliance without verifiable file evidence.**
 >
 > This document is the **absolute normative authority** for all React Native mobile code in this project. Every rule is MANDATORY unless the rule itself defines a named `NOT_APPLICABLE` condition with explicit evidence. The following words in this document carry their STRICTEST possible meaning:
 >
@@ -29,7 +36,7 @@
 > [ ] File size ceilings verified (Screen 80 lines, Component 200 lines, Hooks/API 150 lines, Store 180 lines, Util 120 lines)
 > [ ] MOBILE DELIVERY FREEZE GATE & DEFINITION OF DONE loaded into context
 > ```
-> **Failure to complete the above = entire output is discarded.**
+> **Failure to complete the above = mandatory compliance stop until evidence is established.**
 >
 > ⛔ **NO-PAUSE ON MISSING RUNTIME / HOST CAPABILITY (MANDATORY ANTI-STALL RULE):**
 > Unavailability of a physical mobile device, Android/iOS emulator, Metro bundler, or Maestro E2E test runner is NEVER a reason to pause, stall, abort, or declare mobile code creation, audit, or repair "BLOCKED". The AI MUST fix every issue that can be resolved in source files (screens, components, custom hooks, Zustand stores, Zod schemas, URL configs, query key factories, MSW mock fixtures, documentation trio) in this session. Only live device/emulator execution or live Maestro runner execution is designated as `DEFERRED_TO_HOST_RUNTIME`. Missing runtime is strictly forbidden as a reason to pause.
@@ -51,7 +58,7 @@ Before generating, auditing, or repairing ANY mobile feature module, verify ALL 
 | **Thin Screen Composition** | Screens in `screens/` MUST only compose components; hard maximum **80 lines**; ZERO business logic, state calculations, or direct API calls. Screen renders `<SafeAreaView>`, `<StatusBar>`, extracts route params, and renders ONE `[Role][Module][Screen]MainView.tsx` component. | Heavy screen = ARCHITECTURE VIOLATION. In repair: extract to MainView component in RBG 1. |
 | **Prefixed Component Files** | Components in `components/` MUST use PascalCase with **Role+Module** prefix (e.g., `ManagerMembersMemberCard.tsx`, NOT `MembersMemberCard.tsx`). Max **200 lines**. | Unprefixed or role-missing component = NON_COMPLIANT. In repair: rename to Role+Module prefixed in RBG 1. |
 | **Feature Custom Hooks** | Hooks in `hooks/` MUST use camelCase with `use` + **Role+Module** name (e.g., `useManagerMembers.ts`, `useManagerMembersFilters.ts`). Max **150 lines**. | Generic or role-missing hook name = NON_COMPLIANT. In repair: rename to Role+Module hook in RBG 1. |
-| **Root Quarantine** | The feature root MUST contain ONLY the three documentation files: `[role_module]_features.md`, `[role_module]_forbidden.md`, and `[role_module]_theme_contract.md`. All source artifacts MUST live inside canonical sub-folders. | Loose source files at feature root = NON_COMPLIANT. In repair: move to correct sub-folder in RBG 1. |
+| **Root Quarantine** | The feature root MUST contain ONLY the three documentation files (`_features.md`, `_forbidden.md`, `_theme_contract.md`). All executable or support artifacts MUST live inside approved canonical subfolders (`e2e/`, `tests/`, `mocks/`, `config/`, `types/`, `schemas/`, `api/`, `hooks/`, `state/`, `components/`, `screens/`, `utils/`, `_locales/`). | Loose source files at feature root = NON_COMPLIANT. In repair: move to correct sub-folder in RBG 1. |
 | **Central Hardware Secure Storage** | Auth tokens, refresh tokens, biometric keys MUST use iOS Keychain / Android Keystore via `react-native-keychain`. NEVER `AsyncStorage`. | Tokens in AsyncStorage = CRITICAL SECURITY AUDIT FAILURE. In repair: replace with `react-native-keychain` wrapper in RBG 1. |
 | **Module Documentation Trio** | Every feature MUST contain `[featureName]_features.md`, `[featureName]_forbidden.md`, and `[featureName]_theme_contract.md`. | Missing doc artifact = INCOMPLETE MODULE. In repair: generate missing docs from source in RBG 1. |
 | **Centralized URL Config** | `config/[featureName].url_config.ts` MUST exist and define all routes and API endpoints as `as const`. | Missing URL config = HARDCODED ROUTE RISK. In repair: generate centralized URL config in RBG 1. |
@@ -166,20 +173,23 @@ The following MUST remain centralized and MUST NEVER be duplicated per feature:
 Business-specific formatting, status mapping, field validation, workflow rules,
 and feature UI remain WET and feature-local.
 
-| Scenario | Classification | Required Decision |
-|---|---|---|
-| Pure UI primitive with zero business knowledge (Button, Input, Modal shell, Spinner) | `ZERO_BUSINESS_PRIMITIVE` | SHARE in `src/core/ui/` — no duplication permitted |
-| UI component that knows any business status, label, or domain value (StatusBadge with gym states, PaymentBadge) | `BUSINESS_AWARE_COMPONENT` | DUPLICATE per feature module — SHARING IS STRICTLY PROHIBITED |
-| Hook that fetches or mutates domain data (useManagerMembers, useAdminStats) | `DOMAIN_HOOK` | DUPLICATE per feature module — SHARING IS STRICTLY PROHIBITED |
-| Hook that wraps pure infrastructure (useDebounce, usePagination with zero domain types) | `INFRASTRUCTURE_HOOK` | SHARE in `src/core/hooks/` — PERMITTED shared infrastructure only |
-| Zod schema or TypeScript type describing a business entity | `DOMAIN_TYPE` | DUPLICATE per feature module — SHARING ACROSS ROLES IS STRICTLY FORBIDDEN |
-| API client function (fetchMembers, createInvoice) | `DOMAIN_API_CLIENT` | DUPLICATE per feature module — SHARING IS STRICTLY PROHIBITED |
-| Zustand store slice with domain state | `DOMAIN_STORE` | DUPLICATE per feature module — SHARING IS STRICTLY PROHIBITED |
-| Constants file with business-specific values (STATUS_OPTIONS, PLAN_TYPES) | `BUSINESS_CONSTANTS` | DUPLICATE per feature module — SHARING IS STRICTLY PROHIBITED |
-| Constants file with zero-domain values (DEBOUNCE_MS, PAGE_SIZE_OPTIONS) | `INFRA_CONSTANTS` | SHARE in `src/core/constants/` — PERMITTED shared constants only |
-| Currency formatter with business-domain knowledge | `DOMAIN_UTILITY` | DUPLICATE per feature module as `[module]FormatCurrency.ts` — SHARING IS STRICTLY PROHIBITED |
-| Utility with no business domain knowledge (formatDate, displayValue) | `INFRA_UTILITY` | SHARE in `src/core/utils/` — PERMITTED shared utility only |
-| Same UI feature needed in Admin AND Manager | `CROSS_ROLE_FEATURE` | DUPLICATE the complete feature in each role module (Strict WET is MANDATORY) |
+## WET vs Shared Primitive Decision Matrix
+
+| Artifact | Can live in src/core/? | Must remain feature-local? | Examples |
+|---|---:|---:|---|
+| Visual primitive with no business semantics | Yes | No | AppButton, AppText, AppCard, AppDivider |
+| Theme helper / token resolver | Yes | No | useThemeTokens, getMinTouchTarget, getShadowStyle |
+| Security / transport / permission infrastructure | Yes | No | networkClient, secureStorage, permissionService |
+| Generic formatting with no business rules | Yes, if explicitly approved | No | formatDate, displayValue |
+| Business status badge | No | Yes | MemberPaymentStatusBadge, TrainerTierBadge |
+| Feature filter with business presets | No | Yes | ManagerMembersDateFilter, AttendanceStatusFilter |
+| Entity card / list item | No | Yes | ManagerMembersMemberCard, TrainerClientCard |
+| Domain API hook / mutation | No | Yes | useManagerMembersCreate, useDeleteTrainerClient |
+| Domain Zustand store | No | Yes | useManagerMembersStore, useTrainerClientsStore |
+| Domain enum / business mapping | No | Yes | membershipStatusLabelMap, planDurationEnum |
+| Feature-specific test helper / fixture | No | Yes | manager_members.fixtures.ts, trainer_clients.handlers.ts |
+
+> ⛔ **STRICT BOUNDARY TEST:** If an artifact contains a business noun, role name, module name, API endpoint, permission rule, business status, domain enum, feature-specific copy, or domain transformation, it MUST remain inside the owning feature folder.
 
 **Decision Invariants:**
 - If the code contains ANY reference to a business entity, status, label, or domain type → it is `BUSINESS_AWARE` → it MUST be duplicated per feature. Sharing is a CRITICAL ISOLATION VIOLATION.
@@ -477,13 +487,21 @@ extraction would worsen coupling, and the reason is documented in the feature
 - Store: target ≤180 lines; split by independent UI concern.
 - Utility: target ≤120 lines; split only when functions have unrelated responsibility.
 
-A file may exceed its target only when:
-1. It has one coherent responsibility,
-2. Extracting would create unnecessary prop drilling or cyclic coupling,
-3. The reason is documented in the feature `_features.md`,
-4. Code review approves it.
+## File Size Exception Rule
 
-The real hard limit is responsibility leakage, not mechanical line wrapping.
+File size ceilings are default architectural limits, not an invitation to split
+one cohesive responsibility into artificial fragments.
+
+An exception is permitted only when:
+1. The file has exactly one responsibility;
+2. Splitting would create prop drilling, circular dependencies, or fragmented logic;
+3. The reason is documented at the top of the file:
+   `// architecture-exception: <reason>`
+4. The feature's `_features.md` explicitly records the exception;
+5. The file remains reviewable, testable, and under 300 lines total.
+
+No exception is allowed for Screens containing direct API calls, business calculations,
+or mixed presentation/data-fetching responsibilities.
 
 | File Type | Target Threshold | Decompose Strategy | Enforcement Nature |
 |---|---|---|---|
@@ -577,7 +595,10 @@ src/
         │   ├── trainer_members.api.ts
         │   └── trainer_members.query_keys.ts
         ├── config/
-        │   └── trainer_members.url_config.ts  ← internal routes + API endpoints
+        │   ├── trainer_members.url_config.ts   ← internal routes + API endpoints
+        │   └── trainer_members.navigation.ts   ← feature navigation descriptor
+        ├── e2e/
+        │   └── trainer_members.yaml            ← co-located Maestro E2E test suite
         ├── mocks/
         │   ├── trainer_members.fixtures.ts    ← initial seed data (mutable in-memory)
         │   └── trainer_members.handlers.ts    ← MSW handlers that mutate in-memory state
@@ -736,6 +757,31 @@ Critical interactions must have:
 - Modals, bottom sheets, and nested tab/stack navigators must be defined once at
   the top of the navigation tree, not re-implemented per screen.
 
+### Navigation Ownership Contract
+
+Feature modules MUST NOT edit the root navigation graph unless explicit authorization is granted.
+
+Each feature may expose one read-only navigation descriptor:
+`src/features/frontend_{role}/{role}_{module}/config/{role}_{module}.navigation.ts`
+
+The descriptor may contain only:
+- route names owned by the feature;
+- typed route-param definitions;
+- deep-link path fragments;
+- screen registration metadata;
+- feature-local navigation labels/icons.
+
+The central navigation module (`src/core/navigation/`) is the sole owner of:
+- root stack/tab/drawer composition;
+- authentication gates;
+- role gates;
+- app-wide deep-link prefixes;
+- global modal registration;
+- navigation container configuration.
+
+A feature may request registration through its descriptor, but may not modify sibling
+navigation declarations or global navigation behavior.
+
 ### Android Hardware Back Button Governance
 
 Android hardware back behavior MUST work correctly across all flows.
@@ -845,6 +891,42 @@ stored data and route it accordingly:
   fields — sanitize before any log line or crash-report breadcrumb.
 
 ## Rule 7 — API Layer & Error Handling
+
+### API Contract and Query Consistency Standard
+
+Every feature API contract MUST define:
+- HTTP method and endpoint;
+- request schema (Zod);
+- response schema (Zod + TypeScript interface);
+- nullable fields;
+- pagination strategy (cursor-based or offset/page-based — exactly one per endpoint);
+- sort/filter parameters;
+- error-code mapping;
+- authorization and permission requirements;
+- idempotency behavior (`Idempotency-Key` header on all POST/PATCH/PUT/DELETE mutations).
+
+The API layer MUST normalize server failures into a shared typed error shape:
+```typescript
+export interface NormalizedApiError {
+  code: string;
+  message: string;
+  fieldErrors?: Record<string, string>;
+  retryable: boolean;
+  requestId?: string;
+}
+```
+
+Features MUST NOT parse Axios/fetch error objects directly inside screen components.
+
+### Mutation Execution Standards
+
+Financial, destructive, identity, role, permission, and tenant-changing mutations:
+- MUST be pessimistic (UI updates ONLY after receiving a 2xx response);
+- MUST require explicit confirmation via `useConfirm()` + `ConfirmBottomSheet`;
+- MUST prevent duplicate submission by locking button width (`minWidth: 120`) and disabling button during in-flight state (`disabled={isPending}`);
+- MUST reconcile state against authoritative server response;
+- MUST invalidate or update only affected query keys via `onSuccess: () => queryClient.invalidateQueries(...)`;
+- MUST NOT be queued for silent offline replay unless explicitly approved.
 
 - ONE central network-client module for the whole app — one HTTP client
   instance, one place where auth headers, tenant headers (`x-tenant-id`), and
@@ -1426,6 +1508,18 @@ the feature can be broken and PASS at the same time.
 
 ## Rule 20 — Environment & Configuration Management
 
+### Environment Configuration Contract
+
+Feature code MUST NOT read environment variables directly (no `process.env.*` in features).
+
+Only `src/core/config/` may read build-time or runtime configuration.
+The config module MUST:
+- validate required values at startup;
+- expose typed, non-secret configuration interfaces;
+- separate development, staging, and production environments;
+- never expose signing secrets, private keys, or server-only secrets to the mobile app bundle;
+- document every public configuration field.
+
 - Base URLs and non-sensitive build configuration MUST be defined per environment
   through the native iOS scheme / Android build-variant mechanism.
 - Secrets MUST exist only in CI/CD protected secret storage and MUST NOT be bundled
@@ -1458,6 +1552,38 @@ the feature can be broken and PASS at the same time.
 
 ## Rule 22 — Security Scanning & Dependency Guardrails
 
+### Mandatory Architecture CI Gates
+
+Every pull request affecting mobile code MUST run and pass:
+
+1. Typecheck (`tsc --noEmit`)
+2. ESLint
+3. Unit and integration tests (`jest`)
+4. Feature-boundary import check (no sibling feature imports)
+5. No-barrel-file check (no `index.ts` in feature folders)
+6. Naming convention check (Role+Module prefixed files)
+7. File-size ceiling check (Screen ≤80, Component ≤200, Hook ≤150, Store ≤180, Util ≤120 lines)
+8. Raw visual-value / token enforcement check
+9. Theme token synchronization and contrast check (WCAG AA 4.5:1)
+10. Deterministic testID coverage check (`[role]_[module]-[component]-[action/state]`)
+11. Forbidden dependency/import check (no `expo-*`, no `react-native-vector-icons`)
+12. Secret scan
+13. Dependency vulnerability scan (SCA)
+14. Documentation-trio presence and freshness check
+15. Feature API/query-key/url-config presence check
+
+### Mechanical CI Failure Conditions (FAIL if):
+- `../../frontend_*` imports a sibling feature
+- any feature imports from another feature except explicitly permitted read-only type contracts
+- `index.ts` or `index.tsx` exists as a barrel file
+- `expo-*` or `@expo/*` is imported
+- `react-native-vector-icons` is imported
+- raw `#hex` / `rgb` / `rgba` visual color appears in feature UI
+- static `tokens.ts` is imported directly in feature UI
+- a feature lacks `_features.md`, `_forbidden.md`, or `_theme_contract.md`
+- a screen exceeds its documented responsibility boundary (e.g. direct API calls)
+- an interactive control lacks a stable `testID`
+
 - CI runs, on every push: (a) a software-composition-analysis (SCA)
   dependency vulnerability scan, (b) a secret-scanning check. Both must pass
   before merge.
@@ -1484,6 +1610,29 @@ approved library (e.g. `react-native-keychain`, `zustand`, `react-hook-form`,
 `react-native-reanimated`) does not suffice for the task.
 
 ## Rule 23 — Observability & Crash Reporting
+
+### Privacy-Safe Observability Contract
+
+Every telemetry event MUST define:
+- event name;
+- feature/module name;
+- action;
+- outcome (`success` | `failure` | `cancelled`);
+- non-sensitive error code where applicable;
+- app version;
+- platform (`ios` | `android`);
+- correlation/request ID where available.
+
+Telemetry MUST NOT contain:
+- access tokens or refresh tokens;
+- OTPs or passwords;
+- full phone numbers or email addresses;
+- bank account details or credit card numbers;
+- national IDs (Aadhaar, SSN, PAN);
+- unmasked customer/member PII;
+- raw API request or response bodies.
+
+All telemetry fields must pass through the central PII-redaction layer in `src/core/observability/sanitizeTelemetry.ts`.
 
 - Crash reporting and JS exception tracking wired at app root, before
   any other initialization — use a React Native crash-reporting SDK
@@ -2472,6 +2621,22 @@ Cross-reference: Rule 24 (feature-level documentation), Rule 43 (JSDoc on functi
 
 ## Rule 45 — Network State Model (TanStack Query Native Status — No Parallel Boolean Flags)
 
+### Offline and Connectivity Policy
+
+Every API-backed mobile feature MUST define:
+- offline read behavior;
+- cached-data behavior;
+- retry behavior;
+- mutation behavior while offline;
+- user-visible offline message;
+- recovery behavior on reconnect.
+
+Default rules:
+1. **Cached Reads:** Cached read-only data may be displayed with an explicit `OfflineBanner` indicator.
+2. **Blocked Mutations:** Destructive, financial, permission, role, tenant, or identity mutations MUST be blocked offline using `OfflineBlocker`.
+3. **Non-Sensitive Drafts:** Non-critical draft persistence may use MMKV only when the data is non-sensitive.
+4. **No Silent Replay:** Offline mutation queueing is forbidden by default and requires explicit feature-contract approval. Reconnect must NOT silently replay restricted mutations.
+
 For TanStack Query requests, MUST use TanStack Query v5 native typed status (`isPending`, `isFetching`, `isError`, `data`) and MUST NOT wrap them in a parallel `NetworkState<T>` discriminated union. Creating a parallel async enum for server state managed by TanStack Query is **FORBIDDEN** — it duplicates state ownership and causes cache inconsistency.
 
 `NetworkState<T>` is ONLY permitted for **non-TanStack-Query local async operations** (e.g., device hardware access, file system operations, Bluetooth, camera — operations that cannot use TanStack Query).
@@ -2964,9 +3129,23 @@ For sensitive screens:
 
 The module root MUST contain exactly ONE authoritative `[role_module]_features.md` that covers ALL screens, flows, and sub-features of the module. Creating additional `_features.md` files inside sub-folders is FORBIDDEN — it violates Root Quarantine and fragments the AI repair context. All sub-screen documentation MUST be sections within the single root `_features.md`.
 
-### Documentation Freshness Rule
+### Documentation Freshness Metadata Header
 
-Every time a component is added, an API endpoint changes, a new screen is added, or a user flow changes, the `_features.md` for that feature MUST be updated in the same commit. Stale documentation is worse than no documentation because it actively misleads future AI agents.
+Every `_features.md` MUST begin with this structured YAML frontmatter header to verify synchronization:
+
+```yaml
+---
+feature: manager_members
+owner_role: manager
+module_version: 1
+last_verified_against_commit: <commit-sha-or-host-placeholder>
+last_verified_date: YYYY-MM-DD
+api_contract_version: <version-or-not-supplied>
+navigation_contract_version: <version-or-not-supplied>
+---
+```
+
+Every time a component is added, an API endpoint changes, a new screen is added, or a user flow changes, the `_features.md` for that feature MUST be updated in the same commit with updated `last_verified_date`.
 
 ## Rule 57 — Strict Case Sensitivity for File Names and Imports (Linux/CI Compatibility)
 All imports and file paths MUST exactly match the casing of the actual file on disk. While development often happens on Windows/macOS (which have case-insensitive file systems), production deployments and CI pipelines typically run on Linux (which has a strict case-sensitive file system).
@@ -3021,6 +3200,22 @@ const { data } = useQuery({
 ```
 
 ## Rule 61 — Internationalization (i18n) & Localization
+
+### Mandatory Feature Locale Contract
+
+All user-facing strings MUST use i18n keys via `t('namespace.KEY')`. Feature code MUST NOT contain hardcoded visible English or Hindi strings except documented test fixtures.
+
+Every feature locale file (`_locales/[role_module]_en.json` & `_hi.json`) MUST define keys for:
+- loading states;
+- empty states;
+- error states;
+- offline indicators;
+- retry action buttons;
+- permission-denied messages;
+- destructive action confirmation dialogs;
+- accessibility labels and hints.
+
+Dates, times, numbers, and currency must be formatted through locale-aware utilities. RTL readiness must be preserved even if the initial release supports only LTR languages.
 
 The mobile frontend uses a co-located locale file architecture. The active launch languages are `en` and `hi`.
 
@@ -3633,6 +3828,21 @@ Every feature's `_features.md` MUST include this Edge Case Matrix:
 | **Platform** | Android hardware back, iOS swipe back, notch/safe-area insets, app background/resume |
 
 ## Rule 68 — App Upgrade, Migration, and Backward Compatibility
+
+### Mobile Build and Release Baseline
+
+The mobile application release pipeline enforces:
+- Supported React Native version: Bare-Metal New Architecture (Fabric + TurboModules);
+- Supported iOS deployment target: iOS 15.0+;
+- Supported Android SDK: Min SDK 24 (Android 7.0), Target SDK 34 (Android 14);
+- Node.js runtime: LTS;
+- Package manager: npm with locked `package-lock.json`;
+- JavaScript engine: Hermes enabled by default on iOS and Android;
+- Debug vs Release: Debug builds enable MSW mocks and developer menus; Release builds strip logs and use production networkClient;
+- Crash reporting: Source-map upload to Sentry required on release builds;
+- Signing Security: Keystores, signing certificates, and provisioning profiles MUST NEVER be committed to the repository;
+- Build Versioning: Deterministic `version` (semver), `buildNumber` (iOS integer), and `versionCode` (Android integer);
+- Staged Rollout: Phased releases with automated crash rate monitoring and immediate rollback threshold.
 
 Any persisted local state, cached data, route payload, or feature flag must have
 a versioned migration strategy.

@@ -6,7 +6,14 @@
 
 > ⛔⛔⛔ **AI MANDATORY BOOT SEQUENCE — EXECUTE BEFORE ANYTHING ELSE** ⛔⛔⛔
 >
-> **VIOLATION OF THIS BOOT SEQUENCE = THE ENTIRE OUTPUT IS DISCARDED AND MUST BE RESTARTED.**
+> **COMPLIANCE FAILURE HANDLING (EVIDENCE-BASED REPAIR):**
+> On detecting a violation of this boot sequence or any mandatory invariant, the AI MUST:
+> 1. Stop the affected implementation path immediately;
+> 2. Record the violated rule, affected file, and concrete evidence;
+> 3. Repair the violation before continuing downstream generation;
+> 4. Re-run relevant static compliance checks;
+> 5. Mark final status as compliant ONLY after file-level evidence is verified.
+> The AI MUST NOT silently continue after detecting a violation, and MUST NOT claim compliance without verifiable file evidence.
 >
 > Before producing ANY analysis, code, audit findings, or repair content, you MUST output ALL of the following in your VERY FIRST response:
 >
@@ -69,6 +76,26 @@
 > ⛔ **You MUST NOT deliver the ZIP before the Section 43P Anti-Skipping Checklist is re-evaluated on repaired code. All SOURCE_LEVEL_FIX findings must be resolved. Items requiring host/runtime execution (DEFERRED_TO_HOST_RUNTIME), host infrastructure (OUTSIDE_SUPPLIED_SCOPE), or external product decisions (EXTERNAL_PRODUCT_DECISION_BLOCKED) MUST be documented in RE_AUDIT_CHECKLIST_RESULT.md, but their presence MUST NOT block packaging or delivering the ZIP.**
 > ⛔ **You MUST NOT skip creating `INTEGRATION_GUIDE.md` (containing Section 1 Changelog), `RE_AUDIT_CHECKLIST_RESULT.md`, and the platform-appropriate E2E test suite (`playwright_E2E/` for Web, `mobile_e2e/` for Mobile). They are mandatory deliverables, not suggestions.**
 > ⛔ **OFFLINE / STATIC SCORING DIRECTIVE:** When command or runtime test execution is unavailable in the execution environment, ratings (1 to 10) MUST evaluate **Static Architecture & Code Completeness**. The AI MUST NOT penalize, artificially deduct points, or refuse to rate simply because a live browser/runtime is absent. State the Static Compliance Rating directly (up to 10.0), noting runtime execution separately as `DEFERRED_TO_HOST_RUNTIME`.
+>
+> ⛔⛔⛔ **CAPABILITY-TRUTH DELIVERY RULE (NON-NEGOTIABLE)** ⛔⛔⛔
+>
+> The AI MUST NEVER fabricate or hallucinate:
+> - ZIP archive creation when bash/archive tools are unavailable;
+> - Repository writes when file-system write capabilities are absent;
+> - Test execution passes when runner commands are unexecutable;
+> - Emulator / simulator / device runtime passes;
+> - CI pipeline success;
+> - Fake artifact download URLs or synthetic hashes.
+>
+> The AI MUST complete all source-level work within its granted scope.
+> Final delivery status MUST be explicitly declared as one of:
+> - `SOURCE_COMPLETE_AND_ARTIFACT_GENERATED` (when file writing and packaging tools are available and executed)
+> - `SOURCE_COMPLETE_ARTIFACT_PENDING_HOST_PACKAGING` (when source code is complete but ZIP packaging tool is absent)
+> - `SOURCE_COMPLETE_RUNTIME_VERIFICATION_DEFERRED` (when source code is complete but live device/simulator is absent)
+> - `BLOCKED_BY_MISSING_CONTRACT` (when external spec is ambiguous and unresolvable)
+>
+> Lack of artifact-generation capability does not block source completion.
+> Lack of device/emulator capability does not block static repair completion.
 >
 > ⛔⛔⛔ **CONTINUE-THROUGH DIRECTIVE — NON-NEGOTIABLE** ⛔⛔⛔
 >
@@ -159,14 +186,24 @@ Every AI agent executing this prompt MUST strictly obey these invariants at all 
 
 # 0. WHAT THIS PROMPT DOES
 
-This prompt has **THREE operating modes**. Read the supplied inputs to determine which mode applies.
+## Canonical Mode Registry
+
+This document has **exactly four operating modes**. Any reference to “three modes” is invalid.
+
+| Mode | Purpose | Source Scope | Test System | Delivery Artifacts |
+|---|---|---|---|---|
+| **A** | Web Create | Web feature specification | Playwright | `frontend-{role}-v1.zip` + `playwright_E2E/` |
+| **B** | Web Audit + Repair | Existing web module ZIP | Playwright | `frontend-{role}-v{N}-fix.zip` + `playwright_E2E/` |
+| **C** | Mobile Create from Web Spec | Web ZIP as specification only | Maestro | `mobile-{role}-v1.zip` + `mobile_e2e/` (co-located `e2e/`) |
+| **D** | Mobile Audit + Repair | Existing React Native module ZIP | Maestro | `mobile-{role}-v{N}-fix.zip` + `mobile_e2e/` (co-located `e2e/`) |
+
+> ⛔ **PLATFORM CROSS-CONTAMINATION PROHIBITION:** No mode may use another platform’s test system, UI rules, framework patterns, or delivery naming conventions. Web modes (A & B) use Playwright and web design rules. Mobile modes (C & D) use Maestro and mobile design rules.
 
 > **MODE DETECTION RULES:**
-> - **MODE A (CREATE):** No existing frontend ZIP supplied. Feature doc + architecture + design rules + target module name given. Create from scratch.
-> - **MODE B (AUDIT+REPAIR):** Existing frontend ZIP of the SAME platform supplied (web ZIP for web audit, mobile ZIP for mobile audit). Audit and repair.
-> - **MODE C (CROSS-PLATFORM MOBILE CREATE):** Web Frontend ZIP supplied + user explicitly requests mobile module creation. Extract spec from web ZIP, create React Native module from scratch.
->
-> ⛔ **MODE C DETECTION TRIGGER:** If the user supplies a web ZIP (contains `page.tsx`, `'use client'`, Next.js imports, Tailwind classes) AND asks to create a mobile/React Native module → this is MODE C. Do NOT treat it as Mode B.
+> - **MODE A (WEB CREATE):** No existing ZIP supplied. Feature doc + web architecture + web design rules + target module name given.
+> - **MODE B (WEB AUDIT+REPAIR):** Existing WEB ZIP supplied (contains `page.tsx`, `'use client'`, Next.js/Vite imports).
+> - **MODE C (MOBILE CREATE FROM WEB SPEC):** Web Frontend ZIP supplied + user explicitly requests mobile module creation. Extract spec from web ZIP, create React Native module from scratch.
+> - **MODE D (MOBILE AUDIT+REPAIR):** Existing MOBILE ZIP supplied (contains `*Screen.tsx`, `react-native` imports, `@react-navigation`). Audit and repair.
 
 ---
 
@@ -528,6 +565,7 @@ src/features/frontend_{role}/{role}_{module}/
 ├── mocks/            ← {role}_{module}.fixtures.ts + handlers.ts (MUTABLE)
 ├── state/            ← {role}_{module}.store.ts
 ├── tests/            ← integration tests
+├── e2e/              ← {role}_{module}.yaml (co-located Maestro E2E)
 ├── utils/            ← {role}{Module}FormatCurrency.ts (WET)
 ├── _locales/         ← {role}_{module}_en.json + _hi.json
 ├── {role}_{module}_features.md
