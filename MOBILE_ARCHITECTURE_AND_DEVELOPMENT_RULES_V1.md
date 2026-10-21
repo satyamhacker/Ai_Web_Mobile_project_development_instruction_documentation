@@ -1,4 +1,4 @@
-# React Native Mobile Development Instructions — Enterprise / Industry Scale
+﻿# React Native Mobile Development Instructions — Enterprise / Industry Scale
 
 > ⛔⛔⛔ **AI AGENT — MANDATORY ENFORCEMENT & INTEGRITY DIRECTIVE — READ FIRST** ⛔⛔⛔
 >
@@ -21,9 +21,11 @@
 > ⛔ **BEFORE WRITING ANY CODE OR AUDIT FINDING, CONFIRM:**
 > ```text
 > [ ] Read complete MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md (all 67+ rules)
+> [ ] Read complete MOBILE_UI_UX_DESIGN.md (all 22 sections)
 > [ ] Confirmed TECHNOLOGY BASELINE — React Native Bare-Metal (New Architecture / Fabric + TurboModules)
 > [ ] CRITICAL MOBILE STRUCTURE GATE passed — folder tree verified before any deeper rule
-> [ ] Canonical feature structure confirmed (features/frontend_{role}/{module}/)
+> [ ] Canonical feature structure confirmed (src/features/frontend_{role}/{role}_{module}/)
+> [ ] WET PRINCIPAL confirmed — zero cross-feature business imports, zero DRY shortcuts for business logic
 > [ ] File size ceilings verified (Screen 80 lines, Component 200 lines, Hooks/API 150 lines, Store 180 lines, Util 120 lines)
 > [ ] MOBILE DELIVERY FREEZE GATE & DEFINITION OF DONE loaded into context
 > ```
@@ -44,22 +46,202 @@ Before generating, auditing, or repairing ANY mobile feature module, verify ALL 
 
 | Verification Item | Requirement | Consequence of Failure |
 |---|---|---|
-| **Role Container** | Must be `features/frontend_{role}/` (e.g., `features/frontend_admin/`) | Unprefixed role container = ARCHITECTURE VIOLATION. In repair: move to canonical prefix in RBG 1. |
-| **Canonical Feature Module** | Must be `{module}/` inside role container (e.g., `features/frontend_admin/members/`) | Unowned or flat placement = NON_COMPLIANT. In repair: relocate to canonical container in RBG 1. |
-| **Thin Screen Composition** | Screens in `screens/` MUST only compose components; hard maximum **80 lines**; ZERO business logic, state calculations, or direct API calls. | Heavy screen = ARCHITECTURE VIOLATION. In repair: extract to components & custom hooks in RBG 1. |
-| **Prefixed Component Files** | Components in `components/` MUST use PascalCase with feature prefix (e.g., `MembersMemberCard.tsx`). Max **200 lines**. | Unprefixed component = NON_COMPLIANT. In repair: rename to prefixed components in RBG 1. |
-| **Feature Custom Hooks** | Hooks in `hooks/` MUST use camelCase with `use` + feature name (e.g., `useMembers.ts`, `useMembersFilters.ts`). Max **150 lines**. | Generic hook name = NON_COMPLIANT. In repair: rename to feature hook in RBG 1. |
+| **Role Container** | Must be `src/features/frontend_{role}/` (e.g., `src/features/frontend_admin/`) | Unprefixed role container = ARCHITECTURE VIOLATION. In repair: move to canonical prefix in RBG 1. |
+| **Canonical Feature Module** | Must be `src/features/frontend_{role}/{role}_{module}/` (e.g., `src/features/frontend_manager/manager_members/`) — path MUST start with `src/features/` and module MUST be prefixed with role name | Unprefixed or wrong-path placement = NON_COMPLIANT. In repair: relocate and rename in RBG 1. |
+| **Thin Screen Composition** | Screens in `screens/` MUST only compose components; hard maximum **80 lines**; ZERO business logic, state calculations, or direct API calls. Screen renders `<SafeAreaView>`, `<StatusBar>`, extracts route params, and renders ONE `[Role][Module][Screen]MainView.tsx` component. | Heavy screen = ARCHITECTURE VIOLATION. In repair: extract to MainView component in RBG 1. |
+| **Prefixed Component Files** | Components in `components/` MUST use PascalCase with **Role+Module** prefix (e.g., `ManagerMembersMemberCard.tsx`, NOT `MembersMemberCard.tsx`). Max **200 lines**. | Unprefixed or role-missing component = NON_COMPLIANT. In repair: rename to Role+Module prefixed in RBG 1. |
+| **Feature Custom Hooks** | Hooks in `hooks/` MUST use camelCase with `use` + **Role+Module** name (e.g., `useManagerMembers.ts`, `useManagerMembersFilters.ts`). Max **150 lines**. | Generic or role-missing hook name = NON_COMPLIANT. In repair: rename to Role+Module hook in RBG 1. |
+| **Root Quarantine** | The feature root MUST contain ONLY the three documentation files: `[role_module]_features.md`, `[role_module]_forbidden.md`, and `[role_module]_theme_contract.md`. All source artifacts MUST live inside canonical sub-folders. | Loose source files at feature root = NON_COMPLIANT. In repair: move to correct sub-folder in RBG 1. |
 | **Central Hardware Secure Storage** | Auth tokens, refresh tokens, biometric keys MUST use iOS Keychain / Android Keystore via `react-native-keychain`. NEVER `AsyncStorage`. | Tokens in AsyncStorage = CRITICAL SECURITY AUDIT FAILURE. In repair: replace with `react-native-keychain` wrapper in RBG 1. |
 | **Module Documentation Trio** | Every feature MUST contain `[featureName]_features.md`, `[featureName]_forbidden.md`, and `[featureName]_theme_contract.md`. | Missing doc artifact = INCOMPLETE MODULE. In repair: generate missing docs from source in RBG 1. |
 | **Centralized URL Config** | `config/[featureName].url_config.ts` MUST exist and define all routes and API endpoints as `as const`. | Missing URL config = HARDCODED ROUTE RISK. In repair: generate centralized URL config in RBG 1. |
 | **Query Key Registry** | `api/[featureName].query_keys.ts` or `config/[featureName].query_keys.ts` MUST exist and namespace all TanStack Query keys with resource identity. | Missing query key factory = CACHE INCONSISTENCY RISK. In repair: create query key registry in RBG 1. |
-| **Zero Cross-Feature Imports** | A feature MUST NOT import business components, hooks, or state from sibling features. | Sibling import = VIOLATION OF RULE 28. In repair: decouple or route through shared core in RBG 1. |
+| **Zero Cross-Feature Imports** | A feature MUST NOT import business components, hooks, or state from sibling features. | Sibling import = VIOLATION OF RULE 28 (WET PRINCIPAL). In repair: duplicate the required business artifact locally inside the owning feature module (Strict WET Principal) in RBG 1. Moving business logic to `src/core/` is STRICTLY FORBIDDEN. |
+| **No Barrel Files** | NO `index.ts` or re-export facades. All imports must be direct absolute paths (`@/...`). | Barrel file = CIRCULAR DEPENDENCY RISK. In repair: remove barrel files and update imports in RBG 1. |
 
 > ⛔ **Skipping this gate invalidates all downstream compliance results.**
 
 ---
 
 This document defines the canonical architecture and development rules for a React Native bare-metal application. React Native is the normative implementation target for this project. Use React Native New Architecture (Fabric + TurboModules). No alternative framework is part of the normative implementation rules. React Native bare-metal is the only supported implementation target.
+
+---
+
+## BARE-METAL REACT NATIVE — LOCKED NPM PACKAGE REGISTRY
+
+> ⛔ **AI AGENTS: You MUST ONLY use packages from this table. Adding any package NOT listed here requires explicit written justification in `_features.md` under `## Approved External Dependencies`. Expo packages (`expo-*`, `@expo/*`) are STRICTLY FORBIDDEN in bare-metal projects unless the specific package is listed below.**
+
+| Category | Approved Package | Notes |
+|---|---|---|
+| **Navigation** | `@react-navigation/native` | Core navigation |
+| **Navigation** | `@react-navigation/native-stack` | Native stack navigator |
+| **Navigation** | `@react-navigation/bottom-tabs` | Bottom tab navigator |
+| **Navigation** | `@react-navigation/drawer` | Drawer navigator |
+| **Safe Area** | `react-native-safe-area-context` | SafeAreaView + useSafeAreaInsets |
+| **Screens** | `react-native-screens` | Required by React Navigation |
+| **Lists** | `@shopify/flash-list` | Virtualized lists (preferred over FlatList for >20 items) |
+| **Images** | `react-native-fast-image` | Cached, optimized image loading |
+| **Haptics** | `react-native-haptic-feedback` | Haptic feedback (NOT expo-haptics) |
+| **Permissions** | `react-native-permissions` | All device permissions (NOT expo-permissions) |
+| **Icons** | `lucide-react-native` | 100% icon symmetry with Web (lucide-react) |
+| **Bottom Sheet** | `@gorhom/bottom-sheet` | Native bottom sheets |
+| **Date Picker** | `@react-native-community/datetimepicker` | Platform-native date/time picker |
+| **Secure Storage** | `react-native-keychain` | iOS Keychain / Android Keystore — auth tokens ONLY |
+| **Fast Storage** | `react-native-mmkv` | Non-sensitive prefs and cache |
+| **Charts** | `react-native-gifted-charts` | All charts — canonical library |
+| **Animations** | `react-native-reanimated` | UI-thread animations |
+| **Gestures** | `react-native-gesture-handler` | Swipe/pan/pinch gestures |
+| **Server State** | `@tanstack/react-query` | TanStack Query v5 |
+| **Client State** | `zustand` | Feature-scoped stores |
+| **Forms** | `react-hook-form` | v7 only |
+| **Validation** | `zod` | Schema validation |
+| **HTTP Client** | `axios` | Central network client |
+| **Mocking** | `msw` | MSW for React Native |
+| **Testing** | `@testing-library/react-native` | Component tests |
+| **Testing** | `jest` | Unit tests |
+| **E2E** | `maestro` | E2E YAML test runner |
+| **Clipboard** | `@react-native-clipboard/clipboard` | Copy to clipboard |
+| **Status Bar** | `react-native` (built-in StatusBar) | Use built-in StatusBar component |
+| **Fonts** | `react-native` font linking | Link fonts via native build — no expo-font |
+| **Crash Reporting** | `@sentry/react-native` | Crash monitoring |
+| **i18n** | `react-i18next` + `i18next` | Internationalization |
+
+> ⛔ **FORBIDDEN packages (common AI hallucination traps):**
+> `expo-font`, `expo-status-bar`, `expo-haptics`, `expo-permissions`, `expo-date-picker`, `@expo/vector-icons`, `react-native-vector-icons` (use `lucide-react-native` instead), `react-native-elements`, `native-base`
+
+## CODE & COMPONENT ISOLATION DECISION MATRIX (STRICT WET PRINCIPAL)
+
+> ⛔ **AI AGENTS: Before deciding whether to share or duplicate any component, hook, utility, or constant across roles or modules, you MUST consult this matrix. Guessing is PROHIBITED.**
+>
+> **THE WET PRINCIPAL:** "Write Everything Twice" (WET) is the mandatory default for all business-aware code. Traditional DRY principles MUST NOT override the project's AI isolation requirement. Over-isolation is always compliant; sharing business logic is NEVER permitted.
+
+| Scenario | Classification | Required Decision |
+|---|---|---|
+| Pure UI primitive with zero business knowledge (Button, Input, Modal shell, Spinner) | `ZERO_BUSINESS_PRIMITIVE` | SHARE in `src/core/ui/` — no duplication permitted |
+| UI component that knows any business status, label, or domain value (StatusBadge with gym states, PaymentBadge) | `BUSINESS_AWARE_COMPONENT` | DUPLICATE per feature module — SHARING IS STRICTLY PROHIBITED |
+| Hook that fetches or mutates domain data (useManagerMembers, useAdminStats) | `DOMAIN_HOOK` | DUPLICATE per feature module — SHARING IS STRICTLY PROHIBITED |
+| Hook that wraps pure infrastructure (useDebounce, usePagination with zero domain types) | `INFRASTRUCTURE_HOOK` | SHARE in `src/core/hooks/` — PERMITTED shared infrastructure only |
+| Zod schema or TypeScript type describing a business entity | `DOMAIN_TYPE` | DUPLICATE per feature module — SHARING ACROSS ROLES IS STRICTLY FORBIDDEN |
+| API client function (fetchMembers, createInvoice) | `DOMAIN_API_CLIENT` | DUPLICATE per feature module — SHARING IS STRICTLY PROHIBITED |
+| Zustand store slice with domain state | `DOMAIN_STORE` | DUPLICATE per feature module — SHARING IS STRICTLY PROHIBITED |
+| Constants file with business-specific values (STATUS_OPTIONS, PLAN_TYPES) | `BUSINESS_CONSTANTS` | DUPLICATE per feature module — SHARING IS STRICTLY PROHIBITED |
+| Constants file with zero-domain values (DEBOUNCE_MS, PAGE_SIZE_OPTIONS) | `INFRA_CONSTANTS` | SHARE in `src/core/constants/` — PERMITTED shared constants only |
+| Currency formatter with business-domain knowledge | `DOMAIN_UTILITY` | DUPLICATE per feature module as `[module]FormatCurrency.ts` — SHARING IS STRICTLY PROHIBITED |
+| Utility with no business domain knowledge (formatDate, displayValue) | `INFRA_UTILITY` | SHARE in `src/core/utils/` — PERMITTED shared utility only |
+| Same UI feature needed in Admin AND Manager | `CROSS_ROLE_FEATURE` | DUPLICATE the complete feature in each role module (Strict WET is MANDATORY) |
+
+**Decision Invariants:**
+- If the code contains ANY reference to a business entity, status, label, or domain type → it is `BUSINESS_AWARE` → it MUST be duplicated per feature. Sharing is a CRITICAL ISOLATION VIOLATION.
+- `formatCurrency` is ALWAYS `DOMAIN_UTILITY` — it MUST be feature-local (`[feature]/utils/[module]FormatCurrency.ts`), never in `src/core/`.
+- When in doubt, DUPLICATE. Over-isolation is always compliant; sharing business logic is NEVER permitted.
+
+---
+
+## NO ROLE-WIDE BUSINESS BUCKETS
+
+The project MUST NOT create role-wide business folders such as:
+
+```text
+frontend_manager_components/
+frontend_manager_hooks/
+frontend_manager_store/
+frontend_manager_api/
+```
+
+when those files contain business behavior belonging to individual features. Feature-specific responsibilities MUST remain inside the owning feature:
+
+```text
+src/features/
+└── frontend_manager/
+    ├── manager_members/
+    │   ├── components/
+    │   ├── hooks/
+    │   ├── api/
+    │   └── ...
+    ├── manager_attendance/
+    │   ├── components/
+    │   ├── hooks/
+    │   ├── api/
+    │   └── ...
+    └── manager_billing/
+        └── ...
+```
+
+The same principle applies to every role and every domain.
+
+---
+
+## Mandatory vs Conditionally Required Artifacts
+
+> ⛔ **NO OMISSION OF REQUIRED ARTIFACTS:**
+> AI agents MUST NOT use "only required folders need to exist" as an excuse to omit tests, mocks, schemas, or documentation.
+
+| Artifact | Requirement Level | Mandatory Trigger Condition | Consequence of Omission |
+|---|---|---|---|
+| `[featureName]_features.md` | **MANDATORY FOR ALL MODULES** | Every single feature module | `NON_COMPLIANT` — Module lacks architectural map |
+| `[featureName]_forbidden.md` | **MANDATORY FOR ALL MODULES** | Every single feature module | `NON_COMPLIANT` — Module lacks safety boundaries |
+| `[featureName]_theme_contract.md` | **MANDATORY FOR ALL MODULES** | Every single feature module | `NON_COMPLIANT` — Visual portability contract unverified |
+| `config/[featureName].url_config.ts` | **MANDATORY FOR ALL MODULES** | Every module with routes or API calls | `NON_COMPLIANT` — URL centralization contract broken |
+| `api/[featureName].query_keys.ts` | **MANDATORY FOR ALL MODULES** | Every module with API calls | `NON_COMPLIANT` — Cache key consistency broken |
+| `screens/` | **MANDATORY FOR ALL MODULES** | Every feature module with UI | `NON_COMPLIANT` — Missing screen entry points |
+| `components/` | **MANDATORY FOR ALL MODULES** | Every feature module with UI | `NON_COMPLIANT` — Missing view layer |
+| `hooks/` | **MANDATORY FOR ALL MODULES** | Any component with logic/state | `NON_COMPLIANT` — Logic coupled to view |
+| `api/` | **MANDATORY FOR ALL MODULES** | Any API call | `NON_COMPLIANT` — API centralization broken |
+| `types/` | **MANDATORY FOR ALL MODULES** | Every feature module | `NON_COMPLIANT` — Type isolation contract broken |
+| `schemas/` | **MANDATORY FOR ALL MODULES** | Every module with forms/API responses | `NON_COMPLIANT` — Runtime validation missing |
+| `mocks/` | **MANDATORY FOR ALL MODULES** | Every feature module (fixtures + MSW handlers) | `NON_COMPLIANT` — Untestable/unmocked module |
+| `_locales/` | **MANDATORY FOR ALL MODULES** | Every feature module (`_en.json` + active languages) | `NON_COMPLIANT` — Hardcoded strings in JSX |
+| `state/` | **Conditionally Required** | MUST exist when module has shared client state | `NON_COMPLIANT` if client state is stored in global or component state |
+| `utils/` | **Conditionally Required** | MUST exist when module has formatters/helpers | `NON_COMPLIANT` if helpers are placed in global `src/core/` |
+| `tests/` | **MANDATORY FOR ALL MODULES** | Every feature module (integration tests) | `NON_COMPLIANT` — Zero integration test verification |
+
+---
+
+## AI PORTABILITY CONTRACT
+
+A feature module is considered AI-portable only when an AI can receive the feature directory as its primary context and understand the feature's purpose, user flows, UI, state ownership, API contract, schemas, business constants, mock behavior, tests, error handling, loading/empty behavior, permissions, and documented external dependencies — without receiving unrelated sibling business modules.
+
+The canonical workflow is:
+
+```text
+FEATURE BUG
+   ↓
+PROVIDE ONLY THE FEATURE MODULE FOLDER
+   ↓
+AI READS _features.md FIRST, THEN _forbidden.md
+   ↓
+AI UNDERSTANDS THE FEATURE
+   ↓
+AI REPAIRS THE FEATURE
+   ↓
+AI RUNS FEATURE TESTS
+   ↓
+ONLY FEATURE FILES ARE CHANGED
+```
+
+For example, if a bug exists in `src/features/frontend_manager/manager_members/`, the preferred AI context is ONLY that folder — NOT the entire `frontend_manager/` role container and NOT the entire application.
+
+---
+
+## DUPLICATION IS ALLOWED AND PREFERRED WHEN IT IMPROVES ISOLATION
+
+Traditional DRY principles MUST NOT override the project's AI isolation requirement.
+
+If two independent features need similar business behavior, they MAY contain duplicated implementations. This is intentional when duplication prevents cross-feature business coupling.
+
+The primary optimization target is:
+```text
+AI CONTEXT ISOLATION
++
+BOUNDED CHANGE BLAST RADIUS
++
+FEATURE PORTABILITY
+```
+not minimum source-code duplication.
+
+**FEATURE-LOCAL SINGLE SOURCE OF TRUTH:** The phrase "single source of truth" applies ONLY within the owning feature module. Two modules may contain similar or even identical business constants. Cross-feature consolidation is NOT required and is FORBIDDEN for business-aware code.
+
+---
 
 ## Rule 0A — Feature Module Is the AI Repair Boundary
 
@@ -116,7 +298,7 @@ If a required mobile behavior is not defined by these mobile documents or the su
 To guarantee that any AI agent or mobile developer can repair, test, or expand a mobile feature without app-wide regression, the mobile architecture enforces strict 1-to-1 isomorphism between primary navigation destinations and filesystem feature modules:
 
 1. **The 1:1 Navigation Law (Bottom Tabs / Drawer Items):**
-   - Every primary destination present in ANY mobile role's primary navigation (e.g., in BottomTabNavigator or DrawerNavigator for Member, Trainer, Manager, Admin: Attendance, Schedule, Members, Profile, Workouts, Financials) MUST map strictly 1-to-1 to an autonomous, self-contained feature folder directly under the role container (e.g., `features/frontend_{role}/{role}_{feature}/` or `src/features/frontend_{role}/{feature}/`).
+   - Every primary destination present in ANY mobile role's primary navigation MUST map strictly 1-to-1 to an autonomous, self-contained feature folder directly under the role container: `src/features/frontend_{role}/{role}_{feature}/` (e.g., `src/features/frontend_manager/manager_members/`).
    - Merging distinct primary navigation tabs into a single mega-module (e.g., combining Attendance and Members, or Schedule and Workouts) is STRICTLY PROHIBITED.
    - Creating disjoint root-level folders for sub-screens or detail flows belonging to a navigation tab is STRICTLY PROHIBITED.
 
@@ -129,18 +311,25 @@ To guarantee that any AI agent or mobile developer can repair, test, or expand a
      - State management: Atomic Zustand stores or context providers (under 180 lines)
      - API services: REST/GraphQL queries and mutations (`.api.ts`)
      - Testing & Mocks: Unit/widget tests and mock fixtures
-     - Local contract documentation: `_features.md`, `_forbidden.md`, `_theme_contract.md`
+     - Local contract documentation: `[role_module]_features.md`, `[role_module]_forbidden.md`, `[role_module]_theme_contract.md`
    - ZERO cross-feature business imports: It is STRICTLY PROHIBITED for any feature module to import business components, hooks, stores, or types from any sibling feature (Rule 28).
 
 3. **Isolated AI Repair Hand-Off (Single-Folder Boundary):**
-   - If a bug, UI regression, or data issue occurs in ANY feature (e.g., "Schedule", "Attendance", "Workouts", "Profile"):
-     - The developer or host system MUST provide **ONLY** that single feature module folder (`features/frontend_{role}/{role}_{feature}/`) to the AI agent.
+   - If a bug, UI regression, or data issue occurs in ANY feature:
+     - The developer or host system MUST provide **ONLY** that single feature module folder (`src/features/frontend_{role}/{role}_{feature}/`) to the AI agent.
      - The AI agent will audit, repair, test, and package that module in complete isolation.
      - Demanding host application root files (`package.json`, root `tsconfig.json`, `app.json`, root navigation container) or sibling feature folders is a **CRITICAL SCOPE CREEP VIOLATION**.
 
-4. **Navigation Shell Isolation:**
-   - Root navigation orchestrators (`RootNavigator`, `BottomTabNavigator`, `DrawerNavigator`) reside in that role's core navigation shell (e.g., `src/core/navigation/`).
-   - Navigation orchestrators consume ONLY typed route constants (`ROUTES.ts`), and MUST NOT import business state, business components, or domain hooks from feature modules.
+4. **Feature-Owned Route Config & Stack Navigator (AI Zip Principle):**
+   - Every feature module MUST own its internal screen route names and param types inside `config/{role_module}.url_config.ts` (e.g., `config/manager_members.url_config.ts`). This file exports both internal `SCREEN_ROUTES` constants and the feature's `ParamList` type.
+   - Every primary tab/drawer feature module MUST own a thin **`[Role][Module]Navigator.tsx`** (e.g., `ManagerMembersNavigator.tsx`) inside its `screens/` folder. This navigator orchestrates the internal stack (List → Detail → Add screens) and any feature-level modals/bottom sheets.
+   - `src/core/navigation/` (Root/BottomTab/Drawer Navigator) mounts ONLY the top-level tab/drawer entries. It consumes the feature navigator component — it MUST NOT define internal screen routes for individual features.
+   - Global `src/core/navigation/routes.ts` defines ONLY top-level tab/drawer route names. Feature-internal screen names live exclusively in the feature's own `config/{role_module}.url_config.ts`.
+   - **Why:** If a developer needs to add a new sub-screen to `manager_members`, they ZIP only `src/features/frontend_manager/manager_members/` and hand it to the AI. The AI finds all route definitions, param types, and the stack navigator inside that single folder — zero dependency on global files.
+
+5. **Navigation Shell Isolation:**
+   - Root navigation orchestrators (`RootNavigator`, `BottomTabNavigator`, `DrawerNavigator`) reside in `src/core/navigation/`.
+   - Navigation orchestrators consume ONLY top-level route constants from `src/core/navigation/routes.ts` and feature navigator components. They MUST NOT import business state, business components, or domain hooks from feature modules.
    - If an issue occurs with tab switching, deep linking config, or drawer presentation, the repair context is STRICTLY `src/core/navigation/`, NEVER individual feature modules.
 
 ---
@@ -180,7 +369,7 @@ If an AI repair attempts to modify business logic in a sibling feature module to
 ## Rule 1 — Micro-Modularization (One Feature = One Self-Contained Folder)
 
 This is the most important structural rule. **One feature = one self-contained folder.**
-If there is a bug in `members`, you drag ONLY the `features/frontend_manager/members/` folder to the AI.
+If there is a bug in `manager_members`, you drag ONLY the `src/features/frontend_manager/manager_members/` folder to the AI.
 Everything the AI needs — components, hooks/controllers, schemas, types, API, state,
 tests, and the context file — lives inside that single folder. Zero need to open any other folder.
 
@@ -188,8 +377,7 @@ tests, and the context file — lives inside that single folder. Zero need to op
   data-fetching, business logic, and presentation in the same file.
 - Every feature lives ENTIRELY inside its own feature folder. Nothing feature-specific
   exists outside it.
-- Screens/route entry points are THIN — they compose feature components only.
-  No business logic, no direct API calls, no non-trivial state inside a screen file.
+- **Screen + MainView Pattern (80-line ceiling compliance):** `*Screen.tsx` (≤80 lines) renders ONLY `<SafeAreaView>`, `<StatusBar>`, route param extraction, and ONE `[Role][Module][Screen]MainView.tsx` component (inside `components/`, ≤200 lines). The MainView orchestrates all hooks, loading/empty/error states, and child components. This is the mobile equivalent of Web's `page.tsx` + `[ModuleName]Main.tsx` pattern.
 
 ### File Size Ceilings (Hard Ceilings — Zero Exceptions)
 
@@ -215,44 +403,55 @@ Keep all split files inside the **same feature folder**.
 All application source examples in this document use React Native TypeScript:
 `*.ts` / `*.tsx`.
 ```
-features/
+src/features/
 ├── frontend_admin/
-│   └── members/
+│   └── admin_members/
 ├── frontend_manager/
-│   └── members/
+│   └── manager_members/
 └── frontend_trainer/
-    └── members/                          ← entire feature lives here
-        ├── screens/                      ← thin composition only
-        │   ├── MembersListScreen.tsx         
-        │   ├── MembersDetailScreen.tsx
-        │   └── MembersAddScreen.tsx
-        ├── components/                       
-        │   ├── MembersMemberCard.tsx     ← module-prefixed component
-        │   ├── MembersMemberCard.test.tsx← co-located test
-        │   ├── MembersMemberListItem.tsx
-        │   └── MembersEmptyState.tsx
-        ├── hooks/                            
-        │   ├── useMembers.ts             ← server-state data-fetching hook
-        │   ├── useMembers.test.ts
-        │   ├── useMembersFilters.ts      ← client-state UI filter hook
-        │   └── useMembersFilters.test.ts
-        ├── schemas/                          
-        │   └── members.schema.ts         ← Zod schema / validator class
-        ├── types/                            
-        │   └── members.types.ts          ← all interfaces, enums, type unions
+    └── trainer_members/                  ← entire feature lives here
+        ├── screens/                      ← thin composition only (≤80 lines each)
+        │   ├── TrainerMembersListScreen.tsx      ← renders <SafeAreaView>+<StatusBar>+<TrainerMembersListMainView/>
+        │   ├── TrainerMembersDetailScreen.tsx    ← renders <SafeAreaView>+<StatusBar>+<TrainerMembersDetailMainView/>
+        │   ├── TrainerMembersAddScreen.tsx       ← renders <SafeAreaView>+<StatusBar>+<TrainerMembersAddMainView/>
+        │   └── TrainerMembersNavigator.tsx       ← feature-owned stack navigator
+        ├── components/
+        │   ├── TrainerMembersListMainView.tsx    ← ≤200 lines — main orchestrator for list screen
+        │   ├── TrainerMembersDetailMainView.tsx  ← ≤200 lines — main orchestrator for detail screen
+        │   ├── TrainerMembersAddMainView.tsx     ← ≤200 lines — main orchestrator for add screen
+        │   ├── TrainerMembersMemberCard.tsx      ← Role+Module prefixed
+        │   ├── TrainerMembersMemberCard.test.tsx
+        │   ├── TrainerMembersMemberListItem.tsx
+        │   └── TrainerMembersEmptyState.tsx
+        ├── hooks/
+        │   ├── useTrainerMembers.ts             ← Role+Module prefixed
+        │   ├── useTrainerMembers.test.ts
+        │   ├── useTrainerMembersFilters.ts
+        │   └── useTrainerMembersFilters.test.ts
+        ├── schemas/
+        │   └── trainer_members.schema.ts
+        ├── types/
+        │   └── trainer_members.types.ts
         ├── api/
-        │   └── members.api.ts            ← ALL network calls for this feature ONLY
-        ├── config/                       ← URL constants ONLY (no business logic)
-        │   └── members.url_config.ts     ← endpoint paths for this feature
-        ├── mocks/                        ← MUST CONTAIN ALL FEATURE MOCKS (NO GLOBAL MOCKS)
-        │   └── members.mock.ts           ← MSW handlers or fixture data for this feature
-        ├── state/                        ← only if UI state shared across 2+ components
-        │   └── members.store.ts          
-        ├── tests/                        ← integration-level tests (unit = co-located)
-        │   └── members.integration.test.ts
-        ├── members_features.md           ← MANDATORY — see Rule 24
-        ├── members_forbidden.md          ← MANDATORY — see Rule 29
-        └── [featureName]_theme_contract.md     ← MANDATORY — see Rule 52A
+        │   ├── trainer_members.api.ts
+        │   └── trainer_members.query_keys.ts
+        ├── config/
+        │   └── trainer_members.url_config.ts  ← internal routes + API endpoints
+        ├── mocks/
+        │   ├── trainer_members.fixtures.ts    ← initial seed data (mutable in-memory)
+        │   └── trainer_members.handlers.ts    ← MSW handlers that mutate in-memory state
+        ├── state/
+        │   └── trainer_members.store.ts
+        ├── tests/
+        │   └── trainer_members.integration.test.ts
+        ├── utils/
+        │   └── trainerMembersFormatCurrency.ts  ← feature-local currency formatter (WET)
+        ├── _locales/
+        │   ├── trainer_members_en.json
+        │   └── trainer_members_hi.json
+        ├── trainer_members_features.md
+        ├── trainer_members_forbidden.md
+        └── trainer_members_theme_contract.md
 ```
 
 ### Hyper-Descriptive, Module-Prefixed Naming (AI Context Guarantee)
@@ -261,38 +460,57 @@ Every file name MUST make the feature identity immediately explicit. When you ta
 in an AI prompt (e.g. `@MembersMemberCard.tsx`), the AI instantly knows which module
 it belongs to — zero ambiguity, zero cross-module hallucination risk.
 
-**Canonical filename grammar for the `members` feature:**
+**Canonical filename grammar for the `trainer_members` feature (role = `trainer`, module = `members`):**
 
 ```
-Components / Widgets (PascalCase, feature-prefixed):
-  MembersMemberCard.tsx         ← feature prefix + entity + type
-  MembersMemberListItem.tsx
-  MembersEmptyState.tsx
-  MembersListSkeleton.tsx
+Screens (thin, ≤80 lines, Role+Module prefixed):
+  TrainerMembersListScreen.tsx      ← renders SafeAreaView + StatusBar + TrainerMembersListMainView
+  TrainerMembersDetailScreen.tsx
+  TrainerMembersAddScreen.tsx
+  TrainerMembersNavigator.tsx       ← feature-owned stack navigator
 
-Hooks (camelCase with required `use` prefix + feature name):
-  useMembers.ts                 ← `use` + feature name (NOT memberUse or membersHook)
-  useMembersFilters.ts
-  useMembersSearch.ts
+Main View Orchestrators (inside components/, ≤200 lines):
+  TrainerMembersListMainView.tsx    ← Web equivalent of [ModuleName]Main.tsx
+  TrainerMembersDetailMainView.tsx
+  TrainerMembersAddMainView.tsx
 
-API / Types / Schema / Store / Config (dot-notation, feature-prefixed, lowercase):
-  members.api.ts
-  members.types.ts
-  members.schema.ts
-  members.store.ts
-  members.url_config.ts   ← lives inside config/ sub-folder
+Components / Widgets (PascalCase, Role+Module-prefixed):
+  TrainerMembersMemberCard.tsx      ← Role+Module prefix MANDATORY
+  TrainerMembersMemberListItem.tsx
+  TrainerMembersEmptyState.tsx
+  TrainerMembersListSkeleton.tsx
+
+Hooks (camelCase with required `use` prefix + Role+Module name):
+  useTrainerMembers.ts              ← Role+Module prefix MANDATORY
+  useTrainerMembersFilters.ts
+  useTrainerMembersSearch.ts
+
+API / Types / Schema / Store / Config (dot-notation, role_module-prefixed, lowercase):
+  trainer_members.api.ts
+  trainer_members.types.ts
+  trainer_members.schema.ts
+  trainer_members.store.ts
+  trainer_members.url_config.ts     ← lives inside config/ sub-folder
+  trainer_members.query_keys.ts     ← lives inside api/ sub-folder
+
+Mocks (mutable in-memory state):
+  trainer_members.fixtures.ts       ← initial seed data array
+  trainer_members.handlers.ts       ← MSW handlers that READ/MUTATE in-memory state
+
+Feature-local utilities (WET — never shared to src/core/):
+  trainerMembersFormatCurrency.ts   ← inside utils/ sub-folder
+
+Locale files (co-located, NOT in global src/i18n/):
+  _locales/trainer_members_en.json
+  _locales/trainer_members_hi.json
 
 Mandatory documentation files (feature root level):
-  members_features.md
-  members_forbidden.md
-  members_theme_contract.md
+  trainer_members_features.md
+  trainer_members_forbidden.md
+  trainer_members_theme_contract.md
 ```
 
-**Framework/architectural prefix exceptions (explicitly permitted):**
-Framework-mandated prefixes (`use` for hooks), language-standard naming conventions,
-and mandatory documentation filename formats are permitted exceptions to leading with
-the bare feature name — provided the feature identity remains explicit and unambiguous
-in the rest of the filename. The following are allowed:
+**Why Role+Module prefix on EVERY file?** When you tag a file in an AI prompt (e.g. `@TrainerMembersMemberCard.tsx`), the AI instantly knows which role AND module it belongs to — zero ambiguity, zero cross-role hallucination risk. Without the role prefix, `useMembers.ts` in `frontend_admin/admin_members/` and `useMembers.ts` in `frontend_manager/manager_members/` are indistinguishable in AI context.
 
 | Pattern | Example | Why permitted |
 |---|---|---|
@@ -305,8 +523,8 @@ in the rest of the filename. The following are allowed:
 **What is forbidden regardless:**
 ```
 ❌ BAD:  Card.tsx, hook.ts, api.ts, store.ts, types.ts
-❌ BAD:  useData.ts, loadItems.ts, getData.ts   ← no feature identity
-✅ GOOD: MembersMemberCard.tsx, useMembers.ts, members.api.ts
+❌ BAD:  useData.ts, loadItems.ts, getData.ts   ← no role\+module identity
+✅ GOOD: TrainerMembersMemberCard.tsx, useTrainerMembers.ts, trainer_members.api.ts
 ```
 
 **AI warning:** Do NOT rename `useMembers.ts` to `membersUseHook.ts` or similar to
@@ -393,7 +611,7 @@ State Ownership
 
 | State Type | Category | Rule |
 |---|---|---|
-| Anything from an API (lists, details, counts, status) | **Server state** | Managed by TanStack Query v5 for React Native. Never duplicated into a separate "client" state container. **AI BAN:** `isLoading` is banned (use `isPending`), and callbacks (`onSuccess` inside `useQuery` AND `useMutation`) are banned. For mutations, rely on `.mutateAsync().then()` at the call site or use global `mutationCache`. |
+| Anything from an API (lists, details, counts, status) | **Server state** | Managed by TanStack Query v5 for React Native. Never duplicated into a separate "client" state container. **AI BAN:** `isLoading` is banned (use `isPending`). `onSuccess` inside `useQuery` is banned. For `useMutation`, `onSuccess: () => queryClient.invalidateQueries(...)` is **REQUIRED** inside the dedicated mutation hook — this is the canonical cache invalidation pattern (see Rule 60). |
 | UI-only state shared across 2+ components in one feature | **Client state (shared)** | A lightweight, feature-scoped state container (e.g. Zustand). One container per feature — never one giant global store. |
 | UI-only state used by exactly one component | **Client state (local)** | Local component state (`useState`/`useReducer` equivalent, or `React Component` local fields). |
 | Data that must survive app restart offline | **Server state — persisted** | Only when explicitly required — server-state cache persisted to local storage. Must be documented in the feature's `_features.md` (Rule 24), including conflict-resolution strategy. Persistence does not make this a new category; it is still server state, stored locally. |
@@ -422,6 +640,7 @@ Derived calculations (e.g., `fullName`, `membershipStatus`, `expiryIndicator`) M
 ## Rule 5A — Interface, Schema, & TypeScript Strictness
 
 - **Type Isolation (No Inline String Type Unions):** Never hardcode string type unions (e.g., `'idle' | 'loading' | 'success' | 'error'`) inline inside interfaces or component definitions. Always extract these into a named type in the module's `types/` folder.
+- **Absolute Imports Mandate:** Every import across the mobile codebase MUST use the `@/...` path alias (e.g., `@/features/frontend_manager/manager_members/hooks/useManagerMembers`). Relative imports (`./` or `../`) are STRICTLY FORBIDDEN except within the same file's immediate test co-location. Configure `tsconfig.json` with `"paths": { "@/*": ["src/*"] }`.
 - **No Barrel Files:** Place schemas and constants strictly in their respective folders (`schemas/`, `config/`). Do NOT create barrel files (`index.ts`) to re-export them. Import the specific file directly using absolute imports.
 - **TypeScript Strictness:**
   - `any` is strictly forbidden. Use `unknown` and narrow safely.
@@ -539,7 +758,39 @@ MUST inspect the complete consuming UI and identify the exact data required by:
 - Every pagination control
 - Loading, empty, and error states
 
-### Mock / Stub Response Completeness
+### Mutable In-Memory Mock State Mandate
+
+When the backend is unavailable, the `mocks/` folder MUST maintain an in-memory mutable state store so that Create/Update/Delete operations produce real visible changes:
+
+- **Create** → subsequent list refetch shows the new record
+- **Update** → subsequent detail/list refetch shows changed values
+- **Delete** → record disappears from subsequent list refetch
+
+A toast-only mutation success that leaves the mock list unchanged is **FORBIDDEN**. The mock handlers MUST mutate the in-memory array so that when TanStack Query invalidates and refetches, the updated list is returned.
+
+Structure inside `mocks/`:
+- `[role_module].fixtures.ts` — initial seed data (exported mutable array)
+- `[role_module].handlers.ts` — MSW handlers that read/mutate the in-memory state
+
+```typescript
+// mocks/manager_members.fixtures.ts
+export let memberFixtures: Member[] = [
+  { id: '1', name: 'Rahul Sharma', status: MemberStatus.ACTIVE, ... },
+  { id: '2', name: 'Priya Singh', status: MemberStatus.EXPIRED, ... },
+];
+
+// mocks/manager_members.handlers.ts
+http.post(MANAGER_MEMBERS_URLS.CREATE, async ({ request }) => {
+  const dto = await request.json();
+  const newMember = { id: uuid(), ...dto };
+  memberFixtures.push(newMember); // ✅ MUTATES in-memory state
+  return HttpResponse.json({ success: true, data: newMember });
+}),
+http.delete(MANAGER_MEMBERS_URLS.DELETE(':id'), ({ params }) => {
+  memberFixtures = memberFixtures.filter(m => m.id !== params.id); // ✅ MUTATES
+  return HttpResponse.json({ success: true, data: null });
+}),
+```
 
 During the **feature-first development phase** (before a real API endpoint exists),
 the mock response used in tests and development MUST:
@@ -628,7 +879,7 @@ visually renders with placeholder values.
 
 Every feature module MUST have exactly one `[moduleName].url_config.ts` (e.g., `members.url_config.ts`).
 
-**Placement:** This file lives inside the feature's `config/` sub-folder (e.g., `features/frontend_manager/members/config/members.url_config.ts`), NOT in the feature root.
+**Placement:** This file lives inside the feature's `config/` sub-folder (e.g., `src/features/frontend_manager/manager_members/config/members.url_config.ts`), NOT in the feature root.
 
 **Separation of Concerns (no conflict with Rule 20):**
 - **Base URL** (e.g., `https://api.example.com`) lives in Rule 20 infrastructure — defined per environment via native build configuration and set centrally in the network client. Feature modules MUST NOT define or read the base URL.
@@ -642,7 +893,7 @@ This file MUST export:
 
 Example export shape:
 ```typescript
-// features/frontend_manager/members/config/members.url_config.ts
+// src/features/frontend_manager/manager_members/config/members.url_config.ts
 export const MEMBERS_URLS = {
   LIST:   '/api/v1/manager/members',
   DETAIL: (id: string) => `/api/v1/manager/members/${id}`,
@@ -656,7 +907,7 @@ This guarantees a single source of truth for endpoints and prevents scattered ha
 Every feature module MUST contain a dedicated query key registry file inside its `api/` or `config/` folder (e.g., `members.query_keys.ts`). This prevents the AI from inventing inconsistent, uncoordinated query keys like `['members']`, `['member']`, or `['member-list']`.
 
 ```typescript
-// features/frontend_manager/members/api/members.query_keys.ts
+// src/features/frontend_manager/manager_members/api/members.query_keys.ts
 export const MEMBERS_QUERY_KEYS = {
   all:     ['manager_members'] as const,
   lists:   () => [...MEMBERS_QUERY_KEYS.all, 'list'] as const,
@@ -697,17 +948,21 @@ Screens and components MUST NEVER call `useMutation` directly or mix mutation lo
 
 ```typescript
 // ❌ BAD — mutation logic inlined in screen
-function MembersAddScreen() {
+function ManagerMembersAddScreen() {
   const { mutate } = useMutation({ mutationFn: createMember });
   // ...
 }
 
-// ✅ GOOD — dedicated mutation hook consumed by screen
-// hooks/useCreateMember.ts
-export function useCreateMember() {
+// ✅ GOOD — dedicated mutation hook with onSuccess cache invalidation
+// hooks/useCreateManagerMember.ts
+export function useCreateManagerMember() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createMember,
-    // onSuccess is banned; invalidation MUST happen via .mutateAsync().then() at the call site or via global mutationCache
+    onSuccess: () => {
+      // onSuccess IS REQUIRED here for cache invalidation — this is the canonical pattern
+      queryClient.invalidateQueries({ queryKey: MANAGER_MEMBERS_QUERY_KEYS.lists() });
+    },
   });
 }
 ```
@@ -726,7 +981,7 @@ Cross-reference: Rule 60 (cache invalidation), Rule 7C (query key registry).
 
 - Use React Native's optimized image-loading mechanism exclusively — one that
   supports caching, placeholders, and format negotiation (e.g., `react-native-fast-image`
-  or Expo Image rather than the bare core `Image`).
+  — never the bare core `Image` or Expo Image).
 - Always specify explicit dimensions or aspect ratio for network images to
   prevent layout shift while loading.
 - Bundled assets are referenced statically — never construct a dynamically
@@ -734,9 +989,52 @@ Cross-reference: Rule 60 (cache invalidation), Rule 7C (query key registry).
 
 ## Rule 10 — Iconography
 
-- Use ONE icon library/family for the entire app — never mix icon sets.
-- Icon sizes and stroke/weight values must reference tokens from
-  `MOBILE_UI_UX_DESIGN.md` — never arbitrary numeric values per usage.
+- Use ONE icon library/family for the entire app — `lucide-react-native` is the canonical icon library (100% symmetry with Web's `lucide-react`). Never mix icon sets.
+- Icon sizes and stroke/weight values must reference tokens from `MOBILE_UI_UX_DESIGN.md` — never arbitrary numeric values per usage.
+
+## Rule 10A — Keyboard Safety for Forms (MANDATORY)
+
+Every form screen and form bottom-sheet MUST handle mobile keyboard correctly to prevent the keyboard from covering inputs and the Submit button.
+
+```typescript
+// ✅ REQUIRED — every form screen/sheet
+import { KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+
+<KeyboardAvoidingView
+  behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+  style={{ flex: 1 }}
+>
+  <ScrollView keyboardShouldPersistTaps="handled">
+    {/* form fields and submit button */}
+  </ScrollView>
+</KeyboardAvoidingView>
+```
+
+Rules:
+- `KeyboardAvoidingView` with `behavior={Platform.OS === 'ios' ? 'padding' : 'height'}` is MANDATORY on every screen/sheet containing form inputs.
+- `ScrollView` wrapping form content MUST have `keyboardShouldPersistTaps="handled"` so tapping outside an input dismisses the keyboard without losing the tap event.
+- Never use a plain `<View>` as the root of a form screen — it will cause the keyboard to cover the Submit button on small screens.
+
+## Rule 10B — Pull-to-Refresh (MANDATORY for User-Browsable Lists)
+
+Every user-browsable list (`FlatList` / `FlashList`) that displays server-fetched data MUST implement pull-to-refresh.
+
+```typescript
+// ✅ REQUIRED — every server-backed FlatList/FlashList
+const { data, isPending, isRefetching, refetch } = useManagerMembers(params);
+
+<FlashList
+  data={data?.data ?? []}
+  refreshing={isRefetching}
+  onRefresh={refetch}
+/>
+```
+
+Rules:
+- `refreshing={isRefetching}` — use TanStack Query's `isRefetching` (not a manual boolean state).
+- `onRefresh={refetch}` — calls TanStack Query's `refetch` directly.
+- Pull-to-refresh MUST be wired on every list that a user would expect to refresh (members, attendance, payments, etc.).
+- Static/configuration lists (e.g., plan type dropdowns) are exempt.
 
 ## Rule 11 — Animations, Gestures, & Haptics (The WOW Factor)
 
@@ -748,7 +1046,7 @@ Cross-reference: Rule 60 (cache invalidation), Rule 7C (query key registry).
   non-essential animations when the user has that setting enabled.
 - Centralize reusable animation presets (durations, easing curves, spring
   configs) in one shared module — never redefine the same values per screen.
-- **Haptic Feedback (Premium Feel):** To achieve a world-class SaaS feel, critical interactions MUST be accompanied by appropriate haptic feedback (e.g., using `react-native-haptic-feedback` or Expo Haptics).
+- **Haptic Feedback (Premium Feel):** To achieve a world-class SaaS feel, critical interactions MUST be accompanied by appropriate haptic feedback using `react-native-haptic-feedback` (NOT expo-haptics).
   - Use light impact for minor state changes (e.g., toggling a switch).
   - Use success notifications for successful mutations (e.g., saving a form).
   - Use error notifications for destructive actions or validation failures.
@@ -765,8 +1063,7 @@ Cross-reference: Rule 60 (cache invalidation), Rule 7C (query key registry).
 - Isolate genuinely divergent iOS/Android implementations into separate
   platform-specific files (e.g. `.ios.ts`, `.android.ts`) — not scattered inline
   platform checks throughout shared files.
-- A trivial one-line platform difference (e.g. a shadow property) may remain
-  inline; once a component accumulates three or more such checks, split it.
+- Inline `Platform.OS` / `Platform.select` checks MUST NOT exceed 2 occurrences per file (restricted strictly to minor style offsets such as shadow or border-radius). Any component requiring 3 or more platform checks MUST be split into `.ios.tsx` and `.android.tsx` files.
 - Every platform-specific behavior (permission dialog wording, native UI
   quirks) must be noted in that feature's `_features.md` (Rule 24).
 
@@ -801,6 +1098,9 @@ Cross-reference: Rule 60 (cache invalidation), Rule 7C (query key registry).
   cache invalidation triggers.
 - Any offline write (queued mutation) requires an explicit, written
   conflict-resolution strategy — never silently assume "last write wins."
+- **OfflineBanner vs OfflineBlocker distinction (MANDATORY):**
+  - `[Feature]OfflineBanner` — inline non-blocking banner shown when network is lost BUT cached data is still visible. User can still browse stale data.
+  - `[Feature]OfflineBlocker` — full-screen blocking component shown ONLY when the feature has NO cached data AND requires network to function at all (e.g., payment processing). Never use `OfflineBlocker` when cached data can be shown. Only for features that explicitly declare offline support in `_features.md`.
 
 ## Rule 17 — Testing (Full Pyramid)
 
@@ -814,10 +1114,10 @@ Cross-reference: Rule 60 (cache invalidation), Rule 7C (query key registry).
   multi-file feature flows, API/mock integration, state coordination, and critical
   feature behavior.
 - **E2E tests (Maestro) - AI Zip Principle:**
-  1. **Top-Level Mirrored Folders:** E2E tests MUST live in a completely separate top-level `mobile_e2e/` directory, entirely decoupled from the application code. The internal directory structure of `mobile_e2e/` MUST strictly mirror the mobile route structure (e.g., `mobile_e2e/mobile_admin_e2e/members/members.yaml`). Never dump E2E tests into the feature folders.
-  2. **WET Over DRY (Module-Level Isolation):** Mobile E2E tests must be 100% self-contained at the **MODULE level**. Do NOT create a global `shared/` or `utils/` folder for E2E. If both the `members` test and `dashboard` test need a login helper script, duplicate it directly into BOTH the `members` and `dashboard` test folders.
-     - **Why:** If a bug occurs in the Members mobile flow, a developer must be able to ZIP only the `mobile_e2e/mobile_admin_e2e/members/` folder and feed it to an AI. If the AI is missing parent helpers, it loses context and breaks the test.
-  3. **No Cross-Module Imports:** A test script in `mobile_admin_e2e/members/` MUST NOT import a fixture or helper from `mobile_admin_e2e/dashboard/`. Isolation is absolute.
+  1. **Top-Level Mirrored Folders:** E2E tests MUST live in a completely separate top-level `mobile_e2e/` directory, entirely decoupled from the application code. The canonical path is `mobile_e2e/frontend_{role}_e2e/{role}_{feature}/{role}_{feature}.yaml` (e.g., `mobile_e2e/frontend_manager_e2e/manager_members/manager_members.yaml`). Never dump E2E tests into the feature folders.
+  2. **WET Over DRY (Module-Level Isolation):** Mobile E2E tests must be 100% self-contained at the **MODULE level**. Do NOT create a global `shared/` or `utils/` folder for E2E. If both the `manager_members` test and `manager_dashboard` test need a login helper script, duplicate it directly into BOTH folders.
+     - **Why:** If a bug occurs in the manager_members mobile flow, a developer must be able to ZIP only the `mobile_e2e/frontend_manager_e2e/manager_members/` folder and feed it to an AI. If the AI is missing parent helpers, it loses context and breaks the test.
+  3. **No Cross-Module Imports:** A test script in `frontend_manager_e2e/manager_members/` MUST NOT import a fixture or helper from `frontend_manager_e2e/manager_dashboard/`. Isolation is absolute.
 - Native modules (camera, biometrics, secure storage, notifications) are
   mocked at the test boundary — unit and component tests never touch a real
   native API.
@@ -1218,7 +1518,7 @@ which file to open for any task without reading all files.]
 - [ ] Rule 42: Every `useEffect` dependency array has an explanatory comment
 - [ ] Rule 43: All hooks and exported utilities have JSDoc blocks
 - [ ] Rule 44: Every file has `RESPONSIBILITY:` + `FLOW:` header comment
-- [ ] Rule 45: Async state uses `NetworkState<T>` — no boolean `isLoading`/`isError` flag pairs
+- [ ] Rule 45: TanStack Query v5 native status (`isPending`, `isError`, `data`) used directly for all API calls — zero parallel `NetworkState<T>` wrappers on server state
 - [ ] Rule 46: Background tasks documented in `_features.md` `## Background Tasks` section
 - [ ] Rule 47: All API calls have explicit timeouts from `TIMEOUT_CONFIG`
 - [ ] Rule 48: 400 validation errors mapped to form fields via `handleValidationErrors()` (422 only if explicitly approved by API contract)
@@ -1239,7 +1539,7 @@ which file to open for any task without reading all files.]
 - [ ] Rule 62: Feature flags accessed via `useFeatureFlag()` — no raw build/env reads inside components
 - [ ] Rule 63: Currency formatting is feature-local (`formatCurrency.ts`); approved currency metadata used; unsupported codes throw
 - [ ] Rule 64: Tenant data export triggers async backend call + `202 Accepted` success feedback — no in-app download
-- [ ] Rule 65: Every interactive control and critical state indicator has a deterministic `testID` in canonical format
+- [ ] Rule 65: Every interactive control and critical state indicator has a deterministic `testID` in `[role]_[module]-[component]-[action/state]` format (e.g., `manager_members-addform-submit`)
 - [ ] Rule 66: Every custom hook, complex component, and state store has an exhaustive JSDoc / docstring block
 
 ## Known Issues / Tech Debt
@@ -1265,6 +1565,8 @@ future AI agents.
 - Respect system font-scaling accessibility settings — never disable dynamic
   text scaling unless a specific pixel-perfect element requires it, and
   document why when it does.
+- Use `accessible={false}` on purely decorative elements to exclude them from the screen reader traversal order.
+- Use `importantForAccessibility="no-hide-descendants"` (Android) on container views that wrap decorative or non-interactive content to prevent TalkBack from traversing into their children. This is the Android equivalent of `accessible={false}` for container-level exclusion.
 
 ## Rule 26 — App Store & Regulatory Compliance
 
@@ -1306,7 +1608,7 @@ A feature **MAY** depend on:
   - navigation infrastructure
   - route constants
   - pagination types
-  - formatting primitives (`formatCurrency`, `formatNumber`, `displayValue`, `maskSensitiveData`)
+  - formatting primitives (`formatNumber`, `displayValue`, `maskSensitiveData`) — **`formatCurrency` is DOMAIN_UTILITY and MUST be feature-local per Rule 63, never in `src/core/`**
   - logging/observability infrastructure
   - accessibility infrastructure
   - app-wide configuration required for correctness
@@ -1416,9 +1718,7 @@ Rules:
 - The confirmation message must clearly state what will happen and whether it is
   reversible. Do not soften destructive messages.
 - Use ONE centralized confirmation module (e.g. a `useConfirm()` hook backed by
-  a shared `ConfirmBottomSheet` component) — never implement ad-hoc alert dialogs
-  per screen. Native `Alert.alert()` is acceptable only as a fallback where a
-  custom bottom sheet cannot be rendered.
+  a shared `ConfirmBottomSheet` component) — Using React Native's native `Alert.alert()` for destructive or financial confirmations is STRICTLY FORBIDDEN in feature code. Every destructive/financial action MUST use the centralized `useConfirm()` hook backed by `ConfirmBottomSheet` (`@gorhom/bottom-sheet`).
 - The confirm button must show a loading state while the mutation is in flight
   and be disabled to prevent double-submission.
 
@@ -1437,8 +1737,7 @@ payment, payroll processing):
 - On error: restore the previous UI state, show the backend `message` field in a
   toast or inline error — never a hardcoded string.
 
-For non-destructive mutations (e.g. updating a display name, adding a note),
-optimistic updates are permitted but must be rolled back cleanly on error.
+Pessimistic UI is the mandatory default for ALL mutations. If optimistic updates are used for non-destructive, non-financial mutations, the hook MUST implement `onError` rollback AND MUST reconcile the cache with the authoritative server response on `onSuccess`. Optimistic updates are STRICTLY FORBIDDEN for any financial or destructive mutation.
 
 ### Search and Filter Input Debouncing
 
@@ -1557,9 +1856,10 @@ Cross-reference: Rule 7 and the feature API contract.
 
 ## Rule 35 — Route / Navigation Constants File (No Hardcoded Route Strings)
 
-Every navigation route name or path MUST be defined as a typed constant in ONE
-central file: `src/core/navigation/routes.ts`. No screen, hook, or component may
-contain a hardcoded route string literal.
+Navigation route names are split into two layers:
+
+1. **Top-level tab/drawer routes** (e.g., `MANAGER_TAB.MEMBERS`) MUST be defined in `src/core/navigation/routes.ts`. This file contains ONLY the top-level tab/drawer entry names — never internal screen names.
+2. **Feature-internal screen routes** (e.g., `MANAGER_MEMBERS_ROUTES.LIST`, `MANAGER_MEMBERS_ROUTES.DETAIL`, `MANAGER_MEMBERS_ROUTES.ADD`) and their `ParamList` types MUST live exclusively in the feature's own `config/{role_module}.url_config.ts`. No screen, hook, or component may contain a hardcoded route string literal.
 
 ```typescript
 // src/core/navigation/routes.ts
@@ -1892,8 +2192,7 @@ function level what Rule 24 applies at the feature level.
 
 ## Rule 44 — `RESPONSIBILITY:` + `FLOW:` Comment Mandate on Every File
 
-Every executable .ts / .tsx source file in a feature folder (component, hook, API, store, schema) MUST begin
-with a two-line structured comment block at the very top of the file (before any imports):
+Every executable .ts / .tsx source file in a feature folder (every screen, navigator, component, hook, API, query_keys, store, schema, type, url_config, util, and mock file) MUST begin with a two-line structured comment block at the very top of the file (before any imports):
 
 ```typescript
 // RESPONSIBILITY: Renders a single member card in the list. Displays masked phone,
@@ -1932,35 +2231,36 @@ Cross-reference: Rule 24 (feature-level documentation), Rule 43 (JSDoc on functi
 
 ---
 
-## Rule 45 — Network State Model (No Boolean `isLoading` / `isError` Flags)
+## Rule 45 — Network State Model (TanStack Query Native Status — No Parallel Boolean Flags)
 
-For any async operation managed in local component state or a custom hook, use a discriminated union.
+For TanStack Query requests, MUST use TanStack Query v5 native typed status (`isPending`, `isFetching`, `isError`, `data`) and MUST NOT wrap them in a parallel `NetworkState<T>` discriminated union. Creating a parallel async enum for server state managed by TanStack Query is **FORBIDDEN** — it duplicates state ownership and causes cache inconsistency.
 
-- `idle` → initial/neutral UI;
-- `loading` → loading/skeleton;
-- `success` + empty data → EmptyState;
-- `success` + data → content;
-- `error` → ErrorFallback.
+`NetworkState<T>` is ONLY permitted for **non-TanStack-Query local async operations** (e.g., device hardware access, file system operations, Bluetooth, camera — operations that cannot use TanStack Query).
 
+```typescript
+// ❌ FORBIDDEN — parallel NetworkState<T> wrapping TanStack Query server state
+const [state, setState] = useState<NetworkState<Member[]>>({ status: 'loading' });
+useEffect(() => {
+  fetchMembers().then(data => setState({ status: 'success', data }));
+}, []);
+
+// ✅ REQUIRED — use TanStack Query v5 native status directly
+const { data, isPending, isError, refetch } = useManagerMembers(params);
+
+if (isPending) return <ManagerMembersListSkeleton />;
+if (isError) return <ManagerMembersErrorFallback onRetry={refetch} />;
+if (!data?.data?.length) return <ManagerMembersEmptyState />;
+return <ManagerMembersList members={data.data} />;
+```
+
+**For non-Query local async (device operations only):**
 ```typescript
 export type NetworkState<T> =
   | { status: 'idle' }
   | { status: 'loading' }
   | { status: 'success'; data: T }
   | { status: 'error'; error: string; errorCode?: string };
-
-// Inside component render:
-switch (state.status) {
-  case 'idle':
-    return <NeutralInitialState />;
-  case 'loading':
-    return <MembersSkeleton />;
-  case 'error':
-    return <ErrorFallback message={state.error} />;
-  case 'success':
-    if (state.data.length === 0) return <MembersEmptyState />;
-    return <MembersList data={state.data} />;
-}
+// Use ONLY for: camera, Bluetooth, file system, biometrics — NOT for API calls
 ```
 
 ## Rule 46 — Background Task / Scheduled Job Documentation
@@ -2365,7 +2665,7 @@ The mobile architecture MUST enforce the following security and robustness const
    - Every `useEffect` dependency has an explanatory comment? (Rule 42)
    - All hooks and utilities have JSDoc blocks? (Rule 43)
    - Every file has `RESPONSIBILITY:` + `FLOW:` header comment? (Rule 44)
-   - Async state uses `NetworkState<T>` enum — no boolean flag pairs? (Rule 45)
+   - Async state: TanStack Query v5 native `isPending`/`isError` used directly — zero parallel `NetworkState<T>` wrappers on server state? (Rule 45)
    - Background tasks documented in `_features.md`? (Rule 46)
    - API calls have explicit timeouts from `TIMEOUT_CONFIG`? (Rule 47)
    - 400 validation errors mapped to form fields via `handleValidationErrors()`? (422 only if explicitly approved by API contract) (Rule 48)
@@ -2385,7 +2685,7 @@ The mobile architecture MUST enforce the following security and robustness const
    - WebSocket instantiated only through centralized `WebSocketContext` / `SocketProvider`? (Rule 58)
    - App foreground resume triggers the exact notification-recovery endpoint from the feature API contract? (Rule 58A)
    - Role-masked fields typed as optional in interfaces/schemas; UI handles `undefined` gracefully? (Rule 59)
-   - Every `useMutation` invalidates affected TanStack Query keys via `.mutateAsync().then()` or global `mutationCache`? (Rule 60)
+   - Every dedicated mutation hook invalidates affected TanStack Query keys inside `useMutation({ onSuccess })` per Rule 60? (Rule 60)
    - All client-authored/static user-visible strings use `t('namespace.KEY')` — no hardcoded UI text in components; backend-supplied `response.message` values are displayed as supplied by the API and are NOT passed through `t()` (Rule 61)
    - Locale files named `[featureName]_{lang}.json` and co-located in feature `_locales/`? (Rule 61)
    - `Accept-Language` header attached automatically by central network client? (Rule 61)
@@ -2399,14 +2699,7 @@ The mobile architecture MUST enforce the following security and robustness const
 
 ### Sub-Module `_features.md` Files
 
-For large features with 5+ sub-screens or sub-flows, each major sub-screen folder MAY have its own `_features.md`. These files follow the same quality standard but can be shorter. They MUST still contain:
-- A real Purpose (not "handles X operations")
-- A real Screen + Route table
-- A real API Contract with actual endpoints
-- A real Edge Cases section with feature-specific warnings (minimum 3 items)
-- A Component Responsibility Map
-
-Sub-module files with only generic boilerplate content are considered **undocumented** and MUST be rewritten.
+The module root MUST contain exactly ONE authoritative `[role_module]_features.md` that covers ALL screens, flows, and sub-features of the module. Creating additional `_features.md` files inside sub-folders is FORBIDDEN — it violates Root Quarantine and fragments the AI repair context. All sub-screen documentation MUST be sections within the single root `_features.md`.
 
 ### Documentation Freshness Rule
 
@@ -2442,7 +2735,27 @@ If the user's app is closed or loses internet connection when a server notificat
 
 ## Rule 60 — Strict Cache Invalidation Strategy
 * **The Rule:** TanStack Query (React Query) server state must always remain perfectly synchronized with the backend data.
-* **Implementation:** Every mutation hook (`useMutation`) MUST invalidate affected queries. Since TanStack v5 deprecated callbacks on the mutate function and this architecture bans them inside `useMutation`, you MUST trigger `queryClient.invalidateQueries({ queryKey: [...] })` either explicitly at the call site using `.mutateAsync(...).then(() => ...)` or centrally via a global `mutationCache`. Failing to invalidate queries will cause the UI to display stale, obsolete data after an update.
+* **Implementation:** Every dedicated mutation hook (`useCreateMember.ts`, `useDeleteMember.ts`, etc.) MUST invalidate affected queries inside `onSuccess` within the `useMutation` call. This is the canonical pattern — `onSuccess` inside `useMutation` is **REQUIRED** (not banned) for cache invalidation. The ban applies ONLY to `onSuccess` inside `useQuery`.
+
+```typescript
+// ✅ REQUIRED — onSuccess inside useMutation for cache invalidation
+export function useDeleteManagerMember() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deleteManagerMember(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: MANAGER_MEMBERS_QUERY_KEYS.lists() });
+    },
+  });
+}
+
+// ❌ FORBIDDEN — onSuccess inside useQuery
+const { data } = useQuery({
+  queryKey: MANAGER_MEMBERS_QUERY_KEYS.list(filters),
+  queryFn: () => fetchManagerMembers(filters),
+  onSuccess: (data) => { /* BANNED in TanStack Query v5 */ },
+});
+```
 
 ## Rule 61 — Internationalization (i18n) & Localization
 
@@ -2461,7 +2774,7 @@ Locale files are grouped by feature, NOT by language.
 Do NOT create `src/locales/en/` or any global language folder.
 
 ```json
-// features/frontend_manager/members/_locales/members_en.json
+// src/features/frontend_manager/manager_members/_locales/members_en.json
 {
   "members": {
     "PAGE_TITLE": "Members",
@@ -2503,13 +2816,19 @@ if (isNewBillingEnabled) { ... }
 
 ## Rule 63 — Multi-Currency Monetary Amounts
 
-Rule 63 supersedes the currency portion of Rule 37. Currency formatting is feature-local.
-Currency formatting MUST be feature-local (`[feature]/utils/formatCurrency.ts`). Rule 63 internally handles nulls by returning `—`; `displayValue()` (Rule 38) is NOT called for currency values.
+Rule 63 supersedes the currency portion of Rule 37. Currency formatting is **feature-local** (Strict WET — never in `src/core/`).
+Currency formatting MUST be feature-local (`[feature]/utils/[module]FormatCurrency.ts`, e.g., `managerMembersFormatCurrency.ts`). Rule 63 internally handles nulls by returning `—`; `displayValue()` (Rule 38) is NOT called for currency values.
 
 Only currencies present in the project's approved currency metadata are supported. Unsupported currency codes MUST fail validation. Never silently default an unknown currency to divisor 100.
 
+> ⛔ **AI AGENTS: NEVER import `currencyMetadata` from `@/core/config/currencyMetadata` or any global path. The metadata MUST be self-contained inside the feature-local formatter file. This is a Strict WET requirement — duplicate it per feature.**
+
 ```typescript
-import { currencyMetadata } from '@/core/config/currencyMetadata';
+// currencyMetadata is self-contained inside this file — no external @/core import allowed
+const currencyMetadata: Record<string, { divisor: number }> = {
+  INR: { divisor: 100 }, USD: { divisor: 100 }, EUR: { divisor: 100 },
+  // extend per project approved currencies only
+};
 
 /**
  * Formats a monetary amount from minor units into a localized currency string.
@@ -2572,12 +2891,12 @@ have a deterministic `testID`.
 
 Canonical format:
 
-`testID="[module]-[component]-[action/state]"`
+`testID="[role]_[module]-[component]-[action/state]"`
 
 Examples:
 
-`members-addform-submit`
-`billing-invoice-status-paid`
+`manager_members-addform-submit`
+`manager_billing-invoice-status-paid`
 
 Gesture-driven surfaces MUST expose a `testID` on the view that receives
 the gesture interaction.
@@ -2833,7 +3152,7 @@ Required control files:
 
 ```text
 progress.json
-work-units.json
+work_units.json
 checkpoint-log.md
 ```
 
@@ -2905,7 +3224,7 @@ Reply `continue` to resume from the first unverified or incomplete work unit.
 When the user replies `continue`, the AI MUST:
 
 1. Read `progress.json`;
-2. Read `work-units.json`;
+2. Read `work_units.json`;
 3. Validate checkpoint;
 4. Inspect filesystem;
 5. Compare checkpoint against filesystem;
@@ -2948,7 +3267,7 @@ The final result MUST still satisfy the complete applicable mobile architecture 
 | **Gate 5** | Hardware-Backed Secure Storage Only | Verify auth tokens, refresh tokens, and biometric keys use `react-native-keychain` / Keystore. Zero tokens in `AsyncStorage` | **STOP.** Insecure storage = CRITICAL SECURITY VULNERABILITY |
 | **Gate 6** | Centralized URL Config Present | `config/[featureName].url_config.ts` present, exports all routes/APIs with real paths (zero placeholders) | **STOP.** Missing config = REJECTED DELIVERY |
 | **Gate 7** | Feature Map Non-Generic | `[featureName]_features.md` complete with all 18 mandatory sections (no TBDs or boilerplate) | **STOP.** Generic doc = INCOMPLETE MODULE |
-| **Gate 8** | TanStack Query & Hook Architecture | Query keys registered in `[featureName].query_keys.ts` with resource identity; screens NOT calling `useMutation` directly; `onSuccess` invalidation via `.mutateAsync().then()` | **STOP.** Broken server state / crash |
+| **Gate 8** | TanStack Query & Hook Architecture | Query keys registered in `[featureName].query_keys.ts` with resource identity; screens NOT calling `useMutation` directly; cache invalidation via `useMutation({ onSuccess: () => queryClient.invalidateQueries(...) })` per Rule 60 | **STOP.** Broken server state / crash |
 | **Gate 9** | Form Architecture Compliance | React Hook Form + Zod validator class/schema; zero Yup/Joi; controlled inputs | **STOP.** Broken form validation |
 | **Gate 10** | Screen Thinness Ceilings Enforced | All screens in `screens/` ≤ **80 lines**; composition only; zero business logic or direct API calls | **STOP.** Monolithic screen = ARCHITECTURE FAILURE |
 | **Gate 11** | Scope Integrity Verified | Changed-file list produced — strictly target feature files changed (`features/frontend_{role}/{module}/**`) | **STOP.** Scope leak = REJECTED DELIVERY |
