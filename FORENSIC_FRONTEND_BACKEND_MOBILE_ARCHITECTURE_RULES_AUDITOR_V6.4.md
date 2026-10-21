@@ -1,4 +1,4 @@
-﻿# FORENSIC FRONTEND BACKEND MOBILE ARCHITECTURE RULES AUDITOR — V6.4
+# FORENSIC FRONTEND BACKEND MOBILE ARCHITECTURE RULES AUDITOR — V6.5
 
 ## FORENSIC SOFTWARE / ARCHITECTURE / UI-UX / CONTRACT COMPLIANCE AUDIT
 
@@ -6,9 +6,38 @@
 
 ---
 
+## Master Cross-Document Precedence Order
+
+When instructions conflict across documents or supplied sources, apply this exact order of authority:
+
+1. Security, privacy, legal, authorization, tenant isolation, and data-protection rules
+2. Accessibility and platform-native safety requirements
+3. Explicit user-approved scope and verified API contracts
+4. Normative architecture rules (`MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md` / `WEB_FRONTEND_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md` / `BACKEND_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md`)
+5. Design-system rules (`MOBILE_UI_UX_DESIGN.md` / `FRONTEND_UI_UX_DESIGN.md`) for visual/token decisions
+6. Execution workflow documents (`FRONTEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_V2_5.md` / `BACKEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_FROM_FRONTEND_V6_3.md`) for audit sequencing, delivery artifacts, and reporting
+7. Feature-local documentation trio (`_features.md`, `_forbidden.md`, `_theme_contract.md`)
+8. Existing implementation conventions
+
+A lower-priority rule MUST NOT override a higher-priority rule.
+Any unresolved conflict MUST be recorded as `BLOCKED_BY_SUPPLIED_CONTRACT` rather than resolved through invention.
+
+## Canonical Rule Reference Policy
+
+When a rule is repeated for convenience:
+- The first named canonical section is authoritative;
+- Repeated copies must link to or reference the canonical rule;
+- Repeated copies must not redefine, weaken, or conflict with the canonical wording;
+- Any conflicting duplicate wording is obsolete and must be removed during the next document revision.
+
+---
+
 > ⛔⛔⛔ **AI MANDATORY BOOT SEQUENCE — EXECUTE BEFORE ANYTHING ELSE** ⛔⛔⛔
 >
-> **VIOLATION OF THIS BOOT SEQUENCE = THE ENTIRE AUDIT OUTPUT IS DISCARDED AND MUST BE RESTARTED.**
+> **COMPLIANCE FAILURE HANDLING (EVIDENCE-BASED AUDIT):**
+> A compliance violation triggers a mandatory stop only for the affected work path.
+> The violation must be recorded, repaired, and rechecked before continuation.
+> Previously verified and unaffected work remains valid and must not be discarded.
 >
 > Before producing ANY analysis, findings, or audit content, you MUST output ALL of the following in your VERY FIRST response:
 >
@@ -283,22 +312,25 @@ Repository Metadata
 Commit / Revision Metadata
 ```
 
-## GLOBAL AUTHORITATIVE PRECEDENCE ORDER
+## GLOBAL AUTHORITATIVE PRECEDENCE ORDER (MASTER CROSS-DOCUMENT PRECEDENCE)
 
-When multiple supplied sources conflict, resolve them in the following order:
+When multiple supplied sources or rules conflict, resolve them in this exact canonical order:
 
-1. Security, privacy, authorization, tenant isolation, legal/compliance, and data-integrity requirements
-2. Explicit architecture and framework rules
-3. Explicit API/domain contracts
-4. Repository conventions within the supplied writable scope
-5. Frontend API-client/network behavior
-6. Frontend schemas, hooks, tests, mocks, fixtures, and static UI behavior
-7. AI inference or general framework conventions
+1. Security, privacy, legal, authorization, tenant isolation, and data-protection rules
+2. Accessibility and platform-native safety requirements
+3. Explicit user-approved scope and verified API contracts
+4. Normative architecture rules (`MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md` / `WEB_FRONTEND_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md` / `BACKEND_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md`)
+5. Design-system rules (`MOBILE_UI_UX_DESIGN.md` / `FRONTEND_UI_UX_DESIGN.md`) for visual/token decisions
+6. Execution workflow documents (`FRONTEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_V2_5.md` / `BACKEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_FROM_FRONTEND_V6_3.md`) for execution workflow, audit sequencing, delivery artifacts, and reporting
+7. Feature-local documentation trio (`_features.md`, `_forbidden.md`, `_theme_contract.md`)
+8. Existing implementation conventions
+
+A lower-priority rule MUST NOT override a higher-priority rule.
 
 If a conflict remains unresolved at the same precedence level:
 - Do NOT guess
 - Do NOT silently choose
-- Record `AUTHORITATIVE_CONFLICT`
+- Record `BLOCKED_BY_SUPPLIED_CONTRACT`
 - Record both sources
 - Record impact
 - Record required owner decision
@@ -1073,7 +1105,7 @@ If no ZIP is uploaded (e.g. repo access), use the project or folder name as the 
 >
 > 🎯 **TARGETED / SCOPED INSPECTION EXCEPTION:** If the user explicitly asks to audit or verify a specific individual file, component, diff, or single module (e.g. *"Audit this file"*, *"Sirf ye component check karo"*, *"Check this diff"*), the auditor operates in **TARGETED / SCOPED AUDIT MODE**. In Targeted Mode, you inspect the requested target immediately against all relevant architecture rules and deliver the findings without forcing a 15-batch repo-wide Chunk Map.
 >
-> **Consequence: Starting unauthorized unmapped inspection during a full-repo audit = audit must restart from Phase 1.**
+> **Consequence: Starting unauthorized unmapped inspection during a full-repo audit triggers an immediate stop for the unmapped path. The unmapped findings must be invalidated, and Phase 1 batch mapping must be completed before inspection continues.**
 
 If the repository requires multi-batch execution, your FIRST response to the user MUST be the Audit Chunk Map and NOTHING ELSE (unless the user explicitly requested a targeted single-file or single-module audit). No multi-batch code inspection may begin until the map is published and the user approves it. (Note: If it is a small single-turn audit or scoped request, you may output the final report immediately as per Mode C).
 
@@ -1651,6 +1683,26 @@ just because a complete audit would be easier if the missing evidence existed.
 - Runtime execution limitations belong strictly to `HOST_RUNTIME_BLOCKED_VERIFICATION` (verification deferred to host/runtime) — they do NOT block source auditing or code inspection.
 - **ISOLATED ROLE / MODULE BOUNDARY:** When an isolated role module (e.g., `superadmin.zip`, `frontend_superadmin.zip`, `backend_superadmin/`) is supplied, host application root files (`package.json`, root `tsconfig.json`, `next.config.js`, root route tree / `layout.tsx`) are host monolith responsibilities. Their absence MUST NOT be treated as a blocker for auditing the supplied module, and the auditor MUST NOT stop or request the user to provide host slices, package manifests, or route trees.
 
+
+## Contract Finding and Delivery Status Taxonomy (MANDATORY)
+
+Audit findings and reported repair statuses MUST strictly adhere to this standardized taxonomy:
+
+### Finding Codes
+- `CONTRACT_NOT_FOUND_IN_WEB_ZIP` — Requested endpoint or data field is completely absent from supplied source evidence.
+- `CONTRACT_AMBIGUOUS` — Evidence contains conflicting, contradictory, or multiple plausible definitions.
+- `CONTRACT_CONFLICT` — Explicit contradiction between supplied contract and normative architecture/security rules.
+- `CONTRACT_INCOMPLETE` — Contract declares an operation but omits required parameters, payload schema, or response model.
+
+### Final Delivery / Blocking Statuses
+- `SOURCE_COMPLETE_AND_ARTIFACT_GENERATED` — All source code is written, verified, and packaged into the requested ZIP artifact.
+- `SOURCE_COMPLETE_ARTIFACT_PENDING_HOST_PACKAGING` — All source code is completely written and verified, but archive creation CLI is unavailable.
+- `SOURCE_COMPLETE_RUNTIME_VERIFICATION_DEFERRED` — Source code is complete, but live runtime (Metro, simulator, device) verification is deferred to host.
+- `BLOCKED_BY_SUPPLIED_CONTRACT` — Module cannot safely proceed because a core business invariant or contract is ambiguous or contradictory.
+- `BLOCKED_BY_EXPLICIT_SCOPE_RESTRICTION` — Requested changes lie strictly outside granted writable boundaries.
+
+A finding code explains the issue.
+A delivery/blocking status explains the final execution outcome.
 
 ## DEFECT FIX CLASSIFICATION TAXONOMY (MANDATORY)
 
@@ -2839,9 +2891,10 @@ If the target is Mobile (React Native), inspect ALL of the following where appli
 - Generic keys like `['members']` or `['profile']` are forbidden
 - Mutations MUST be orchestrated through dedicated mutation hooks (e.g., `useCreateMember.ts`)
 - Screens MUST NOT call `useMutation()` directly
-- `onSuccess` inside `useMutation()` is BANNED — use `.mutateAsync().then()` or global `mutationCache` instead
-- Server state (API data) MUST use TanStack Query - NOT duplicated into a Zustand store
-- Shared client UI state MUST use feature-scoped Zustand stores - NOT one global store
+- `onSuccess` / `onError` callbacks inside `useQuery()` are BANNED in TanStack Query v5 (use derived state or useEffect)
+- `onSuccess` inside `useMutation()` is REQUIRED for query cache invalidation via `queryClient.invalidateQueries(...)` per Rule 60
+- Server state (API data) MUST use TanStack Query — NOT duplicated into a Zustand store
+- Shared client UI state MUST use feature-scoped Zustand stores — NOT one global store
 
 ### Form & Keyboard Handling
 - Every form screen MUST wrap content in `KeyboardAvoidingView` with `behavior={Platform.OS === 'ios' ? 'padding' : 'height'}` and `ScrollView keyboardShouldPersistTaps="handled"` -- missing this causes keyboard to cover inputs on iOS
@@ -2872,14 +2925,22 @@ If the target is Mobile (React Native), inspect ALL of the following where appli
 - Every screen MUST set `<StatusBar>` explicitly (style, backgroundColor) -- no screen may inherit StatusBar from the host app shell
 - Every screen root MUST use `<SafeAreaView>` from `react-native-safe-area-context` -- NEVER from `react-native` core
 
-### Design Token Shape (Flat camelCase -- CRITICAL)
-- Mobile tokens use FLAT camelCase shape -- nested paths are WRONG
-- CORRECT: `tokens.color.card`, `tokens.color.foreground`, `tokens.color.statusSuccessBg`, `tokens.color.statusDangerText`, `tokens.color.textMuted`
-- WRONG: `tokens.color.surface.card`, `tokens.color.text.primary`, `tokens.color.status.successBg`
-- Any nested token path in mobile StyleSheets = FAIL -- report as `WRONG_TOKEN_PATH`
-- StyleSheet values that cannot use a token MUST have an inline `// design-exception:` comment -- absence = FAIL
-- Server state (API data) MUST use TanStack Query — NOT duplicated into a Zustand store
-- Shared client UI state MUST use feature-scoped Zustand stores — NOT one global store
+### Design Token Shape & Modern Hook Architecture (CRITICAL)
+- Feature UI MUST consume tokens dynamically via `const tokens = useThemeTokens()`; static import of `tokens.ts` directly in feature UI is a CRITICAL VIOLATION (`FAIL — STATIC_TOKEN_IMPORT_BANNED`)
+- Mobile tokens use FLAT camelCase shape — nested paths are WRONG:
+  - CORRECT: `tokens.color.card`, `tokens.color.foreground`, `tokens.color.statusSuccessBg`, `tokens.color.statusDangerText`, `tokens.color.textMuted`
+  - WRONG: `tokens.color.surface.card`, `tokens.color.text.primary`, `tokens.color.status.successBg`
+- Canonical payment tokens MUST be used for payment badges:
+  - `tokens.color.payCashText` / `tokens.color.payCashBg`
+  - `tokens.color.payUpiText` / `tokens.color.payUpiBg`
+  - `tokens.color.payCardText` / `tokens.color.payCardBg`
+  - `tokens.color.payBankText` / `tokens.color.payBankBg`
+  - `tokens.color.payment.*` is OBSOLETE and FORBIDDEN
+- Shadows and elevation MUST resolve via `getShadowStyle('sm' | 'md' | 'lg' | 'xl')` from `@/core/theme/getShadowStyle`
+  - Direct shadow composition and `tokens.shadow.card` are FORBIDDEN
+- Any nested token path in mobile StyleSheets = FAIL — report as `WRONG_TOKEN_PATH`
+- StyleSheet values that cannot use a token MUST have an inline `// design-exception: <reason>` comment — absence = FAIL
+- App Upgrade & Backward Compatibility (Rule 68): Verify safe schema evolution, tenant-bound cache clearing on logout/switch, and deep-link backwards compatibility
 
 ### Device Permissions
 - Camera, Location, Storage, Notifications, Biometrics — ALL must go through ONE central permissions module
@@ -2891,7 +2952,7 @@ If the target is Mobile (React Native), inspect ALL of the following where appli
 - Every interactive element MUST have `accessibilityLabel` with a human-readable description -- empty or undefined labels = FAIL
 - Every interactive element MUST have correct `accessibilityRole` (`button`, `link`, `checkbox`, `tab`, etc.)
 - Stateful controls (toggle, checkbox, tab) MUST set `accessibilityState` (`checked`, `selected`, `disabled`) reactively
-- All touch targets MUST be minimum 44x44pt -- icon-only buttons smaller than 44pt without padding = FAIL
+- Touch target sizing MUST resolve via `getMinTouchTarget()` from `@/core/theme/getMinTouchTarget` (resolves to 44pt on iOS, 48dp on Android). Interactive targets smaller than 44pt (iOS) / 48dp (Android) without `hitSlop` = FAIL
 - Purely decorative icons MUST have `accessible={false}` and `importantForAccessibility="no-hide-descendants"`
 
 ### i18n (Mobile-Specific)
@@ -3206,6 +3267,14 @@ Check whether those attributes are:
 - semantically appropriate;
 - connected to actual controls;
 - consistent with interaction behavior.
+
+### Async Status Announcement Rule (Mobile React Native)
+For asynchronous success, validation, warning, and error updates:
+- **Android:** Use `accessibilityLiveRegion="polite"` (non-critical) or `"assertive"` (critical errors).
+- **iOS:** Use `AccessibilityInfo.announceForAccessibility(localizedMessage)`.
+- Cross-platform critical announcements may use both mechanisms where supported.
+- Announcements MUST use localized, user-safe text.
+- Raw server errors, stack traces, and unvalidated response text MUST NOT be announced.
 
 ### Mobile Accessibility Specifics (React Native)
 When auditing React Native, additionally verify:
@@ -3555,12 +3624,13 @@ If MOBILE FRONTEND (React Native) is in scope, verify the E2E test structure:
 ```text
 Verify:
 [ ] Mobile E2E tests live in a separate top-level `mobile_e2e/` directory
-[ ] Internal structure mirrors the mobile route structure:
-    e.g., `mobile_e2e/mobile_admin_e2e/members/members.yaml`
+[ ] Canonical path: `mobile_e2e/frontend_{role}_e2e/{role}_{module}/{role}_{module}.yaml`
+    (e.g., `mobile_e2e/frontend_admin_e2e/admin_members/admin_members.yaml`)
+[ ] Executable E2E YAML files MUST NOT be stored inside `src/features/`
 [ ] E2E tests use Maestro as the test tool (YAML-based)
 [ ] WET (Write Everything Twice) principle: NO shared `utils/` or `shared/` folders in mobile_e2e/
-[ ] Each module's E2E tests are 100% self-contained — login helpers, fixtures duplicated per module
-[ ] No cross-module imports: `mobile_admin_e2e/members/` MUST NOT import from `mobile_admin_e2e/dashboard/`
+[ ] Each module's E2E tests are 100% self-contained — login helpers, fixtures duplicated per module under `helpers/`
+[ ] No cross-module imports: `frontend_{role}_e2e/{role}_{module}/` MUST NOT import from sibling E2E suites
 [ ] A developer must be able to ZIP only one module's E2E folder and run it independently
 [ ] Each Maestro YAML flow covers: happy path, empty state, error state (API failure), and offline state
 [ ] Destructive action flows verify the ConfirmBottomSheet appears before the action executes
@@ -3645,36 +3715,49 @@ For every frontend feature module, verify that ALL THREE mandatory documentation
 [ ] [featureName]_forbidden.md    — MANDATORY (must list concrete forbidden patterns for this module)
 [ ] [featureName]_theme_contract.md — MANDATORY (must list all design tokens used by this module)
 
-> **MOBILE DOCUMENTATION NOTE:** For React Native modules, the `_features.md` MUST contain all 18 mandatory sections: (1) Overview, (2) User Stories, (3) Screen Inventory, (4) Navigation Flow, (5) API Contract, (6) State Management, (7) Component Tree, (8) Token Usage, (9) Permission Requirements, (10) Error States, (11) Empty States, (12) Loading States, (13) Offline Behaviour, (14) Accessibility Notes, (15) i18n Keys, (16) Mock Fixture Strategy, (17) Rule Compliance Checklist, (18) Deferred / Out-of-Scope items.
+> **MANDATORY FRONTMATTER REQUIREMENT (`_features.md`):**
+> Every `_features.md` MUST begin with this structured YAML frontmatter:
+> ```yaml
+> ---
+> feature: "{role}_{module}"
+> owner_role: "{role}"
+> module_version: 1
+> api_contract_source: "verified-api-contract | web-zip-extraction | supplied-scope"
+> last_verified_date: "YYYY-MM-DD"
+> last_verified_commit: "commit-sha-or-host-unavailable"
+> documentation_status: "current"
+> ---
+> ```
+> Missing or non-structured frontmatter = `FAIL — DOCUMENTATION_HEADER_INVALID`.
 ```
 
 **Missing any of these 3 files = FAIL.**
 
 **A file that exists but contains only generic boilerplate or placeholder text = PARTIAL.**
 
-### `_features.md` MANDATORY SECTION AUDIT
+### `_features.md` MANDATORY SECTION AUDIT (CANONICAL 18 SECTIONS)
 
-Every `_features.md` file MUST contain ALL 18 of these sections. Missing even one = PARTIAL.
+Every `_features.md` file MUST contain ALL 18 of these canonical sections with non-generic content. Missing even one = PARTIAL:
 
 ```text
-[ ] 1. Purpose
-[ ] 2. Dependency Manifest
-[ ] 3. Feature Lifecycle Contract
-[ ] 4. Screens & Entry Points
-[ ] 5. Folder Structure
-[ ] 6. User Flows & Interactions
-[ ] 7. Data & State Architecture
-[ ] 8. API Contract
-[ ] 9. Approved External Dependencies
-[ ] 10. Permissions Used
-[ ] 11. Platform-Specific Notes
-[ ] 12. Offline Behavior
-[ ] 13. Loading/Empty/Error States
-[ ] 14. Background Tasks
-[ ] 15. Edge Cases and AI Warnings
-[ ] 16. Component Responsibility Map
-[ ] 17. Rule Compliance Checklist
-[ ] 18. Known Issues / Tech Debt
+[ ] 1. ## Scope and Non-Scope
+[ ] 2. ## Screen Inventory
+[ ] 3. ## Navigation Contract
+[ ] 4. ## API Contract
+[ ] 5. ## Query Key Registry
+[ ] 6. ## Mutation Inventory
+[ ] 7. ## Permissions and Role Rules
+[ ] 8. ## State Ownership
+[ ] 9. ## Offline and Reconnect Behavior
+[ ] 10. ## Security and PII Rules
+[ ] 11. ## Accessibility Requirements
+[ ] 12. ## Background Tasks
+[ ] 13. ## Feature Flags
+[ ] 14. ## Cache Invalidation
+[ ] 15. ## Migration and Rollback
+[ ] 16. ## Test Coverage Map
+[ ] 17. ## Architecture Exceptions (must document any // architecture-exception: comments)
+[ ] 18. ## Known Contract Gaps
 ```
 
 ### `_theme_contract.md` AUDIT
@@ -5491,7 +5574,14 @@ Current implementation mein mutation ka evidence milta hai, lekin required audit
 
 # 83. REPORT DELIVERY
 
-## MODE A — MARKDOWN FILE CAN BE CREATED
+## Capability-Truth Delivery Rule (Audit Reports)
+
+The auditor MUST report delivery status truthfully per available environment capabilities:
+- If file writing is available: write `DEEP-VERIFICATION-REPORT.md` (or `[module]_deep_verification_report.md`) to disk and report status as `SOURCE_COMPLETE_AND_ARTIFACT_GENERATED`.
+- If file writing is unavailable: output the complete, untruncated 15-section report directly in the interface and report status as `SOURCE_COMPLETE_ARTIFACT_PENDING_HOST_PACKAGING`.
+Missing host file-system access MUST NOT downgrade audit accuracy or cause a failure declaration.
+
+## MODE A — FILE CREATION AVAILABLE
 
 Create exactly:
 
@@ -5514,6 +5604,7 @@ CURRENT RATING: X.X / 10
 PROJECTED AFTER IDENTIFIED FIXES: Y.Y / 10
 MAX ACHIEVABLE: Z.Z / 10
 AUDIT CONFIDENCE: HIGH | MEDIUM | LOW
+DELIVERY STATUS: SOURCE_COMPLETE_AND_ARTIFACT_GENERATED
 
 P0: N
 P1: N
@@ -5521,39 +5612,22 @@ P2: N
 P3: N
 ```
 
-**CRITICAL DOWNLOADABLE FILE RULE (NON-NEGOTIABLE):**
-1. You MUST write the final report to an actual file named `[zip_name]_deep_verification_report.md`.
-2. IMMEDIATELY after writing the file, you MUST emit the platform's file render/download component for that exact file path so the user receives a one-click download link. 
-3. Writing the file without rendering the UI download component is considered a CRITICAL FAILURE. Do NOT print the 15-section report as raw chat text.
+**DOWNLOADABLE FILE PROTOCOL:**
+1. Write the final report to `[module]_deep_verification_report.md` (or `DEEP-VERIFICATION-REPORT.md`).
+2. Where supported by the platform, render the file download link for that path.
+3. If file tools are present, do NOT paste the full 15-section report as raw chat text.
 
-Do NOT paste the full report into chat.
+## MODE B — INTERFACE ONLY (FILE GENERATION UNAVAILABLE)
 
-Never truncate.
-
-Never use:
-
-```text
-...
-etc.
-see above
-remaining issues omitted
-```
-
-If message limits require splitting:
-
-```text
-[PART 1 of N — Sections 1-4]
-
-[PART 2 of N — Sections 5-8]
-
-[PART 3 of N — Sections 9-12]
-
-[PART N of N — Sections 13-15]
-
-[END OF REPORT]
-```
-
-Every section must remain complete.
+If the environment lacks file-writing tools:
+1. Output the complete 15-section report directly within the response interface without truncation.
+2. Report DELIVERY STATUS as `SOURCE_COMPLETE_ARTIFACT_PENDING_HOST_PACKAGING`.
+3. Never use ellipsis (`...`), `etc.`, or omit findings to save space.
+4. If output length requires chunked responses, divide cleanly:
+   - Part 1: Sections 1–4
+   - Part 2: Sections 5–8
+   - Part 3: Sections 9–12
+   - Part 4: Sections 13–15
 
 ## MODE C — MULTI-BATCH AUDIT IN PROGRESS (V6.3)
 
