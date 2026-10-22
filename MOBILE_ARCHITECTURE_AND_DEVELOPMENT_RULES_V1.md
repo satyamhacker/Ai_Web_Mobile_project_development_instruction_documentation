@@ -2141,6 +2141,13 @@ None
   - *Empty State:* Set filter or mock flag `?empty=true` to trigger `[Feature]EmptyState.tsx`
   - *Error State:* Mock endpoint throws 500 / network error to trigger `[Feature]ErrorFallback.tsx`
   - *Offline Blocker:* Simulate zero connectivity with empty cache to trigger `[Feature]OfflineBlocker.tsx`
+
+## Module Changelog & Revision History
+[REQUIRED: Every major modification, schema change, or bug fix MUST append an entry here to preserve AI audit trail.]
+
+| Version | Date | Author / Agent | Changes & Architectural Rationale |
+|---|---|---|---|
+| v1.0.0 | [YYYY-MM-DD] | [Engineer/AI] | Initial canonical module implementation with MSW mocks and doc trio |
 ```
 
 ### Documentation Freshness Rule
@@ -3381,6 +3388,7 @@ Every feature's `_features.md` MUST define these sections with non-generic conte
 18. `## Logical Integration Points (Zero Code Imports)` (documents conceptual cross-feature touchpoints with zero code imports)
 19. `## Known Contract Gaps & Bug Log`
 20. `## Module Run, Mock & Test Harness` (isolated test commands, Maestro suite, test user credentials, mock scenario toggles)
+21. `## Module Changelog & Revision History` (documents version history and rationale for AI audit trail)
 
 CI MUST fail when a changed feature source file does not have a corresponding update to its `[feature]_features.md`, unless the change is test-only or a documented no-behavior-change refactor.
 
@@ -4120,7 +4128,7 @@ and MUST NOT claim that a ZIP was generated.
 | **Gate 4** | Zero Hardcoded Colors or Insets | Grep for hex `#`, `rgb(`, raw sizes without `// design-exception: <reason>` | **STOP.** Hardcoded style = REJECTED DELIVERY |
 | **Gate 5** | Hardware-Backed Secure Storage Only | Verify auth tokens, refresh tokens, and biometric keys use `react-native-keychain` / Keystore. Zero tokens in `AsyncStorage` | **STOP.** Insecure storage = CRITICAL SECURITY VULNERABILITY |
 | **Gate 6** | Centralized URL Config Present | `config/[featureName].url_config.ts` present, exports all routes/APIs with real paths (zero placeholders) | **STOP.** Missing config = REJECTED DELIVERY |
-| **Gate 7** | Feature Map Non-Generic | `[featureName]_features.md` complete with all 20 mandatory sections (no TBDs or boilerplate) | **STOP.** Generic doc = INCOMPLETE MODULE |
+| **Gate 7** | Feature Map Non-Generic | `[featureName]_features.md` complete with all 21 mandatory sections (no TBDs or boilerplate) | **STOP.** Generic doc = INCOMPLETE MODULE |
 | **Gate 8** | TanStack Query & Hook Architecture | Query keys registered in `[featureName].query_keys.ts` with resource identity; screens NOT calling `useMutation` directly; cache invalidation via `useMutation({ onSuccess: () => queryClient.invalidateQueries(...) })` per Rule 60 | **STOP.** Broken server state / crash |
 | **Gate 9** | Form Architecture Compliance | React Hook Form + Zod validator class/schema; zero Yup/Joi; controlled inputs | **STOP.** Broken form validation |
 | **Gate 10** | Screen Thinness Ceilings Enforced | All screens in `screens/` ≤ **80 lines**; composition only; zero business logic or direct API calls | **STOP.** Monolithic screen = ARCHITECTURE FAILURE |

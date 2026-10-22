@@ -1816,6 +1816,13 @@ None
   - *Error State:* Trigger 500 error / network failure to verify `error.tsx` boundary with retry CTA
   - *Permission Denied:* Set role to unauthorized to verify 403 / redirect
 
+## Module Changelog & Revision History
+[REQUIRED: Every major modification, schema change, or bug fix MUST append an entry here to preserve AI audit trail.]
+
+| Version | Date | Author / Agent | Changes & Architectural Rationale |
+|---|---|---|---|
+| v1.0.0 | [YYYY-MM-DD] | [Engineer/AI] | Initial canonical module implementation with MSW mocks and doc trio |
+
 ## Rule Compliance Checklist
 [REQUIRED: Every checkbox must be honestly marked. Do NOT mark [x] if the rule is not
 actually implemented. An honest [ ] is better than a false [x].]
