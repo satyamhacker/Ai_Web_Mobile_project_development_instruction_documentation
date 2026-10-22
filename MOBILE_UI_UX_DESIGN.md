@@ -176,7 +176,7 @@ A numeric visual value is permitted only when:
 **Exception Process — Controlled Runtime Values:**
 Locally derived layout values are permitted ONLY when the value cannot be expressed as a static token AND an explicit `// design-exception: <reason>` comment documents why. Permitted exception categories:
 - Safe-area insets (from `useSafeAreaInsets()`) — device-dependent at runtime
-- Device screen dimensions (from `Dimensions.get('window')`) — cannot be a static token
+- Device screen dimensions (from `useWindowDimensions()` hook — static `Dimensions.get()` is FORBIDDEN due to orientation and foldable device failure)
 - Keyboard offset height — varies per device and input type
 - Image aspect ratios computed from API-provided dimensions
 - Animation interpolation output ranges — runtime-derived from gesture values
@@ -639,15 +639,17 @@ Inline validation error messages appear **below** the field in `caption` typogra
 
 Every screen section that loads data MUST implement all applicable states.
 No component may ship without its loading, empty, and error states.
+Every state MUST be deterministically testable via the module's `mocks/scenarios/[role_module].scenarios.ts` presets.
 
-| State | When to show | Implementation |
-|---|---|---|
-| **Loading / skeleton** | Data fetch in progress | A skeleton component that mimics the exact layout of the real content. Use `skeleton-base` for shimmer base, `skeleton-highlight` for shimmer highlight. **Never a full-screen spinner for content areas** — spinner only for button-level actions. |
-| **Empty** | Fetch succeeded, zero results | A dedicated `[Feature]EmptyState` component with a contextual icon, a short human-readable message, and a primary CTA (e.g. "Add your first member"). Never a blank white screen. |
-| **Error** | Fetch failed or network error | A `[Feature]ErrorFallback` component showing a safe user-facing message, a "Try again" retry button, and optionally a help link. Use backend `response.message` only when the API contract explicitly guarantees that it is user-safe and localized for the active app locale. Otherwise show a feature-specific translated fallback through `t('...')`. Never expose raw Axios errors, JavaScript errors, stack traces, raw `error.message`, or unvalidated server text. |
-| **Permission denied** | User lacks role access to the resource | A `[Feature]PermissionDenied` component explaining the access restriction. Never show a blank screen or a cryptic error code. |
-| **Offline** | No network detected (if offline is a declared feature) | An inline `OfflineBanner` (not a full-screen takeover) with the last-cached data still visible. Only for features that explicitly declare offline support in `_features.md`. |
-| **Offline Blocker** | No network AND feature has no cached data to show | A full-screen `[Feature]OfflineBlocker` component that blocks interaction and explains the feature requires connectivity. Use ONLY when the feature cannot function at all without network (e.g., payment processing). Never use `OfflineBlocker` for features that can show cached data — use `OfflineBanner` instead. |
+| State | Canonical Scenario Key | When to show | Implementation |
+|---|---|---|---|
+| **Sunny Day / Populated** | `ACTIVE_RECORDS` | Normal list/detail render | Real fixture/backend response rendered via semantic tokens. |
+| **Loading / skeleton** | `NETWORK_TIMEOUT` | Data fetch in progress | A skeleton component that mimics the exact layout of the real content. Use `skeleton-base` for shimmer base, `skeleton-highlight` for shimmer highlight. **Never a full-screen spinner for content areas** — spinner only for button-level actions. |
+| **Empty** | `EMPTY_DATA` | Fetch succeeded, zero results (`data: []`) | A dedicated `[Feature]EmptyState` component with a contextual icon, a short human-readable message, and a primary CTA (e.g. "Add your first member"). Never a blank white screen. |
+| **Error** | `SERVER_500_ERROR` | Fetch failed or network error (500) | A `[Feature]ErrorFallback` component showing a safe user-facing message, a "Try again" retry button, and optionally a help link. Use backend `response.message` only when the API contract explicitly guarantees that it is user-safe and localized for the active app locale. Otherwise show a feature-specific translated fallback through `t('...')`. Never expose raw Axios errors, JavaScript errors, stack traces, raw `error.message`, or unvalidated server text. |
+| **Permission denied** | `UNAUTHORIZED_401` | User lacks role access to the resource (401/403) | A `[Feature]PermissionDenied` component explaining the access restriction. Never show a blank screen or a cryptic error code. |
+| **Offline** | `NETWORK_TIMEOUT` | No network detected (if offline is a declared feature) | An inline `OfflineBanner` (not a full-screen takeover) with the last-cached data still visible. Only for features that explicitly declare offline support in `_features.md`. |
+| **Offline Blocker** | `NETWORK_TIMEOUT` | No network AND feature has no cached data to show | A full-screen `[Feature]OfflineBlocker` component that blocks interaction and explains the feature requires connectivity. Use ONLY when the feature cannot function at all without network (e.g., payment processing). Never use `OfflineBlocker` for features that can show cached data — use `OfflineBanner` instead. |
 
 ## 14. Safe Area & Notch Handling
 
@@ -1191,6 +1193,7 @@ When a custom Android `BackHandler` is required:
 - [ ] **Error State:** `[Feature]ErrorFallback.tsx` rendered with retry button and user-friendly message. — *STOP if raw JavaScript exception shown to user.*
 - [ ] **Permission Denied State:** `[Feature]PermissionDenied.tsx` rendered with clear rationale and settings deep link. — *STOP if feature silently fails when permission denied.*
 - [ ] **Offline State:** Non-blocking banner displayed if feature declares offline support. — *STOP if app crashes or locks up when offline.*
+- [ ] **Mock Scenario Validation:** All 5 canonical scenarios (`ACTIVE_RECORDS`, `EMPTY_DATA`, `SERVER_500_ERROR`, `NETWORK_TIMEOUT`, `UNAUTHORIZED_401`) validated against the UI using the standalone `bootstrap.ts` harness. — *STOP if any scenario fails to render or crashes.*
 
 ### 3. Accessibility Gate (Section 1C)
 - [ ] **Interactive Labels:** All interactive elements have meaningful `accessibilityLabel` strings. — *STOP if icon-only button lacks accessibility label.*
