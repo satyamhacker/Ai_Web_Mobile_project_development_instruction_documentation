@@ -14,13 +14,43 @@ When instructions conflict across documents or supplied sources, apply this exac
 2. Accessibility and platform-native safety requirements
 3. Explicit user-approved scope and verified API contracts
 4. Normative architecture rules (`MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md` / `WEB_FRONTEND_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md` / `BACKEND_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md`)
-5. Design-system rules (`MOBILE_UI_UX_DESIGN.md` / `FRONTEND_UI_UX_DESIGN.md`) for visual/token decisions
+5. Design-system rules (`MOBILE_UI_UX_DESIGN.md` / `WEB_FRONTEND_UI_UX_DESIGN.md`) for visual/token decisions
 6. Execution workflow documents (`FRONTEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_V2_11.md` / `BACKEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_FROM_FRONTEND_V6_3.md`) for audit sequencing, delivery artifacts, and reporting
 7. Feature-local documentation trio (`_features.md`, `_forbidden.md`, `_theme_contract.md`)
 8. Existing implementation conventions
 
 A lower-priority rule MUST NOT override a higher-priority rule.
-Any unresolved conflict MUST be recorded as `BLOCKED_BY_SUPPLIED_CONTRACT` rather than resolved through invention.
+Any unresolved conflict MUST be recorded per the canonical conflict taxonomy below rather than resolved through invention.
+
+## CANONICAL CONFLICT AND BLOCKER TAXONOMY
+
+Use exactly one primary status per issue:
+
+- `SOURCE_CONFLICT`
+  Two supplied authoritative documents or requirements conflict and no explicit
+  supersession exists.
+
+- `CONTRACT_CONFLICT`
+  Supplied API/product/domain contract conflicts with observed frontend, backend,
+  generated client, mock, schema, or test behavior.
+
+- `BLOCKED_BY_SUPPLIED_SCOPE`
+  Required evidence, implementation, contract, source file, runtime evidence, or
+  product requirement was not supplied.
+
+- `NOT_VERIFIED`
+  Evidence exists partially but is insufficient to prove compliance or failure.
+
+- `NOT_APPLICABLE`
+  The rule genuinely does not apply to the detected stack, framework, mode, or
+  feature behavior.
+
+`HUMAN_ARCHITECTURAL_DECISION_REQUIRED` is an escalation action, not a primary
+finding status. It MUST accompany `SOURCE_CONFLICT` or `CONTRACT_CONFLICT` where
+a human decision is required.
+
+The AI MUST NOT use `BLOCKED_BY_SUPPLIED_CONTRACT` for a conflict when the actual
+problem is missing evidence. Use `BLOCKED_BY_SUPPLIED_SCOPE` instead.
 
 ## Canonical Rule Reference Policy
 
@@ -29,6 +59,22 @@ When a rule is repeated for convenience:
 - Repeated copies must link to or reference the canonical rule;
 - Repeated copies must not redefine, weaken, or conflict with the canonical wording;
 - Any conflicting duplicate wording is obsolete and must be removed during the next document revision.
+
+The forensic auditor MUST NOT duplicate volatile implementation conventions from
+architecture documents unless it cites the exact canonical rule and version.
+
+Examples of volatile conventions include:
+- URL-config export names;
+- route-group policy;
+- test-runner choice;
+- directory naming;
+- generated-client paths;
+- E2E helper-sharing policy;
+- API response envelope names.
+
+Where feasible, the auditor must state:
+"Validate against the current canonical architecture rule [Rule ID]"
+rather than creating a parallel hardcoded rule copy.
 
 ---
 
@@ -49,7 +95,7 @@ When a rule is repeated for convenience:
 > Before producing ANY analysis, findings, or audit content, you MUST output ALL of the following in your VERY FIRST response:
 >
 > ```
-> FORENSIC AUDITOR V6.4 — BOOT DECLARATION
+> FORENSIC AUDITOR V6.5 — BOOT DECLARATION
 > ==========================================
 > ROLE:              Forensic Audit-Only AI (NO code editing, NO repairs)
 > AUDIT TARGET:      [FRONTEND / BACKEND / INTEGRATION / UNKNOWN — derive from supplied inputs]
@@ -364,7 +410,7 @@ When multiple supplied sources or rules conflict, resolve them in this exact can
 2. Accessibility and platform-native safety requirements
 3. Explicit user-approved scope and verified API contracts
 4. Normative architecture rules (`MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md` / `WEB_FRONTEND_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md` / `BACKEND_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md`)
-5. Design-system rules (`MOBILE_UI_UX_DESIGN.md` / `FRONTEND_UI_UX_DESIGN.md`) for visual/token decisions
+5. Design-system rules (`MOBILE_UI_UX_DESIGN.md` / `WEB_FRONTEND_UI_UX_DESIGN.md`) for visual/token decisions
 6. Execution workflow documents (`FRONTEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_V2_11.md` / `BACKEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_FROM_FRONTEND_V6_3.md`) for execution workflow, audit sequencing, delivery artifacts, and reporting
 7. Feature-local documentation trio (`_features.md`, `_forbidden.md`, `_theme_contract.md`)
 8. Existing implementation conventions
@@ -374,18 +420,33 @@ A lower-priority rule MUST NOT override a higher-priority rule.
 If a conflict remains unresolved at the same precedence level:
 - Do NOT guess
 - Do NOT silently choose
-- Record `BLOCKED_BY_SUPPLIED_CONTRACT`
+- Record `SOURCE_CONFLICT` or `CONTRACT_CONFLICT` per CANONICAL CONFLICT AND BLOCKER TAXONOMY
+- Require `HUMAN_ARCHITECTURAL_DECISION_REQUIRED`
 - Record both sources
 - Record impact
 - Record required owner decision
 
-> **⚠️ AUDITOR-SPECIFIC NOTE on items 7 and 8:**
-> For a forensic auditor, the ACTUAL IMPLEMENTATION is the ground truth of current behavior.
-> Documentation makes CLAIMS about the implementation.
-> The auditor's job is to verify whether those claims are TRUE by inspecting the code.
-> NEVER let documentation override what the code actually does.
-> If docs say "compliant" but code is not → document as AUDIT_DRIFT (documentation is wrong).
-> If code does X and docs say Y → the code is the current reality; docs are stale.
+### Current Behavior vs Normative Authority Rule
+
+Implementation code is authoritative evidence of CURRENT OBSERVED BEHAVIOR.
+It is not automatically authoritative over an approved product specification,
+OpenAPI contract, backend/domain contract, security requirement, or higher-priority
+architecture rule.
+
+When code and documentation differ:
+
+1. Record the actual code behavior with exact source evidence.
+2. Identify whether a higher-priority approved contract exists.
+3. If an approved contract exists and conflicts with code:
+   - record `CONTRACT_CONFLICT`;
+   - do not silently update documentation to match code;
+   - do not claim the implementation is compliant;
+   - require human architectural/product decision where ownership is unclear.
+4. If no higher-priority contract exists and documentation is merely stale:
+   - record `AUDIT_DRIFT`;
+   - recommend documentation alignment;
+   - do not modify files in this audit-only prompt.
+5. Dead code is not valid contract evidence.
 
 This precedence model is NOT permission to silently ignore conflicting evidence.
 
@@ -980,6 +1041,9 @@ Every passed check and every forensic finding MUST use exactly one status:
 - **DEFERRED_TO_HOST_RUNTIME:**
   Requires a device, emulator, Metro, build pipeline, backend, or Maestro run.
 
+- **BACKEND_ENFORCEMENT_REQUIRED_NOT_VERIFIABLE_FROM_FRONTEND:**
+  When audit target is FRONTEND only and backend implementation evidence is not supplied. Backend authorization, tenant isolation, database isolation, idempotency persistence, or resource-ownership enforcement cannot be verified from frontend artifacts. Do NOT falsely declare backend compliance. Verify frontend 401/403/masked data handling only.
+
 Absence of evidence MUST NOT be classified as compliant.
 Out-of-scope host concerns MUST NOT be reported as feature-level defects.
 
@@ -1222,7 +1286,7 @@ The Audit Chunk Map MUST use exactly this format:
 
 ```text
 ╔══════════════════════════════════════════════════════════╗
-║           FORENSIC AUDIT — CHUNK MAP V6.4                ║
+║           FORENSIC AUDIT — CHUNK MAP V6.5                ║
 ╚══════════════════════════════════════════════════════════╝
 
 STACK DETECTED:    [FRONTEND | BACKEND | BOTH | UNKNOWN]
@@ -2181,7 +2245,7 @@ Audit whether the mobile primary navigation (Bottom Tab Navigator / Drawer Navig
 3. **Navigation Shell Isolation Audit:**
    - Are root navigation orchestrators (`RootNavigator`, `BottomTabNavigator`, `DrawerNavigator`) isolated inside core navigation (`src/core/navigation/` or `{role}_navigation/`)?
    - Do navigation orchestrators import business state, business components, or domain hooks from feature modules (violating shell isolation)?
-     → If YES: Flag as `FINDING: NAVIGATION_SHELL_DOMAIN_POLLUTION` (Severity: CRITICAL). Remediation: Navigation shell must consume ONLY exported typed route constants (`ROUTES.ts`).
+     → If YES: Flag as `FINDING: NAVIGATION_SHELL_DOMAIN_POLLUTION` (Severity: CRITICAL). Remediation: Navigation shell must consume only the route-contract export approved by the active frontend architecture document. For the current web architecture, navigation may consume `[MODULE_NAME]_ROUTES` from the owning feature's `[moduleName]_url_config.ts`. Navigation MUST NOT import feature business components, hooks, stores, schemas, API clients, fixtures, handlers, or business constants.
 
 ---
 
@@ -2191,15 +2255,15 @@ Audit whether the mobile primary navigation (Bottom Tab Navigator / Drawer Navig
 >
 > ⛔ **UNIVERSAL SCOPE: This section applies equally to EVERY backend role container (e.g., `backend-admin`, `backend-manager`, `backend-superadmin`, `backend-trainer`). References to `manager-attendance` or `admin-billing` are illustrative examples only.**
 
-Audit whether the backend architecture enforces strict 1-to-1 isomorphism with frontend feature modules per Rule 0A.1:
-1. **1-to-1 Feature Isomorphism Audit:**
+Audit whether the backend architecture enforces strict 1-to-1 isomorphism with frontend feature modules per Rule 0A.1 and the WET Principle:
+1. **1-to-1 Feature Isomorphism Audit (Rule 0A.1):**
    - Does every primary feature module exposed on the frontend across ANY role map strictly 1-to-1 to a dedicated autonomous backend feature module under the corresponding role container (e.g., `src/backend-{role}/{role}-modules/{role}-{feature}/`)?
    - Are multiple distinct frontend features merged into a monolithic backend mega-module (e.g., combining `manager-finance` and `manager-expenses`, or `admin-billing` and `admin-plans`)?
      → If YES: Flag as `FINDING: MISSING_FEATURE_MODULE_ISOLATION` (Severity: CRITICAL). Remediation: Split into dedicated sibling backend feature modules per frontend feature.
    - Are endpoints, controllers, or services for a single feature scattered across arbitrary or shared role-level controllers?
      → If YES: Flag as `FINDING: SCATTERED_FEATURE_ENDPOINTS` (Severity: MAJOR). Remediation: Consolidate 100% of the controllers, services, repositories, entities, DTOs, events, and migrations inside `{role}-{feature}/`.
 
-2. **Autonomous AI Repair Hand-off Audit:**
+2. **Autonomous AI Repair Hand-off & WET Boundary Audit:**
    - Can the target backend feature module (e.g., `manager-attendance/`, `admin-billing/`, `superadmin-plans/`) be extracted as a standalone ZIP and audited/repaired by an AI agent in 100% isolation?
    - Does the backend feature module import ANY internal repositories, services, or domain logic directly from a sibling backend feature module?
      → If YES: Flag as `FINDING: CROSS_FEATURE_COUPLING` (Severity: CRITICAL). Remediation: Communicate via published interfaces, domain events, or decouple business dependencies.
@@ -2875,9 +2939,11 @@ If the target is Web (Next.js App Router / React / TypeScript / Tailwind CSS), i
 ### 1. Canonical Module Hierarchy & Root Quarantine (Rule 1, 1B, 1C, 1D)
 - **Role Container:** MUST be `src/app/frontend_{role}/` (e.g., `src/app/frontend_admin/`), NOT unprefixed `src/app/admin/`. Unprefixed container = IMMEDIATE ARCHITECTURE VIOLATION.
 - **Canonical Feature Module:** MUST be `{role}_{module}/` inside role container (e.g., `admin_members/`). Generic name (`members/`) = NON_COMPLIANT.
-- **No Duplicate Route Tree:** Exactly ONE canonical directory represents the feature. No parallel or sibling route tree (e.g., `dashboard/` + `admin_dashboard/`). (Note: When evaluating an isolated role/module ZIP, verify this rule strictly within the supplied files. Do NOT demand the host route tree, root layout, or sibling route groups.)
+- **No Duplicate Route Tree:** Exactly ONE canonical directory represents the feature. No parallel or sibling route tree (e.g., `dashboard/` + `admin_dashboard/`). (Note: When evaluating an isolated role/module ZIP, verify this rule strictly within the supplied files. Do NOT demand the host route tree, root layout, or sibling modules.)
 - **Root Quarantine Invariant:** ONLY Next.js routing files (`page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`, `not-found.tsx`, `template.tsx`, `default.tsx`), `[moduleName]_url_config.ts`, and the documentation trio (`_features.md`, `_forbidden.md`, `_theme_contract.md`) are permitted at the feature root. ANY other `.ts`/`.tsx` file in feature root = IMMEDIATE NON_COMPLIANT.
-- **Prefixed Sub-Folders:** ALL sub-folders must use single module prefix: `[moduleName]_components/`, `[moduleName]_hooks/`, `[moduleName]_api/`, `[moduleName]_types/`, `[moduleName]_schemas/`, `[moduleName]_constants/`, `[moduleName]_store/`, `[moduleName]_utils/`, `[moduleName]_locales/`, `[moduleName]_mocks/`, `[moduleName]_tests/`. No double prefixing.
+- **Prefixed Sub-Folders:** ALL business sub-folders must use single module prefix: `[moduleName]_components/`, `[moduleName]_hooks/`, `[moduleName]_api/`, `[moduleName]_types/`, `[moduleName]_schemas/`, `[moduleName]_constants/`, `[moduleName]_store/`, `[moduleName]_utils/`, `[moduleName]_locales/`, `[moduleName]_mocks/`, `[moduleName]_tests/`. No double prefixing.
+- **Approved Framework Routing Exceptions:** Dynamic route segments (`[id]`, `[member_id]`, `[...slug]`), parallel routes (`@modal`), and private folders (`_folder`) are approved framework exceptions holding route entries only (`page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`). They MUST NOT contain business components.
+- **Strict Prohibition of Route Groups:** The auditor MUST apply the current canonical route-group policy from `WEB_FRONTEND_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md`. For the current web architecture, Next.js route groups (folders enclosed in parentheses like `(auth)`, `(dashboard)`, `(group_name)`) are **STRICTLY FORBIDDEN**. Route groups omit folder names from URLs, causing silent route collisions and breaking 1:1 physical file path mapping. The auditor MUST NOT independently permit route groups merely for clean URLs. Finding any route group in the module tree = IMMEDIATE NON_COMPLIANT AUDIT FAILURE.
 
 ### 2. Zero Barrel Files Ban (Rule 32)
 - Zero `index.ts` files or re-export facades across the entire module.
@@ -2923,8 +2989,11 @@ If the target is Web (Next.js App Router / React / TypeScript / Tailwind CSS), i
 - Display MUST go through module-local `[module]FormatCurrency()` utility using `Intl.NumberFormat` and active locale.
 - Strict ban on raw `/ 100` inline in JSX and hardcoded currency symbols (`₹`, `$`, `€`).
 
-### 11. En-Dash Nullable Display Fallback (Rule 78)
+### 11. En-Dash Nullable Display Fallback & Formatter Boundary (Rule 78, Rule 80)
 - All nullable or optional fields rendered via `displayValue()` showing en-dash (`—`).
+- `displayValue()` MUST be imported from `src/lib/display_value.ts` (neutral zero-business empty-state primitive).
+- **Prohibition of Global Business Formatters:** Finding a general `src/lib/formatters.ts` business library = NON_COMPLIANT.
+- All business formatters (`formatCurrency`, dates, phone, tax, invoice) MUST be feature-local inside `[moduleName]_utils/` (Strict WET isolation).
 - Zero blank table cells or empty data values.
 
 ### 12. Complex-Form Unsaved Changes Guard (Rule 79)
@@ -2940,7 +3009,10 @@ If the target is Web (Next.js App Router / React / TypeScript / Tailwind CSS), i
 - `[moduleName]_features.md` with all 18 mandatory sections (no generic boilerplate or TBDs).
 - `[moduleName]_forbidden.md` detailing module-specific anti-patterns.
 - `[moduleName]_theme_contract.md` listing all consumed semantic design tokens.
-- `[moduleName]_url_config.ts` exporting all routes and API endpoints as `as const`.
+- `[moduleName]_url_config.ts` exporting exactly two typed contracts:
+  1. `[MODULE_NAME]_ROUTES` (browser navigation paths)
+  2. `[MODULE_NAME]_API` (backend API endpoint paths)
+  All string literals MUST use `as const`. Navigation shell/sidebar MUST import ONLY `_ROUTES`, never `_API`. `_API` MUST NOT be imported outside the owning feature module.
 
 ---
 
@@ -3733,6 +3805,25 @@ Verify:
 [ ] Executable E2E YAML files MUST NOT be stored inside `src/features/`
 [ ] E2E tests use Maestro as the test tool (YAML-based)
 [ ] WET (Write Everything Twice) principle: NO shared `utils/` or `shared/` folders in mobile_e2e/
+```
+
+## 51D. WEB FRONTEND E2E TEST STRUCTURE AUDIT (Playwright)
+
+If WEB FRONTEND (Next.js) is in scope, verify the Playwright E2E test structure:
+
+```text
+Verify:
+[ ] Top-level E2E directory exists and follows: `playwright_E2E/frontend_{role}_e2e/{role}_{module}/`
+    (e.g., `playwright_E2E/frontend_admin_e2e/admin_members/admin_members_e2e.spec.ts`)
+[ ] E2E tests are completely decoupled from `src/` app directory
+[ ] Module-level WET Principle: Business fixtures, workflows, and domain assertions are 100% self-contained in the module folder
+[ ] Zero Cross-Module Business Imports: A test script in `manager_members/` MUST NOT import fixtures or helpers from `manager_billing/`
+[ ] Controlled Test-Support Layer (`playwright_E2E/_support/`): Permitted ONLY for neutral infrastructure:
+    - `auth-setup.ts` (browser authentication setup)
+    - `msw-utils.ts` (MSW service worker registration helpers)
+    - `render-utils.ts` (test render wrappers)
+    - `factory.ts` (synthetic data factories for non-business primitive types)
+[ ] ZERO business fixtures, domain workflows, or feature assertions in `playwright_E2E/_support/`
 [ ] Each module's E2E tests are 100% self-contained — login helpers, fixtures duplicated per module under `helpers/`
 [ ] No cross-module imports: `frontend_{role}_e2e/{role}_{module}/` MUST NOT import from sibling E2E suites
 [ ] A developer must be able to ZIP only one module's E2E folder and run it independently
@@ -5861,4 +5952,4 @@ Only AFTER completing the Final Verification Ledger are you allowed to begin gen
 
 This verification mechanism is CRITICAL and NON-NEGOTIABLE for a "Great Audit".
 
-# END OF FORENSIC FRONTEND BACKEND MOBILE ARCHITECTURE RULES AUDITOR V6.4
+# END OF FORENSIC FRONTEND BACKEND MOBILE ARCHITECTURE RULES AUDITOR V6.5
