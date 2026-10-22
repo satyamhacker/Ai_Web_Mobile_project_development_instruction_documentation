@@ -85,11 +85,11 @@ Before generating, auditing, or repairing ANY frontend role module, verify ALL o
 | **Role Container** | Must be `src/app/frontend_{role}/` (e.g., `src/app/frontend_admin/`) | Unprefixed role container = ARCHITECTURE VIOLATION. In repair: move to canonical prefix in RBG 1. |
 | **Canonical Feature Module** | Must be `{role}_{module}/` inside role container (e.g., `admin_members/`) | Generic name (`members/`) = NON_COMPLIANT. In repair: rename to prefixed module in RBG 1. |
 | **No Duplicate Route Tree** | Exactly ONE canonical directory represents the feature. No parallel route tree within supplied scope. | Sibling duplicate (e.g. `dashboard/` + `admin_dashboard/`) = ARCHITECTURE VIOLATION. In repair: consolidate into canonical directory in RBG 1. (Do not demand host route trees). |
-| **Root Quarantine** | ONLY `page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`, `not-found.tsx`, `template.tsx`, `default.tsx`, `[moduleName]_url_config.ts`, and the documentation trio (`[moduleName]_features.md`, `[moduleName]_forbidden.md`, `[moduleName]_theme_contract.md` or `_features.md`, `_forbidden.md`, `_theme_contract.md`) allowed in feature root. | Any other `.ts`/`.tsx` file in root = NON_COMPLIANT. In repair: move to prefixed subfolder in RBG 1. |
+| **Root Quarantine** | Feature domain root (`src/app/frontend_{role}/{role}_{module}/`) contains ONLY `layout.tsx` (navigation wrapper/tab bar), `page.tsx` (submodule redirect), and autonomous sub-module directories `{submodule}/`. 100% of feature business code lives inside autonomous sub-modules. Inside each autonomous sub-module, only route-entry files, `config/[role]_[submodule].url_config.ts`, and the Documentation Trio (`[role]_[submodule]_features.md`, `[role]_[submodule]_forbidden.md`, `[role]_[submodule]_theme_contract.md`) are allowed in its root. | Any business code in domain root or non-quarantine file in sub-module root = NON_COMPLIANT. In repair: move to prefixed subfolder in RBG 1. |
 | **Prefixed Sub-Folders** | ALL business sub-folders must use single prefix: `[moduleName]_components/`, `[moduleName]_hooks/`, `[moduleName]_api/`, `[moduleName]_types/`, `[moduleName]_schemas/`, `[moduleName]_constants/`, `[moduleName]_store/`, `[moduleName]_utils/`, `[moduleName]_locales/`, `[moduleName]_mocks/`, `[moduleName]_tests/`. Next.js framework dynamic routing folders (`[id]`, `[member_id]`, `[...slug]`, `@modal`, `_private`) are approved routing exceptions and may contain route-entry files only. Route groups like `(group)` are STRICTLY FORBIDDEN to prevent route conflicts. | Generic folder (`components/`, `api/`) or double-prefix = NON_COMPLIANT. In repair: rename to prefixed folders in RBG 1. |
 | **No Barrel Files** | NO `index.ts` or re-export facades. All imports must be direct absolute paths (`@/...`). | Barrel file = CIRCULAR DEPENDENCY RISK. In repair: remove barrel files and update imports in RBG 1. |
-| **Module Documentation Trio** | Every module MUST contain `[moduleName]_features.md`, `[moduleName]_forbidden.md`, and `[moduleName]_theme_contract.md`. | Missing doc artifact = INCOMPLETE MODULE. In repair: generate missing docs from source in RBG 1. |
-| **Centralized URL Config** | `[moduleName]_url_config.ts` MUST exist and define all routes and API endpoints as `as const`. | Missing URL config = HARDCODED ROUTE RISK. In repair: generate centralized URL config in RBG 1. |
+| **Sub-Module Documentation Trio** | Every autonomous sub-module MUST contain `[role]_[submodule]_features.md` (with all 22 canonical sections, Section 20 Standalone Harness, Section 21 Portability Guide), `[role]_[submodule]_forbidden.md`, and `[role]_[submodule]_theme_contract.md`. | Missing doc artifact = INCOMPLETE MODULE. In repair: generate missing docs from source in RBG 1. |
+| **Centralized URL Config** | `[role]_[submodule].url_config.ts` (or `[moduleName]_url_config.ts`) MUST exist and define all routes and API endpoints as `as const`. | Missing URL config = HARDCODED ROUTE RISK. In repair: generate centralized URL config in RBG 1. |
 
 > ⛔ **Skipping this gate in audit invalidates downstream compliance results. In repair, all structural defects must be resolved in RBG 1.**
 
@@ -770,10 +770,10 @@ The canonical feature module structure MUST contain:
 
 | Artifact | Requirement Level | Mandatory Trigger Condition | Consequence of Omission |
 |---|---|---|---|
-| `[moduleName]_features.md` | **MANDATORY FOR ALL MODULES** | Every single feature module | `NON_COMPLIANT` — Module lacks architectural map |
-| `[moduleName]_forbidden.md` | **MANDATORY FOR ALL MODULES** | Every single feature module | `NON_COMPLIANT` — Module lacks safety boundaries |
-| `[moduleName]_theme_contract.md` | **MANDATORY FOR ALL MODULES** | Every single feature module | `NON_COMPLIANT` — Visual portability contract unverified |
-| `[moduleName]_url_config.ts` | **MANDATORY FOR ALL MODULES** | Every module with routes or API calls | `NON_COMPLIANT` — URL centralization contract broken |
+| `[role]_[submodule]_features.md` (or `_features.md`) | **MANDATORY FOR ALL SUB-MODULES** | Every single autonomous sub-module (all 22 canonical sections) | `NON_COMPLIANT` — Sub-module lacks architectural map |
+| `[role]_[submodule]_forbidden.md` (or `_forbidden.md`) | **MANDATORY FOR ALL SUB-MODULES** | Every single autonomous sub-module | `NON_COMPLIANT` — Sub-module lacks safety boundaries & WET rules |
+| `[role]_[submodule]_theme_contract.md` (or `_theme_contract.md`) | **MANDATORY FOR ALL SUB-MODULES** | Every single autonomous sub-module | `NON_COMPLIANT` — Visual portability contract unverified |
+| `config/[role]_[submodule].url_config.ts` | **MANDATORY FOR ALL SUB-MODULES** | Every sub-module with routes or API calls | `NON_COMPLIANT` — URL centralization contract broken |
 | `[moduleName]_components/` | **MANDATORY FOR ALL MODULES** | Every feature module with UI | `NON_COMPLIANT` — Missing view layer |
 | `[moduleName]_hooks/` | **MANDATORY FOR ALL MODULES** | Any component with logic/state | `NON_COMPLIANT` — Logic coupled to view |
 | `[moduleName]_api/` | **MANDATORY FOR ALL MODULES** | Any API call | `NON_COMPLIANT` — API centralization broken |
@@ -882,28 +882,28 @@ AI RUNS FEATURE TESTS
 ONLY FEATURE FILES ARE CHANGED
 ```
 
-For example, if a bug exists in:
+For example, if a bug exists in billing invoices within admin billing:
 
 ```text
-src/app/frontend_admin/admin_billing/
+src/app/frontend_admin/admin_billing/billing_invoices/
 ```
 
-the preferred AI context is:
+the preferred AI context under the Sub-Module ZIP Guarantee is:
 
 ```text
-src/app/frontend_admin/admin_billing/
+src/app/frontend_admin/admin_billing/billing_invoices/
 ```
 
-NOT:
+NOT the parent domain container:
 
 ```text
-/frontend_admin/
+/frontend_admin/admin_billing/
 ```
 
 and NOT:
 
 ```text
-the entire application
+/frontend_admin/ (role container) or the entire application
 ```
 
 unless the feature documentation explicitly identifies an unavoidable application-infrastructure dependency that is genuinely required for the repair.
@@ -2144,15 +2144,15 @@ actually implemented. An honest [ ] is better than a false [x].]
 - [ ] Design §29: `motion-safe:` prefix on all transitions and animations
 ```
 
-### Sub-Module `[moduleName]_features.md` Files
+### Autonomous Sub-Module Documentation Trio (`_features.md`, `_forbidden.md`, `_theme_contract.md`)
 
-For large modules (5+ sub-features), each sub-folder MAY have its own `[moduleName]_features.md`. These sub-module files follow the same quality standard but can be shorter. They MUST still contain:
-- A real Module Purpose (not "handles X operations")
-- A real Feature Inventory with actual API endpoints
-- A real Edge Cases section with module-specific warnings (minimum 3 items)
-- A Component Responsibility Map
+> ⛔ **UNIVERSAL SUB-MODULE DOCUMENTATION TRIO LAW (MANDATORY FROM DAY 1):**
+> Under the Universal Day-1 Sub-Module Architecture (Rule 0A.2), **EVERY autonomous sub-module** (e.g., `attendance_dashboard/`, `attendance_history/`, `profile_overview/`) MUST maintain its own dedicated Documentation Trio right inside its directory:
+> 1. `[role]_[submodule]_features.md` — MUST contain all 22 canonical sections, including Section 20 (Module Run, Mock & Test Harness) and Section 21 (Module Portability & Host Integration Guide).
+> 2. `[role]_[submodule]_forbidden.md` — MUST enforce strict sibling sub-module decoupling (zero cross-submodule imports), zero parent shared folders (`attendance/common/` or `attendance/components/` strictly forbidden), and strict WET law.
+> 3. `[role]_[submodule]_theme_contract.md` — MUST document all global semantic design tokens consumed by the sub-module.
 
-Sub-module files with only generic boilerplate content are considered **undocumented** and must be regenerated.
+Sub-module documentation files with only generic boilerplate content or missing any of the 22 canonical sections are considered **undocumented** and MUST be regenerated.
 
 ### Documentation Freshness Rule
 
@@ -2780,18 +2780,22 @@ In every Zustand store and custom hook, document the data flow direction at the 
 `// DATA FLOW: API → useManagerMembersTable.ts → useManagerMembersStore → ManagerMembersTable`
 *(Note: As per Rule 5, React Context MUST NOT be used for feature data or state. Use Zustand).*
 
-40. **Forbidden Patterns File (`[moduleName]_forbidden.md`)**:
-Every module must have a tiny markdown file listing what is explicitly NOT allowed in that module.
+40. **Forbidden Patterns File (`[role]_[submodule]_forbidden.md` / `[moduleName]_forbidden.md`)**:
+Every autonomous sub-module (and feature module) must have a dedicated markdown file listing what is explicitly NOT allowed in that unit.
 
-Every module's `[moduleName]_forbidden.md` MUST explicitly document:
+Every sub-module's `[role]_[submodule]_forbidden.md` MUST explicitly document:
 
-- Do not place feature mock data outside this module.
-- Do not create duplicate global mock handlers for this module.
-- Do not import another module's business fixtures.
+- **Zero Cross-Sub-Module Imports:** Do not import any component, hook, store, type, utility, or mock from any sibling sub-module (e.g. `attendance_dashboard` MUST NEVER import from `attendance_history`).
+- **Zero Parent Shared Folders:** Do not create or import from parent shared folders (e.g. `attendance/common/`, `attendance/shared/`, or `attendance/components/` are strictly forbidden).
+- **Strict WET Principle:** Duplicate shared badges, filters, or formatters locally inside `{submodule}/components/` or `{submodule}/utils/`.
+- **Zero In-Memory Cross-Submodule State:** Do not share React Context or Zustand stores between sub-modules; communicate solely via URL navigation and typed query parameters.
+- Do not place feature mock data outside this sub-module.
+- Do not create duplicate global mock handlers for this sub-module.
+- Do not import another sub-module's business fixtures.
 - Do not add component-level fake business fallbacks.
 - Do not bypass the module API client by reading fixtures directly.
 - Do not modify global MSW bootstrap for a module-local feature change unless registration is actually required.
-*Consequence of violation:* Without explicit module-level forbidden patterns, future AI sessions re-introduce previously eradicated antipatterns (like barrel files, relative imports, and fake UI fallbacks). Missing or generic `[moduleName]_forbidden.md` = `NON_COMPLIANT`.
+*Consequence of violation:* Without explicit sub-module forbidden patterns, future AI sessions re-introduce previously eradicated antipatterns (like barrel files, relative imports, cross-submodule leaks, and fake UI fallbacks). Missing or generic `[role]_[submodule]_forbidden.md` = `NON_COMPLIANT`.
 
 41. **URL as State for Shareable Views**:
 Any filterable, searchable, or paginated list page MUST sync its state to the URL as query parameters using `useSearchParams` / `useRouter`.

@@ -25,7 +25,7 @@ This document governs the **web frontend only** (Next.js / React / Tailwind). Ru
 6. **Architecture Rules** — isolation, naming, state management
 7. **Visual Preferences** — colors, spacing, micro-animations
 
-Deviations from this hierarchy MUST be documented in the affected module's `[moduleName]_features.md`.
+Deviations from this hierarchy MUST be documented in the affected sub-module's `[role]_[submodule]_features.md`.
 
 ---
 
@@ -33,9 +33,9 @@ This document defines the application's global visual language, semantic theme t
 
 This document is NOT intended to be copied wholesale into every feature-module prompt.
 
-Feature modules consume the global design system through semantic theme tokens and approved zero-business UI primitives.
+Feature modules and autonomous sub-modules consume the global design system through semantic theme tokens and approved zero-business UI primitives.
 
-Every feature module must maintain its own `[moduleName]_theme_contract.md` describing the exact global theme tokens it consumes.
+Every autonomous sub-module must maintain its own `[role]_[submodule]_theme_contract.md` describing the exact global theme tokens it consumes.
 
 ### Specific Restrictions (The ERP Context)
 - **Dashboard Consistency:** The ERP relies on the 5-color core architecture (Gold Primary, Blue Info, Green Success, Amber Warning, Red Danger).
@@ -73,8 +73,8 @@ Document the mapping clearly so an AI cannot confuse `--primary` with `--text-pr
 - Feature-specific icons, static UI constants, labels and configuration
 - API/server data, module state, tests, MSW fixtures/handlers, feature behavior
 
-### MODULE THEME CONTRACT owns:
-- The exact list of global semantic tokens required by the module
+### SUB-MODULE THEME CONTRACT owns:
+- The exact list of global semantic tokens required by the autonomous sub-module
 - Any explicitly justified feature-local visual token
 
 ### GLOBAL DESIGN MUST NOT own:
@@ -84,9 +84,12 @@ Document the mapping clearly so an AI cannot confuse `--primary` with `--text-pr
 - Member/plan/payment/etc. business data
 - Feature API behavior, specific constants, or business feature logic
 
-> **CRITICAL WARNING TO AI AGENTS (COMPONENT ISOLATION):**
+> **CRITICAL WARNING TO AI AGENTS (COMPONENT ISOLATION & SUB-MODULE WET PRINCIPLE):**
 > Do NOT create or move "business-aware" components (e.g., Date Filters with "Last 3 Months" presets, Status Badges with hardcoded "Active" text) into global folders like `src/components/ui/` just to avoid code duplication. 
-> Global design/UI folders are STRICTLY for zero-business, dumb primitives. Business components MUST be duplicated per feature.
+> Global design/UI folders are STRICTLY for zero-business, dumb primitives.
+> Furthermore, within a module container (e.g., `attendance/`), DO NOT create shared parent folders like `attendance/common/` or `attendance/components/` to share components between sibling sub-modules (e.g., between `attendance_dashboard` and `attendance_history`).
+> Each sub-module MUST remain 100% self-contained. Shared UI patterns, badges, and filters MUST be duplicated locally inside `{submodule}/components/` in strict accordance with the WET (Write Everything Twice) principle.
+> Every autonomous sub-module must maintain its own `[role]_[submodule]_theme_contract.md`.
 
 ---
 
@@ -1286,7 +1289,7 @@ A feature screen or component is NOT considered release-ready until ALL applicab
 - [ ] Dates/numbers/currency use locale-aware formatters
 
 ### API Integration
-- [ ] All displayed fields have a documented API source in `[moduleName]_features.md`
+- [ ] All displayed fields have a documented API source in `[role]_[submodule]_features.md`
 - [ ] MSW fixture covers all rendered UI fields (Rule 75D)
 - [ ] No component-level hardcoded business fallback data
 
@@ -1296,8 +1299,9 @@ A feature screen or component is NOT considered release-ready until ALL applicab
 - [ ] E2E test covers critical user flows (login, CRUD, destructive actions)
 
 ### Documentation & Observability
-- [ ] `[moduleName]_features.md` updated if user flows, API, permissions, or state changed
-- [ ] `[moduleName]_theme_contract.md` lists all consumed tokens
+- [ ] `[role]_[submodule]_features.md` updated if user flows, API, permissions, or state changed (with all 22 canonical sections, Section 20 Standalone Harness, Section 21 Portability Guide)
+- [ ] `[role]_[submodule]_theme_contract.md` lists all consumed tokens
+- [ ] `[role]_[submodule]_forbidden.md` present with zero cross-submodule import guarantees
 - [ ] Error monitoring wired for critical flows (Rule 15E)
 - [ ] Web vitals within budget: LCP < 2.5s, CLS < 0.1, INP < 200ms
 
