@@ -10294,7 +10294,7 @@ export async function createManagerMember(
   dto: CreateManagerMemberDto,
   idempotencyKey: string,  // MANDATORY parameter
 ): Promise<ApiResponse<ManagerMember>> {
-  return networkClient.post(MANAGER_MEMBERS_URLS.CREATE, dto, {
+  return networkClient.post(MANAGER_MEMBERS_API.create, dto, {
     headers: { 'Idempotency-Key': idempotencyKey },
   });
 }

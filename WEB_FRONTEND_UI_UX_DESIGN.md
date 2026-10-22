@@ -1266,7 +1266,9 @@ A feature screen or component is NOT considered release-ready until ALL applicab
 
 ### Security & Permissions
 - [ ] Frontend permission checks control UI visibility only (not authorization enforcement)
-- [ ] Server-side authorization enforced for every protected operation
+- [ ] Server-side authorization requirements are documented for every protected operation.
+  - When backend source code and authorization tests are supplied: server-side authorization is verified for every protected operation.
+  - When backend evidence is not supplied: mark `BACKEND_ENFORCEMENT_REQUIRED_NOT_VERIFIABLE_FROM_FRONTEND`; verify only that frontend permission checks are UX controls and that the UI handles 401, 403, and permission-masked responses correctly.
 - [ ] Sensitive data masked in list views via `maskSensitiveData()` (Rule 43)
 - [ ] No tokens, secrets, or PII in error logs or analytics
 
