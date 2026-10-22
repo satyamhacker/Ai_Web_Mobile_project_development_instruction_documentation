@@ -328,20 +328,72 @@ Every feature module must pass two mechanical portability tests before it is app
    - All sibling modules (`{role}_billing`, `{role}_reports`, etc.) MUST CONTINUE TO RUN with zero missing import errors.
    - If deleting a feature breaks another feature's build, the architecture has FAILED the isolation invariant.
 
-### Feature Size Ceilings & Sub-Navigation Splitting Rule
+### Universal Day-1 Sub-Module Architecture (Zero Exceptions, Zero Refactoring)
 
-A single feature folder MUST NOT become an unmaintainable monolith.
-- **Maximum File Ceiling:** 100 source files per feature module.
-- **Maximum Line-of-Code Ceiling:** 15,000 LOC per feature module.
-- **Sub-Navigation Splitting Rule:** When a domain feature grows large (e.g. Attendance having Dashboard, History, Analytics, and Biometric Sync), the module folder MUST be partitioned into sub-feature domain folders matching the sub-navigation structure:
-  ```text
-  attendance/
-  ├── attendance_dashboard/
-  ├── attendance_history/
-  ├── attendance_analytics/
-  └── attendance_biometrics/
-  ```
-  Each sub-folder follows the exact same canonical micro-modular structure with its own components, hooks, tests, and documentation trio.
+> ⛔ **UNIVERSAL LAW: EVERY FEATURE IN THE SYSTEM IS ORGANIZED INTO SUB-MODULES FROM DAY 1**
+>
+> There are NO special cases, NO file-count thresholds, and NO hardcoded exceptions based on whether a feature has "one screen" or "multiple screens".
+> 
+> **Every single feature domain across the entire application — whether `manager_profile`, `manager_settings`, `manager_attendance`, `manager_notifications`, or `manager_billing` — MUST be structured as an autonomous Sub-Module Container right from Day 1.**
+>
+> An engineer or AI agent is STRICTLY FORBIDDEN from creating loose `components/`, `hooks/`, `api/`, `mocks/`, or `utils/` at the domain root level. 100% of executable source code, mocks, and tests MUST live inside a dedicated `{sub_module}/` folder.
+
+#### The Universal 3-Tier Hierarchy:
+
+```text
+APPLICATION
+  └── ROLE CONTAINER (e.g., src/app/frontend_manager/)
+        └── FEATURE DOMAIN CONTAINER (e.g., manager_profile/, manager_attendance/, manager_settings/)
+              ├── layout.tsx                                    # Pure UI Shell / Sub-Nav Tab Bar (zero business code)
+              ├── page.tsx                                      # Default redirect to primary sub-module
+              │
+              ├── {sub_module_1}/                               # 100% Autonomous Sub-Feature (AI Repair Unit)
+              │    ├── components/                              # [Role][Submodule][Name].tsx
+              │    ├── hooks/                                   # use[Role][Submodule][Name].ts
+              │    ├── api/                                     # [role]_[submodule].api.ts
+              │    ├── state/                                   # use[Role][Submodule]Store.ts
+              │    ├── types/ & schemas/                        # Zod schemas & types
+              │    ├── mocks/                                   # scenarios/, fixtures, MSW handlers
+              │    ├── utils/
+              │    ├── tests/                                   # Integration tests
+              │    ├── config/[role]_[submodule].url_config.ts
+              │    ├── [role]_[submodule]_features.md
+              │    ├── [role]_[submodule]_forbidden.md
+              │    └── [role]_[submodule]_theme_contract.md
+              │
+              └── {sub_module_2}/                               # Additional Sub-Features (Day 1 or Future)
+                   └── ... (identical canonical micro-structure)
+```
+
+#### Concrete Proof Across ALL Domains (No Exceptions):
+
+| Feature Domain | Day-1 Initial Sub-Module | Future / Additional Sub-Modules |
+|---|---|---|
+| **Profile** (`manager_profile/`) | `profile_overview/` | `profile_security/`, `profile_preferences/` |
+| **Settings** (`manager_settings/`) | `settings_general/` | `settings_notifications/`, `settings_integrations/` |
+| **Attendance** (`manager_attendance/`) | `attendance_dashboard/` | `attendance_history/`, `attendance_analytics/`, `attendance_biometrics/` |
+| **Billing** (`manager_billing/`) | `billing_invoices/` | `billing_subscriptions/`, `billing_payment_methods/` |
+| **Members** (`manager_members/`) | `members_directory/` | `members_profile/`, `members_attendance/` |
+| **Notifications** (`manager_notifications/`) | `notifications_inbox/` | `notifications_preferences/`, `notifications_templates/` |
+
+#### Why the Universal Day-1 Rule Kills 100% of AI Hallucinations:
+1. **Zero Guesswork:** An AI NEVER has to ask *"Is this 1 screen or 2 screens? Should I put mocks at root or in a subfolder?"* The answer is ALWAYS: **All code lives inside `{sub_module}/`. The domain root is a pure shell.**
+2. **Zero Refactoring Forever:** When `manager_profile` gets a `profile_security` tab in month 6, nobody breaks or moves existing files. `profile_overview/` remains completely untouched. You simply add a new sibling folder `profile_security/`!
+3. **Predictable AI ZIP Guarantee:** The AI repair unit is ALWAYS `frontend_{role}/{role}_{domain}/{sub_module}/`. An engineer zips only that sub-module, giving any AI a clean 10-15 file context with 100% working mocks and tests.
+
+#### ⛔ The Forbidden Root Code Monolith (Zero Root Code In Domain Folder):
+It is **STRICTLY FORBIDDEN** to create loose `mocks/`, `utils/`, `api/`, or `components/` at the feature domain root:
+```text
+❌ FORBIDDEN ROOT POLLUTION:
+manager_profile/
+├── mocks/                  <-- ❌ FORBIDDEN! Mocks must live inside profile_overview/mocks/!
+├── components/             <-- ❌ FORBIDDEN! Components must live inside profile_overview/components/!
+└── profile_overview/
+```
+The domain root contains ONLY `layout.tsx` (navigation wrapper) and `page.tsx` (redirect). 100% of feature code lives inside sub-modules.
+
+
+
 
 ### Sub-Module Isolation Firewall (Zero Cross-Sub-Module Imports & Sub-Module ZIP Guarantee)
 

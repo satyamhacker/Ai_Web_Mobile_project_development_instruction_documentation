@@ -485,17 +485,72 @@ To guarantee that any AI agent or mobile developer can repair, test, or expand a
    - Navigation orchestrators consume ONLY top-level route constants from `src/core/navigation/routes.ts` and feature navigator components. They MUST NOT import business state, business components, or domain hooks from feature modules.
    - If an issue occurs with tab switching, deep linking config, or drawer presentation, the repair context is STRICTLY `src/core/navigation/`, NEVER individual feature modules.
 
-6. **Feature Size Ceilings & Sub-Navigation Splitting Rule (Sub-Module Isolation Firewall):**
+6. **Universal Day-1 Sub-Module Architecture (Zero Exceptions, Zero Refactoring):**
    - **Maximum File Ceiling:** 100 source files per feature module.
    - **Maximum Line-of-Code Ceiling:** 15,000 LOC per feature module.
-   - **Sub-Navigation Splitting:** When a mobile domain feature grows large (e.g. Attendance having Dashboard, History, Analytics, and Biometric Sync), the module folder MUST be partitioned into sub-feature domain folders matching the sub-navigation structure:
-     ```text
-     attendance/
-     ├── attendance_dashboard/
-     ├── attendance_history/
-     ├── attendance_analytics/
-     └── attendance_biometrics/
-     ```
+
+   > ⛔ **UNIVERSAL LAW: EVERY MOBILE FEATURE IS ORGANIZED INTO SUB-MODULES FROM DAY 1**
+   >
+   > There are NO special cases, NO file-count thresholds, and NO hardcoded exceptions based on whether a feature has "one screen" or "multiple screens".
+   >
+   > **Every single mobile feature domain across the entire application — whether `manager_profile`, `manager_settings`, `manager_attendance`, `manager_notifications`, or `manager_billing` — MUST be structured as an autonomous Sub-Module Container right from Day 1.**
+   >
+   > An engineer or AI agent is STRICTLY FORBIDDEN from creating loose `screens/`, `components/`, `hooks/`, `api/`, `mocks/`, or `utils/` at the domain root level. 100% of executable source code, mocks, and tests MUST live inside a dedicated `{sub_module}/` folder.
+
+   #### The Universal Mobile 3-Tier Hierarchy:
+
+   ```text
+   APPLICATION
+     └── ROLE CONTAINER (e.g., src/features/frontend_manager/)
+           └── FEATURE DOMAIN CONTAINER (e.g., manager_profile/, manager_attendance/, manager_settings/)
+                 ├── screens/                                      # Pure Navigational Shell
+                 │    └── Manager[Domain]Navigator.tsx             # Stack/TopTab navigator mounting sub-screens
+                 │
+                 ├── {sub_module_1}/                               # 100% Autonomous Sub-Feature (AI Repair Unit)
+                 │    ├── screens/                                 # [Role][Submodule][Screen]Screen.tsx
+                 │    ├── components/                              # [Role][Submodule][Name].tsx
+                 │    ├── hooks/                                   # use[Role][Submodule][Name].ts
+                 │    ├── api/                                     # [role]_[submodule].api.ts
+                 │    ├── state/                                   # use[Role][Submodule]Store.ts
+                 │    ├── types/ & schemas/                        # Zod schemas & types
+                 │    ├── mocks/                                   # scenarios/, fixtures, MSW handlers
+                 │    ├── utils/
+                 │    ├── tests/                                   # Integration tests
+                 │    ├── config/[role]_[submodule].url_config.ts
+                 │    ├── [role]_[submodule]_features.md
+                 │    ├── [role]_[submodule]_forbidden.md
+                 │    └── [role]_[submodule]_theme_contract.md
+                 │
+                 └── {sub_module_2}/                               # Additional Sub-Features (Day 1 or Future)
+                      └── ... (identical canonical micro-structure)
+   ```
+
+   #### Concrete Proof Across ALL Domains (No Exceptions):
+
+   | Feature Domain | Day-1 Initial Sub-Module | Future / Additional Sub-Modules |
+   |---|---|---|
+   | **Profile** (`manager_profile/`) | `profile_overview/` | `profile_security/`, `profile_preferences/` |
+   | **Settings** (`manager_settings/`) | `settings_general/` | `settings_notifications/`, `settings_integrations/` |
+   | **Attendance** (`manager_attendance/`) | `attendance_dashboard/` | `attendance_history/`, `attendance_analytics/`, `attendance_biometrics/` |
+   | **Billing** (`manager_billing/`) | `billing_invoices/` | `billing_subscriptions/`, `billing_payment_methods/` |
+   | **Members** (`manager_members/`) | `members_directory/` | `members_profile/`, `members_attendance/` |
+   | **Notifications** (`manager_notifications/`) | `notifications_inbox/` | `notifications_preferences/`, `notifications_templates/` |
+
+   #### Why the Universal Day-1 Rule Kills 100% of AI Hallucinations:
+   1. **Zero Guesswork:** An AI NEVER has to ask *"Is this 1 screen or 2 screens? Should I put mocks at root or in a subfolder?"* The answer is ALWAYS: **All code lives inside `{sub_module}/`. The domain root contains only the Navigator.**
+   2. **Zero Refactoring Forever:** When `manager_profile` gets a `profile_security` tab in month 6, nobody breaks or moves existing files. `profile_overview/` remains completely untouched. You simply add a new sibling folder `profile_security/`!
+   3. **Predictable AI ZIP Guarantee:** The AI repair unit is ALWAYS `frontend_{role}/{role}_{domain}/{sub_module}/`. An engineer zips only that sub-module, giving any AI a clean 10-15 file context with 100% working mocks and tests.
+
+   #### ⛔ The Forbidden Root Code Monolith (Zero Root Code In Domain Folder):
+   It is **STRICTLY FORBIDDEN** to create loose `mocks/`, `utils/`, `api/`, `components/`, or business screens at the feature domain root:
+   ```text
+   ❌ FORBIDDEN ROOT POLLUTION:
+   manager_profile/
+   ├── mocks/                  <-- ❌ FORBIDDEN! Mocks must live inside profile_overview/mocks/!
+   ├── components/             <-- ❌ FORBIDDEN! Components must live inside profile_overview/components/!
+   └── profile_overview/
+   ```
+   The domain root contains ONLY `screens/Manager[Domain]Navigator.tsx` (navigation wrapper). 100% of feature code lives inside sub-modules.
    - **Zero Cross-Sub-Module Imports (Absolute Decoupling):**
      - Sibling sub-folders within the same parent domain MUST NEVER import components, hooks, state, types, mocks, or utils from each other.
      - `attendance_dashboard` MUST NEVER import from `attendance_history`.
