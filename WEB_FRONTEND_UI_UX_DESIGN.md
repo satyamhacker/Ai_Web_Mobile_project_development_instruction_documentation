@@ -1241,15 +1241,18 @@ A feature screen or component is NOT considered release-ready until ALL applicab
 - [ ] All documented user flows work end-to-end (no placeholder `onClick` handlers)
 - [ ] All form validations work client-side and display server errors correctly
 - [ ] All mutations show correct success/error feedback via toast
+- [ ] All state-changing mutations (`POST`, `PUT`, `PATCH`, `DELETE`) attach `X-Idempotency-Key: UUIDv4` header
+- [ ] All toasts specify deterministic `toastId` (or `id`) to prevent duplicate toast cascades on rapid clicks
 - [ ] All API-driven data renders from real MSW fixture or backend response
 
 ### State Coverage (Section 24 — Async UI State System)
 - [ ] **Loading state:** Layout-matching skeleton implemented (not a generic spinner)
+- [ ] **Loading stabilization:** Skeleton containers reserve explicit `min-w-[...]` and `min-h-[...]` dimensions matching final content to guarantee Cumulative Layout Shift (CLS) < 0.1
 - [ ] **Empty state:** Dedicated `[Module]EmptyState.tsx` with icon, message, and contextual CTA
 - [ ] **Error state:** Non-technical error message + Retry button
 - [ ] **Permission-denied state:** Clear restriction message + next-step guidance
 - [ ] **Offline state:** Non-blocking indicator (if feature declares offline support)
-- [ ] **Partial-data state:** UI handles nullable fields gracefully via `displayValue()`
+- [ ] **Partial-data state:** UI handles nullable fields gracefully via `displayValue()` — renders en-dash (`—`), zero empty `<td></td>` or blank cards
 
 ### Accessibility (WCAG 2.2 AA — Section 13)
 - [ ] All interactive elements keyboard-accessible (Tab navigation verified)
@@ -1282,6 +1285,8 @@ A feature screen or component is NOT considered release-ready until ALL applicab
   - When backend evidence is not supplied: mark `BACKEND_ENFORCEMENT_REQUIRED_NOT_VERIFIABLE_FROM_FRONTEND`; verify only that frontend permission checks are UX controls and that the UI handles 401, 403, and permission-masked responses correctly.
 - [ ] Sensitive data masked in list views via `maskSensitiveData()` (Rule 43)
 - [ ] No tokens, secrets, or PII in error logs or analytics
+- [ ] Zero private secrets in frontend code; only `NEXT_PUBLIC_*` public variables permitted
+- [ ] Business entity persistence banned in `localStorage` / `sessionStorage` (only non-sensitive UI preferences like theme mode and sidebar collapsed state permitted)
 
 ### Localization (Section 32)
 - [ ] No hardcoded English strings in JSX (all via `t('key')`)
@@ -1310,3 +1315,4 @@ A feature screen or component is NOT considered release-ready until ALL applicab
 - [ ] Images use `next/image` with explicit dimensions
 - [ ] Heavy components use `next/dynamic` (code-split)
 - [ ] Search/filter inputs debounced ≥ 300ms
+- [ ] Virtualization via `@tanstack/react-virtual` enabled for all tables, lists, or grids rendering > 50 items

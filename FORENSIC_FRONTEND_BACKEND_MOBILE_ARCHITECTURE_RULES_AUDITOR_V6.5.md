@@ -2231,11 +2231,15 @@ Audit whether the role container's sidebar navigation aligns strictly 1-to-1 wit
      → If YES: Flag as `FINDING: SIBLING_SUBMODULE_COUPLING` (Severity: CRITICAL). Remediation: Enforce strict WET duplication locally inside each sub-module.
    - **Sub-Module Maximum Nesting Depth Audit (Strict Depth = 1):** Is any folder nested inside a sub-module that acts as a child sub-module (e.g., `attendance_history/details/`, or depth > 1 below domain container)?
      → If YES: Flag as `FINDING: SUBMODULE_DEEP_NESTING_VIOLATION` (Severity: CRITICAL). Remediation: Flatten hierarchy to strictly 1 level below domain container. All internal sub-views, drawers, and wizard steps MUST live in `components/` (`[Submodule]Views/`, `[Submodule]Modals/`).
-   - **Sub-Module Granularity & Qualification Audit (5-Gate Matrix & Goldilocks Rule):**
-     - Has a sub-module been created for a single button, badge, dropdown, or trivial UI element (< 3 files)?
-       → If YES: Flag as `FINDING: NANO_MODULE_VIOLATION` (Severity: MAJOR). Remediation: Collapse into owning sub-module's `components/` or `utils/`.
-     - Does a single sub-module contain > 25 files spanning 3+ distinct operational workflows?
-       → If YES: Flag as `FINDING: MEGA_SUBMODULE_VIOLATION` (Severity: MAJOR). Remediation: Split into sibling autonomous sub-modules under the domain container.
+   - **Sub-Module Granularity & Qualification Audit (Deterministic 5-Gate Matrix & Goldilocks Rule):**
+     Every sub-module candidate MUST satisfy all 5 gates to qualify as an autonomous sub-module:
+     | Gate | Verification Requirement | Violation Finding | Remediation |
+     |---|---|---|---|
+     | **Gate 1: Navigation / Route** | Maps to a distinct tab, sub-route, or secondary navigation link | `FINDING: UNQUALIFIED_SUBMODULE_FRAGMENTATION` (Severity: MAJOR) | Collapse internal modal/drawer into owning sub-module `components/` |
+     | **Gate 2: State & Lifecycle Independence** | Independent data lifecycle, unique query keys, zero coupled mutation locks | `FINDING: COUPLED_LIFECYCLE_SUBMODULE` (Severity: CRITICAL) | Decouple state/query keys or merge |
+     | **Gate 3: Goldilocks File Count** | 5–20 files ideal. Strictly < 3 files = `NANO_MODULE_VIOLATION`. Strictly > 25 files = `MEGA_SUBMODULE_VIOLATION`. | `FINDING: NANO_MODULE_VIOLATION` or `FINDING: MEGA_SUBMODULE_VIOLATION` (Severity: MAJOR) | Merge nano-module into parent `components/` or split mega-module |
+     | **Gate 4: Standalone Mockability** | Owns complete MSW mock handlers & fixtures, fully testable in isolated test runner | `FINDING: UNMOCKABLE_SUBMODULE_VIOLATION` (Severity: CRITICAL) | Generate local MSW mocks and tests |
+     | **Gate 5: Import Firewall & WET Isolation** | Zero imports from sibling sub-modules, zero parent shared folders (`common/`, `shared/`), strict WET duplication | `FINDING: SIBLING_SUBMODULE_COUPLING` (Severity: CRITICAL) | Duplicate shared business logic locally (Strict WET) |
 
 3. **Autonomous AI Repair Hand-off & Sub-Module ZIP Guarantee:**
    - Can any single sub-module (e.g., `attendance_history/`) or complete feature domain (e.g., `manager_attendance/`) be extracted as a standalone ZIP and audited/repaired by an AI agent in 100% isolation?
@@ -3067,7 +3071,7 @@ If the target is Web (Next.js App Router / React / TypeScript / Tailwind CSS), i
 - No central `src/messages/` dumping directory.
 
 ### 14. Mandatory Module Documentation Trio & Centralized URL Config (Rule 11, Rule 13, Rule 40)
-- `[moduleName]_features.md` with all 18 mandatory sections (no generic boilerplate or TBDs).
+- `[moduleName]_features.md` with all 22 canonical sections (no generic boilerplate or TBDs, including Section 20 Standalone Harness, Section 21 Portability Guide, and Section 22 Version History + Portability Score).
 - `[moduleName]_forbidden.md` detailing module-specific anti-patterns.
 - `[moduleName]_theme_contract.md` listing all consumed semantic design tokens.
 - `[moduleName]_url_config.ts` exporting exactly two typed contracts:
