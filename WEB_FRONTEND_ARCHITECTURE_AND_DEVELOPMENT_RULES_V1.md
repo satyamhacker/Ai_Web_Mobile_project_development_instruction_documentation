@@ -3020,12 +3020,12 @@ The MSW response MUST contain all fields that the UI actually consumes.
 
 Every feature that depends on MSW MUST document or be able to derive the following mapping (use the `## UI Data Requirements` section of its `[moduleName]_features.md` — see Rule 13):
 
-| UI Element | Required Field(s) | API Endpoint | Response Path | Nullable? | Mocked? |
-|---|---|---|---|---|---|
-| Table: Gym Name | `name` | `GET /.../gyms` | `data.items[].name` | No | Yes |
-| Table: Owner | `ownerName` | `GET /.../gyms` | `data.items[].ownerName` | Yes | Yes |
-| KPI: Active Gyms | `activeCount` | `GET /.../gyms/stats` | `data.activeCount` | No | Yes |
-| Filter: Plan | `planId`, `planName` | `GET /.../gyms` | `data.items[]` | No | Yes |
+| UI Element | Required Field(s) | API Endpoint | Response Path | Availability | Nullable? | Mocked? | UI Behavior When Unavailable |
+|---|---|---|---|---|---|---|---|
+| Table: Gym Name | `name` | `GET /.../gyms` | `data.items[].name` | `required` | No | Yes | Render fallback text |
+| Table: Owner | `ownerName` | `GET /.../gyms` | `data.items[].ownerName` | `nullable` | Yes | Yes | `displayValue()` |
+| KPI: Active Gyms | `activeCount` | `GET /.../gyms/stats` | `data.activeCount` | `permission_masked` | No | Yes | Hide KPI or show neutral badge |
+| Filter: Plan | `planId`, `planName` | `GET /.../gyms` | `data.items[]` | `required` | No | Yes | All options |
 
 The actual project feature MUST use its real field names, endpoint names, and response paths. The example above is illustrative only.
 
@@ -3266,7 +3266,7 @@ Never render completely blank table cells or profile field values when an API re
 - ❌ **BAD:** `<td>{member.trainerName}</td>` — renders nothing if `null`
 - ✅ **GOOD:** `<td>{displayValue(member.trainerName)}</td>` — renders `—` explicitly
 - **Centralize the neutral fallback:** Define a shared zero-business utility `displayValue` in `src/lib/display_value.ts`. `displayValue()` accepts primitive display values required by the UI, including string, number, boolean, null, and undefined, rendering an en-dash (`—`) for nullish/empty values while preserving meaningful zero (`0`) and false values.
-*(Note: `src/lib/display_value.ts` contains zero business logic and qualifies as approved global presentation infrastructure under Rule 63. No general `src/lib/formatters.ts` business library may exist. All business-aware formatters—currency, date, phone, tax, invoice, etc.—MUST remain strictly feature-local inside `[moduleName]_utils/` per Rule 80).*
+*(Note: `src/lib/display_value.ts` contains zero business logic and qualifies as approved global presentation infrastructure under Rule 63. No global business formatting library may exist. All business-aware formatters—currency, date, phone, tax, invoice, etc.—MUST remain strictly feature-local inside `[moduleName]_utils/` per Rule 80).*
 
 79. **Unsaved Changes Guard (Data Loss Prevention)**:
 Any complex form or multi-step wizard MUST implement a "Dirty State Guard" to prevent accidental data loss. Rule 79 supersedes Rule 46 for scope; Rule 46 defines only the browser `beforeunload` mechanism.
@@ -3284,7 +3284,7 @@ Any complex form or multi-step wizard MUST implement a "Dirty State Guard" to pr
 80. **Currency & Number Formatting Standardization**:
 Never manually concatenate currency symbols, format numbers with raw `.toFixed()`, or build locale strings directly inside JSX or component logic. All financial values and large numeric metrics MUST be piped through a centralized formatting utility.
 - **Minor-unit contract:** API monetary values are stored as minor units (paise, cents). Always divide by the appropriate currency subunit divisor (e.g., 100 for INR) before formatting. Never pass a raw API minor-unit value to a display formatter that expects major units — this causes a 100× display error.
-- **Required utilities:** Define `[module]FormatCurrency(amountMinor: number, currencyCode: string, locale: string): string` locally inside the feature module under `[moduleName]_utils/`. **Do NOT create or use a global `src/lib/formatters.ts`.** Each feature module must own its own formatting utility to prevent cross-module coupling. The only permitted global presentation utility is `src/lib/display_value.ts` for zero-business en-dash fallbacks.
+- **Required utilities:** Define `[module]FormatCurrency(amountMinor: number, currencyCode: string, locale: string): string` locally inside the feature module under `[moduleName]_utils/`. **Do NOT create or use a global formatters library.** Each feature module must own its own formatting utility to prevent cross-module coupling. The only permitted global presentation utility is `src/lib/display_value.ts` for zero-business en-dash fallbacks.
 - **Locale consistency:** The utility must use the `Intl.NumberFormat` API to ensure consistent comma separators, decimal places, and currency symbol placement based on the app's configured locale — never hardcoded.
 - **Decimal precision:** Financial values MUST use the feature-local currency formatter. Metric counts (e.g., total members) must display with comma separators but no decimals.
 - **This rule is the numeric parallel to Rule 24** (which standardizes date/time formatting via `date-fns`/`dayjs`). Just as Rule 24 forbids raw `new Date()` in JSX, this rule forbids raw number concatenation.
