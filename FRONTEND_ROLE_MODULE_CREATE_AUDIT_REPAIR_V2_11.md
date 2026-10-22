@@ -1765,69 +1765,82 @@ Produce this table for every candidate feature or consolidated route:
 ### Core Tenets of the 1:1 Navigation-to-Folder Law:
 
 1. **Strict 1-to-1 Primary Navigation Mapping (Universal):**
-   - Every top-level clickable item defined in a role's sidebar/navigation configuration (e.g., in Manager: Dashboard, Inquiries, Members, Attendance, Plans, Finance, HR, Schedule, PT; in Admin: Gyms, Billing, Staff, Settings; in Superadmin: Tenants, Subscriptions, Platform Analytics; in Trainer: Schedule, Clients, Workouts) MUST have an exact corresponding dedicated feature folder directly inside `src/app/frontend_{role}/` (e.g., `src/app/frontend_{role}/{role}_{feature}/`).
+   - Every top-level clickable item defined in a role's sidebar/navigation configuration (e.g., in Manager: Dashboard, Inquiries, Members, Attendance, Plans, Finance, HR, Schedule, PT; in Admin: Gyms, Billing, Staff, Settings; in Superadmin: Tenants, Subscriptions, Platform Analytics; in Trainer: Schedule, Clients, Workouts) MUST have an exact corresponding dedicated feature domain container directly inside `src/app/frontend_{role}/` (e.g., `src/app/frontend_{role}/{role}_{feature}/`).
    - **NO MEGA-MODULE MERGING:** Merging separate sidebar destinations (e.g., combining `manager_finance` and `manager_expenses`, or `admin_billing` and `admin_plans`) into a single folder is STRICTLY PROHIBITED.
-   - **NO ROOT-LEVEL FRACTURING:** A single sidebar destination MUST NOT spawn arbitrary multiple top-level folders for its internal tabs or workflows. All internal tabs, secondary workflows, and sub-pages belonging to that sidebar destination MUST be managed via `?view=` inside that module's `_components/` and `_views/`.
+   - **NO ROOT-LEVEL FRACTURING:** A single sidebar destination MUST NOT spawn arbitrary multiple top-level folders for its internal tabs or workflows. All internal tabs, secondary workflows, and sub-pages belonging to that sidebar destination MUST be encapsulated as child sub-modules inside that domain container.
 
-2. **100% Domain Self-Containment Inside the Feature Folder:**
-   - When a user clicks a sidebar item (e.g., Attendance ➔ `/frontend_manager/manager_attendance`, Billing ➔ `/frontend_admin/admin_billing`), **100% of the UI, state, and logic for that capability MUST reside INSIDE that single folder**:
-     - `page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`, `not-found.tsx`
-     - `[moduleName]_components/` (Orchestrator, tables, forms, modals, filters, and `[moduleName]_views/` for all `?view=` sub-screens)
-     - `[moduleName]_hooks/` (Feature-specific domain hooks)
-     - `[moduleName]_api/` (Feature REST endpoints and client methods)
-     - `[moduleName]_store/` (Feature Zustand store slice)
-     - `[moduleName]_types/` & `[moduleName]_schemas/` (Feature TypeScript definitions & Zod validation)
-     - `[moduleName]_constants/` & `[moduleName]_utils/` (Feature constants and domain utilities)
-     - `[moduleName]_mocks/` (Feature MSW handlers and mutable mock datasets)
-     - `[moduleName]_tests/` (Feature unit/component test suite)
-     - `[moduleName]_url_config.ts` (Feature canonical routes and parameter definitions)
-     - Local Documentation Trio: `[moduleName]_features.md`, `[moduleName]_forbidden.md`, `[moduleName]_theme_contract.md`
-   - **ZERO CROSS-FEATURE BUSINESS LEAKAGE:** A feature module MUST NEVER import business components, hooks, stores, types, or utilities from a sibling feature module (e.g., `manager_attendance` cannot import from `manager_finance`; `admin_billing` cannot import from `admin_plans`). All business domain logic MUST be duplicated per module (Strict WET Principle).
+2. **Universal Day-1 Sub-Module Architecture & Domain Root Quarantine:**
+   - Every feature module folder (`src/app/frontend_{role}/{role}_{domain}/` or `src/features/frontend_{role}/{role}_{domain}/`) is a **Pure Domain Container** containing ONLY:
+     1. Navigational shell (`layout.tsx` or `Manager[Domain]Navigator.tsx`) mounting sub-navigation tabs/links
+     2. Default route redirect (`page.tsx`) redirecting to the primary initial sub-module
+     3. Master domain documentation trio (`_features.md`, `_forbidden.md`, `_theme_contract.md`)
+     4. One or more autonomous Sub-Modules (`{domain}_{capability}/`, e.g., `attendance_dashboard/`, `attendance_history/`, `attendance_analytics/`, `attendance_biometrics/`).
+   - **Zero Root Code in Domain Folder (Domain Root Quarantine):** Creating loose `components/`, `hooks/`, `api/`, `mocks/`, `utils/`, or `state/` directly at the feature domain root level (e.g., `manager_attendance/components/` or `manager_attendance/mocks/`) is a **CRITICAL ARCHITECTURE VIOLATION**. 100% of executable source code, components, hooks, stores, mocks, and tests MUST live inside autonomous child sub-modules (`{domain}_{capability}/`).
+   - **Zero Relationship Between Sibling Sub-Modules (Strict Sibling Isolation Firewall & WET Law):**
+     - Sibling sub-modules (e.g., `attendance_dashboard` vs `attendance_history`) have **ABSOLUTE ZERO RELATIONSHIPS, ZERO CROSS-IMPORTS, AND ZERO RUNTIME COUPLING**.
+     - `attendance_dashboard` NEVER imports any component, hook, utility, type, schema, or mock from `attendance_history` or vice versa (`import from '../attendance_history'` = IMMEDIATE ARCHITECTURAL FAILURE).
+     - Creating shared parent folders (e.g., `attendance/common/`, `attendance/shared/`, or `attendance/components/`) is **STRICTLY FORBIDDEN**.
+     - If multiple sub-modules require similar UI elements (e.g., `AttendanceStatusBadge`, date range filter, table row formatter), each sub-module MUST duplicate it locally within its own `components/` or `utils/` (Strict WET Principle).
 
-3. **Autonomous AI Repair Hand-off Law (Single-Folder Boundary):**
-   - **The Golden Operational Invariant:** If a bug, regression, layout defect, or new requirement arises in ANY feature of ANY role (e.g., "Attendance" in Manager, "Billing" in Admin, "Plans" in Superadmin, "Schedule" in Trainer):
-     - The developer or host system MUST provide **ONLY** that single feature module folder to the AI agent:
-       - **Web:** `src/app/frontend_{role}/{role}_{feature}/`
-       - **Mobile:** `src/features/frontend_{role}/{role}_{feature}/`
-     - The AI agent MUST audit, repair, test, and deliver that module in complete isolation.
-     - The AI agent MUST NOT request, inspect, or modify other feature folders (`{role}_{sibling}/`) or host application root files (`package.json`, root `layout.tsx`).
-     - Modifying any file outside the supplied feature module boundary is a **CRITICAL SCOPE CREEP VIOLATION**.
+3. **Autonomous AI Repair Hand-off Law & The Sub-Module ZIP Guarantee:**
+   - **The Golden Operational Invariant:** If a bug, regression, layout defect, or new requirement arises in ANY sub-feature or feature domain (e.g., "Attendance History" in Manager, "Invoices" in Billing, "Plans" in Superadmin):
+     - The developer or host system provides **ONLY that single sub-module folder** (e.g., `attendance_history/`) or feature domain container to the AI agent.
+     - The AI agent receives a laser-focused 10-15 file context, complete local mocks, and repairs the issue in one shot with 0% risk of breaking sibling sub-modules or the host app.
+     - Demanding host application root slices (`package.json`, root `tsconfig.json`, root `layout.tsx`) or sibling sub-modules when auditing an isolated sub-module is a **CRITICAL SCOPE CREEP VIOLATION & AUDIT FAILURE**.
 
 4. **Navigation Shell & Layout Isolation:**
    - The Sidebar, Header, Breadcrumbs, Command Palette, and Shell layout themselves MUST reside in that role's own dedicated navigation module (e.g., `src/app/frontend_{role}/{role}_navigation/`).
-   - Navigation components MUST consume ONLY the exported typed URL contracts (`[moduleName]_url_config.ts`) from feature modules. Navigation components MUST NOT import any business components, business stores, or domain hooks from feature modules.
+   - Navigation components MUST consume ONLY the exported typed URL contracts (`[submodule]_url_config.ts`) from feature sub-modules. Navigation components MUST NOT import any business components, business stores, or domain hooks from feature sub-modules.
    - If a bug occurs in the sidebar itself (e.g., collapsing toggle, mobile drawer focus trap, search filtering, menu group ordering, or active link highlighting), the repair context is STRICTLY the navigation module (`{role}_navigation/`), NEVER individual feature modules.
 
 ---
 
 # 6. BUILD A MODULE MAP FIRST
 
-Before giving findings, produce:
+Before giving findings, produce the physical ASCII tree following the Universal Day-1 Sub-Module Architecture:
 
 ```text
-[module root]/
-├── [moduleName]_components/
-├── [moduleName]_hooks/
-├── [moduleName]_store/
-├── [moduleName]_api/
-├── [moduleName]_types/
-├── [moduleName]_schemas/
-├── [moduleName]_constants/
-├── [moduleName]_utils/
-├── [moduleName]_mocks/
-├── [moduleName]_tests/
-└── documentation (.md files)
+src/app/frontend_{role}/{role}_{domain}/  <-- Pure Domain Container
+├── layout.tsx                            <-- Navigation shell with sub-navigation tabs
+├── page.tsx                              <-- Default redirect to initial sub-module
+├── [role]_[domain]_features.md           <-- Master domain feature specification
+├── [role]_[domain]_forbidden.md          <-- Master domain forbidden rules
+├── [role]_[domain]_theme_contract.md     <-- Master domain theme tokens
+│
+├── {domain}_{capability_1}/              <-- Autonomous Sub-Module 1 (e.g., attendance_dashboard/)
+│   ├── components/                       <-- Standard sub-module components
+│   ├── hooks/                            <-- Domain hooks
+│   ├── api/                              <-- Sub-module API client & url config
+│   ├── state/                            <-- Feature-scoped Zustand store
+│   ├── types/                            <-- Domain TypeScript interfaces
+│   ├── schemas/                          <-- Zod validation schemas
+│   ├── mocks/                            <-- Module MSW handlers & fixtures
+│   ├── utils/                            <-- Feature-local formatters & helpers
+│   ├── tests/                            <-- Unit/component tests & harness
+│   ├── [role]_[submodule]_features.md    <-- ALL 22 Canonical Sections
+│   ├── [role]_[submodule]_forbidden.md   <-- Sub-module forbidden rules
+│   └── [role]_[submodule]_theme_contract.md <-- Sub-module consumed tokens
+│
+└── {domain}_{capability_2}/              <-- Autonomous Sub-Module 2 (e.g., attendance_history/)
+    ├── components/
+    ├── hooks/
+    ├── api/
+    ├── state/
+    ├── types/
+    ├── schemas/
+    ├── mocks/
+    ├── utils/
+    ├── tests/
+    ├── [role]_[submodule]_features.md
+    ├── [role]_[submodule]_forbidden.md
+    └── [role]_[submodule]_theme_contract.md
 ```
 
-**IMPORTANT FOLDER NAMING & COMPONENT SUBFOLDER GROUPING:**
-1. Replace EVERY folder name with the ACTUAL discovered prefixed folder name (e.g., `manager_members_components/`, NOT `components/`). Generic unprefixed folder names are an architecture violation.
-2. **Responsibility Subfolders inside `[moduleName]_components/`:** Do NOT dump dozens of flat component files directly into `[moduleName]_components/`. Group related components into module-prefixed responsibility subfolders:
-   - `[moduleName]_main/` → contains `<ModuleName>Main.tsx` orchestrator
-   - `[moduleName]_views/` → contains screen-level view components (e.g., `[moduleName]_overview_view/`, `[moduleName]_table_view/`)
-   - `[moduleName]_[feature]_form/`, `[moduleName]_[feature]_table/`, `[moduleName]_[feature]_modal/`
-3. **Category Boundary Rule (CRITICAL):** `[moduleName]_components/` and its subfolders are STRICTLY for React components (`.tsx`). NEVER put independent API clients, hooks, constants, schemas, types, stores, or test suites inside a component subfolder. Those artifacts MUST reside in their respective canonical module category (`[moduleName]_api/`, `[moduleName]_hooks/`, etc.).
-
-Replace the generic names above with the ACTUAL discovered structure.
+**IMPORTANT FOLDER & FILE NAMING RULES:**
+1. **Domain Container Quarantine:** Loose `components/`, `hooks/`, `api/`, `mocks/`, or `utils/` directly at `{role}_{domain}/` root are strictly BANNED. 100% of executable implementation code MUST live inside child sub-modules (`{domain}_{capability}/`).
+2. **Standard Folders inside Sub-Modules:** Inside `{domain}_{capability}/`, canonical standard folder names are used: `components/`, `hooks/`, `api/`, `mocks/`, `utils/`, `state/`, `types/`, `schemas/`, `tests/`.
+3. **Globally Unique File Prefix:** Files inside sub-module folders MUST carry the full unique prefix: `[Role][Submodule][Name]` (e.g., `ManagerAttendanceDashboardMetricCard.tsx`, `useManagerAttendanceDashboardMetrics.ts`).
+4. **Category Boundary Rule (CRITICAL):** `components/` is STRICTLY for React components (`.tsx`). NEVER put independent API clients, hooks, constants, schemas, types, stores, or test suites inside `components/`. Those artifacts MUST reside in their respective canonical category (`api/`, `hooks/`, etc.).
 
 For every important folder explain:
 
@@ -3723,28 +3736,50 @@ Find existing:
 
 Check whether the documentation reflects reality.
 
-Feature documentation must be evaluated for ALL 18 mandatory sections:
+Under the Universal Day-1 Sub-Module Architecture, every autonomous sub-module MUST contain its own dedicated **Documentation Trio** (`_features.md`, `_forbidden.md`, `_theme_contract.md`).
 
-1. Module Purpose
-2. Dependency Manifest
-3. Feature Lifecycle Contract
-4. Screens & Entry Points
-5. Directory Structure / Folder Structure
-6. User Flows & Interactions
-7. Data and State Architecture
-8. API Contract
-9. Approved External Dependencies
-10. Permissions / Security
-11. Platform-Specific Notes
-12. Offline Behavior
-13. Loading / Empty / Error States
-14. Background Tasks
-15. Edge Cases and AI Warnings
-16. Component Responsibility Map
-17. Rule Compliance Checklist
-18. Known Issues / Tech Debt
+> **MANDATORY FRONTMATTER REQUIREMENT (`_features.md`):**
+> Every `_features.md` MUST begin with this structured YAML frontmatter:
+> ```yaml
+> ---
+> feature: "[role]_[submodule]"
+> owner_role: "[role]"
+> module_version: 1
+> api_contract_source: "verified-api-contract | web-zip-extraction | normative-rules"
+> last_verified_date: "YYYY-MM-DD"
+> last_verified_commit: "commit-sha-or-host-unavailable"
+> documentation_status: "current"
+> portability_score: "8/8"
+> ---
+> ```
+> Missing or non-structured frontmatter = `FAIL — DOCUMENTATION_HEADER_INVALID`.
 
-**Missing even one section = PARTIAL. All 18 must be present and non-boilerplate.**
+Feature documentation must be evaluated for ALL 22 canonical sections:
+
+1. ## Scope and Non-Scope
+2. ## Screen Inventory
+3. ## Navigation Contract
+4. ## API Contract
+5. ## Query Key Registry
+6. ## Mutation Inventory
+7. ## Permissions and Role Rules
+8. ## State Ownership
+9. ## Offline and Reconnect Behavior
+10. ## Security and PII Rules
+11. ## Accessibility Requirements
+12. ## Background Tasks
+13. ## Feature Flags
+14. ## Cache Invalidation
+15. ## Migration and Rollback
+16. ## Test Coverage Map
+17. ## Architecture Exceptions (must document any `// architecture-exception:` comments)
+18. ## Known Contract Gaps
+19. ## Rule Compliance Checklist (35+ Verification Items)
+20. ## Standalone Run, Mock & Test Harness (How to run this sub-module standalone with MSW / mock data)
+21. ## Module Portability & Host Integration Guide (Drop-in reuse into other host applications)
+22. ## Deliverables & Version History (8/8 Portability Score)
+
+**Missing even one section = PARTIAL. All 22 must be present and non-boilerplate.**
 
 Check whether the documentation contains:
 
@@ -4442,10 +4477,10 @@ MINIMUM: No single RBG may contain fewer than 2 audit batches unless it is the f
 RBGs MUST be ordered by repair dependency, not by batch number:
 
 ```text
-RBG 1 — P0 Critical fixes (architecture blockers, broken flows, security)
-RBG 2 — P1 High fixes (state/API, forms, tables, functional closure)
-RBG 3 — P2 Medium fixes (design system, loading/error states, tests)
-RBG 4 — P3 Low fixes (naming, docs, comments, tooling)
+RBG 1 — P0 Critical Structural & Architectural Foundation fixes (Universal Sub-Module hierarchy normalization, domain root quarantine, removal of banned parent common/shared folders, sibling isolation firewall) + Broken user flows, Auth/Tenant boundaries, and Security vulnerabilities
+RBG 2 — P1 High fixes (state/API, forms, tables, functional closure, optimistic/pessimistic mutation reconciliation)
+RBG 3 — P2 Medium fixes (design system, loading/error/empty states, Autonomous Sub-Module Documentation Trio with 22 Canonical Sections, unit/component tests, MSW mock fixtures)
+RBG 4 — P3 Low fixes (responsibility comments, minor naming conventions, formatting, tooling)
 RBG N — Final re-audit + packaging
 ```
 
@@ -7452,10 +7487,9 @@ Before final delivery, the AI MUST literally verify:
 [ ] All source prohibitions checked
 [ ] All source examples that establish mandatory behavior checked
 [ ] All source conflicts reported
-[ ] Web Rule 1 checked
-[ ] Web Rule 1B & 1C — frontend_ namespace prefix + role container hierarchy checked
-[ ] Web Rule 1C.1 & Section 5B — Sidebar navigation 1-to-1 feature module mapping and isolated AI repair hand-off checked
-[ ] Web Rule 1D — Canonical Next.js routing and filesystem structure checked
+[ ] Web Rule 1, 1B & 1C — Universal Day-1 Sub-Module Architecture, Domain Root Quarantine, Sibling Isolation Firewall, Parent Shared Folder Ban, and Strict WET Principle checked
+[ ] Web Rule 1C.1 & Section 5B — Sidebar navigation 1-to-1 feature domain mapping and Sub-Module ZIP Guarantee checked
+[ ] Web Rule 1D — Canonical Next.js routing, layout.tsx shell, and filesystem structure checked
 [ ] Web Rule 2 checked
 [ ] Web Rule 3 checked
 [ ] Web Rule 3B checked
@@ -7466,7 +7500,7 @@ Before final delivery, the AI MUST literally verify:
 [ ] Web Rule 8 checked
 [ ] Web Rule 9 checked
 [ ] Web Rule 10 checked
-[ ] Web Rule 11 checked
+[ ] Web Rule 11 & Rule 40 — Autonomous Sub-Module Documentation Trio (_features.md with ALL 22 canonical sections, _forbidden.md, _theme_contract.md) verified
 [ ] Web Rule 12 checked
 [ ] Web Rule 13 checked
 [ ] Web Rule 14 checked
@@ -10158,9 +10192,9 @@ The AI MUST evaluate every item below against the created mobile module and reco
 
 ## 43P-DOCS — Documentation Trio
 
-- [ ] **43P-DOCS-01:** `{role}_{module}_features.md` exists with all 18 mandatory sections (no TBD, no generic filler): (1) Overview, (2) User Stories, (3) Screen Inventory, (4) Navigation Flow, (5) API Contract, (6) State Management, (7) Component Tree, (8) Token Usage, (9) Permission Requirements, (10) Error States, (11) Empty States, (12) Loading States, (13) Offline Behaviour, (14) Accessibility Notes, (15) i18n Keys, (16) Mock Fixture Strategy, (17) Rule Compliance Checklist, (18) Deferred / Out-of-Scope items
-- [ ] **43P-DOCS-02:** `{role}_{module}_forbidden.md` exists with minimum 5 feature-specific actionable entries
-- [ ] **43P-DOCS-03:** `{role}_{module}_theme_contract.md` exists listing all consumed token names
+- [ ] **43P-DOCS-01:** Every autonomous sub-module contains dedicated Documentation Trio, with `[role]_[submodule]_features.md` containing ALL 22 canonical sections (no TBD, no generic filler): (1) Scope and Non-Scope, (2) Screen Inventory, (3) Navigation Contract, (4) API Contract, (5) Query Key Registry, (6) Mutation Inventory, (7) Permissions and Role Rules, (8) State Ownership, (9) Offline and Reconnect Behavior, (10) Security and PII Rules, (11) Accessibility Requirements, (12) Background Tasks, (13) Feature Flags, (14) Cache Invalidation, (15) Migration and Rollback, (16) Test Coverage Map, (17) Architecture Exceptions, (18) Known Contract Gaps, (19) Rule Compliance Checklist, (20) Standalone Run, Mock & Test Harness, (21) Module Portability & Host Integration Guide, (22) Deliverables & Version History (8/8 Portability Score)
+- [ ] **43P-DOCS-02:** `{role}_{submodule}_forbidden.md` exists with minimum 5 feature-specific actionable entries
+- [ ] **43P-DOCS-03:** `{role}_{submodule}_theme_contract.md` exists listing all consumed token names
 - [ ] **43P-DOCS-04:** `_features.md` Rule Compliance Checklist section is honestly filled (no false checkmarks)
 
 ## 43P-ASYNC — Async States
