@@ -191,6 +191,13 @@ Every AI agent executing this prompt MUST strictly obey these invariants at all 
 6. **DO NOT SKIP PASS GATE ITEMS 11-14:** Before marking ANY rule PASS, you MUST explicitly confirm all 14 items in Section 20. Skipping items 11-14 is the leading cause of fabricated PASS results. **VIOLATION = PASS is treated as NOT_VERIFIED.**
 7. **DO NOT SKIP SECTION 85 VERIFICATION LEDGER:** This is MANDATORY before publishing the final report. **VIOLATION = report is not forensically valid.**
 8. **DO NOT SKIP WEB ARCHITECTURE INVARIANTS (SECTION 39):** When auditing Web Frontend (Next.js App Router), you MUST explicitly audit all 14 Web Architecture Invariants (Canonical Module Hierarchy, Root Quarantine, Barrel Ban, Zero Business Logic in `src/components/ui/`, TanStack Query v5 `isPending`, RHF v7 + Zod, Idempotency-Key on mutations, MSW Rule 75D complete data contract parity, Multi-currency integer minor units, En-dash `displayValue()` fallback, Unsaved-changes guard, Co-located `_locales/`, and Documentation Trio). Skipping these or treating them as generic UI checks = AUDIT FAILURE.
+9. **UNIVERSAL DAY-1 SUB-MODULE ARCHITECTURE & SIBLING ISOLATION INVARIANT:**
+   When auditing Web, Mobile, or Backend modules:
+   - **Domain Root Quarantine:** Domain container root contains ONLY the navigation shell (`layout.tsx`, `Navigator.tsx`, or aggregator `.module.ts`), default redirect (`page.tsx`), and autonomous sub-module folders. Loose `components/`, `hooks/`, `mocks/`, `services/`, `controllers/`, or `utils/` directly at domain root = IMMEDIATE ARCHITECTURE VIOLATION.
+   - **Sibling Sub-Modules Isolation (Strict WET Law):** Sibling sub-modules (e.g. `attendance_dashboard/` vs `attendance_history/`) MUST have 0% cross-imports, zero relationship, and zero shared parent folders (`attendance/common/` = FORBIDDEN). Any shared UI, formatters, or logic MUST be duplicated locally (Strict WET).
+   - **Submodule Documentation Trio & Run Harness:** Every single sub-module MUST have its own isolated documentation trio (`[role]_[submodule]_features.md` with Section 20 Standalone Run/Mock Harness, `_forbidden.md`, `_theme_contract.md`).
+   - **Meaningful Domain-Prefixed Submodule Naming (`{domain}_{capability}`):** 5-Second Comprehension Invariant; ban on lazy names (`tab1/`, `main/`, `default/`, `home/`).
+   - **The Sub-Module ZIP Guarantee:** Verify that any single sub-module can be independently extracted, zipped, and audited with 0% dependency on sibling sub-modules or the host app.
 
 ---
 
@@ -2938,21 +2945,27 @@ If the target is Web (Next.js App Router / React / TypeScript / Tailwind CSS), i
 
 ### 1. Canonical Module Hierarchy & Root Quarantine (Rule 1, 1B, 1C, 1D)
 - **Role Container:** MUST be `src/app/frontend_{role}/` (e.g., `src/app/frontend_admin/`), NOT unprefixed `src/app/admin/`. Unprefixed container = IMMEDIATE ARCHITECTURE VIOLATION.
-- **Canonical Feature Module:** MUST be `{role}_{module}/` inside role container (e.g., `admin_members/`). Generic name (`members/`) = NON_COMPLIANT.
+- **Canonical Feature Module (Domain Container):** MUST be `{role}_{module}/` inside role container (e.g., `manager_attendance/`). Generic name (`attendance/`) = NON_COMPLIANT.
+- **Universal Day-1 Sub-Module Architecture:** Every feature domain folder is a **Pure Domain Container** containing ONLY:
+  1. Navigational shell (`layout.tsx`) mounting sub-navigation tabs/links
+  2. Default route redirect (`page.tsx`) redirecting to the primary initial sub-module
+  3. One or more autonomous Sub-Modules (`{sub_module}/`, e.g., `attendance_dashboard/`, `attendance_history/`, `attendance_analytics/`, `attendance_biometrics/`).
+- **Forbidden Root Code Monolith (Domain Root Quarantine):** Creating loose `components/`, `hooks/`, `api/`, `mocks/`, `utils/`, or `state/` directly at the domain root (e.g. `manager_attendance/components/` or `manager_attendance/mocks/`) is a **CRITICAL ARCHITECTURE VIOLATION**. 100% of feature implementation code lives inside sub-modules.
+- **Sub-Folder Formula Inside Sub-Modules:** Inside `{sub_module}/`, canonical standard folder names are used: `components/`, `hooks/`, `api/`, `mocks/`, `utils/`, `state/`, `types/`, `schemas/`, `tests/`. Files inside those folders MUST carry the full globally unique prefix: `[Role][Submodule][Name]` (e.g., `ManagerAttendanceDashboardMetricCard.tsx`, `useManagerAttendanceDashboardMetrics.ts`).
+- **Meaningful Domain-Prefixed Submodule Naming Standard:** Every submodule folder MUST follow the semantic formula: `{domain}_{capability}` (e.g., `attendance_dashboard`, `attendance_history`, `profile_overview`, `profile_security`, `billing_invoices`). Lazy/ambiguous names (`tab1/`, `main/`, `default/`, `home/`, `view/`, `details/`, `common/`, `shared/`) = **CRITICAL NAMING VIOLATION**.
 - **No Duplicate Route Tree:** Exactly ONE canonical directory represents the feature. No parallel or sibling route tree (e.g., `dashboard/` + `admin_dashboard/`). (Note: When evaluating an isolated role/module ZIP, verify this rule strictly within the supplied files. Do NOT demand the host route tree, root layout, or sibling modules.)
-- **Root Quarantine Invariant:** ONLY Next.js routing files (`page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`, `not-found.tsx`, `template.tsx`, `default.tsx`), `[moduleName]_url_config.ts`, and the documentation trio (`_features.md`, `_forbidden.md`, `_theme_contract.md`) are permitted at the feature root. ANY other `.ts`/`.tsx` file in feature root = IMMEDIATE NON_COMPLIANT.
-- **Prefixed Sub-Folders:** ALL business sub-folders must use single module prefix: `[moduleName]_components/`, `[moduleName]_hooks/`, `[moduleName]_api/`, `[moduleName]_types/`, `[moduleName]_schemas/`, `[moduleName]_constants/`, `[moduleName]_store/`, `[moduleName]_utils/`, `[moduleName]_locales/`, `[moduleName]_mocks/`, `[moduleName]_tests/`. No double prefixing.
-- **Approved Framework Routing Exceptions:** Dynamic route segments (`[id]`, `[member_id]`, `[...slug]`), parallel routes (`@modal`), and private folders (`_folder`) are approved framework exceptions holding route entries only (`page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`). They MUST NOT contain business components.
-- **Strict Prohibition of Route Groups:** The auditor MUST apply the current canonical route-group policy from `WEB_FRONTEND_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md`. For the current web architecture, Next.js route groups (folders enclosed in parentheses like `(auth)`, `(dashboard)`, `(group_name)`) are **STRICTLY FORBIDDEN**. Route groups omit folder names from URLs, causing silent route collisions and breaking 1:1 physical file path mapping. The auditor MUST NOT independently permit route groups merely for clean URLs. Finding any route group in the module tree = IMMEDIATE NON_COMPLIANT AUDIT FAILURE.
+- **Strict Prohibition of Route Groups:** Next.js route groups (folders in parentheses like `(auth)`, `(dashboard)`) are **STRICTLY FORBIDDEN**. Route groups omit folder names from URLs and cause silent collisions. Finding any route group in the module tree = IMMEDIATE NON_COMPLIANT AUDIT FAILURE.
 
 ### 2. Zero Barrel Files Ban (Rule 32)
 - Zero `index.ts` files or re-export facades across the entire module.
 - All imports MUST be direct absolute paths: `import { ... } from '@/app/frontend_{role}/{role}_{module}/...'`. Barrel file = CIRCULAR DEPENDENCY RISK = FAIL.
 
-### 3. Absolute Module Isolation & UI Primitive Scope (Rule 1A, Rule 54)
+### 3. Absolute Module Isolation, Sibling Firewall & Strict WET Law (Rule 1A, Rule 54, Rule 63)
 - **Zero Business Logic in `src/components/ui/` or `src/shared/`:** `src/components/ui/` is strictly for dumb, zero-business primitives (raw Buttons, Inputs, Dialogs).
-- Domain-specific dropdowns, status badges, formatters, and filters containing business constants (e.g., "Active", "Last 3 Months") MUST be duplicated/co-located per module, NEVER globalized. Finding business logic in `src/components/ui/` = IMMEDIATE NON_COMPLIANT AUDIT FAILURE.
-- **Zero Cross-Module Business Imports (Rule 63):** A feature module MUST NOT import business components, hooks, stores, or APIs from sibling feature modules.
+- **Sub-Module Isolation Firewall:** Sibling sub-modules (e.g. `attendance_dashboard/` vs `attendance_history/`) MUST have **0% cross-imports, zero relationship, and zero shared parent folders** (`attendance/common/` or `attendance/shared/` = STRICTLY FORBIDDEN).
+- **Strict WET Principle:** If multiple sub-modules require similar UI elements (status badges, date pickers, table formatters), each sub-module MUST duplicate it locally within its own `components/` or `utils/`.
+- **Zero Cross-Module Business Imports:** A feature module MUST NOT import business components, hooks, stores, or APIs from sibling feature modules.
+- **The Sub-Module ZIP Guarantee:** Any single sub-module folder can be extracted and audited in 100% isolation with zero missing dependencies.
 
 ### 4. Server vs. Client Boundary & Next.js App Router (Rule 8, Rule 9)
 - Server Components by default; `"use client";` placed strictly at the top of files that use React hooks (`useState`, `useEffect`) or DOM event listeners.
@@ -3021,6 +3034,10 @@ If the target is Web (Next.js App Router / React / TypeScript / Tailwind CSS), i
 If the target is Mobile (React Native), inspect ALL of the following where applicable:
 
 ### Architecture Boundary Checks
+- **Universal Mobile Day-1 Sub-Module Architecture:** Role container (`src/features/frontend_{role}/`) ➔ Feature Domain Container (`{role}_{domain}/`, e.g., `manager_attendance/`) containing ONLY `screens/Manager[Domain]Navigator.tsx` (navigation wrapper) and autonomous Sub-Modules (`{sub_module}/`, e.g., `attendance_dashboard/`, `attendance_history/`, `attendance_analytics/`, `attendance_biometrics/`).
+- **Forbidden Mobile Root Code Monolith:** Creating loose screens, components, hooks, stores, or mocks directly at the domain root (e.g. `manager_attendance/screens/ManagerAttendanceScreen.tsx` or `manager_attendance/mocks/`) is a **CRITICAL ARCHITECTURE VIOLATION**. 100% of feature implementation code lives inside autonomous sub-modules.
+- **Mobile Sub-Module Isolation Firewall:** Sibling sub-modules have **0% cross-imports and zero shared parent folders** (`attendance/common/` = STRICTLY FORBIDDEN). If multiple sub-modules require similar UI elements (status badges, date pickers), each sub-module MUST duplicate it locally (Strict WET).
+- **Mobile Sub-Folder Formula:** Inside `{sub_module}/`, canonical folders are `screens/`, `components/`, `hooks/`, `api/`, `state/`, `types/`, `schemas/`, `mocks/`, `utils/`, `tests/` with globally unique `[Role][Submodule][Name]` prefix (e.g., `ManagerAttendanceDashboardMetricCard.tsx`, `useManagerAttendanceDashboardMetrics.ts`).
 - UI Thread vs JS Thread execution blocking
 - Platform-specific code branching (`Platform.OS` or `.ios.ts` / `.android.ts`)
 - React Native New Architecture compatibility (Fabric / TurboModules)
@@ -3901,20 +3918,20 @@ Known Issues / Tech Debt
 
 Do not PASS documentation merely because a file exists.
 
-### MANDATORY FEATURE DOCUMENTATION FILES (Frontend — Web & Mobile)
+### MANDATORY FEATURE & SUB-MODULE DOCUMENTATION FILES (Frontend — Web & Mobile)
 
-For every frontend feature module, verify that ALL THREE mandatory documentation files exist and are non-empty/non-boilerplate:
+For every autonomous sub-module (e.g. `attendance_dashboard/`, `attendance_history/`), verify that ALL THREE mandatory documentation files exist inside its own folder and are non-empty/non-boilerplate:
 
 ```text
-[ ] [featureName]_features.md     — MANDATORY (see required sections below)
-[ ] [featureName]_forbidden.md    — MANDATORY (must list concrete forbidden patterns for this module)
-[ ] [featureName]_theme_contract.md — MANDATORY (must list all design tokens used by this module)
+[ ] [role]_[submodule]_features.md     — MANDATORY (see required 22 sections below)
+[ ] [role]_[submodule]_forbidden.md    — MANDATORY (must list concrete forbidden patterns for this sub-module)
+[ ] [role]_[submodule]_theme_contract.md — MANDATORY (must list all design tokens used by this sub-module)
 
 > **MANDATORY FRONTMATTER REQUIREMENT (`_features.md`):**
 > Every `_features.md` MUST begin with this structured YAML frontmatter:
 > ```yaml
 > ---
-> feature: "{role}_{module}"
+> feature: "{role}_{submodule}"
 > owner_role: "{role}"
 > module_version: 1
 > api_contract_source: "verified-api-contract | web-zip-extraction | supplied-scope"
@@ -3926,13 +3943,13 @@ For every frontend feature module, verify that ALL THREE mandatory documentation
 > Missing or non-structured frontmatter = `FAIL — DOCUMENTATION_HEADER_INVALID`.
 ```
 
-**Missing any of these 3 files = FAIL.**
+**Missing any of these 3 files in ANY sub-module = FAIL.**
 
 **A file that exists but contains only generic boilerplate or placeholder text = PARTIAL.**
 
-### `_features.md` MANDATORY SECTION AUDIT (CANONICAL 18 SECTIONS)
+### `_features.md` MANDATORY SECTION AUDIT (CANONICAL 22 SECTIONS)
 
-Every `_features.md` file MUST contain ALL 18 of these canonical sections with non-generic content. Missing even one = PARTIAL:
+Every `_features.md` file MUST contain ALL 22 of these canonical sections with non-generic content. Missing even one = PARTIAL:
 
 ```text
 [ ] 1. ## Scope and Non-Scope
@@ -3953,6 +3970,10 @@ Every `_features.md` file MUST contain ALL 18 of these canonical sections with n
 [ ] 16. ## Test Coverage Map
 [ ] 17. ## Architecture Exceptions (must document any // architecture-exception: comments)
 [ ] 18. ## Known Contract Gaps
+[ ] 19. ## Rule Compliance Checklist (35+ Verification Items)
+[ ] 20. ## Standalone Run, Mock & Test Harness (How to run this sub-module standalone with mock data)
+[ ] 21. ## Module Portability & Host Integration Guide (Drop-in reuse into other host applications)
+[ ] 22. ## Deliverables & Version History
 ```
 
 ### `_theme_contract.md` AUDIT
