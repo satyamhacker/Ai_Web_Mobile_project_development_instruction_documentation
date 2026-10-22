@@ -144,6 +144,11 @@ No feature/screen/component may contain:
 
 Every visual value must resolve through a documented global token.
 
+> ⛔ **REACT NATIVE TOKEN CONTRACT (NO WEB CSS VARIABLES):**
+> In React Native bare-metal (New Architecture), web CSS custom properties (`--primary-color`, `var(...)`) do NOT exist.
+> All visual design decisions MUST be accessed via the typed `useThemeTokens()` hook (`tokens.color.primary`, `tokens.space[4]`, `tokens.typography.body`, `tokens.radius.md`).
+> Components must NEVER hardcode inline hex colors (`#FF0000`), raw dp values (`fontSize: 18`), or ad-hoc style objects without tokens.
+
 ### Design-Magic-Value Boundary
 
 “Zero magic values” applies to visual design decisions that could diverge across

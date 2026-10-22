@@ -71,6 +71,10 @@ When a rule is repeated for convenience:
 > ⛔ **NO-PAUSE ON MISSING RUNTIME / HOST CAPABILITY (MANDATORY ANTI-STALL RULE):**
 > Unavailability of a physical mobile device, Android/iOS emulator, Metro bundler, or Maestro E2E test runner is NEVER a reason to pause, stall, abort, or declare mobile code creation, audit, or repair "BLOCKED". The AI MUST fix every issue that can be resolved in source files (screens, components, custom hooks, Zustand stores, Zod schemas, URL configs, query key factories, MSW mock fixtures, documentation trio) in this session. Only live device/emulator execution or live Maestro runner execution is designated as `DEFERRED_TO_HOST_RUNTIME`. Missing runtime is strictly forbidden as a reason to pause.
 > ⛔ **OFFLINE / STATIC SCORING DIRECTIVE:** When live mobile device or simulator execution is unavailable in the execution environment, ratings (1 to 10) MUST evaluate **Static Architecture & Code Completeness**. The AI MUST NOT penalize, artificially deduct points, or refuse to rate simply because a physical device or emulator is absent. State the Static Compliance Rating directly (up to 10.0), noting dynamic execution separately as `DEFERRED_TO_HOST_RUNTIME`.
+> ⛔ **AI HALLUCINATION REDUCTION DISCIPLINE (80% TO <5% GOAL):**
+> AI hallucination is never eliminated by wishful thinking; it is driven down from 80% to <5% strictly through immutable verified contracts, explicit Zod validation schemas, deterministic testIDs, exact typed API response envelopes, and strict forbidden boundaries. When an AI lacks verified contract evidence, guessing is strictly FORBIDDEN — mark as `CONTRACT_MISSING` or `BLOCKED_BY_SUPPLIED_CONTRACT`.
+> ⛔ **THE 5-SECOND COMPREHENSION INVARIANT:**
+> A new engineer or AI agent MUST understand the exact responsibility, dependencies, and boundary of any file or folder within 5 seconds of opening it. If understanding requires tracing spaghetti dependencies, inspecting sibling business folders, or decoding ambiguous abbreviations, the architectural isolation has FAILED.
 
 ## CRITICAL MOBILE STRUCTURE GATE (NON-NEGOTIABLE)
 
@@ -526,6 +530,7 @@ tests, and the context file — lives inside that single folder. Zero need to op
   data-fetching, business logic, and presentation in the same file.
 - Every feature lives ENTIRELY inside its own feature folder. Nothing feature-specific
   exists outside it.
+- **The 5-Second Comprehension Invariant:** A new engineer or AI agent MUST understand the exact responsibility and boundary of any file or folder within 5 seconds of opening it. If understanding requires tracing spaghetti dependencies, inspecting sibling business folders, or decoding ambiguous abbreviations, the architectural isolation has FAILED.
 - **Screen + MainView Pattern (80-line ceiling compliance):** `*Screen.tsx` (≤80 lines) renders ONLY `<SafeAreaView>`, `<StatusBar>`, route param extraction, and ONE `[Role][Module][Screen]MainView.tsx` component (inside `components/`, ≤200 lines). The MainView orchestrates all hooks, loading/empty/error states, and child components. This is the mobile equivalent of Web's `page.tsx` + `[ModuleName]Main.tsx` pattern.
 
 ### File Size Governance
@@ -1194,6 +1199,39 @@ id, name, phone, membershipPlan, status, expiryDate, paymentStatus
 → Every rendered field has a source in the mock response.
 ```
 
+### Byte-for-Byte Mock & Real API Envelope Symmetry (CRITICAL)
+
+Mock responses and Real API responses MUST share an identical, byte-for-byte schema envelope. A divergent mock shape is a critical defect that guarantees a production crash:
+
+```text
+❌ CRITICAL RUNTIME CRASH HAZARD — ASYMMETRIC MOCK CONTRACT:
+Mock handler returns unwrapped data:
+{
+  "id": "1",
+  "name": "Rahul Sharma"
+}
+
+Real Backend returns canonical ApiResponse<T> envelope:
+{
+  "success": true,
+  "message": "Member fetched successfully",
+  "data": {
+    "id": "1",
+    "name": "Rahul Sharma"
+  }
+}
+Consequence: Code written against the mock reads `response.name`, which passes mock tests but crashes instantly in production with `TypeError: Cannot read properties of undefined (reading 'name')`!
+
+✔ MANDATORY CONTRACT LOCK:
+Every MSW mock handler MUST return the canonical 8-field ApiResponse<T> envelope:
+HttpResponse.json({
+  success: true,
+  message: 'Success',
+  data: memberData,
+  meta: paginationMeta,
+})
+```
+
 ### Forbidden: Component-Level Hardcoded Fallback Data
 
 This pattern is **forbidden**:
@@ -1788,6 +1826,11 @@ or debug it without reading any other part of the codebase.
 If it is missing or stale, updating it is part of the same change — a feature
 is never "done" while its context file is out of date.
 
+### Source Code as Last Resort Mandate
+An AI agent or engineer MUST be able to completely understand the feature's business purpose, user flows, state lifecycle, API contracts, permissions, test requirements, and edge cases purely by reading `_features.md` and `_forbidden.md`.
+- **The Rule:** Source code inspection MUST be the last resort, never the starting point.
+- **The Rationale:** When an AI is forced to reverse-engineer business intent from JSX markup and complex React hooks, hallucinations soar to 80%. When the AI operates against verified contract documentation, guessing drops below 5%. If an AI cannot understand the feature without opening source code files, the documentation has FAILED.
+
 ### Read-Only Core Contract Pack
 
 AI editable scope is limited to the target feature folder by default.
@@ -2065,6 +2108,20 @@ which file to open for any task without reading all files.]
 [REQUIRED: "None" is acceptable. Never leave blank without explicitly stating no known issues.]
 
 None
+
+## Module Run, Mock & Test Harness
+[REQUIRED: Exact commands and credentials to run, test, and mock THIS specific module in isolation.]
+
+- **Integration Test Execution:** `npm run test:integration -- src/features/frontend_{role}/{role}_{module}`
+- **Unit Test Execution:** `npm run test:unit -- src/features/frontend_{role}/{role}_{module}`
+- **Maestro E2E Suite:** `mobile_e2e/frontend_{role}_e2e/{role}_{module}/{role}_{module}.yaml`
+- **Primary Route & Stack:** `ROUTES.[ROLE_MODULE].LIST` via `config/{role_module}.url_config.ts`
+- **Seed Test User & Role:** e.g. `role: "MANAGER"`, `branchId: "branch-001"`, `tenantId: "tenant-dev"`
+- **Mock Scenario Toggles:**
+  - *Standard List:* MSW returns seeded fixtures array from `mocks/{role_module}.fixtures.ts`
+  - *Empty State:* Set filter or mock flag `?empty=true` to trigger `[Feature]EmptyState.tsx`
+  - *Error State:* Mock endpoint throws 500 / network error to trigger `[Feature]ErrorFallback.tsx`
+  - *Offline Blocker:* Simulate zero connectivity with empty cache to trigger `[Feature]OfflineBlocker.tsx`
 ```
 
 ### Documentation Freshness Rule
@@ -2152,6 +2209,12 @@ The AI MUST NOT need unrelated business modules.
 If business logic is required by two features, duplicate it inside each feature
 rather than moving it into `src/core/`. This preserves portability without
 artificially duplicating mandatory application infrastructure.
+
+### The "Shared Folder" Trap & Strict WET Invariant
+
+A common architectural antipattern is attempting to resolve cross-module needs by creating a `shared/` or `common/` dumping ground (e.g. `shared/ui/`, `shared/hooks/`, `shared/utils/`).
+- **THE TRAP:** Within weeks, developers and AI agents place business cards, attendance filters, status badges, and domain hooks into `shared/`. Then, modifying a component to satisfy Feature A silently breaks Feature B and Feature C.
+- **THE LAW:** Generic zero-business infrastructure belongs in `src/core/` ONLY. Any component, hook, utility, or type containing a business noun, domain status, or business rule MUST remain strictly feature-local. If two features require similar business UI or logic, DUPLICATE IT LOCALLY under the Strict WET Principal. Creating `shared/` directories for business logic is STRICTLY FORBIDDEN.
 
 Enforce mechanically via `eslint-plugin-boundaries` so violations are caught in CI, not in
 code review.
@@ -2729,6 +2792,7 @@ Format rules:
   For hooks: the call chain. For API files: the request/response path.
 - These comments are the first thing an AI reads when a file is dropped into a
   prompt — they eliminate the need to read the entire file to understand context.
+- **Enforcing the 5-Second Comprehension Invariant:** This mandatory header ensures that any human engineer or AI agent immediately grasps the exact boundaries, non-responsibilities, and call flow of the file within 5 seconds without reading past line 5.
 
 ```typescript
 // ❌ BAD — no header; AI must read 150 lines to understand the file's role
@@ -3296,6 +3360,7 @@ Every feature's `_features.md` MUST define these sections with non-generic conte
 16. `## Test Coverage Map`
 17. `## Architecture Exceptions` (documents any `// architecture-exception:` comments)
 18. `## Known Contract Gaps`
+19. `## Module Run, Mock & Test Harness` (isolated test commands, Maestro suite, test user credentials, mock scenario toggles)
 
 CI MUST fail when a changed feature source file does not have a corresponding update to its `[feature]_features.md`, unless the change is test-only or a documented no-behavior-change refactor.
 
@@ -4035,7 +4100,7 @@ and MUST NOT claim that a ZIP was generated.
 | **Gate 4** | Zero Hardcoded Colors or Insets | Grep for hex `#`, `rgb(`, raw sizes without `// design-exception: <reason>` | **STOP.** Hardcoded style = REJECTED DELIVERY |
 | **Gate 5** | Hardware-Backed Secure Storage Only | Verify auth tokens, refresh tokens, and biometric keys use `react-native-keychain` / Keystore. Zero tokens in `AsyncStorage` | **STOP.** Insecure storage = CRITICAL SECURITY VULNERABILITY |
 | **Gate 6** | Centralized URL Config Present | `config/[featureName].url_config.ts` present, exports all routes/APIs with real paths (zero placeholders) | **STOP.** Missing config = REJECTED DELIVERY |
-| **Gate 7** | Feature Map Non-Generic | `[featureName]_features.md` complete with all 18 mandatory sections (no TBDs or boilerplate) | **STOP.** Generic doc = INCOMPLETE MODULE |
+| **Gate 7** | Feature Map Non-Generic | `[featureName]_features.md` complete with all 19 mandatory sections (no TBDs or boilerplate) | **STOP.** Generic doc = INCOMPLETE MODULE |
 | **Gate 8** | TanStack Query & Hook Architecture | Query keys registered in `[featureName].query_keys.ts` with resource identity; screens NOT calling `useMutation` directly; cache invalidation via `useMutation({ onSuccess: () => queryClient.invalidateQueries(...) })` per Rule 60 | **STOP.** Broken server state / crash |
 | **Gate 9** | Form Architecture Compliance | React Hook Form + Zod validator class/schema; zero Yup/Joi; controlled inputs | **STOP.** Broken form validation |
 | **Gate 10** | Screen Thinness Ceilings Enforced | All screens in `screens/` ≤ **80 lines**; composition only; zero business logic or direct API calls | **STOP.** Monolithic screen = ARCHITECTURE FAILURE |
