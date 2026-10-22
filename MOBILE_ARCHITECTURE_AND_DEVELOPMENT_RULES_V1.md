@@ -393,17 +393,18 @@ not minimum source-code duplication.
 
 ---
 
-## Rule 0A — Feature Module Is the AI Repair Boundary
+## Rule 0A — Autonomous Sub-Module Is the AI Repair Boundary (The Sub-Module ZIP Guarantee)
 
 ```text
 APPLICATION
   └── ROLE CONTAINER (Prefixed with frontend_)
-        └── FEATURE MODULE
-              └── SUB-FEATURE / USE CASE
+        └── FEATURE DOMAIN CONTAINER (e.g., manager_members/, manager_attendance/)
+              └── AUTONOMOUS SUB-MODULE (e.g., members_directory/, attendance_dashboard/)
 ```
 
-AI Repair Boundary = FEATURE MODULE
-Role Container = NOT the repair boundary
+- **Primary Granular AI Repair Boundary = AUTONOMOUS SUB-MODULE** (`{domain}_{capability}/`).
+- **Parent Navigation / Orchestration Boundary = FEATURE DOMAIN CONTAINER** (`{role}_{domain}/`).
+- **Role Container = NOT the repair boundary.**
 
 ## Rule 0A.1 — FRONTEND NAMESPACE PREFIXING (MANDATORY)
 
@@ -503,7 +504,7 @@ To guarantee that any AI agent or mobile developer can repair, test, or expand a
    >
    > An engineer or AI agent is STRICTLY FORBIDDEN from creating loose `screens/`, `components/`, `hooks/`, `api/`, `mocks/`, or `utils/` at the domain root level. 100% of executable source code, mocks, and tests MUST live inside a dedicated `{sub_module}/` folder.
 
-   #### The Universal Mobile 3-Tier Hierarchy:
+   #### The Universal Mobile 4-Tier Hierarchy:
 
    ```text
    APPLICATION
@@ -1409,6 +1410,43 @@ HttpResponse.json({
 })
 ```
 
+### Mandatory Mobile API Response Envelope Contract (`ApiResponse<T>`)
+
+Every mobile API service function (`api/*.api.ts`), custom query/mutation hook, central network client (`networkClient.ts`), and MSW mock handler MUST consume and return this exact discriminated union:
+
+```typescript
+export type ApiResponse<T> = ApiSuccess<T> | ApiFailure;
+
+export interface ApiSuccess<T> {
+  success: true;
+  message?: string;
+  data: T;
+  meta?: PaginationMeta;
+}
+
+export interface ApiFailure {
+  success: false;
+  error: string;
+  message: string;
+  statusCode: number;
+  validationErrors?: Record<string, string[]>;
+}
+
+export interface PaginationMeta {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
+```
+
+This guarantees that:
+1. When checking `if (response.success)`, TypeScript narrows to `ApiSuccess<T>` where `response.data` is guaranteed to exist.
+2. In error states (`else`), `response.message`, `response.statusCode`, and `response.validationErrors` are strictly accessible.
+3. MSW mock responses and live backend responses remain 100% byte-for-byte symmetric with zero runtime property mismatches.
+
 ### Forbidden: Component-Level Hardcoded Fallback Data
 
 This pattern is **forbidden**:
@@ -1557,11 +1595,24 @@ Cross-reference: Rule 60 (cache invalidation), Rule 7C (query key registry).
 
 ## Rule 8 — Lists & Rendering Performance
 
-- Any list rendering more than ~20 items MUST use a virtualization-aware list
-  component (e.g. `FlatList` or `@shopify/flash-list`
-  — never a naively-mapped, fully-rendered list of widgets).
-- List item components must be render-stable (memoized with `React.memo` or `useMemo`)
-  to avoid unnecessary re-renders.
+### Rule 8A — Virtualization Threshold & List Performance (> 50 Items)
+- Any list rendering more than ~20 items MUST use a virtualization-aware list component.
+- For collections with potential **> 50 items**, Shopify's `@shopify/flash-list` (or optimized `FlatList` with `windowSize={5}`, `initialNumToRender={10}`, and `removeClippedSubviews={true}`) is **MANDATORY**.
+- Naively mapping arrays inside a `ScrollView` or wrapping hundreds of dynamic items in raw `<View>` containers is STRICTLY FORBIDDEN (causes memory bloat and frame drops).
+- List item components must be render-stable (memoized with `React.memo` or `useMemo`) with stable `keyExtractor={(item) => item.id}` to avoid unnecessary re-renders.
+
+### Rule 8B — Live Search & Filter Debounce Standard (≥ 300ms)
+- All live search inputs, query text bars, and rapid filter selectors MUST be debounced by a minimum of **300ms** (recommended: 300ms–500ms) using a dedicated `useDebounce` hook before triggering TanStack Query key updates or API network requests.
+- Firing an API request or cache invalidation on every single keystroke is STRICTLY FORBIDDEN (prevents mobile battery drain, UI stutter, and backend request flooding).
+
+```typescript
+// ✅ REQUIRED — Canonical search debounce pattern in mobile hooks/screens
+const [rawSearchQuery, setRawSearchQuery] = useState('');
+const debouncedSearch = useDebounce(rawSearchQuery, 300);
+
+// TanStack Query consumes the debounced value only
+const { data, isPending } = useManagerMembersList({ search: debouncedSearch, page: 1 });
+```
 
 ## Rule 9 — Images & Media Assets
 
@@ -2079,84 +2130,191 @@ Every `_features.md` MUST use this structure. Each section has mandatory content
 requirements listed inline.
 
 ```markdown
-# [FeatureName] — Feature Map
+---
+feature: "[role]_[submodule]"
+owner_role: "[role]"
+module_version: 1
+api_contract_source: "verified-api-contract | normative-rules"
+last_verified_date: "YYYY-MM-DD"
+last_verified_commit: "commit-sha-or-host-unavailable"
+documentation_status: "current"
+portability_score: "8/8"
+---
 
-## Purpose & 30-Second Snapshot
-[REQUIRED: 3-5 sentences. Must answer: (1) What business problem does this feature solve?
-(2) Which role(s) use it and what can they DO? (3) What is strictly OFF-LIMITS for each
-role? If an AI or engineer has only 30 seconds, reading this section alone must convey complete business context.
+# [Submodule Name] — Feature Map (ALL 22 CANONICAL SECTIONS)
+
+## 1. Scope and Non-Scope (Module Purpose, System Context & Dependencies)
+[REQUIRED: 3–6 sentences. Must answer: (1) What business problem does this sub-module solve?
+(2) Who uses it (which role/persona)? (3) What are the 3–5 most important things a user
+can DO in this sub-module? (4) What is strictly OFF-LIMITS for this role in this sub-module?
+If an AI or engineer has only 30 seconds, reading this section alone must convey complete business context.
 Generic phrases like "handles X operations" are forbidden.]
 
-## Feature Ownership & System Context
-[REQUIRED: Must explicitly document backend ownership, persistence, and external jobs so an AI never makes assumptions about system topology.]
-
+### Feature Ownership & System Context
 - **Feature / Role Owner:** [e.g., "Gym Manager / Operations Team"]
 - **Backend Microservice / API Base:** [e.g., "members-service (`/api/v1/manager/members`)"]
 - **Authoritative Database Tables:** [e.g., `members`, `memberships`, `member_attendance_logs`]
 - **Background / Queued Jobs:** [e.g., `member_sync_queue`, `biometric_device_sync_cron` — "None" if purely synchronous]
 
-## Dependency Manifest
-[REQUIRED: List every library and core infrastructure module this feature uses. Example:
-TanStack Query, Zustand, React Hook Form, Zod, react-native-reanimated.
-This lets an AI instantly know what stack is used without reading every file.]
+### Dependency Manifest
+- **State Pattern:** TanStack Query v5 (server state) + Zustand (UI transient state) + React Navigation `RouteProp` (route params)
+- **Form & Validation:** React Hook Form + Zod schemas
+- **Icons & Native Primitives:** `lucide-react-native` + React Native Bare-Metal / Reanimated
 
-## Feature Lifecycle Contract
-[REQUIRED: Explicitly state which CRUD operations exist. If any is absent, state why.
-Example: Create ✓ | Read ✓ | Update ✓ | Delete ✓ | Export ✓ | Bulk ✗ (not in scope)
-Prevents AI from blindly assuming standard CRUD capability.]
-
-## Screens & Entry Points
-[REQUIRED: Every screen with its exact route/stack name and which roles can access it.
-"All roles" is not acceptable — name each role explicitly.]
-
-| Screen name | Route / stack name | Role access | Entry trigger |
-|---|---|---|---|
-
-## Folder Structure
-[REQUIRED: Every subfolder listed with its exact responsibility AND the key files inside
-it. "Contains components" is not acceptable.]
-
+### Autonomous Sub-Module Directory Structure
 | Folder | Responsibility | Key Files |
 |---|---|---|
-| `components/` | Presentational UI only — no API calls, no business logic | `MembersMemberCard.tsx`, `MembersEmptyState.tsx`, `MembersListSkeleton.tsx` |
-| `hooks/` | Data-fetching and UI-state logic extracted from screens | `useMembers.ts` (server state), `useMembersFilters.ts` (client state) |
-| `api/` | All network calls for this feature — nothing else | `members.api.ts` |
-| `types/` | All interfaces, enums, type unions | `members.types.ts` |
-| `schemas/` | Zod schemas / validator classes for forms | `members.schema.ts` |
-| `state/` | Feature-scoped store for shared UI state | `members.store.ts` — holds: selectedMemberId, isAddSheetOpen, filterStatus |
-| `config/` | Feature-specific configs like URL constants | `members.url_config.ts` |
-| `mocks/handlers/` | Feature-specific MSW handlers for mobile endpoints | `members.handlers.ts` |
-| `mocks/fixtures/` | Complete mock datasets matching canonical envelope | `members.fixtures.ts` |
-| `mocks/scenarios/` | Preset scenarios (ACTIVE, EMPTY, SERVER_500, TIMEOUT, UNAUTHORIZED) | `members.scenarios.ts` |
-| `tests/harness/` | Standalone module mounting harness with MSW for isolated execution | `MembersHarness.tsx`, `bootstrap.ts` |
+| `screens/` | Thin screen orchestrators (≤80 lines, zero business logic) | `ManagerMembersListScreen.tsx`, `ManagerMembersDetailScreen.tsx` |
+| `components/` | Presentational UI components and bottom sheets (≤200 lines) | `ManagerMembersCard.tsx`, `ManagerMembersFilterSheet.tsx`, `ManagerMembersEmptyState.tsx` |
+| `hooks/` | Domain query and mutation hooks (≤150 lines) | `useManagerMembersList.ts`, `useManagerMembersMutations.ts` |
+| `api/` | All API calls for this sub-module via `networkClient` | `manager_members.api.ts` |
+| `types/` | TypeScript interfaces for entities, navigation param lists, DTOs | `manager_members.types.ts` |
+| `schemas/` | Zod validation schemas for forms and payloads | `manager_members.schemas.ts` |
+| `state/` | Feature-scoped Zustand store for transient UI state (≤180 lines) | `useManagerMembersStore.ts` |
+| `config/` | Sub-module route constants and URL definitions | `manager_members.url_config.ts` |
+| `mocks/` | Module-specific MSW handlers, fixtures, and scenarios | `manager_members.handlers.ts`, `manager_members.fixtures.ts`, `manager_members.scenarios.ts` |
+| `tests/` | Integration tests and standalone mounting harness | `manager_members.test.tsx`, `MembersHarness.tsx`, `bootstrap.ts` |
 
-## User Flows & Interactions
-[REQUIRED: 2-4 most important multi-step flows. Numbered steps. This lets an AI
-understand the full journey without reading every file.]
+### Approved External Dependencies & Expected Host Contract
+[REQUIRED: Maximum 7 Application Infrastructure items permitted under the Feature Dependency Budget. Each dependency MUST document its exact expected TypeScript interface/contract so an isolated AI never guesses.]
+
+- `src/core/network/networkClient.ts` — `networkClient.get/post/patch/delete<T>(endpoint, body?, options?): Promise<ApiResponse<T>>`
+- `src/core/theme/` — `useThemeTokens()` returning typed design tokens
+- `src/core/utils/formatters.ts` — `displayValue(val, fallback?)`, `formatCurrency(amount, currency)`
+- `src/core/toast/` — `showToast(message, type, dedupKey?)`
+- Host Session Context — `interface ExpectedAuthUser { id: string; role: Role; branchId: string; }`
+
+Business Feature Dependencies:
+- None (STRICTLY FORBIDDEN under Strict WET Principal)
+
+Role-Level Business Dependencies:
+- None
+
+## 2. Screen Inventory & Component Responsibility Map
+[REQUIRED: Every distinct user-facing screen or sheet gets its own row. "Core UI" is NOT a feature.
+Each row must have a real Purpose description, real API endpoints, and an accurate Status.]
+
+| Screen / Sheet | Route / Stack Name | What the User Can Do | Key Components | Main API Calls | Status |
+|---|---|---|---|---|---|
+| Members List | `ManagerMembersList` | View paginated list, search, pull-to-refresh, tap card to navigate to detail | `ManagerMembersCard.tsx`, `ManagerMembersFilterSheet.tsx` | `fetchMembers()` | Complete |
+| Member Detail | `ManagerMembersDetail` | View profile tabs, status badge, renewal CTA | `ManagerMembersDetailHeader.tsx`, `ManagerMembersTabs.tsx` | `fetchMemberById()` | Complete |
+| Add Member Sheet | `ManagerMembersAdd` | 3-step registration wizard: Personal Info → Plan → Payment | `ManagerMembersAddForm.tsx` | `createMember()` | Complete |
+
+### Component Responsibility Map
+[REQUIRED: Lists every component file with a one-line responsibility statement so an AI knows exactly which file to open.]
+
+| Component File | Responsibility |
+|---|---|
+| `ManagerMembersListScreen.tsx` | Thin screen orchestrator (≤80 lines). Renders SafeAreaView and MainView. |
+| `ManagerMembersMainView.tsx` | Composes header, search bar, and FlashList. Zero direct API calls. |
+| `ManagerMembersCard.tsx` | Single list item with masked phone. Handles tap → navigates to detail. |
+| `ManagerMembersDetailScreen.tsx` | Screen wrapper for member profile. Extracts route param `memberId`. |
+| `ManagerMembersEmptyState.tsx` | Empty state shown when list has zero items. Has "Add Member" CTA. |
+| `ManagerMembersListSkeleton.tsx` | Loading skeleton matching member card dimensions. |
+
+## 3. Navigation Contract & User Flows
+[REQUIRED: Document internal screen route names, typed navigation params, and 2–4 most important multi-step user journeys.]
+
+```typescript
+export type ManagerMembersParamList = {
+  ManagerMembersList: { statusFilter?: string };
+  ManagerMembersDetail: { memberId: string };
+  ManagerMembersAdd: undefined;
+};
+```
 
 ### Flow 1: Add New Member
-1. Manager taps "Add Member" FAB in MembersListScreen
-2. MembersAddScreen pushes onto stack
+1. Manager taps "Add Member" FAB in `ManagerMembersListScreen`
+2. `ManagerMembersAdd` screen/sheet pushes onto stack
 3. 3-step form: Personal Info → Plan Selection (fetches live plans) → Payment
-4. On submit: createMember(dto) called → loading state shown on button
-5. On 2xx: query cache invalidated, screen pops, toast shows backend message
-6. On error: form preserves data, inline error from response.message
+4. On submit: `createMember(dto)` called with `Idempotency-Key: UUIDv4`
+5. On success: query cache invalidated, sheet dismisses, toast shows backend message
+6. On error: form preserves entered data, inline error displayed from `response.validationErrors` or `response.message`
 
-## Data & State Architecture
-[REQUIRED: Name the ACTUAL store files, cache keys, and providers — not "TBD".]
+### Flow 2: View & Renew Member
+1. User taps member card in list → `navigation.navigate('ManagerMembersDetail', { memberId })`
+2. Detail screen fetches member profile via `useManagerMembersDetail(memberId)`
+3. User taps "Renew" CTA → bottom sheet opens with pre-filled plan
+4. On confirm: `renewMembership(id, dto)` called → query cache invalidated → toast displayed
 
-- **State pattern:** [e.g., "TanStack Query for server state + Zustand members.store.ts for UI state"]
-- **Cache / query keys:** [e.g., `MEMBERS_QUERY_KEYS.list(filters)`, `MEMBERS_QUERY_KEYS.detail(memberId)` — from `members.query_keys.ts` (Rule 7C)]
-- **Feature-scoped store:** [e.g., `members.store.ts` — holds: selectedMemberId, isAddSheetOpen, filterStatus, searchQuery]
-- **Local state decisions:** [e.g., "Detail screen tab selection is local useState — not shared"]
-- **Persisted state (offline requirement):** Yes / No — if Yes, document cache strategy and invalidation triggers
-- **Storage keys used:** ["None" or namespaced constants e.g. `MEMBERS_FILTER_PREFS_V1`] — if yes, document strategy
+### Logical Integration Points (Zero Code Imports)
+| Target Domain / Feature | Interaction Type | Data Flow / Event | Isolation Mechanism |
+|---|---|---|---|
+| `admin_members` | Entity Identity | Consumes `memberId` via route params | Zero code imports; state passed purely via typed route params |
+| `admin_billing` | Payment Status | Triggers billing stack redirect or receives payment verification via API | Decoupled via centralized API endpoint / route config |
+| `notifications` | Async Alert | Dispatches or listens to server-sent WebSocket events | Centralized `WebSocketContext` at `src/core/`, zero feature-to-feature imports |
 
-## Module Architecture Flow
+## 4. API Contract & UI Data Requirements
+[REQUIRED: Every API function in the module's API file must be listed with its exact
+HTTP method, endpoint, request shape, and response type. All calls return `ApiResponse<T>`.]
+
+| Function | Method | Endpoint | Request | Response `data` type |
+|---|---|---|---|---|
+| `fetchMembers(params)` | GET | `/api/v1/manager/members` | `{ page, limit, search, status }` | `Member[]` + `PaginationMeta` |
+| `fetchMemberById(id)` | GET | `/api/v1/manager/members/:id` | — | `MemberDetail` |
+| `createMember(dto, key)` | POST | `/api/v1/manager/members` | `CreateMemberDto` | `Member` |
+| `updateMember(id, dto)` | PATCH | `/api/v1/manager/members/:id` | `UpdateMemberDto` | `Member` |
+| `deleteMember(id)` | DELETE | `/api/v1/manager/members/:id` | — | `null` |
+| `renewMembership(id, dto, key)` | POST | `/api/v1/manager/members/:id/renew` | `RenewalDto` | `MembershipRecord` |
+
+### UI Data Requirements Mapping
+| UI Element | Required Field(s) | API Endpoint | Response Path | Availability | Nullable? | Mocked? | UI Behavior When Unavailable |
+|---|---|---|---|---|---|---|---|
+| Card: Member Name | `name` | `GET /api/v1/manager/members` | `data[].name` | `required` | No | Yes | Render fallback text |
+| Card: Status Badge | `status` | `GET /api/v1/manager/members` | `data[].status` | `required` | No | Yes | Neutral badge |
+| Card: Phone | `phone` | `GET /api/v1/manager/members` | `data[].phone` | `permission_masked` in list | No | Yes | `maskSensitiveData()` |
+| KPI: Total Active | `activeCount` | `GET /api/v1/manager/members/stats` | `data.activeCount` | `required` | No | Yes | `displayValue()` |
+| Filter: Status | `status` | `GET /api/v1/manager/members` | `data[].status` | `required` | No | Yes | All options |
+
+Availability values: `required` (mandatory data), `nullable` (rendered via `displayValue()`), `permission_masked` (hidden/masked without breaking layout), `feature_flagged` (conditional field), `not_applicable` (static UI).
+
+## 5. Query Key Registry & Server State
+[REQUIRED: Strict query key factory to prevent cache collisions and enforce granular invalidation.]
+
+```typescript
+export const MANAGER_MEMBERS_QUERY_KEYS = {
+  all: ['manager_members'] as const,
+  lists: () => [...MANAGER_MEMBERS_QUERY_KEYS.all, 'list'] as const,
+  list: (params: Record<string, unknown>) => [...MANAGER_MEMBERS_QUERY_KEYS.lists(), params] as const,
+  details: () => [...MANAGER_MEMBERS_QUERY_KEYS.all, 'detail'] as const,
+  detail: (id: string) => [...MANAGER_MEMBERS_QUERY_KEYS.details(), id] as const,
+};
+```
+
+- **Default Stale Time:** 60,000ms (1 minute)
+- **Garbage Collection Time (`gcTime`):** 300,000ms (5 minutes)
+- **Refetch on App Focus / Resume:** Handled centrally on app foregrounding
+
+## 6. Mutation Inventory & Lifecycle Operations
+[REQUIRED: Document every state-modifying action, idempotency keys, button lock, and cache invalidation targets.]
+
+| Mutation Action | HTTP Method | Target Endpoint | Payload DTO | Idempotency Key? | Cache Invalidation Target |
+|---|---|---|---|---|---|
+| Create Member | POST | `/api/v1/manager/members` | `CreateMemberDto` | Yes (`Idempotency-Key: UUIDv4`) | `MANAGER_MEMBERS_QUERY_KEYS.lists()` |
+| Update Profile | PATCH | `/api/v1/manager/members/:id` | `UpdateMemberDto` | No | `MANAGER_MEMBERS_QUERY_KEYS.detail(id)`, `MANAGER_MEMBERS_QUERY_KEYS.lists()` |
+| Renew Membership | POST | `/api/v1/manager/members/:id/renew` | `RenewalDto` | Yes (`Idempotency-Key: UUIDv4`) | `MANAGER_MEMBERS_QUERY_KEYS.detail(id)`, `MANAGER_MEMBERS_QUERY_KEYS.lists()` |
+| Delete Member | DELETE | `/api/v1/manager/members/:id` | None | No | `MANAGER_MEMBERS_QUERY_KEYS.lists()` |
+
+## 7. Permissions and Role Rules
+[REQUIRED: Specify exact roles, protected actions, and guards. Generic statements are forbidden.]
+
+- **Required role:** `MANAGER` — enforced by auth session guard before mounting feature navigator
+- **Destructive actions and their guards:** Delete member → confirmation bottom sheet with explicit warning: "This will permanently delete the member and all their records."
+- **Sensitive data handling:** Phone numbers masked via `maskSensitiveData()` in list card view. Full number visible only in profile detail.
+- **Cross-role isolation:** Zero imports from `frontend_admin`, `frontend_trainer`, `frontend_superadmin`.
+- **CODEOWNERS:** Operations / Security team review required for payment and deletion hooks.
+
+## 8. State Ownership & Architecture Flow
+- **Server State:** TanStack Query v5 (`useQuery`, `useMutation`). Native status flags (`isPending`, `isError`, `data`).
+- **UI Transient State:** Zustand store (`useManagerMembersStore.ts`) — active filter bottom sheet open state, active tab index.
+- **Navigation Route Params:** `memberId`, search filters passed via typed `RouteProp`. Never duplicated into global stores.
+- **Encrypted Local Storage:** Auth tokens and biometric keys in iOS Keychain / Android Keystore only via `react-native-keychain`. Zero business entities stored in unencrypted storage.
+
+### Module Architecture Flow
 ```text
 Screen (Route Entry in screens/ ≤80 lines)
       ↓
-Child Components (Thin Composition in components/)
+Child Components (Thin Composition in components/ ≤200 lines)
       ↓
 Custom Hooks / Store (Zustand UI State + TanStack Query Server State)
       ↓
@@ -2165,121 +2323,93 @@ Feature API Client (api/*api.ts via networkClient with ApiResponse<T>)
 MSW Handlers / Fixtures (Dev/Test) OR Real Backend API (Prod)
 ```
 
-## API Contract
-[REQUIRED: Every function in the feature's api file listed with exact HTTP method,
-endpoint, request shape, and response type. "TBD" is not acceptable.]
-
-All calls go through the central network client. Response envelope:
-`{ success, message, data: T | null, meta?: PaginationMeta, error?: string, errorCode?: string, statusCode?: number, validationErrors?: ValidationErrorItem[] }`
-
-| Function | Method | Endpoint | Request | Response data type |
-|---|---|---|---|---|
-| `fetchMembers(params)` | GET | `/api/v1/{role}/members` | `{ page, limit, search, status }` | `Member[]` + PaginationMeta |
-| `fetchMemberById(id)` | GET | `/api/v1/{role}/members/:id` | — | `MemberDetail` |
-| `createMember(dto)` | POST | `/api/v1/{role}/members` | `CreateMemberDto` | `Member` |
-| `updateMember(id, dto)` | PATCH | `/api/v1/{role}/members/:id` | `UpdateMemberDto` | `Member` |
-| `deleteMember(id)` | DELETE | `/api/v1/{role}/members/:id` | — | `null` |
-
-## Approved External Dependencies
-[REQUIRED: Must list all cross-layer and external packages. AI must not import anything outside this list.]
-
-### Feature Business Dependencies
-- None
-
-### Core Infrastructure Dependencies
-- `src/core/network/networkClient.ts`
-- `src/core/navigation/routes.ts`
-- `src/core/utils/formatters.ts`
-
-### Allowed Packages
-- `@tanstack/react-query`
-- `react-hook-form`
-- `zod`
-
-### Forbidden Dependencies
-- Any other feature folder
-- Any role sibling feature
-- Any business logic from `src/core`
-
-## Permissions Used
-[REQUIRED: "None" is a valid and complete answer if no device permissions are used.]
-
-| Permission | Central module function | Rationale |
-|---|---|---|
-
-## Platform-Specific Notes
-[REQUIRED: "None" is acceptable if there are no iOS/Android divergences. If there are,
-name the exact component and what differs and why.]
-
-## Offline Behavior
-[REQUIRED: Explicit "No offline requirement" OR "Yes — [describe cache strategy,
-invalidation triggers, and conflict-resolution approach]".]
-
-## Loading, Empty, and Error States
-[REQUIRED: Name the exact component file for each state per section. "Uses skeleton"
-is not enough — describe what the skeleton mimics.]
+## 9. Offline, Loading, Empty, and Error States
+[REQUIRED: Explicit state handling per major UI section.]
 
 | Section | Loading State | Empty State | Error State |
 |---|---|---|---|
-| Members list | `MembersListSkeleton.tsx` — 5 ghost card rows matching MembersMemberCard height | `MembersEmptyState.tsx` — icon + "No members yet" + "Add Member" CTA | `MembersErrorFallback.tsx` — retry button re-runs the query |
-| Detail screen | Skeleton matching header + 3 tab sections | N/A | Inline retry |
+| Members list | `ManagerMembersListSkeleton.tsx` — 5 ghost card rows matching card height | `ManagerMembersEmptyState.tsx` — icon + "No members found" + "Add Member" CTA | `ManagerMembersErrorFallback.tsx` — retry button calling `refetch()` |
+| Detail screen | Skeleton matching header + 3 tab sections | N/A | Inline retry banner calling `refetch()` |
 
-## Background Tasks
-[REQUIRED: Must explicitly list any scheduled jobs, push handlers, or periodic syncs.]
+- **Network Offline Fallback:** Surfaces user-friendly i18n message (`t('errors.network')`), never exposes raw fetch errors.
+- **Pull-to-Refresh:** Integrated via `refreshing={isRefetching}` and `onRefresh={refetch}` on FlashList.
+
+## 10. Security and PII Rules (Data Masking & Guards)
+- **PII Fields:** Member phone numbers and email addresses masked in list card views using `maskSensitiveData(phone)`.
+- **Zero Client Secrets:** No backend API keys or service tokens embedded in client bundles.
+- **Secure Token Storage:** Auth tokens, refresh tokens, biometric keys stored exclusively in Keychain / Keystore.
+- **Authorization Verification:** In-component role verification prevents rendering unauthorized mutation buttons.
+
+## 11. Accessibility Requirements (A11y)
+- **Accessible Role & Labels:** Every interactive control has `accessible={true}`, `accessibilityRole`, and `accessibilityLabel`.
+- **Touch Target Size:** Minimum 44×44pt (iOS) / 48×48dp (Android) with `hitSlop` on small icons.
+- **Screen Reader Traversal:** Decorative icons set `accessible={false}` or `importantForAccessibility="no-hide-descendants"`.
+- **Dynamic Text Scaling:** Respects user's system font scaling settings without layout clipping.
+
+## 12. Background Tasks & Realtime Events
+- **Push Notification Recovery:** On app foreground resume, notification recovery endpoint is queried (`GET /api/v1/{role}/notifications`).
+- **WebSocket Alerts:** Centralized `WebSocketContext` at `src/core/` dispatches realtime attendance events.
+- **Toast Notifications:** Deduplicated toast triggered on async events using `showToast(msg, type, dedupKey)`.
+
+## 13. Feature Flags & Tenant Settings
+- **Biometric Check-in Flag:** `useFeatureFlag('enable_biometric_sync')` controls biometric registration CTA.
+- **Graceful Fallback:** If disabled, the biometric section is cleanly omitted without layout breakage.
+- **Tenant Currency & Locale:** Consumed via Tenant Config Provider for locale-accurate formatting.
+
+## 14. Cache Invalidation & Consistency
+- **Authoritative Invalidation:** Mutations trigger `queryClient.invalidateQueries({ queryKey: MANAGER_MEMBERS_QUERY_KEYS.lists() })` inside `onSuccess`.
+- **Resource Identity Preservation:** Two different members never share the same query cache entry (`['manager_members', 'detail', memberId]`).
+- **Pessimistic UI Updates:** Financial and destructive mutations wait for 2xx response before updating UI state.
+
+## 15. Migration, Rollback & Edge Cases (AI Warnings)
+[REQUIRED: Specific, non-generic warnings for THIS module.]
+
+- **Hardware Back Press Trap:** On Android, active bottom sheets (`ManagerMembersFilterSheet`) MUST trap back press via `BackHandler` and close the sheet before popping the screen.
+- **Keyboard Safety:** Wrap forms in `KeyboardAvoidingView` with `keyboardShouldPersistTaps="handled"` on ScrollView.
+- **Renewal form pre-fills current plan — do not reset on open:** Sheet receives `currentPlan` prop and pre-fills selector.
+- **`deleteMember` removes ALL membership history:** Irreversible operation; confirmation sheet must state this explicitly.
+- **Phone number masking applies to list view only:** Card uses `maskSensitiveData()`, detail screen reveals full number.
+
+## 16. Test Coverage Map & Quality Gates
+- **Integration Tests:** `tests/manager_members.test.tsx` (MSW mocked API integration test)
+- **Unit Tests:** `tests/formatCurrency.test.ts`, `hooks/useManagerMembersList.test.ts`
+- **Maestro E2E Flows:** `mobile_e2e/frontend_manager_e2e/manager_members/manager_members.yaml`
+- **Mock Scenarios Registry:** ACTIVE, EMPTY, SERVER_500, TIMEOUT, UNAUTHORIZED in `mocks/scenarios/`
+- **Stress Datasets:** Tier 1 (10), Tier 2 (100), Tier 3 (500+) records in `mocks/fixtures/`
+
+## 17. Architecture Exceptions (ADRs)
+| Decision / Parameter | Chosen Approach | Rationale / Trade-Off | Date / Approver |
+|---|---|---|---|
+| Pagination Page Size | 50 rows default | Balanced memory footprint vs scroll smoothness for mobile FlashList | Standard Arch |
+| Mutation State Update | Pessimistic over Optimistic | Complex backend triggers (biometrics, billing recalculations) require authoritative server response | Standard Arch |
+| Local Utility Duplication | Formatter kept feature-local | WET principle strictly enforced to preserve AI portability and zero cross-module coupling | Rule 28 Compliance |
+
+## 18. Known Contract Gaps & Bug Log
 None
 
-## Edge Cases and AI Warnings
-[REQUIRED: Minimum 5 items for any feature with CRUD. Must be feature-specific and
-actionable — not generic advice. Format: bold title + explanation.]
-
-- **[Specific warning title]:** [What breaks, why, and what to do instead]
-
-## Component Responsibility Map
-[REQUIRED for features with 4+ components. One line per file so an AI knows exactly
-which file to open for any task without reading all files.]
-
-| File | Responsibility |
-|---|---|
-| `MembersListScreen.tsx` | Entry screen. Renders toolbar + filter bar + FlatList. No direct API calls. |
-| `MembersMemberCard.tsx` | Single list item. Displays masked phone. Tap navigates to detail screen. |
-| `MembersDetailScreen.tsx` | Full member profile with tabs. Composes useMemberDetail(). Does not call members.api.ts directly. |
-| `MembersEmptyState.tsx` | Empty state shown when list has zero items. Has "Add Member" CTA. |
-| `MembersListSkeleton.tsx` | Loading skeleton — 5 ghost rows matching MembersMemberCard layout. |
-
-## Feature Self-Audit & ZIP Portability Score
-[REQUIRED: Every mobile feature module must score 8/8 before release. Any unchecked box rejects the module from standalone deployment.]
-
-- [ ] **1. ZIP Self-Sufficiency:** Feature can be zipped and given to an external AI agent with zero parent codebase context and zero missing types.
-- [ ] **2. Zero Cross-Feature Business Imports:** Zero imports from sibling features or role containers.
-- [ ] **3. Mock Parity & Scenario Completeness:** Handlers cover all 5 canonical scenarios (ACTIVE, EMPTY, SERVER_500, TIMEOUT, UNAUTHORIZED).
-- [ ] **4. Standalone Harness / Bootstrap:** `tests/harness/bootstrap.ts` / `[Feature]Harness.tsx` mounts the feature in total isolation.
-- [ ] **5. Token Integrity:** Zero hardcoded hex, RGB, or magic dp values; 100% `useThemeTokens()` consumption.
-- [ ] **6. Triad UI States:** Skeleton loading, non-generic EmptyState, and ErrorFallback with retry CTA verified.
-- [ ] **7. Mutation Safety:** Idempotency key attached to all state-changing calls, double-click prevention verified.
-- [ ] **8. Native Safety:** Keyboard avoidance, safe area insets, and Android hardware back press trap verified.
-
-## Rule Compliance Checklist
-[REQUIRED: Mark honestly. An honest [ ] is better than a false [x].]
-
-- [ ] Rule 1: Micro-modularization — module-prefixed files, size ceilings respected
-- [ ] Rule 1: Role isolation — zero cross-role imports (frontend_admin/frontend_manager/frontend_superadmin/frontend_trainer isolated)
-- [ ] Rule 2: Navigation uses typed params — no full objects passed through routes
-- [ ] Rule 3: All styles use design tokens — no magic hex/dp values
-- [ ] Rule 4: State placed per Server/Client decision matrix
+## 19. Rule Compliance Checklist (35+ Verification Items)
+- [ ] Rule 0A: Universal Day-1 Sub-Module Architecture — Autonomous sub-modules at depth = 1
+- [ ] Rule 1: Micro-modularization — module-prefixed files, size ceilings respected (Screen 80, Component 200, Hook 150)
+- [ ] Rule 1: Role isolation — zero cross-role imports (`frontend_admin`, `frontend_manager`, `frontend_superadmin`, `frontend_trainer`)
+- [ ] Rule 2: Navigation uses typed params — no full objects passed through routes (`ParamList` defined)
+- [ ] Rule 3: All styles use design tokens — no magic hex/dp values; `useThemeTokens()` consumed
+- [ ] Rule 4: State placed per Server/Client decision matrix (TanStack Query for server state, Zustand for UI state)
 - [ ] Rule 4: Pessimistic UI — financial/destructive mutations wait for 2xx before UI update
-- [ ] Rule 5: Forms use form library + schema validator
-- [ ] Rule 6: Auth tokens in hardware-backed secure storage only
-- [ ] Rule 7 (API): All API calls through central network client, typed verb contract
-- [ ] Rule 7 (messages): User-facing messages come from backend response.message — never hardcoded
-- [ ] Rule 7A: API/mock response covers ALL UI fields — no missing card fields, KPI fields, chart series, filter fields, or relationship fields; no hardcoded business fallback data in components
-- [ ] Rule 8: Lists use virtualized component for >20 items
-- [ ] Rule 8: Search/filter inputs debounced — minimum 300ms before API call
-- [ ] Rule 17: Co-located unit tests present; E2E for critical flows; AI Test Integrity Gate satisfied — no placeholder assertions, all required API-driven behaviors verified
+- [ ] Rule 5: Forms use form library + schema validator (React Hook Form + Zod)
+- [ ] Rule 6: Auth tokens in hardware-backed secure storage only (`react-native-keychain`)
+- [ ] Rule 7 (API): All API calls through central `networkClient`, typed verb contract, `ApiResponse<T>` envelope
+- [ ] Rule 7 (messages): User-facing messages come from backend `response.message` — never hardcoded
+- [ ] Rule 7A: API/mock response covers ALL UI fields — no missing card fields, KPI fields, chart series, or filters
+- [ ] Rule 8A: Lists use virtualized component (`FlashList` / optimized `FlatList`) for > 50 items
+- [ ] Rule 8B: Search/filter inputs debounced — minimum 300ms before API call
+- [ ] Rule 10A: KeyboardAvoidance wrapped around forms with `keyboardShouldPersistTaps="handled"`
+- [ ] Rule 10B: Pull-to-refresh implemented on user-browsable lists via `refreshing={isRefetching}`
+- [ ] Rule 17: Co-located unit tests present; E2E for critical flows; AI Test Integrity Gate satisfied
 - [ ] Rule 22: No unapproved dependencies added
 - [ ] Rule 23: Observability wired for critical error paths
-- [ ] Rule 24: This _features.md is complete, specific, and non-generic
+- [ ] Rule 24: This `_features.md` is complete, specific, and non-generic
 - [ ] Rule 25: All interactive elements have accessible labels + 44/48dp targets with `hitSlop` for small icons
-- [ ] Rule 28: Zero cross-feature imports (self-containment verified)
+- [ ] Rule 28: Zero cross-feature imports (Strict WET principle verified)
 - [ ] Rule 29: `_forbidden.md` exists, is specific, and has minimum 5 entries
 - [ ] Rule 30: Sensitive data masked in list/card views — full values only in detail screens
 - [ ] Rule 31: Destructive/financial actions use centralized confirmation bottom sheet
@@ -2288,97 +2418,55 @@ which file to open for any task without reading all files.]
 - [ ] Rule 35: All navigation calls use `ROUTES` constants — no hardcoded route strings
 - [ ] Rule 36: Type-only imports use `import type`
 - [ ] Rule 37: Currency/numbers formatted via `formatCurrency()` / `formatNumber()` — no inline `toFixed()`
-- [ ] Rule 38: Null/empty fields use `displayValue()` — no blank cells or "N/A" strings
+- [ ] Rule 38: Null/empty fields use `displayValue()` with en-dash `—` fallback
 - [ ] Rule 39: Async-submit buttons have `minWidth` — no layout shift on loading state
-- [ ] Rule 40: All toasts go through `showToast()` — no direct library calls
+- [ ] Rule 40: All toasts go through `showToast()` with stable `dedupKey` — no direct library calls
 - [ ] Rule 41: Multi-step forms have `useUnsavedChangesGuard` wired to `isDirty`
-- [ ] Rule 42: Every `useEffect` dependency array has an explanatory comment
-- [ ] Rule 43: All hooks and exported utilities have JSDoc blocks
-- [ ] Rule 44: Every file has `RESPONSIBILITY:` + `FLOW:` header comment
-- [ ] Rule 45: TanStack Query v5 native status (`isPending`, `isError`, `data`) used directly for all API calls — zero parallel `NetworkState<T>` wrappers on server state
-- [ ] Rule 46: Background tasks documented in `_features.md` `## Background Tasks` section
-- [ ] Rule 47: All API calls have explicit timeouts from `TIMEOUT_CONFIG`
-- [ ] Rule 48: 400 validation errors mapped to form fields via `handleValidationErrors()` (422 only if explicitly approved by API contract)
-- [ ] Rule 49: List items keyed by entity ID — no array index keys
-- [ ] Rule 50: Permitted record identifiers have copy-to-clipboard affordance in detail screens
-- [ ] Rule 51: Every list screen has a dedicated named `EmptyState` component
-- [ ] Rule 52: New design tokens added to `MOBILE_UI_UX_DESIGN.md` before implementation
-- [ ] Rule 53: Every POST/PATCH/PUT/DELETE mutation uses a required stable Idempotency-Key; the same key is reused on retry and a new key is generated only for a new user intent
-- [ ] Rule 54: Token refresh is single-flight — concurrent 401s share the same refresh promise
-- [ ] Rule 55: `x-tenant-id` derived from trusted session context only — never from route params or local state
-- [ ] Rule 56: Enterprise security constraints respected (encrypted offline cache, exponential backoff with jitter, AbortSignal on unmount, deep-link re-authorization, notification payload validation, clipboard policy)
-- [ ] Rule 57: All import paths exactly match file casing on disk — CI/Linux compatible
-- [ ] Rule 58: WebSockets managed via centralized `WebSocketContext` / `SocketProvider` — no direct `new WebSocket()` in components
-- [ ] Rule 58A: App foreground resume calls the exact notification-recovery endpoint defined by the feature API contract; canonical project pattern: `GET /api/v1/{role}/notifications`
-- [ ] Rule 59: Role-masked fields typed as optional in TypeScript interfaces and Zod schemas; UI handles `undefined` gracefully
-- [ ] Rule 60: Every dedicated mutation hook invalidates affected TanStack Query keys inside `useMutation({ onSuccess: () => queryClient.invalidateQueries(...) })` per Rule 60
-- [ ] Rule 61: All client-authored/static user-visible strings use `t('namespace.KEY')`; backend-supplied `response.message` values are displayed as-is and NOT passed through `t()`; `Accept-Language` header attached by central network client
-- [ ] Rule 62: Feature flags accessed via `useFeatureFlag()` — no raw build/env reads inside components
-- [ ] Rule 63: Currency formatting is feature-local (`formatCurrency.ts`); approved currency metadata used; unsupported codes throw
-- [ ] Rule 64: Tenant data export triggers async backend call + `202 Accepted` success feedback — no in-app download
-- [ ] Rule 65: Every interactive control and critical state indicator has a deterministic `testID` in `[role]_[module]-[component]-[action/state]` format (e.g., `manager_members-addform-submit`)
-- [ ] Rule 66: Every custom hook, complex component, and state store has an exhaustive JSDoc / docstring block
-- [ ] Mobile Edge: KeyboardAvoidance wrapped around forms with `keyboardShouldPersistTaps="handled"`
-- [ ] Mobile Edge: Safe Area insets (`insets.top`, `insets.bottom`) used for screen headers and floating action buttons
-- [ ] Mobile Edge: Hardware back press listener (`BackHandler`) traps active bottom sheets and modals before popping screen
-- [ ] Mobile Edge: Dynamic Type font scaling tested; no fixed-height clipping on text containers
-- [ ] Mobile Edge: Orientation resilience — `useWindowDimensions()` used instead of static `Dimensions.get()`
-- [ ] Mock Scenario Registry: `mocks/scenarios/` implements ACTIVE, EMPTY, SERVER_500, TIMEOUT, UNAUTHORIZED presets
-- [ ] Standalone Harness: `tests/harness/bootstrap.ts` / `[Feature]Harness.tsx` present for isolated execution
+- [ ] Rule 45: TanStack Query v5 native status (`isPending`, `isError`, `data`) used directly for all API calls
+- [ ] Rule 53: Every POST/PATCH/PUT/DELETE mutation uses a required stable `Idempotency-Key` (UUIDv4) with button disable
+- [ ] Native Safety: Hardware back press listener (`BackHandler`) traps active bottom sheets before popping screen
 
-## Architecture Exceptions & Decision Log (ADRs)
-[REQUIRED: Every non-obvious architecture choice, parameter value, or exception MUST be recorded here with its rationale. "None" is acceptable if strictly standard.]
+## 20. Standalone Run, Mock & Test Harness
+[REQUIRED: Exact commands and credentials to run, test, and mock THIS specific sub-module in complete isolation.]
 
-| Decision / Parameter | Chosen Approach | Rationale / Trade-Off | Date / Approver |
-|---|---|---|---|
-| Pagination Page Size | 50 rows default | Balanced memory footprint vs scroll smoothness for mobile FlatList | Standard Arch |
-| Mutation State Update | Pessimistic over Optimistic | Complex backend triggers (biometrics, billing recalculations) require authoritative server response | Standard Arch |
-| Local Utility Duplication | Formatter kept feature-local | WET principle strictly enforced to preserve AI portability and zero cross-module coupling | Rule 28 Compliance |
-
-## Logical Integration Points (Zero Code Imports)
-[REQUIRED: Document the logical, cross-module domain interactions — what other features or services this feature conceptually relates to, without violating code firewalls. Code imports across business features remain STRICTLY FORBIDDEN.]
-
-| Target Domain / Feature | Interaction Type | Data Flow / Event | Isolation Mechanism |
-|---|---|---|---|
-| `admin_members` | Entity Identity | Consumes `memberId` via route params | Zero code imports; state passed purely via typed route params |
-| `admin_billing` | Payment Status | Triggers billing redirect or receives payment verification via API | Decoupled via centralized API endpoint / route config |
-| `notifications` | Async Alert | Dispatches or listens to server-sent WebSocket events | Centralized `WebSocketContext` at `src/core/`, zero feature-to-feature imports |
-
-## Known Contract Gaps & Bug Log
-[REQUIRED: Document any pending backend endpoints, OpenAPI schema mismatches, temporary test workarounds, or active bugs. "None" is required if no known issues exist.]
-
-None
-
-## Module Run, Mock & Test Harness
-[REQUIRED: Exact commands and credentials to run, test, and mock THIS specific module in isolation.]
-
-- **Standalone Harness Entry:** `src/features/frontend_{role}/{role}_{module}/tests/harness/bootstrap.ts`
-- **Integration Test Execution:** `npm run test:integration -- src/features/frontend_{role}/{role}_{module}`
-- **Unit Test Execution:** `npm run test:unit -- src/features/frontend_{role}/{role}_{module}`
-- **Maestro E2E Suite:** `mobile_e2e/frontend_{role}_e2e/{role}_{module}/{role}_{module}.yaml`
-- **Primary Route & Stack:** `ROUTES.[ROLE_MODULE].LIST` via `config/{role_module}.url_config.ts`
-- **Seed Test User & Role:** e.g. `role: "MANAGER"`, `branchId: "branch-001"`, `tenantId: "tenant-dev"`
-- **Mock Scenarios Registry:** `mocks/scenarios/{role_module}.scenarios.ts`
-  - *Standard List (ACTIVE):* MSW returns seeded fixtures array from `mocks/{role_module}.fixtures.ts`
-  - *Empty State (EMPTY):* Set filter or mock flag `?empty=true` to trigger `[Feature]EmptyState.tsx`
-  - *Error State (SERVER_500):* Mock endpoint throws 500 / network error to trigger `[Feature]ErrorFallback.tsx`
+- **Standalone Harness Entry:** `tests/harness/bootstrap.ts` / `[Submodule]Harness.tsx`
+- **Integration Test Execution:** `npm run test:integration -- src/features/frontend_{role}/{role}_{domain}/{domain}_{capability}`
+- **Unit Test Execution:** `npm run test:unit -- src/features/frontend_{role}/{role}_{domain}/{domain}_{capability}`
+- **Maestro E2E Suite:** `mobile_e2e/frontend_{role}_e2e/{role}_{domain}/{domain}_{capability}.yaml`
+- **Primary Route & Stack:** `ROUTES.[ROLE_SUBMODULE].LIST` via `config/[role]_[submodule].url_config.ts`
+- **Seed Test User & Role:** `role: "MANAGER"`, `branchId: "branch-001"`, `tenantId: "tenant-dev"`
+- **Mock Scenarios Registry:** `mocks/scenarios/[role]_[submodule].scenarios.ts`
+  - *Standard List (ACTIVE):* MSW returns seeded fixtures array from `mocks/fixtures/`
+  - *Empty State (EMPTY):* Set filter or mock flag `?empty=true` to trigger empty state component
+  - *Error State (SERVER_500):* Mock endpoint throws 500 / network error to trigger error fallback component
   - *Offline Blocker (TIMEOUT):* Simulated high latency to trigger loading skeletons, button spinner states, or offline alert
   - *Permission Denied (UNAUTHORIZED):* Simulated 401/403 to verify auth recovery and session expiry flow
 
-## Module Portability & Host Integration Guide
-[REQUIRED: Exact 4-step instructions to copy and plug this module into another mobile project or host app.]
+## 21. Module Portability & Host Integration Guide
+[REQUIRED: Exact 4-step instructions to copy and plug this sub-module into another mobile project or host app.]
 
-1. **Folder Transfer:** Copy `src/features/frontend_{role}/{role}_{module}` into target mobile project.
-2. **Route Registration:** Register route `ROUTES.[ROLE_MODULE].*` in host navigation stack.
+1. **Folder Transfer:** Copy `src/features/frontend_{role}/{role}_{domain}/{domain}_{capability}` into target mobile project.
+2. **Route Registration:** Register route `ROUTES.[ROLE_SUBMODULE].*` in host navigation stack.
 3. **Core Contracts Alignment:** Verify target host provides core application plumbing (`networkClient`, `useThemeTokens()`, `showToast()`).
-4. **Mock / Live Backend Verification:** Verify immediate standalone execution via feature-owned MSW fixtures, or connect to production backend via `config/{role_module}.url_config.ts`.
+4. **Mock / Live Backend Verification:** Verify immediate standalone execution via sub-module MSW fixtures, or connect to production backend via `_url_config.ts`.
 
-## Module Changelog & Revision History
-[REQUIRED: Every major modification, schema change, or bug fix MUST append an entry here to preserve AI audit trail.]
+## 22. Deliverables & Version History (8/8 Portability Score)
+[REQUIRED: Every mobile sub-module must score 8/8 before release. Any unchecked box rejects the sub-module.]
 
+### Feature Self-Audit & ZIP Portability Score
+- [ ] **1. ZIP Self-Sufficiency:** Sub-module can be zipped and given to an external AI agent with zero parent codebase context and zero missing types.
+- [ ] **2. Zero Cross-Feature Business Imports:** Zero imports from sibling sub-modules or parent shared folders.
+- [ ] **3. Mock Parity & Scenario Completeness:** Handlers cover all 5 canonical scenarios (ACTIVE, EMPTY, SERVER_500, TIMEOUT, UNAUTHORIZED).
+- [ ] **4. Standalone Harness / Bootstrap:** `tests/harness/bootstrap.ts` / `[Submodule]Harness.tsx` mounts the sub-module in total isolation.
+- [ ] **5. Token Integrity:** Zero hardcoded hex, RGB, or magic dp values; 100% `useThemeTokens()` consumption.
+- [ ] **6. Triad UI States:** Skeleton loading, non-generic EmptyState, and ErrorFallback with retry CTA verified.
+- [ ] **7. Mutation Safety:** Idempotency key attached to all state-changing calls, double-click prevention verified.
+- [ ] **8. Native Safety:** Keyboard avoidance, safe area insets, and Android hardware back press trap verified.
+
+### Module Changelog & Revision History
 | Version | Date | Author / Agent | Changes & Architectural Rationale |
 |---|---|---|---|
-| v1.0.0 | [YYYY-MM-DD] | [Engineer/AI] | Initial canonical module implementation with MSW mocks and doc trio |
+| v1.0.0 | [YYYY-MM-DD] | [Engineer/AI] | Initial canonical sub-module implementation with MSW mocks and doc trio |
 ```
 
 ### Documentation Freshness Rule

@@ -1187,12 +1187,15 @@ When a custom Android `BackHandler` is required:
 - [ ] **End-to-End User Flows:** All documented user flows work end-to-end with verified navigation transitions. — *STOP if broken navigation or orphaned screen.*
 - [ ] **Validation & Error States:** All form validations and error states trigger correctly with field-level feedback. — *STOP if generic error toast replaces field errors.*
 - [ ] **Authoritative Data Rendering:** All API-driven data renders from real fixture or backend response. — *STOP if hardcoded mock data remains in production paths.*
-- [ ] **Mutation Feedback:** All mutations show correct success/error feedback via non-blocking toasts/alerts. — *STOP if mutation completes without visual feedback.*
+- [ ] **Mutation Feedback:** All mutations show correct success/error feedback via non-blocking toasts/alerts with stable `dedupKey`. — *STOP if mutation completes without visual feedback or duplicate toasts stack.*
+- [ ] **Null & Undefined Safe-Fallbacks:** Every nullable or optional field in lists, cards, and profiles uses `displayValue(val, '—')`. — *STOP if raw 'null', 'undefined', or blank cell rendered.*
+- [ ] **Debounced Search Inputs:** All search and rapid filter inputs debounced by ≥ 300ms. — *STOP if API triggers on every keystroke.*
 
 ### 2. State Coverage Gate (Section 13)
 - [ ] **Loading / Skeleton State:** Mimics exact layout of real content (`[Feature]Skeleton.tsx`); never a full-screen spinner. — *STOP if full-screen spinner used.*
 - [ ] **Empty State:** `[Feature]EmptyState.tsx` rendered with icon, message, and CTA where applicable. — *STOP if blank screen shown on empty list.*
 - [ ] **Error State:** `[Feature]ErrorFallback.tsx` rendered with retry button and user-friendly message. — *STOP if raw JavaScript exception shown to user.*
+- [ ] **Large List Virtualization:** Any collection with potential > 50 items uses `FlashList` or optimized `FlatList` with `windowSize={5}`. — *STOP if plain ScrollView or un-virtualized View used.*
 - [ ] **Permission Denied State:** `[Feature]PermissionDenied.tsx` rendered with clear rationale and settings deep link. — *STOP if feature silently fails when permission denied.*
 - [ ] **Offline State:** Non-blocking banner displayed if feature declares offline support. — *STOP if app crashes or locks up when offline.*
 - [ ] **Mock Scenario Validation:** All 5 canonical scenarios (`ACTIVE_RECORDS`, `EMPTY_DATA`, `SERVER_500_ERROR`, `NETWORK_TIMEOUT`, `UNAUTHORIZED_401`) validated against the UI using the standalone `bootstrap.ts` harness. — *STOP if any scenario fails to render or crashes.*
