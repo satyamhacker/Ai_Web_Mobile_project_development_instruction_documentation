@@ -2296,7 +2296,7 @@ which file to open for any task without reading all files.]
 - [ ] Rule 58: WebSockets managed via centralized `WebSocketContext` / `SocketProvider` — no direct `new WebSocket()` in components
 - [ ] Rule 58A: App foreground resume calls the exact notification-recovery endpoint defined by the feature API contract; canonical project pattern: `GET /api/v1/{role}/notifications`
 - [ ] Rule 59: Role-masked fields typed as optional in TypeScript interfaces and Zod schemas; UI handles `undefined` gracefully
-- [ ] Rule 60: Every `useMutation` invalidates affected TanStack Query keys via `.mutateAsync().then()` or global `mutationCache`
+- [ ] Rule 60: Every dedicated mutation hook invalidates affected TanStack Query keys inside `useMutation({ onSuccess: () => queryClient.invalidateQueries(...) })` per Rule 60
 - [ ] Rule 61: All client-authored/static user-visible strings use `t('namespace.KEY')`; backend-supplied `response.message` values are displayed as-is and NOT passed through `t()`; `Accept-Language` header attached by central network client
 - [ ] Rule 62: Feature flags accessed via `useFeatureFlag()` — no raw build/env reads inside components
 - [ ] Rule 63: Currency formatting is feature-local (`formatCurrency.ts`); approved currency metadata used; unsupported codes throw
