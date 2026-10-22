@@ -1904,10 +1904,11 @@ requirements listed inline.
 ```markdown
 # [FeatureName] — Feature Map
 
-## Purpose
+## Purpose & 30-Second Snapshot
 [REQUIRED: 3-5 sentences. Must answer: (1) What business problem does this feature solve?
 (2) Which role(s) use it and what can they DO? (3) What is strictly OFF-LIMITS for each
-role? Generic phrases like "handles X operations" are forbidden.]
+role? If an AI or engineer has only 30 seconds, reading this section alone must convey complete business context.
+Generic phrases like "handles X operations" are forbidden.]
 
 ## Dependency Manifest
 [REQUIRED: List every library and core infrastructure module this feature uses. Example:
@@ -2104,8 +2105,26 @@ which file to open for any task without reading all files.]
 - [ ] Rule 65: Every interactive control and critical state indicator has a deterministic `testID` in `[role]_[module]-[component]-[action/state]` format (e.g., `manager_members-addform-submit`)
 - [ ] Rule 66: Every custom hook, complex component, and state store has an exhaustive JSDoc / docstring block
 
-## Known Issues / Tech Debt
-[REQUIRED: "None" is acceptable. Never leave blank without explicitly stating no known issues.]
+## Architecture Exceptions & Decision Log (ADRs)
+[REQUIRED: Every non-obvious architecture choice, parameter value, or exception MUST be recorded here with its rationale. "None" is acceptable if strictly standard.]
+
+| Decision / Parameter | Chosen Approach | Rationale / Trade-Off | Date / Approver |
+|---|---|---|---|
+| Pagination Page Size | 50 rows default | Balanced memory footprint vs scroll smoothness for mobile FlatList | Standard Arch |
+| Mutation State Update | Pessimistic over Optimistic | Complex backend triggers (biometrics, billing recalculations) require authoritative server response | Standard Arch |
+| Local Utility Duplication | Formatter kept feature-local | WET principle strictly enforced to preserve AI portability and zero cross-module coupling | Rule 28 Compliance |
+
+## Logical Integration Points (Zero Code Imports)
+[REQUIRED: Document the logical, cross-module domain interactions — what other features or services this feature conceptually relates to, without violating code firewalls. Code imports across business features remain STRICTLY FORBIDDEN.]
+
+| Target Domain / Feature | Interaction Type | Data Flow / Event | Isolation Mechanism |
+|---|---|---|---|
+| `admin_members` | Entity Identity | Consumes `memberId` via route params | Zero code imports; state passed purely via typed route params |
+| `admin_billing` | Payment Status | Triggers billing redirect or receives payment verification via API | Decoupled via centralized API endpoint / route config |
+| `notifications` | Async Alert | Dispatches or listens to server-sent WebSocket events | Centralized `WebSocketContext` at `src/core/`, zero feature-to-feature imports |
+
+## Known Contract Gaps & Bug Log
+[REQUIRED: Document any pending backend endpoints, OpenAPI schema mismatches, temporary test workarounds, or active bugs. "None" is required if no known issues exist.]
 
 None
 
@@ -3358,9 +3377,10 @@ Every feature's `_features.md` MUST define these sections with non-generic conte
 14. `## Cache Invalidation`
 15. `## Migration and Rollback`
 16. `## Test Coverage Map`
-17. `## Architecture Exceptions` (documents any `// architecture-exception:` comments)
-18. `## Known Contract Gaps`
-19. `## Module Run, Mock & Test Harness` (isolated test commands, Maestro suite, test user credentials, mock scenario toggles)
+17. `## Architecture Exceptions & Decision Log (ADRs)` (documents non-obvious architecture choices and any `// architecture-exception:` comments)
+18. `## Logical Integration Points (Zero Code Imports)` (documents conceptual cross-feature touchpoints with zero code imports)
+19. `## Known Contract Gaps & Bug Log`
+20. `## Module Run, Mock & Test Harness` (isolated test commands, Maestro suite, test user credentials, mock scenario toggles)
 
 CI MUST fail when a changed feature source file does not have a corresponding update to its `[feature]_features.md`, unless the change is test-only or a documented no-behavior-change refactor.
 
@@ -4100,7 +4120,7 @@ and MUST NOT claim that a ZIP was generated.
 | **Gate 4** | Zero Hardcoded Colors or Insets | Grep for hex `#`, `rgb(`, raw sizes without `// design-exception: <reason>` | **STOP.** Hardcoded style = REJECTED DELIVERY |
 | **Gate 5** | Hardware-Backed Secure Storage Only | Verify auth tokens, refresh tokens, and biometric keys use `react-native-keychain` / Keystore. Zero tokens in `AsyncStorage` | **STOP.** Insecure storage = CRITICAL SECURITY VULNERABILITY |
 | **Gate 6** | Centralized URL Config Present | `config/[featureName].url_config.ts` present, exports all routes/APIs with real paths (zero placeholders) | **STOP.** Missing config = REJECTED DELIVERY |
-| **Gate 7** | Feature Map Non-Generic | `[featureName]_features.md` complete with all 19 mandatory sections (no TBDs or boilerplate) | **STOP.** Generic doc = INCOMPLETE MODULE |
+| **Gate 7** | Feature Map Non-Generic | `[featureName]_features.md` complete with all 20 mandatory sections (no TBDs or boilerplate) | **STOP.** Generic doc = INCOMPLETE MODULE |
 | **Gate 8** | TanStack Query & Hook Architecture | Query keys registered in `[featureName].query_keys.ts` with resource identity; screens NOT calling `useMutation` directly; cache invalidation via `useMutation({ onSuccess: () => queryClient.invalidateQueries(...) })` per Rule 60 | **STOP.** Broken server state / crash |
 | **Gate 9** | Form Architecture Compliance | React Hook Form + Zod validator class/schema; zero Yup/Joi; controlled inputs | **STOP.** Broken form validation |
 | **Gate 10** | Screen Thinness Ceilings Enforced | All screens in `screens/` ≤ **80 lines**; composition only; zero business logic or direct API calls | **STOP.** Monolithic screen = ARCHITECTURE FAILURE |

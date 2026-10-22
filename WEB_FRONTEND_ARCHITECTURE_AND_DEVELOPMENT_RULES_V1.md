@@ -1588,10 +1588,11 @@ Every module feature map MUST use this structure. Each section has mandatory con
 ```markdown
 # [Module Name] — Feature Map
 
-## Module Purpose
+## Module Purpose & 30-Second Snapshot
 [REQUIRED: 3–6 sentences. Must answer: (1) What business problem does this module solve?
 (2) Who uses it (which role/persona)? (3) What are the 3–5 most important things a user
 can DO in this module? (4) What is strictly OFF-LIMITS for this role in this module?
+If an AI or engineer has only 30 seconds, reading this section alone must convey complete business context.
 Generic phrases like "handles X operations" are forbidden.]
 
 ## Dependency Manifest
@@ -1679,6 +1680,15 @@ without reading every component file. Example:]
 2. User navigates to "Membership" tab → clicks "Renew"
 3. `ManagerMembersRenewalModal` opens with pre-filled current plan
 4. On confirm: `renewMembership(memberId, dto)` called → Query cache invalidated/updated → toast shown
+
+## Logical Integration Points (Zero Code Imports)
+[REQUIRED: Document the logical, cross-module domain interactions — what other features or services this module conceptually relates to, without violating code firewalls. Code imports across business features remain STRICTLY FORBIDDEN.]
+
+| Target Domain / Feature | Interaction Type | Data Flow / Event | Isolation Mechanism |
+|---|---|---|---|
+| `admin_members` | Entity Identity | Consumes `memberId` via route param or URL query | Zero code imports; state passed purely via URL / route params |
+| `admin_billing` | Payment Status | Triggers billing redirect or receives payment verification via API | Decoupled via centralized API endpoint / route config |
+| `notifications` | Async Alert | Dispatches or listens to server-sent WebSocket events | Centralized `WebSocketContext` at `@/lib/socket`, zero module-to-module imports |
 
 ## Data and State Architecture
 [REQUIRED: Must name the ACTUAL store files, context files, and query keys — not "TBD".]
@@ -1778,6 +1788,20 @@ without reading all files.]
 | `ManagerMembersAddModal.tsx` | 3-tab add member form. Renders form and delegates submission to form/mutation hook. Closes on success. |
 | `ManagerMembersKPIs.tsx` | 4 stat cards (Total, Active, Expired, Due Today). Read-only display. |
 | `ManagerMembersEmptyState.tsx` | Empty state UI shown when table has zero rows. Has "Add Member" CTA. |
+
+## Architecture Exceptions & Decision Log (ADRs)
+[REQUIRED: Every non-obvious architecture choice, parameter value, or exception MUST be recorded here with its rationale. "None" is acceptable if strictly standard.]
+
+| Decision / Parameter | Chosen Approach | Rationale / Trade-Off | Date / Approver |
+|---|---|---|---|
+| Pagination Page Size | 50 rows default | Balanced throughput vs DOM node count for gym member tables | Standard Arch |
+| Mutation State Update | Invalidation over Optimistic | Complex backend triggers (biometrics, billing recalculations) require authoritative server response | Standard Arch |
+| Local Utility Duplication | Formatter kept module-local | WET principle strictly enforced to preserve AI portability and zero cross-module coupling | Rule 1A Compliance |
+
+## Known Contract Gaps & Bug Log
+[REQUIRED: Document any pending backend endpoints, OpenAPI schema mismatches, temporary test workarounds, or active bugs. "None" is required if no known issues exist.]
+
+None
 
 ## Module Run, Mock & Test Harness
 [REQUIRED: Exact commands, route paths, test credentials, and MSW mock scenario toggles to run, verify, and mock THIS specific module in complete isolation.]
