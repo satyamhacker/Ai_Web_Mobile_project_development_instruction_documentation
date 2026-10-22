@@ -1015,10 +1015,11 @@ Verification modes available:
      1. **Static Architecture & Code Compliance Rating (1 to 10):** Measures actual code quality, contract fulfillment, and rule adherence.
      2. **Runtime Verification Status:** Clearly marked as `DEFERRED_TO_HOST_RUNTIME (Offline audit)`.
    - When asked by the user to rate progress or compliance (e.g., "Rate from 1 to 10"), the AI **MUST NOT complain or repeatedly excuse itself** with "I don't have a runtime environment". It MUST state the Static Compliance Rating directly and concisely.
-5. **ISOLATED ROLE / FEATURE MODULE INPUT RULE (NON-NEGOTIABLE):**
-   - When the user supplies an isolated role module, feature slice, or role container ZIP (e.g., `superadmin.zip`, `frontend_superadmin.zip`, `backend_superadmin/`, `manager_members.zip`):
-   - The absence of host application root configuration files (`package.json`, root `tsconfig.json`, `next.config.js`, root route tree `src/app/layout.tsx`, root providers, or sibling role modules) is EXPECTED and BY DESIGN in a modular architecture.
+5. **ISOLATED ROLE / FEATURE / SUB-MODULE INPUT RULE (THE SUB-MODULE ZIP GUARANTEE):**
+   - When the user supplies an isolated role module, feature slice, role container ZIP, or a single autonomous Sub-Module folder (e.g., `superadmin.zip`, `frontend_superadmin.zip`, `manager_attendance.zip`, `attendance_dashboard.zip`, `attendance-history.zip`):
+   - The absence of host application root configuration files (`package.json`, root `tsconfig.json`, `next.config.js`, root route tree `src/app/layout.tsx`, root providers, sibling role modules, or sibling sub-modules) is EXPECTED and BY DESIGN in a modular architecture.
    - The auditor MUST NOT halt, stall, refuse to audit, or output messages such as *"what I need to unblock the fixes --- please provide the host applications route/configuration slice... package manifest Typescript aliases next js route tree"*.
+   - Sibling sub-modules (e.g. `attendance_dashboard` vs `attendance_history`) are 100% independent. The auditor MUST NOT expect or demand sibling files when evaluating a single sub-module.
    - The auditor MUST NOT demand host files or declare the audit/repair BLOCKED.
    - The auditor MUST assume standard modular conventions: path alias `@/*` resolves to `src/*`, and framework/platform dependencies are provided by the host.
    - The auditor MUST proceed to audit the supplied source files immediately and exhaustively.
@@ -3173,6 +3174,77 @@ Do NOT apply Web/DOM rules to React Native code.
 Use framework-specific supplied rules only.
 
 Do not invent framework restrictions.
+
+---
+
+# 39B. BACKEND FRAMEWORK BOUNDARY AUDIT (NESTJS / DJANGO)
+
+If the target is Backend (NestJS / Django / TypeScript / Python), inspect ALL of the following where applicable:
+
+### 1. Canonical Backend Hierarchy & Root Quarantine (Rule 0A.2, 0D, 0F, 0H)
+- **Role Container Namespace (Rule 0D):** MUST be `src/backend-{role}/` (e.g., `src/backend-manager/`, `src/backend-admin/`), NEVER unprefixed. Unprefixed role container = IMMEDIATE ARCHITECTURE VIOLATION.
+- **Top-Level Role Canonical Structure:** Every backend role MUST contain exactly:
+  ```text
+  backend-{role}/
+  ├── {role}-core/
+  └── {role}-modules/
+  ```
+- **Domain Container:** MUST be `{role}-modules/{role}-{domain}/` (e.g., `manager-modules/manager-attendance/`).
+- **Universal Day-1 Sub-Module Architecture:** Every backend domain module container contains ONLY:
+  1. Parent aggregator module (`[role]-[module].module.ts`) importing sub-modules
+  2. Master documentation files (`{role}-{domain}-feature.md`)
+  3. One or more autonomous Sub-Modules (`{sub-module}/`, e.g., `attendance-dashboard/`, `attendance-history/`, `profile-overview/`).
+- **Forbidden Root Code Monolith (Domain Quarantine):** Placing loose controllers, services, repositories, DTOs, or entities directly at the domain module root is a **CRITICAL ARCHITECTURE VIOLATION** (`FAIL — ROOT_CODE_MONOLITH`). 100% of executable implementation code lives inside sub-modules.
+- **Sub-Folder Formula Inside Sub-Modules:** Inside `{sub-module}/`, sub-folders follow `{submodule}-{artifact}/`:
+  - `{submodule}-controllers/`
+  - `{submodule}-services/`
+  - `{submodule}-dto/`
+  - `{submodule}-repositories/`
+  - `{submodule}-entities/`
+  - `{submodule}-tests/`
+- **File Naming Formula (Anti-Double-Prefixing Rule 0F & 0H):**
+  - Sub-folders use the module/submodule prefix ONLY: `{submodule}-{artifact}/` (e.g. `dashboard-controllers/`, `dashboard-services/`). NEVER `manager-dashboard-controllers/`.
+  - Files inside those folders MUST carry the full unique prefix: `[role]-[submodule]-[description].[type].ts` (e.g., `manager-attendance-dashboard-metrics.controller.ts`, `manager-attendance-history-query.service.ts`).
+- **Meaningful Domain-Prefixed Submodule Naming Standard:** Every submodule folder MUST follow `{domain}-{capability}` (e.g., `attendance-dashboard/`, `attendance-history/`, `profile-overview/`, `billing-invoices/`). Banned lazy names (`tab1/`, `main/`, `default/`, `api/`, `details/`, `common/`, `shared/`, `temp/`, `misc/`) = **CRITICAL NAMING VIOLATION**.
+
+### 2. Sibling Sub-Module Isolation Firewall & Strict WET Law (Rule 0A.2, Rule 0C)
+- **Zero Cross-Sub-Module Coupling:** `attendance-dashboard` services MUST NEVER import repositories, services, entities, or DTOs from `attendance-history` or vice versa. Direct sibling imports = IMMEDIATE ARCHITECTURE FAILURE.
+- **Parent Shared Folders Strictly Forbidden:** Creating `attendance/common/` or `attendance/shared/` inside the domain is FORBIDDEN.
+- **Strict WET Principle:** Shared query helpers, DTO validators, and mappers MUST be duplicated locally within the sub-module.
+- **The Backend Sub-Module ZIP Guarantee:** Any single sub-module (e.g., `src/backend-manager/manager-modules/manager-attendance/attendance-history/`) can be zipped, handed to an AI, and audited/repaired in complete isolation.
+
+### 3. Modular Monolith vs Microservice Boundary (Rule 0E)
+- Feature modules operate in a **Modular Monolith**, NOT as microservices.
+- **NestJS Rule:** Feature modules MUST strictly use `.forFeature()` registrations (e.g., `TypeOrmModule.forFeature([...])`). Feature modules MUST NEVER call `.forRoot()` or `.forRootAsync()`.
+- Feature modules MUST NOT initialize redundant database connection pools or Redis clients locally.
+
+### 4. Database Relations & Foreign Keys vs Event Communication
+- **Read Operations & Foreign Keys:** Normal TypeORM relations (`relations: ['employee']`, `leftJoinAndSelect`) and database foreign keys are 100% permitted and required for data queries. Direct joins in repository queries are standard and MUST NOT be replaced with premature event emitters.
+- **Cross-Domain Write Side-Effects:** State-change mutations affecting another domain MUST use `EventEmitter2` (`emit` & `@OnEvent`) or an outbox-backed event registry (`event-registry.constants.ts`). Direct cross-domain service injection is FORBIDDEN.
+- **Cross-Feature Multi-Table Atomic Transactions:** Managed exclusively by an application orchestrator (`src/infrastructure/workflows/`), never by sibling-to-sibling service cross-calling.
+
+### 5. ApiResponse<T> Standard 8-Field Envelope & Discriminated Union (Rule 28, Rule 64, Rule 82)
+- All endpoints MUST return the canonical 8-field envelope:
+  `success`, `statusCode`, `message`, `data`, `meta`, `error`, `errorCode`, `validationErrors`.
+- `data` is ALWAYS `null` on error; `data` is ALWAYS a single, explicitly typed DTO on success (no polymorphic bags of mixed objects).
+- Error responses MUST use SCREAMING_SNAKE_CASE `errorCode` (`DOMAIN.ENTITY.REASON`, e.g., `ATTENDANCE.CHECKIN.ALREADY_RECORDED`).
+
+### 6. Mutational Idempotency & Tenant Security (Rule 31, Rule 50A, Rule 103)
+- All mutating endpoints (POST/PUT/PATCH/DELETE) MUST validate the `Idempotency-Key` header.
+- Multi-tenancy: `gymId` and `branchId` MUST be extracted ONLY from JWT/Auth context via `@CurrentUser()` or Auth Guard. Passing tenant IDs in request bodies or query params = **P0 CRITICAL SECURITY FAILURE**.
+- Every repository query MUST enforce tenant isolation in its `WHERE` clause.
+
+### 7. Database Migrations & Soft-Deletes (Rule 24, Rule 29, Rule 34)
+- NestJS MUST use TypeORM migrations with `synchronize: false` in production/staging. Automatic schema sync is BANNED.
+- Soft-deletes MUST use `@DeleteDateColumn()` at the repository layer. Direct destructive SQL `DELETE` is FORBIDDEN on operational data (except append-only event logs / ledger rows).
+- N+1 Prevention: All queries fetching related entities MUST use eager loading or `leftJoinAndSelect`.
+
+### 8. Sub-Module Documentation & Run Harness
+- Every backend sub-module MUST contain its own `{sub-module}-backend-feature.md` containing:
+  - API endpoint contracts and HTTP methods
+  - Frozen Frontend UI Data Contract snapshot
+  - Swagger/OpenAPI schemas
+  - Standalone Unit & Integration test run instructions
 
 ---
 
@@ -5582,8 +5654,12 @@ The audit is complete only when ALL of the following are true:
 [ ] Visual evidence types separated
 [ ] Accessibility checked when applicable
 [ ] Web Frontend-specific checks applied when stack is Next.js / Web
-[ ] — Web: Canonical Module Hierarchy checked (src/app/frontend_{role}/{role}_{module}/)
-[ ] — Web: Root Quarantine checked (only page/layout/docs/url_config at feature root)
+[ ] — Web: Universal Day-1 Sub-Module Architecture checked (src/app/frontend_{role}/{role}_{domain}/ containing layout.tsx shell + autonomous {domain}_{capability}/ sub-modules)
+[ ] — Web: Forbidden Root Code Monolith checked (zero loose components, hooks, mocks, or utils at domain root)
+[ ] — Web: Sibling Sub-Module Isolation Firewall checked (zero cross-submodule imports between siblings, e.g. attendance_dashboard vs attendance_history)
+[ ] — Web: Strict WET Principle checked (zero parent attendance/common/ or shared/ folders; shared badges/filters duplicated locally)
+[ ] — Web: Sub-Module Documentation Trio checked ([role]_[submodule]_features.md with 22 canonical sections including Section 20 Run Harness, _forbidden.md, _theme_contract.md)
+[ ] — Web: Sub-Module ZIP Guarantee checked (any single sub-module can be zipped and audited independently)
 [ ] — Web: Zero Barrel Files checked (no index.ts, direct absolute imports @/...)
 [ ] — Web: Zero Business Logic in src/components/ui/ checked (dumb primitives only)
 [ ] — Web: TanStack Query v5 Compliance checked (isPending, not isLoading on mutations)
@@ -5594,15 +5670,30 @@ The audit is complete only when ALL of the following are true:
 [ ] — Web: En-Dash Nullable Fallback checked (displayValue() used, zero blank cells)
 [ ] — Web: Unsaved Changes Guard checked on complex forms (browser exit + router navigation)
 [ ] — Web: Module-Co-located Locales checked (en + active languages in _locales/)
-[ ] — Web: Documentation Trio checked (_features.md, _forbidden.md, _theme_contract.md)
 [ ] — Web: Centralized URL Config checked (_url_config.ts exports all routes as const)
 [ ] Backend architecture checked when applicable
-[ ] — Modular Monolith Isolation Check done (no .forRoot() in feature modules)
-[ ] — Orchestrator-owns-transactions check done
-[ ] — Redis Responsibility Segregation checked
-[ ] — Event Registry pattern checked (NestJS)
-[ ] — Django: no independent DB connections in feature apps
+[ ] — Backend: Universal Day-1 Sub-Module Architecture checked (backend-{role}/{role}-modules/{role}-{domain}/{sub-module}/)
+[ ] — Backend: Forbidden Root Code Monolith checked (zero loose controllers, services, repositories at domain root)
+[ ] — Backend: Anti-Double-Prefixing & Naming Formula checked (folders: {submodule}-{artifact}/, files: [role]-[submodule]-[description].[type].ts)
+[ ] — Backend: Sibling Sub-Module Isolation Firewall checked (attendance-dashboard never imports services/repos from attendance-history)
+[ ] — Backend: Strict WET Principle checked (shared DTOs/validators duplicated locally, zero shared domain common/ folders)
+[ ] — Backend: Sub-Module Backend Documentation checked ({sub-module}-backend-feature.md with frozen contract & run harness)
+[ ] — Backend: Modular Monolith Isolation Check done (.forFeature() used, no .forRoot() in feature modules)
+[ ] — Backend: Database Reads & Foreign Keys checked (TypeORM relations: [...] & leftJoinAndSelect for reads, no unnecessary event emitters)
+[ ] — Backend: Cross-Domain Mutations checked (EventEmitter2 emit & @OnEvent used for cross-domain side-effects)
+[ ] — Backend: Orchestrator-owns-transactions check done (atomic multi-table writes managed by workflow orchestrator)
+[ ] — Backend: ApiResponse<T> 8-Field Envelope checked (success, statusCode, message, data, meta, error, errorCode, validationErrors)
+[ ] — Backend: Multi-Tenancy JWT Isolation checked (gymId/branchId resolved from JWT context, never client body/params)
+[ ] — Backend: TypeORM Migrations checked (synchronize: false in production/staging)
+[ ] — Backend: Soft-Deletes checked (@DeleteDateColumn() in repository layer, no hard DELETE)
+[ ] — Backend: Redis Responsibility Segregation checked
+[ ] — Backend: Event Registry pattern checked (NestJS)
+[ ] — Backend: Django: no independent DB connections in feature apps
 [ ] Mobile-specific checks applied when stack is React Native
+[ ] — Mobile: Universal Day-1 Sub-Module Architecture checked (screens/Manager[Domain]Navigator.tsx shell + autonomous {domain}_{capability}/ sub-modules)
+[ ] — Mobile: Forbidden Root Code Monolith checked (zero loose screens, components, hooks, or mocks at domain root)
+[ ] — Mobile: Sibling Sub-Module Isolation Firewall checked (zero cross-submodule imports, zero parent common/ folders)
+[ ] — Mobile: Sub-Module Documentation Trio checked ([role]_[submodule]_features.md with 22 canonical sections, _forbidden.md, _theme_contract.md)
 [ ] — Mobile: AsyncStorage-for-tokens check done (CRITICAL security)
 [ ] — Mobile: react-native-reanimated vs legacy Animated API check done
 [ ] — Mobile: FlatList / flash-list for large lists check done
