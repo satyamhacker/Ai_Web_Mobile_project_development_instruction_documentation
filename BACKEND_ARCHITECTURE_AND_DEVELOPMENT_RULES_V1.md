@@ -340,6 +340,11 @@ To prevent architectural drift and eliminate monolithic backend sprawl, the back
 >    - `manager_billing/billing_invoices` ➔ `manager-billing/billing-invoices/`
 >    - `manager_members/members_directory` ➔ `manager-members/members-directory/`
 >
+> 7. **Meaningful Domain-Prefixed Submodule Naming Standard (No Lazy Names):**
+>    - Every backend submodule folder MUST follow the exact semantic formula: `{submodule}` where `{submodule}` matches `{domain}-{capability}` (e.g., `attendance-dashboard/`, `attendance-history/`, `profile-overview/`, `billing-invoices/`).
+>    - **The 5-Second Comprehension Invariant:** Anyone inspecting ONLY the submodule folder name MUST instantly know within 5 seconds its parent domain and exact business capability/API intent.
+>    - **Strictly Banned Lazy/Ambiguous Names:** Never use generic or lazy names such as `tab1/`, `main/`, `default/`, `api/`, `details/` (must be `members-detail`), `common/`, `shared/`, `temp/`, or `misc/`. Lazy names are treated as **Critical Naming Violations**.
+>
 
 ### Cross-Feature Workflow Exception
 

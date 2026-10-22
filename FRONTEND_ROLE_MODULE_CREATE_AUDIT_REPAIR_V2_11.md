@@ -204,6 +204,9 @@ A delivery/blocking status explains the final execution outcome.
 >    - **Zero Root Code In Domain Folder:** Creating loose `components/`, `hooks/`, `api/`, `mocks/`, or `utils/` directly at the feature root level is a **CRITICAL ARCHITECTURE VIOLATION**. 100% of executable source code, mocks, and tests MUST live inside `{sub_module}/`.
 >    - **The Sub-Module Is The AI Repair Unit:** When repairing a sub-feature (e.g., `attendance_history`), the AI receives ONLY `attendance_history/` (or modifies ONLY that sub-folder). It MUST NEVER import from or modify sibling sub-modules (e.g., `attendance_dashboard`).
 >    - **Folder vs File Naming Formula:** Subfolders use canonical standard names (`components/`, `hooks/`, `api/`, `mocks/`, `utils/`, `tests/`), while file names MUST be globally unique with `[Role][Submodule][Name]` prefix (e.g., `ManagerAttendanceHistoryFilterBar.tsx`, `useManagerAttendanceHistoryList.ts`). Sibling sub-modules are 100% decoupled in source code.
+>    - **Meaningful Domain-Prefixed Submodule Naming Standard (No Lazy Names):** Every submodule folder MUST follow the exact semantic formula: `{domain}_{capability}` or `{domain}_{screen_intent}` (e.g., `attendance_dashboard`, `attendance_history`, `profile_overview`, `profile_security`, `billing_invoices`).
+>      - **The 5-Second Comprehension Invariant:** Anyone inspecting ONLY the submodule folder name MUST instantly know within 5 seconds its parent domain and exact business capability/screen intent.
+>      - **Strictly Banned Lazy/Ambiguous Names:** Never use generic or lazy names such as `tab1/`, `tab2/`, `main/`, `default/`, `home/`, `view/`, `details/` (must be `members_detail`), `common/`, `shared/`, `temp/`, or `misc/`. Lazy names are treated as **Critical Naming Violations**.
 
 ---
 

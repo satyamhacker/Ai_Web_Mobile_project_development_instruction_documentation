@@ -392,7 +392,11 @@ manager_profile/
 ```
 The domain root contains ONLY `layout.tsx` (navigation wrapper) and `page.tsx` (redirect). 100% of feature code lives inside sub-modules.
 
-
+#### Meaningful Domain-Prefixed Submodule Naming Standard (Strict Ban on Lazy / Ambiguous Names):
+Every submodule folder MUST follow the exact semantic formula: `{domain}_{capability}` or `{domain}_{screen_intent}`:
+- ✅ **Compliant Examples:** `attendance_dashboard/`, `attendance_history/`, `attendance_analytics/`, `attendance_biometrics/`, `profile_overview/`, `profile_security/`, `billing_invoices/`, `billing_subscriptions/`, `members_directory/`, `members_detail/`.
+- **The 5-Second Comprehension Invariant:** Anyone (developer or AI agent) inspecting ONLY the submodule folder name MUST instantly know within 5 seconds its parent domain and exact business capability/screen intent.
+- ❌ **Strictly Banned Lazy/Ambiguous Names:** Never use generic or lazy names such as `tab1/`, `tab2/`, `main/`, `default/`, `home/`, `view/`, `details/` (must be `members_detail`), `common/`, `shared/`, `temp/`, or `misc/`. Lazy names are treated as **Critical Naming Violations**.
 
 
 ### Sub-Module Isolation Firewall (Zero Cross-Sub-Module Imports & Sub-Module ZIP Guarantee)

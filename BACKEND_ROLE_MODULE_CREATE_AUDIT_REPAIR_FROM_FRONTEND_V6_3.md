@@ -103,6 +103,9 @@ Stop only when:
 >    - **Zero Root Code in Domain Folder:** Creating loose controllers, services, repositories, or DTOs directly at the domain module root is a **CRITICAL ARCHITECTURE VIOLATION**. 100% of executable source code, entities, and tests MUST live inside `{sub-module}/`.
 >    - **The Sub-Module Is The AI Repair Unit:** When repairing a backend sub-feature (e.g., `attendance-history`), the AI receives ONLY `attendance-history/` (or modifies ONLY that sub-folder). It MUST NEVER import from or modify sibling sub-modules (e.g., `attendance-dashboard`).
 >    - **Folder vs File Naming Formula:** Subfolders use `{submodule}-{artifact}/` (e.g., `dashboard-controllers/`, `dashboard-services/`, `dashboard-dto/`), while file names MUST be globally unique with `[role]-[submodule]-[description].[type].ts` (e.g., `manager-attendance-history-query.controller.ts`). Sibling sub-modules are 100% decoupled in source code.
+>    - **Meaningful Domain-Prefixed Submodule Naming Standard (No Lazy Names):** Every backend submodule folder MUST follow the exact semantic formula: `{submodule}` matching `{domain}-{capability}` (e.g., `attendance-dashboard/`, `attendance-history/`, `profile-overview/`, `billing-invoices/`).
+>      - **The 5-Second Comprehension Invariant:** Anyone inspecting ONLY the submodule folder name MUST instantly know within 5 seconds its parent domain and exact business capability/API intent.
+>      - **Strictly Banned Lazy/Ambiguous Names:** Never use generic or lazy names such as `tab1/`, `main/`, `default/`, `api/`, `details/` (must be `members-detail`), `common/`, `shared/`, `temp/`, or `misc/`. Lazy names are treated as **Critical Naming Violations**.
 
 
 ---
