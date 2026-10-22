@@ -10,7 +10,7 @@ When instructions conflict across documents, apply this exact order of authority
 4. `MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md`
 5. `MOBILE_UI_UX_DESIGN.md` for visual/token decisions
 6. `FRONTEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_V2_11.md` for execution workflow, audit sequencing, delivery artifacts, and reporting
-7. Feature-local documentation trio (`_features.md`, `_forbidden.md`, `_theme_contract.md`)
+7. Sub-module documentation trio (`[role]_[submodule]_features.md`, `[role]_[submodule]_forbidden.md`, `[role]_[submodule]_theme_contract.md`)
 8. Existing implementation conventions
 
 A lower-priority rule MUST NOT override a higher-priority rule.
@@ -126,7 +126,7 @@ This document governs the **React Native mobile application only**. Rules refere
 6. **Architecture Rules** — isolation, naming, token discipline
 7. **Visual Preferences** — colors, animations, spacing aesthetics
 
-Deviations from this hierarchy MUST be documented in the affected feature's `_features.md`.
+Deviations from this hierarchy MUST be documented in the affected sub-module's `[role]_[submodule]_features.md`.
 
 ---
 
@@ -1233,5 +1233,6 @@ When a custom Android `BackHandler` is required:
 ### 7. Documentation & Testing Gate
 - [ ] **Sub-Module Theme Contract Artifact:** `[role]_[submodule]_theme_contract.md` lists all consumed tokens for this sub-module. — *STOP if theme contract missing or empty.*
 - [ ] **Sub-Module Feature Spec Sync:** `[role]_[submodule]_features.md` updated with all 22 canonical sections (including Section 20 Standalone Harness). — *STOP if features doc out of sync.*
+- [ ] **Sub-Module Forbidden Patterns:** `[role]_[submodule]_forbidden.md` present with zero cross-submodule imports and parent shared folder ban. — *STOP if forbidden patterns missing or generic.*
 - [ ] **Behavioral Tests:** Component and hook tests verify real user actions (tap -> submit -> visible state update). — *STOP if tests only check shallow renders.*
 - [ ] **Maestro E2E Flows:** E2E tests verify critical mobile flows (login, CRUD, permissions). — *STOP if critical user journey lacks E2E coverage.*

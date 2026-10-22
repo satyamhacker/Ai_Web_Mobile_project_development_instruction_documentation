@@ -10,7 +10,7 @@ When instructions conflict across documents, apply this exact order of authority
 4. `MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md`
 5. `MOBILE_UI_UX_DESIGN.md` for visual/token decisions
 6. `FRONTEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_V2_11.md` for execution workflow, audit sequencing, delivery artifacts, and reporting
-7. Feature-local documentation trio (`_features.md`, `_forbidden.md`, `_theme_contract.md`)
+7. Sub-module documentation trio (`[role]_[submodule]_features.md`, `[role]_[submodule]_forbidden.md`, `[role]_[submodule]_theme_contract.md`)
 8. Existing implementation conventions
 
 A lower-priority rule MUST NOT override a higher-priority rule.
@@ -92,10 +92,10 @@ Before generating, auditing, or repairing ANY mobile feature module, verify ALL 
 | **Thin Screen Composition** | Screens in `screens/` MUST only compose components; hard maximum **80 lines**; ZERO business logic, state calculations, or direct API calls. Screen renders `<SafeAreaView>`, `<StatusBar>`, extracts route params, and renders ONE `[Role][Module][Screen]MainView.tsx` component. | Heavy screen = ARCHITECTURE VIOLATION. In repair: extract to MainView component in RBG 1. |
 | **Prefixed Component Files** | Components in `components/` MUST use PascalCase with **Role+Module** prefix (e.g., `ManagerMembersMemberCard.tsx`, NOT `MembersMemberCard.tsx`). Max **200 lines**. | Unprefixed or role-missing component = NON_COMPLIANT. In repair: rename to Role+Module prefixed in RBG 1. |
 | **Feature Custom Hooks** | Hooks in `hooks/` MUST use camelCase with `use` + **Role+Module** name (e.g., `useManagerMembers.ts`, `useManagerMembersFilters.ts`). Max **150 lines**. | Generic or role-missing hook name = NON_COMPLIANT. In repair: rename to Role+Module hook in RBG 1. |
-| **Root Quarantine** | The feature root MUST contain ONLY the three documentation files (`_features.md`, `_forbidden.md`, `_theme_contract.md`). All executable or support artifacts MUST live inside approved canonical subfolders (`e2e/`, `tests/`, `mocks/`, `config/`, `types/`, `schemas/`, `api/`, `hooks/`, `state/`, `components/`, `screens/`, `utils/`, `_locales/`). | Loose source files at feature root = NON_COMPLIANT. In repair: move to correct sub-folder in RBG 1. |
+| **Root Quarantine** | Feature domain root (`src/features/frontend_{role}/{role}_{module}/`) contains ONLY `screens/Manager[Domain]Navigator.tsx` (pure navigation shell) and autonomous sub-module directories `{submodule}/`. 100% of feature business code lives inside autonomous sub-modules. Inside each autonomous sub-module, only route screens, `config/[role]_[submodule].url_config.ts`, and the Documentation Trio (`[role]_[submodule]_features.md`, `[role]_[submodule]_forbidden.md`, `[role]_[submodule]_theme_contract.md`) are allowed at root. | Any business code in domain root or non-quarantine file in sub-module root = NON_COMPLIANT. In repair: move to correct subfolder in RBG 1. |
 | **Central Hardware Secure Storage** | Auth tokens, refresh tokens, biometric keys MUST use iOS Keychain / Android Keystore via `react-native-keychain`. NEVER `AsyncStorage`. | Tokens in AsyncStorage = CRITICAL SECURITY AUDIT FAILURE. In repair: replace with `react-native-keychain` wrapper in RBG 1. |
-| **Module Documentation Trio** | Every feature MUST contain `[featureName]_features.md`, `[featureName]_forbidden.md`, and `[featureName]_theme_contract.md`. | Missing doc artifact = INCOMPLETE MODULE. In repair: generate missing docs from source in RBG 1. |
-| **Centralized URL Config** | `config/[featureName].url_config.ts` MUST exist and define all routes and API endpoints as `as const`. | Missing URL config = HARDCODED ROUTE RISK. In repair: generate centralized URL config in RBG 1. |
+| **Sub-Module Documentation Trio** | Every autonomous sub-module MUST contain `[role]_[submodule]_features.md` (with all 22 canonical sections, Section 20 Standalone Harness, Section 21 Portability Guide), `[role]_[submodule]_forbidden.md`, and `[role]_[submodule]_theme_contract.md`. | Missing doc artifact = INCOMPLETE MODULE. In repair: generate missing docs from source in RBG 1. |
+| **Centralized URL Config** | `config/[role]_[submodule].url_config.ts` MUST exist inside each sub-module and define all routes and API endpoints as `as const`. | Missing URL config = HARDCODED ROUTE RISK. In repair: generate centralized URL config in RBG 1. |
 | **Query Key Registry** | `api/[featureName].query_keys.ts` or `config/[featureName].query_keys.ts` MUST exist and namespace all TanStack Query keys with resource identity. | Missing query key factory = CACHE INCONSISTENCY RISK. In repair: create query key registry in RBG 1. |
 | **Zero Cross-Feature Imports** | A feature MUST NOT import business components, hooks, or state from sibling features. | Sibling import = VIOLATION OF RULE 28 (WET PRINCIPAL). In repair: duplicate the required business artifact locally inside the owning feature module (Strict WET Principal) in RBG 1. Moving business logic to `src/core/` is STRICTLY FORBIDDEN. |
 | **No Barrel Files** | NO `index.ts` or re-export facades. All imports must be direct absolute paths (`@/...`). | Barrel file = CIRCULAR DEPENDENCY RISK. In repair: remove barrel files and update imports in RBG 1. |
@@ -322,10 +322,10 @@ The same principle applies to every role and every domain.
 
 | Artifact | Requirement Level | Mandatory Trigger Condition | Consequence of Omission |
 |---|---|---|---|
-| `[featureName]_features.md` | **MANDATORY FOR ALL MODULES** | Every single feature module | `NON_COMPLIANT` — Module lacks architectural map |
-| `[featureName]_forbidden.md` | **MANDATORY FOR ALL MODULES** | Every single feature module | `NON_COMPLIANT` — Module lacks safety boundaries |
-| `[featureName]_theme_contract.md` | **MANDATORY FOR ALL MODULES** | Every single feature module | `NON_COMPLIANT` — Visual portability contract unverified |
-| `config/[featureName].url_config.ts` | **MANDATORY FOR ALL MODULES** | Every module with routes or API calls | `NON_COMPLIANT` — URL centralization contract broken |
+| `[role]_[submodule]_features.md` (or `_features.md`) | **MANDATORY FOR ALL SUB-MODULES** | Every single autonomous sub-module (all 22 canonical sections) | `NON_COMPLIANT` — Sub-module lacks architectural map |
+| `[role]_[submodule]_forbidden.md` (or `_forbidden.md`) | **MANDATORY FOR ALL SUB-MODULES** | Every single autonomous sub-module | `NON_COMPLIANT` — Sub-module lacks safety boundaries & WET rules |
+| `[role]_[submodule]_theme_contract.md` (or `_theme_contract.md`) | **MANDATORY FOR ALL SUB-MODULES** | Every single autonomous sub-module | `NON_COMPLIANT` — Visual portability contract unverified |
+| `config/[role]_[submodule].url_config.ts` | **MANDATORY FOR ALL SUB-MODULES** | Every sub-module with routes or API calls | `NON_COMPLIANT` — URL centralization contract broken |
 | `api/[featureName].query_keys.ts` | **MANDATORY FOR ALL MODULES** | Every module with API calls | `NON_COMPLIANT` — Cache key consistency broken |
 | `screens/` | **MANDATORY FOR ALL MODULES** | Every feature module with UI | `NON_COMPLIANT` — Missing screen entry points |
 | `components/` | **MANDATORY FOR ALL MODULES** | Every feature module with UI | `NON_COMPLIANT` — Missing view layer |
@@ -363,7 +363,13 @@ AI RUNS FEATURE TESTS
 ONLY FEATURE FILES ARE CHANGED
 ```
 
-For example, if a bug exists in `src/features/frontend_manager/manager_members/`, the preferred AI context is ONLY that folder — NOT the entire `frontend_manager/` role container and NOT the entire application.
+For example, if a bug exists in the directory flow within manager members:
+
+```text
+src/features/frontend_manager/manager_members/members_directory/
+```
+
+the preferred AI context under the Sub-Module ZIP Guarantee is ONLY that autonomous sub-module folder — NOT the parent domain container `manager_members/`, NOT the role container `frontend_manager/`, and NOT the entire application.
 
 ---
 
@@ -2464,18 +2470,17 @@ code review.
 
 ---
 
-## Rule 29 — Forbidden Patterns Per Feature (`_forbidden.md`)
+## Rule 29 — Forbidden Patterns Per Autonomous Sub-Module (`[role]_[submodule]_forbidden.md`)
 
-Every feature folder MUST have a `[featureName]_forbidden.md` file listing
-what is explicitly NOT allowed in that specific feature.
+Every autonomous sub-module (and feature module) MUST have a dedicated `[role]_[submodule]_forbidden.md` file listing what is explicitly NOT allowed in that specific unit.
 The canonical read order for AI agents is:
-1. `_features.md`
-2. `_forbidden.md`
+1. `[role]_[submodule]_features.md`
+2. `[role]_[submodule]_forbidden.md`
 3. only then source files
 
-### `_forbidden.md` Content Quality Standard
+### `[role]_[submodule]_forbidden.md` Content Quality Standard
 
-Every entry MUST be feature-specific and actionable. Generic entries like
+Every entry MUST be sub-module-specific and actionable. Generic entries like
 "Do not bypass API interceptors" or "Follow best practices" are **forbidden in
 the forbidden file itself** — they add zero value. Every entry must name the
 specific file, hook, or pattern to use instead. Minimum 5 entries for any
@@ -2490,14 +2495,17 @@ feature with CRUD operations.
 
 ✅ **GOOD (specific, actionable):**
 ```markdown
-# members — Forbidden Patterns
+# [role]_[submodule] — Forbidden Patterns
 
-- NEVER import from any other feature folder (frontend_admin/members/, frontend_trainer/members/, etc.) — zero cross-feature imports, Rule 28
-- NEVER call the HTTP client directly — always use members.api.ts which goes through the central network client
-- NEVER store API response data in members.store.ts — the TanStack Query cache is the single source of truth for server data
+- NEVER import from any sibling sub-module (e.g., attendance_dashboard must NEVER import from attendance_history) — zero cross-sub-module imports, Rule 28
+- NEVER create or import from parent shared folders (e.g., attendance/common/ or attendance/components/ are strictly forbidden) — strict WET principle
+- NEVER share React Context or Zustand stores between sub-modules — communicate exclusively via route navigation with typed params
+- NEVER import from any other feature or role folder (frontend_admin/members/, frontend_trainer/members/, etc.) — zero cross-feature imports, Rule 28
+- NEVER call the HTTP client directly — always use [submodule].api.ts which goes through the central network client
+- NEVER store API response data in [submodule].store.ts — the TanStack Query cache is the single source of truth for server data
 - NEVER execute delete/suspend actions on single tap — always show the centralized confirmation bottom sheet first (Rule 31)
 - NEVER add a new dependency without checking approved-dependencies.md first (Rule 22)
-- NEVER hardcode hex colors, dp values, or font sizes — use design tokens from MOBILE_UI_UX_DESIGN.md only (Rule 3)
+- NEVER hardcode hex colors, dp values, or font sizes — use design tokens via useThemeTokens() only (Rule 3)
 - NEVER log auth tokens, phone numbers, payment amounts, or full API response bodies — sanitize before any log call (Rule 6)
 - NEVER display raw phone numbers or payment amounts in list/card views — use maskSensitiveData() (Rule 30)
 ```
