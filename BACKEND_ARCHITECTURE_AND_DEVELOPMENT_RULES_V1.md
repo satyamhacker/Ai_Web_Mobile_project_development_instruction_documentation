@@ -483,6 +483,25 @@ backend-admin/
 
 AI agents MUST consult this table before creating any folder or file name. Any deviation = architecture violation.
 
+### 0I. STRICT MAXIMUM NESTING DEPTH LAW (THE DEPTH INVARIANT — SUB-SUBMODULES BANNED)
+
+1. **The 4-Tier Terminal Leaf Boundary:** The backend architectural hierarchy stops strictly at Tier 4:
+   - Tier 1: `src/` (Source Root)
+   - Tier 2: `backend-{role}/` (Role Container)
+   - Tier 3: `{role}-modules/` ➔ `{role}-{domain}/` (Pure Feature Domain Module — Aggregator & Quarantine)
+   - Tier 4: `{submodule}/` (Autonomous Sub-Module — **TERMINAL LEAF BUSINESS EXECUTION UNIT**)
+2. **Sub-submodules are STRICTLY FORBIDDEN:** Creating nested folders inside a sub-module that act as child sub-modules (e.g., `members-directory/directory-export/` or `attendance-history/biometrics/`) is a **CRITICAL P0 ARCHITECTURE VIOLATION**.
+3. **Artifact-Only Decomposition:** All decomposition inside an autonomous sub-module happens PURELY via standard canonical artifact folders (`{submodule}-controllers/`, `{submodule}-services/`, `{submodule}-repositories/`, `{submodule}-dto/`, `{submodule}-mappers/`, `{submodule}-domain/`, `{submodule}-types/`, `{submodule}-tests/`).
+4. **Deterministic 5-Gate Sub-Module Qualification Decision Matrix (Backend):**
+   - **Gate 1 (Frontend Route / Tab Isomorphism):** Does this capability correspond to a distinct secondary tab or dedicated sub-route on the frontend (e.g., `/attendance/history`, `/billing/invoices`)? If YES → **Autonomous Sub-Module** (`{submodule}/`).
+   - **Gate 2 (Entity / Lifecycle Independence):** Does this capability manage an independent sub-domain entity or distinct transactional lifecycle? If YES → **Autonomous Sub-Module**. If it is merely an additional query filter, patch endpoint, or export method on the existing entity → **Method/Controller** inside the existing sub-module.
+   - **Gate 3 (File Count & Granularity Bounds — The Goldilocks Rule: 5–20 Files):**
+     - Target: 5 to 20 files per sub-module (controllers + services + repositories + DTOs + entity + tests + harness + doc trio).
+     - Nano-Module Banned: Creating a sub-module for a single utility or single endpoint (< 3 files) is FORBIDDEN.
+     - Mega-Submodule Banned: Cramming 3+ distinct sub-domain entity lifecycles into one sub-module (> 25 files) is FORBIDDEN; split into sibling sub-modules under `{role}-{domain}/`.
+   - **Gate 4 (Standalone Testability & Mockability):** Can this sub-module run isolated unit/integration tests with its own seeders and harness? If YES → **Autonomous Sub-Module**.
+   - **Gate 5 (DI & Sibling Isolation Boundary):** Sibling sub-modules NEVER import each other's NestJS `@Module`, `@Injectable()` services, or repositories. Cross-domain side-effects use Domain Events (Transactional Outbox).
+
 ### 0B. HARD FEATURE WRITE BOUNDARY
 
 For a feature-specific task, the default writable scope is:
@@ -1471,6 +1490,8 @@ Every autonomous backend sub-module MUST implement ALL 22 canonical sections bel
 - [ ] Rule 0A.2: Parent shared folder banned (`manager-attendance/common/` absent)
 - [ ] Rule 0A.2: Zero cross-submodule imports; sibling `@Module` or service NOT imported
 - [ ] Rule 0A.2: Strict WET Principle applied to DTOs, mappers, and helpers
+- [ ] Rule 0A.2: Strict Maximum Nesting Depth verified (depth = 1 below domain module; zero sub-submodules)
+- [ ] Rule 0A.2: Sub-Module Sizing & Qualification verified (5-Gate Matrix; zero nano-modules <3 files; zero mega-modules >25 files)
 - [ ] Rule 0G: Tenant isolation verified (`gymId`/`branchId` from JWT, never body)
 - [ ] Rule 7: Approved project ORM used; parameterized queries only
 - [ ] Rule 8: Event-driven cross-module communication (Redis Streams/Outbox)

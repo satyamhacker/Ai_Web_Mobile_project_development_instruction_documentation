@@ -119,6 +119,19 @@ Stop only when:
 >    - **Meaningful Domain-Prefixed Submodule Naming Standard (No Lazy Names):** Every backend submodule folder MUST follow the exact semantic formula: `{submodule}` matching `{domain}-{capability}` (e.g., `attendance-dashboard/`, `attendance-history/`, `profile-overview/`, `billing-invoices/`).
 >      - **The 5-Second Comprehension Invariant:** Anyone inspecting ONLY the submodule folder name MUST instantly know within 5 seconds its parent domain and exact business capability/API intent.
 >      - **Strictly Banned Lazy/Ambiguous Names:** Never use generic or lazy names such as `tab1/`, `main/`, `default/`, `api/`, `details/` (must be `members-detail`), `common/`, `shared/`, `temp/`, or `misc/`. Lazy names are treated as **Critical Naming Violations**.
+>    - **Strict Maximum Nesting Depth Law (The Depth Limit Invariant — Sub-Submodules Strictly BANNED):**
+>      - Hierarchy depth below the Domain Module Container (`{role}-{domain}/`) is **STRICTLY BOUNDED TO EXACTLY 1 LEVEL** (`{submodule}/`).
+>      - Tier 4 (`{submodule}/`) is the **absolute terminal leaf business execution unit**.
+>      - **Sub-submodules are STRICTLY FORBIDDEN:** Creating nested folders inside a sub-module that act as child sub-modules (e.g., `attendance-history/export/` or `members-directory/details/`) is a **CRITICAL P0 ARCHITECTURE VIOLATION**. All decomposition inside a sub-module happens PURELY via standard canonical artifact folders (`{submodule}-controllers/`, `{submodule}-services/`, `{submodule}-repositories/`, `{submodule}-dto/`, `{submodule}-mappers/`, `{submodule}-domain/`, `{submodule}-types/`, `{submodule}-tests/`).
+>    - **Deterministic 5-Gate Sub-Module Qualification Decision Matrix (How AI Decides Backend Sub-Module vs Service Method):**
+>      - **Gate 1 (Frontend Route / Tab Isomorphism):** Does this capability correspond to a distinct secondary tab or dedicated sub-route on the frontend (e.g., `/attendance/history`, `/billing/invoices`)? If YES → **Autonomous Sub-Module** (`{submodule}/`).
+>      - **Gate 2 (Entity / Lifecycle Independence):** Does this capability manage an independent sub-domain entity or distinct transactional lifecycle? If YES → **Autonomous Sub-Module**. If it is merely an additional query filter, patch endpoint, or export method on an existing entity → **Method/Controller** inside the existing sub-module.
+>      - **Gate 3 (File Count & Granularity Bounds — The Goldilocks Rule: 5–20 Files):**
+>        - Target: 5 to 20 files per sub-module (controllers + services + repositories + DTOs + entity + tests + harness + doc trio).
+>        - Nano-Module Banned: Creating a sub-module for a single utility or single endpoint (< 3 files) is FORBIDDEN.
+>        - Mega-Submodule Banned: Cramming 3+ distinct sub-domain entity lifecycles into one sub-module (> 25 files) is FORBIDDEN; split into sibling sub-modules under `{role}-{domain}/`.
+>      - **Gate 4 (Standalone Testability & Mockability):** Can this sub-module run isolated unit/integration tests with its own seeders and harness? If YES → **Autonomous Sub-Module**.
+>      - **Gate 5 (DI & Sibling Isolation Boundary):** Sibling sub-modules NEVER import each other's NestJS `@Module`, `@Injectable()` services, or repositories. Cross-domain side-effects use Domain Events (Transactional Outbox).
 
 
 ---
@@ -6017,12 +6030,16 @@ Verify ALL of the following:
    - `[role]-[submodule]-backend-forbidden.md` (or `_backend-forbidden.md`)
    - `[role]-[submodule]-backend-contract.md` (or `_backend-contract.md`)
 7. **Backend Sub-Module ZIP Guarantee:** Any single sub-module can be zipped independently, provided to an AI agent, and audited/repaired in complete isolation.
+8. **Strict Maximum Nesting Depth Law (The Depth Limit Invariant — Sub-Submodules Strictly BANNED):** Hierarchy depth below `{role}-{domain}/` is **STRICTLY BOUNDED TO EXACTLY 1 LEVEL** (`{submodule}/`). Tier 4 is the terminal leaf business execution unit. Creating nested sub-modules inside a sub-module (e.g., `attendance-history/export/` or `members-directory/details/`) is a **CRITICAL P0 ARCHITECTURE VIOLATION**. All internal decomposition MUST use `{submodule}-{artifact}/` folders.
+9. **Deterministic 5-Gate Sub-Module Qualification Decision Matrix:** Enforce the 5 deterministic qualification gates (frontend tab/route isomorphism, independent entity lifecycle, Goldilocks 5–20 file rule, standalone test harness, and strict DI boundary).
 
 Detect:
 - feature repair performed at role-container scope without necessity;
 - sibling sub-module cross-imports or DI coupling;
 - loose business logic at parent domain root (Quarantine breach);
 - domain-level `common/` or `shared/` folders (WET violation);
+- sub-submodules nested inside `{submodule}/` (depth > 1 violation);
+- nano-modules (< 3 files / single endpoint) or mega-modules (> 25 files with multi-workflow sprawl);
 - mega-module mashing multiple frontend feature domains together.
 
 ### 0B — Hard feature write boundary

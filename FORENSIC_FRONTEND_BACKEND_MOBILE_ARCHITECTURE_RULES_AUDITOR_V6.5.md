@@ -2229,6 +2229,13 @@ Audit whether the role container's sidebar navigation aligns strictly 1-to-1 wit
      → If YES: Flag as `FINDING: DOMAIN_ROOT_QUARANTINE_VIOLATION` (Severity: CRITICAL). Remediation: Move 100% of feature implementation code into autonomous sub-modules (`{domain}_{capability}/`).
    - Sibling Sub-Module Isolation & Parent Shared Folder Ban: Do sibling sub-modules import from each other, or does a parent shared folder (`attendance/common/`, `attendance/shared/`) exist?
      → If YES: Flag as `FINDING: SIBLING_SUBMODULE_COUPLING` (Severity: CRITICAL). Remediation: Enforce strict WET duplication locally inside each sub-module.
+   - **Sub-Module Maximum Nesting Depth Audit (Strict Depth = 1):** Is any folder nested inside a sub-module that acts as a child sub-module (e.g., `attendance_history/details/`, or depth > 1 below domain container)?
+     → If YES: Flag as `FINDING: SUBMODULE_DEEP_NESTING_VIOLATION` (Severity: CRITICAL). Remediation: Flatten hierarchy to strictly 1 level below domain container. All internal sub-views, drawers, and wizard steps MUST live in `components/` (`[Submodule]Views/`, `[Submodule]Modals/`).
+   - **Sub-Module Granularity & Qualification Audit (5-Gate Matrix & Goldilocks Rule):**
+     - Has a sub-module been created for a single button, badge, dropdown, or trivial UI element (< 3 files)?
+       → If YES: Flag as `FINDING: NANO_MODULE_VIOLATION` (Severity: MAJOR). Remediation: Collapse into owning sub-module's `components/` or `utils/`.
+     - Does a single sub-module contain > 25 files spanning 3+ distinct operational workflows?
+       → If YES: Flag as `FINDING: MEGA_SUBMODULE_VIOLATION` (Severity: MAJOR). Remediation: Split into sibling autonomous sub-modules under the domain container.
 
 3. **Autonomous AI Repair Hand-off & Sub-Module ZIP Guarantee:**
    - Can any single sub-module (e.g., `attendance_history/`) or complete feature domain (e.g., `manager_attendance/`) be extracted as a standalone ZIP and audited/repaired by an AI agent in 100% isolation?
@@ -2262,6 +2269,9 @@ Audit whether the mobile primary navigation (Bottom Tab Navigator / Drawer Navig
      → If YES: Flag as `FINDING: DOMAIN_ROOT_QUARANTINE_VIOLATION` (Severity: CRITICAL). Remediation: Move 100% of executable screen and feature code into autonomous sub-modules.
    - Sibling Isolation & Parent Shared Folder Ban: Are there cross-imports between sibling mobile sub-modules or does a parent shared folder (`attendance/common/`, `attendance/shared/`) exist?
      → If YES: Flag as `FINDING: SIBLING_SUBMODULE_COUPLING` (Severity: CRITICAL). Remediation: Enforce local duplication (Strict WET).
+   - **Sub-Module Maximum Nesting Depth Audit (Strict Depth = 1):** Are there sub-submodules nested inside `{domain}_{capability}/`?
+     → If YES: Flag as `FINDING: SUBMODULE_DEEP_NESTING_VIOLATION` (Severity: CRITICAL). Remediation: Flatten hierarchy to depth = 1. Internal sub-views must live in `components/`.
+   - **Sub-Module Granularity & Qualification Audit (5-Gate Matrix & Goldilocks Rule):** Check for `NANO_MODULE_VIOLATION` (< 3 files) and `MEGA_SUBMODULE_VIOLATION` (> 25 files multi-workflow).
 
 3. **Autonomous AI Repair Hand-off Audit & Sub-Module ZIP Guarantee:**
    - Can the target mobile sub-module folder (e.g., `attendance_history/`) or feature domain folder be extracted as a standalone ZIP and audited/repaired by an AI agent in 100% isolation?
@@ -2296,6 +2306,9 @@ Audit whether the backend architecture enforces strict 1-to-1 isomorphism with f
      3. Autonomous Sub-Modules (`{submodule}/`, e.g., `attendance-dashboard/`, `attendance-history/`, `profile-overview/`)
    - Are loose controllers, services, repositories, entities, or DTOs placed directly at the domain module root?
      → If YES: Flag as `FINDING: DOMAIN_ROOT_QUARANTINE_VIOLATION` (Severity: CRITICAL). Remediation: Move 100% of executable source code, entities, DTOs, and tests into child sub-modules (`{submodule}/`).
+   - **Backend Sub-Module Maximum Nesting Depth Audit (Strict Depth = 1):** Are there sub-submodules nested inside `{submodule}/` (e.g., `attendance-history/history-export/`)?
+     → If YES: Flag as `FINDING: SUBMODULE_DEEP_NESTING_VIOLATION` (Severity: CRITICAL). Remediation: Flatten hierarchy to depth = 1 below domain module. All internal artifact categorization MUST use `{submodule}-{artifact}/` folders.
+   - **Backend Sub-Module Sizing & Qualification Audit (5-Gate Matrix):** Verify that each sub-module aligns with an autonomous sub-domain entity/workflow. Check for `NANO_MODULE_VIOLATION` (< 3 files) and `MEGA_SUBMODULE_VIOLATION` (> 25 files multi-workflow).
 
 3. **Sibling Sub-Module Isolation Firewall, Sibling DI Boundary & WET Principle:**
    - Do sibling sub-modules (e.g., `attendance-dashboard` and `attendance-history`) import each other's `@Module`, `@Injectable()` services, repositories, entities, or DTOs directly?

@@ -215,6 +215,19 @@ A delivery/blocking status explains the final execution outcome.
 >    - **Meaningful Domain-Prefixed Submodule Naming Standard (No Lazy Names):** Every submodule folder MUST follow the exact semantic formula: `{domain}_{capability}` or `{domain}_{screen_intent}` (e.g., `attendance_dashboard`, `attendance_history`, `profile_overview`, `profile_security`, `billing_invoices`).
 >      - **The 5-Second Comprehension Invariant:** Anyone inspecting ONLY the submodule folder name MUST instantly know within 5 seconds its parent domain and exact business capability/screen intent.
 >      - **Strictly Banned Lazy/Ambiguous Names:** Never use generic or lazy names such as `tab1/`, `tab2/`, `main/`, `default/`, `home/`, `view/`, `details/` (must be `members_detail`), `common/`, `shared/`, `temp/`, or `misc/`. Lazy names are treated as **Critical Naming Violations**.
+>    - **Strict Maximum Nesting Depth Law (The Depth Limit Invariant — Sub-Submodules Strictly BANNED):**
+>      - Hierarchy depth below the Domain Container (`{role}_{domain}/`) is **STRICTLY BOUNDED TO EXACTLY 1 LEVEL** (`{domain}_{capability}/`).
+>      - Tier 4 (`{domain}_{capability}/`) is the **absolute terminal leaf feature execution unit**.
+>      - **Sub-submodules are STRICTLY FORBIDDEN:** Creating nested folders inside a sub-module that act as child sub-modules (e.g., `{domain}_{capability}/{capability}_{sub}/`) is a **CRITICAL ARCHITECTURE VIOLATION**. All decomposition inside a sub-module happens PURELY through standard category folders (`components/`, `hooks/`, `api/`, `state/`, `types/`, `schemas/`, `mocks/`, `utils/`, `tests/`).
+>    - **Deterministic 5-Gate Sub-Module Qualification Decision Matrix (How AI Decides Sub-Module vs Internal View):**
+>      - **Gate 1 (Route & Navigation):** Does the capability have its own secondary navigation tab or distinct URL route segment (e.g., `/attendance/history`, `/attendance/biometrics`)? If YES → **Autonomous Sub-Module**. If it is opened by a button click, table row click, modal toggle, drawer slide-out, or multi-step wizard step → **Internal Component/View** inside `components/` (`[Submodule]Views/`, `[Submodule]Modals/`, etc.).
+>      - **Gate 2 (State & Lifecycle Independence):** Can this capability be refreshed, directly navigated to, or reset without depending on uncommitted in-memory React state of another screen? If YES → **Autonomous Sub-Module**. If it strictly depends on live uncommitted form state of a multi-step flow → **Internal View/Component** inside the same sub-module.
+>      - **Gate 3 (Granularity & File Count — The Goldilocks Rule: 5–20 Files):**
+>        - **Healthy Sub-Module Range:** 5 to 20 files.
+>        - **Anti-Pattern 1 (Nano-Module BANNED):** Creating a sub-module for a single component, badge, dropdown, or simple card (< 3 files) is STRICTLY FORBIDDEN. Keep it in `components/`.
+>        - **Anti-Pattern 2 (Mega-Submodule BANNED):** Cramming multiple distinct operational workflows into one giant sub-module (> 25 files) is STRICTLY FORBIDDEN. Split into sibling sub-modules under that domain container.
+>      - **Gate 4 (Standalone Testability & Mockability):** Can this capability run in isolation with its own MSW handlers, mock dataset, and test harness? If YES → **Autonomous Sub-Module**.
+>      - **Gate 5 (Backend Entity Alignment):** Sub-modules map 1:1 to cohesive sub-domain entities or aggregate roots. New CRUD operations or filters on existing entities belong inside the existing sub-module, NOT a new sub-module.
 
 ---
 
@@ -1792,6 +1805,41 @@ Produce this table for every candidate feature or consolidated route:
    - The Sidebar, Header, Breadcrumbs, Command Palette, and Shell layout themselves MUST reside in that role's own dedicated navigation module (e.g., `src/app/frontend_{role}/{role}_navigation/`).
    - Navigation components MUST consume ONLY the exported typed URL contracts (`[submodule]_url_config.ts`) from feature sub-modules. Navigation components MUST NOT import any business components, business stores, or domain hooks from feature sub-modules.
    - If a bug occurs in the sidebar itself (e.g., collapsing toggle, mobile drawer focus trap, search filtering, menu group ordering, or active link highlighting), the repair context is STRICTLY the navigation module (`{role}_navigation/`), NEVER individual feature modules.
+
+5. **Strict Maximum Nesting Depth Law (The Depth Limit Invariant — Sub-Submodules Strictly BANNED):**
+   - **The 4-Tier Terminal Leaf Boundary:** The architectural hierarchy stops strictly at Tier 4:
+     - Tier 1: `src/app/` (Application Route Root)
+     - Tier 2: `frontend_{role}/` (Role Container)
+     - Tier 3: `{role}_{domain}/` (Pure Domain Container — Navigational Shell & Quarantine)
+     - Tier 4: `{domain}_{capability}/` (Autonomous Sub-Module — **TERMINAL LEAF FEATURE EXECUTION UNIT**)
+   - **Sub-Submodules are STRICTLY FORBIDDEN:** Creating folders like `{domain}_{capability}/{capability}_{sub}/` (e.g., `attendance_history/history_details/` or `attendance_history/table/`) as child submodules is a **CRITICAL P0 ARCHITECTURE VIOLATION**. Nesting depth below the Domain Container is STRICTLY LIMITED TO EXACTLY 1 LEVEL.
+   - All internal UI decomposition inside an autonomous sub-module happens PURELY via standard canonical category folders (`components/`, `hooks/`, `api/`, `state/`, `types/`, `schemas/`, `mocks/`, `utils/`, `tests/`).
+   - Multi-step forms, secondary tabs, detail panels, slide-over drawers, or modals inside a sub-module MUST live inside that sub-module's `components/` folder (e.g. `components/[Submodule]Views/`, `components/[Submodule]Modals/`, `components/[Submodule]Drawers/`), driven by React state or URL search parameters (`?view=`), NEVER by nesting sub-submodule folders.
+
+6. **Deterministic 5-Gate Sub-Module Qualification Decision Matrix (How AI Decides Sub-Module vs Internal View):**
+   When designing, creating, or auditing features, the AI MUST follow this deterministic decision matrix. Never guess or arbitrarily invent sub-modules:
+
+| Level | Granularity Criteria | Location & Structure | Correct Example | FORBIDDEN Anti-Pattern |
+|---|---|---|---|---|
+| **Domain Container (Tier 3)** | Primary clickable item in role's sidebar/primary drawer. Contains high-level business domain. | `src/app/frontend_{role}/{role}_{domain}/` | `manager_attendance/`, `admin_billing/` | Merging separate sidebar items (`manager_finance_and_expenses/`) |
+| **Autonomous Sub-Module (Tier 4)** | Distinct secondary navigation tab, independent sub-route segment, or standalone operational capability with its own lifecycle. | `{domain}_{capability}/` directly under `{role}_{domain}/` (Depth = 1) | `attendance_dashboard/`, `attendance_history/`, `attendance_biometrics/` | Nested sub-submodule (`attendance_history/details/`) or generic name (`tab1/`) |
+| **Internal Component / Sub-View** | Sub-screen, modal, slide-over drawer, filter drawer, or step within a wizard. Controlled by UI interaction or `?view=`. | Inside sub-module `components/` folder (`components/[Submodule]Views/`) | `ManagerAttendanceHistoryDetailDrawer.tsx` inside `attendance_history/components/` | Creating a standalone sub-module for a single drawer (`attendance_history_drawer/`) |
+| **Local Utility / Reusable UI** | UI badge, status pill, table formatter, card wrapper, or local date helper used across this sub-module. | Inside sub-module `components/` or `utils/` | `ManagerAttendanceStatusBadge.tsx` inside `attendance_history/components/` | Nano-module (`attendance_status_badge/`) or parent shared folder (`attendance/common/`) |
+
+   - **The 5 Deterministic Qualification Gates:**
+     1. **Gate 1 (Navigation Invariant):** Does this capability map to a secondary tab in the domain shell or a distinct URL segment (e.g., `/attendance/history`)?
+        - If YES → **Autonomous Sub-Module** (`{domain}_{capability}/`).
+        - If NO (triggered by clicking an "Edit" button, a table row, a filter toggle, or a wizard next step) → **Internal Component/View** in `components/`.
+     2. **Gate 2 (State & Lifecycle Independence):** Can this capability be refreshed directly, deep-linked, or reset without depending on live uncommitted in-memory React state of another screen?
+        - If YES → **Autonomous Sub-Module**.
+        - If NO (e.g., Step 2 of a 3-step checkout or registration wizard that depends on uncommitted form memory from Step 1) → **Internal Component/View** inside the SAME sub-module.
+     3. **Gate 3 (File Count & Granularity Bounds — The Goldilocks Rule: 5–20 Files):**
+        - **Target Range:** 5 to 20 files per sub-module (orchestrator + 2-4 UI components + 1-2 hooks + 1 api client + 1 store + 1 mock + 1 test + doc trio).
+        - **Anti-Pattern 1 (Nano-Module BANNED):** Creating a sub-module for a single button, badge, chip, or static card (< 3 files) is STRICTLY FORBIDDEN. Keep it in `components/`.
+        - **Anti-Pattern 2 (Mega-Submodule BANNED):** Cramming 3+ completely distinct operational workflows (e.g., Attendance Clock-in + Biometric Sync + Payroll Export + Shift Calendar) into one giant sub-module (> 25 files) is STRICTLY FORBIDDEN. Split into separate sibling sub-modules under that domain container.
+     4. **Gate 4 (Standalone Testability & Mockability — ZIP Guarantee):** Can this capability be extracted, supplied with mock data, and tested in total isolation using its own MSW handlers and local harness?
+        - If YES → **Autonomous Sub-Module**.
+     5. **Gate 5 (Backend Entity Lifecycle Alignment):** In Backend, a Sub-Module maps 1:1 to an autonomous sub-domain entity or aggregate root. Additional CRUD actions or filters on the existing entity belong inside the existing sub-module, NEVER as a new sub-module.
 
 ---
 
@@ -10046,6 +10094,8 @@ The AI MUST evaluate every item below against the created mobile module and reco
 - [ ] **43P-ARCH-14:** No abbreviations in file or component names
 - [ ] **43P-ARCH-15:** Exported component name matches filename exactly
 - [ ] **43P-ARCH-16:** App Upgrade & Backward Compatibility (Rule 68) — MMKV schema versioned (`version: number`); secure storage migrations handled safely; cached query payloads use optional chaining (`data?.field ?? fallback`) to prevent runtime crashes on API drift
+- [ ] **43P-ARCH-17:** Universal Sub-Module Nesting Depth Law — Maximum folder depth below `{role}_{module}/` is strictly 1 level (`{domain}_{capability}/`). Zero sub-submodules allowed (e.g., `attendance_history/details/` is FORBIDDEN). Submodules qualify strictly by secondary navigation tabs, distinct sub-routes, or independent lifecycle per the 5-Gate Matrix; internal modals, slide-overs, and wizard steps MUST live in `components/` (`[Submodule]Views/`, `[Submodule]Modals/`)
+- [ ] **43P-ARCH-18:** Sub-Module Sizing & Qualification (Goldilocks Rule) — Submodule file count is 5–20 files; zero nano-modules (< 3 files / single badge, button, or chip); zero mega-submodules (> 25 files spanning multi-workflow sprawl; must be split into peer sub-modules)
 
 ## 43P-API — API Contract & URL Config
 

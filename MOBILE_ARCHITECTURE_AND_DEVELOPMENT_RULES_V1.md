@@ -598,6 +598,21 @@ To guarantee that any AI agent or mobile developer can repair, test, or expand a
        export const managerAttendanceHistoryKeys = { all: ['manager', 'attendance', 'history'] as const }
        ```
      - MSW mock handlers MUST mock distinct sub-feature REST endpoints. Cross-sub-module query invalidation or shared cache keys are STRICTLY FORBIDDEN.
+    - **Strict Maximum Nesting Depth Law (The Depth Limit Invariant — Sub-Submodules Strictly BANNED):**
+      - Mobile hierarchy depth below `{role}_{domain}/` is **STRICTLY BOUNDED TO EXACTLY 1 LEVEL** (`{domain}_{capability}/`).
+      - Tier 4 (`src/features/frontend_{role}/{role}_{domain}/{domain}_{capability}/`) is the **absolute terminal leaf feature execution unit**.
+      - **Sub-submodules are STRICTLY FORBIDDEN:** Creating nested folders inside a sub-module that act as child sub-modules (e.g., `attendance_history/details/` or `attendance_history/table/`) is a **CRITICAL P0 ARCHITECTURE VIOLATION**.
+      - All decomposition inside a mobile sub-module happens PURELY via standard canonical category folders (`screens/`, `components/`, `hooks/`, `api/`, `state/`, `types/`, `schemas/`, `mocks/`, `utils/`, `tests/`).
+      - Multi-step wizards, bottom sheets, modals, detail sub-screens, and secondary tabs MUST live inside that sub-module's `screens/` or `components/` folders (e.g., `ManagerAttendanceHistoryDetailSheet.tsx`), orchestrated via typed React Navigation params, NEVER via nested sub-submodule folders.
+    - **Deterministic 5-Gate Sub-Module Qualification Decision Matrix (Mobile):**
+      - **Gate 1 (Navigation Invariant):** Does this capability map to a secondary tab in the domain navigator or a distinct top-tab/stack screen? If YES → **Autonomous Sub-Module** (`{domain}_{capability}/`). If it is opened as a bottom sheet, modal, action sheet, or wizard step → **Internal Component/Widget** in `components/`.
+      - **Gate 2 (State & Lifecycle Independence):** Can this capability be refreshed or navigated to directly via deep-link without live in-memory state of another screen? If YES → **Autonomous Sub-Module**. If it depends on live uncommitted multi-step form memory → **Internal Screen/Component** inside the SAME sub-module.
+      - **Gate 3 (File Count & Granularity Bounds — The Goldilocks Rule: 5–20 Files):**
+        - Target Range: 5 to 20 files per sub-module.
+        - Nano-Module BANNED: Creating a sub-module for a single widget, button, or simple bottom sheet (< 3 files) is STRICTLY FORBIDDEN. Keep it in `components/`.
+        - Mega-Submodule BANNED: Cramming 3+ distinct operational mobile workflows into one sub-module (> 25 files) is STRICTLY FORBIDDEN; split into sibling sub-modules under that domain container.
+      - **Gate 4 (Standalone Testability & Mockability — ZIP Guarantee):** Can this capability run in isolation with its own MSW handlers, mock fixtures, and test harness? If YES → **Autonomous Sub-Module**.
+      - **Gate 5 (Backend Entity Lifecycle Alignment):** Sub-modules map 1:1 to cohesive backend sub-module API contracts.
 
 ---
 
