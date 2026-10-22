@@ -207,10 +207,11 @@ const { bottom } = useSafeAreaInsets();
 - Feature UI never hardcodes global values.
 - Feature UI never guesses token names.
 
-> **CRITICAL WARNING TO AI AGENTS (COMPONENT ISOLATION — WET PRINCIPAL):**
-> Do NOT attempt to "DRY up" business-aware components (e.g., Date Filters with presets, Status Badges with hardcoded text) by moving them to global folders like `widgets/common/` or `ui/`.
-> Global UI folders are STRICTLY for zero-business, dumb primitives. Business components MUST be duplicated per feature (Strict WET Principal).
-> **Consequence:** An AI modifying a shared business component to fix Feature A will silently break Feature B, triggering cross-feature regression cascades.
+> **CRITICAL WARNING TO AI AGENTS (COMPONENT ISOLATION & SUB-MODULE WET PRINCIPLE):**
+> 1. **Zero Global Business UI:** Do NOT attempt to "DRY up" business-aware components (e.g., Date Filters with presets, Status Badges with hardcoded text, Metric Cards) by moving them to global folders like `widgets/common/` or `ui/`. Global UI folders are STRICTLY for zero-business, dumb primitives.
+> 2. **Zero Cross-Sub-Module Styling Imports (Strict WET Law):** Sibling sub-modules (e.g., `attendance_dashboard`, `attendance_history`, `attendance_analytics`, `attendance_biometrics`) MUST NOT import UI components, cards, badges, or styled views from each other.
+> 3. **Parent Shared UI Banned:** Creating shared parent folders (e.g., `attendance/common/` or `attendance/components/`) is **STRICTLY PROHIBITED**. Every sub-module MUST duplicate its required UI components locally inside `{submodule}/components/` (Strict WET Principle).
+> 4. **Consequence:** An AI modifying a shared business component to fix Submodule A will silently break Submodule B, triggering cross-submodule regression cascades and violating the Sub-Module ZIP Guarantee.
 
 ---
 
@@ -223,14 +224,15 @@ const { bottom } = useSafeAreaInsets();
 - Global async state patterns (skeleton, empty, error, offline)
 - Approved visual treatment for charts, haptics, toasts, loading, empty and error states
 
-### FEATURE MODULE owns:
+### FEATURE & SUB-MODULE owns:
 - Business statuses and status-to-semantic-color mapping
 - Feature-specific icons, static UI constants, labels and configuration
+- Local presentational components (`[Role][Submodule][Name].tsx`) inside `{submodule}/components/`
 - API/server data, module state, tests, MSW fixtures/handlers, feature behavior
 
-### MODULE THEME CONTRACT owns:
-- The exact list of global semantic tokens required by the module (`[featureName]_theme_contract.md`)
-- Any explicitly justified feature-local visual token
+### SUB-MODULE THEME CONTRACT owns:
+- The exact list of global semantic tokens required by the specific sub-module (`[role]_[submodule]_theme_contract.md`)
+- Any explicitly justified sub-module local visual token with `// design-exception: <reason>`
 
 ### GLOBAL DESIGN MUST NOT own:
 - Business navigation configuration
@@ -1229,7 +1231,7 @@ When a custom Android `BackHandler` is required:
 - [ ] **WCAG AA Contrast:** All semantic text/background pairs pass WCAG AA contrast check (4.5:1 minimum). — *STOP if contrast ratio fails WCAG AA.*
 
 ### 7. Documentation & Testing Gate
-- [ ] **Theme Contract Artifact:** `[featureName]_theme_contract.md` lists all consumed tokens. — *STOP if theme contract missing or empty.*
-- [ ] **Feature Spec Sync:** `[featureName]_features.md` updated for any flow, API, or permission change. — *STOP if features doc out of sync.*
+- [ ] **Sub-Module Theme Contract Artifact:** `[role]_[submodule]_theme_contract.md` lists all consumed tokens for this sub-module. — *STOP if theme contract missing or empty.*
+- [ ] **Sub-Module Feature Spec Sync:** `[role]_[submodule]_features.md` updated with all 22 canonical sections (including Section 20 Standalone Harness). — *STOP if features doc out of sync.*
 - [ ] **Behavioral Tests:** Component and hook tests verify real user actions (tap -> submit -> visible state update). — *STOP if tests only check shallow renders.*
 - [ ] **Maestro E2E Flows:** E2E tests verify critical mobile flows (login, CRUD, permissions). — *STOP if critical user journey lacks E2E coverage.*
