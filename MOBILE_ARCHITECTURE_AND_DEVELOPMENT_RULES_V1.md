@@ -1184,6 +1184,54 @@ the mock response used in tests and development MUST:
    `EmptyState` component.
 4. Support an **error scenario** that visibly triggers the error fallback.
 
+### Mock Scenarios Registry (`mocks/scenarios/[role_module].scenarios.ts`)
+
+Every mobile feature module's mock suite MUST define a canonical scenarios registry at `mocks/scenarios/[role_module].scenarios.ts`.
+This ensures any engineer or AI agent can immediately switch scenarios and verify all mobile UI states deterministically without manual mocking hacks.
+
+Standard mandatory scenario keys:
+1. `ACTIVE_RECORDS` (Default): Standard populated dataset for normal list/card rendering.
+2. `EMPTY_DATA`: Zero records array (`data: []`, `total: 0`) to verify the module's `EmptyState` component.
+3. `SERVER_500_ERROR`: Simulated 500 error response to verify the module's `ErrorFallback` boundary and retry button.
+4. `NETWORK_TIMEOUT`: Simulated high latency (15,000ms delay) to verify loading skeletons, button disabled states, and offline alerts.
+5. `UNAUTHORIZED_401` / `FORBIDDEN_403`: Session expiry or permission denial to verify auth recovery and session expiry toast.
+
+```typescript
+// Example: mocks/scenarios/manager_members.scenarios.ts
+export const MANAGER_MEMBERS_SCENARIOS = {
+  ACTIVE_RECORDS: {
+    status: 200,
+    envelope: { success: true, message: "OK", data: memberFixtures, meta: mockPaginationMeta }
+  },
+  EMPTY_DATA: {
+    status: 200,
+    envelope: { success: true, message: "No members found", data: [], meta: { total: 0, page: 1, limit: 10, totalPages: 0, hasNextPage: false, hasPrevPage: false } }
+  },
+  SERVER_500_ERROR: {
+    status: 500,
+    envelope: { success: false, message: "Internal server error occurred", data: null, errorCode: "ERR_INTERNAL_500" }
+  },
+  NETWORK_TIMEOUT: {
+    delayMs: 15000,
+    status: 504,
+    envelope: { success: false, message: "Gateway timeout", data: null, errorCode: "ERR_TIMEOUT" }
+  },
+  UNAUTHORIZED_401: {
+    status: 401,
+    envelope: { success: false, message: "Session expired", data: null, errorCode: "ERR_UNAUTHORIZED" }
+  }
+} as const;
+```
+
+### Standalone Module Harness / Bootstrap (`tests/harness/bootstrap.ts` / `[Feature]Harness.tsx`)
+
+To guarantee absolute **Feature ZIP Portability**, every mobile feature module MUST include a self-contained mounting harness located inside `tests/harness/` (e.g., `MembersHarness.tsx` or `bootstrap.ts`).
+
+The Harness MUST:
+1. Initialize the module's MSW worker with the active scenario;
+2. Wrap the primary screen/component with necessary zero-business providers (`QueryClientProvider`, `SafeAreaProvider`, `NavigationContainer`, mock theme tokens);
+3. Allow standalone rendering of the feature inside React Native / Expo Go / Storybook in total isolation from the rest of the application.
+
 ### Forbidden: Minimal Mock / Stub
 
 ```text
@@ -1910,6 +1958,14 @@ requirements listed inline.
 role? If an AI or engineer has only 30 seconds, reading this section alone must convey complete business context.
 Generic phrases like "handles X operations" are forbidden.]
 
+## Feature Ownership & System Context
+[REQUIRED: Must explicitly document backend ownership, persistence, and external jobs so an AI never makes assumptions about system topology.]
+
+- **Feature / Role Owner:** [e.g., "Gym Manager / Operations Team"]
+- **Backend Microservice / API Base:** [e.g., "members-service (`/api/v1/manager/members`)"]
+- **Authoritative Database Tables:** [e.g., `members`, `memberships`, `member_attendance_logs`]
+- **Background / Queued Jobs:** [e.g., `member_sync_queue`, `biometric_device_sync_cron` — "None" if purely synchronous]
+
 ## Dependency Manifest
 [REQUIRED: List every library and core infrastructure module this feature uses. Example:
 TanStack Query, Zustand, React Hook Form, Zod, react-native-reanimated.
@@ -1940,6 +1996,10 @@ it. "Contains components" is not acceptable.]
 | `schemas/` | Zod schemas / validator classes for forms | `members.schema.ts` |
 | `state/` | Feature-scoped store for shared UI state | `members.store.ts` — holds: selectedMemberId, isAddSheetOpen, filterStatus |
 | `config/` | Feature-specific configs like URL constants | `members.url_config.ts` |
+| `mocks/handlers/` | Feature-specific MSW handlers for mobile endpoints | `members.handlers.ts` |
+| `mocks/fixtures/` | Complete mock datasets matching canonical envelope | `members.fixtures.ts` |
+| `mocks/scenarios/` | Preset scenarios (ACTIVE, EMPTY, SERVER_500, TIMEOUT, UNAUTHORIZED) | `members.scenarios.ts` |
+| `tests/harness/` | Standalone module mounting harness with MSW for isolated execution | `MembersHarness.tsx`, `bootstrap.ts` |
 
 ## User Flows & Interactions
 [REQUIRED: 2-4 most important multi-step flows. Numbered steps. This lets an AI
@@ -2057,6 +2117,18 @@ which file to open for any task without reading all files.]
 | `MembersEmptyState.tsx` | Empty state shown when list has zero items. Has "Add Member" CTA. |
 | `MembersListSkeleton.tsx` | Loading skeleton — 5 ghost rows matching MembersMemberCard layout. |
 
+## Feature Self-Audit & ZIP Portability Score
+[REQUIRED: Every mobile feature module must score 8/8 before release. Any unchecked box rejects the module from standalone deployment.]
+
+- [ ] **1. ZIP Self-Sufficiency:** Feature can be zipped and given to an external AI agent with zero parent codebase context and zero missing types.
+- [ ] **2. Zero Cross-Feature Business Imports:** Zero imports from sibling features or role containers.
+- [ ] **3. Mock Parity & Scenario Completeness:** Handlers cover all 5 canonical scenarios (ACTIVE, EMPTY, SERVER_500, TIMEOUT, UNAUTHORIZED).
+- [ ] **4. Standalone Harness / Bootstrap:** `tests/harness/bootstrap.ts` / `[Feature]Harness.tsx` mounts the feature in total isolation.
+- [ ] **5. Token Integrity:** Zero hardcoded hex, RGB, or magic dp values; 100% `useThemeTokens()` consumption.
+- [ ] **6. Triad UI States:** Skeleton loading, non-generic EmptyState, and ErrorFallback with retry CTA verified.
+- [ ] **7. Mutation Safety:** Idempotency key attached to all state-changing calls, double-click prevention verified.
+- [ ] **8. Native Safety:** Keyboard avoidance, safe area insets, and Android hardware back press trap verified.
+
 ## Rule Compliance Checklist
 [REQUIRED: Mark honestly. An honest [ ] is better than a false [x].]
 
@@ -2077,7 +2149,7 @@ which file to open for any task without reading all files.]
 - [ ] Rule 22: No unapproved dependencies added
 - [ ] Rule 23: Observability wired for critical error paths
 - [ ] Rule 24: This _features.md is complete, specific, and non-generic
-- [ ] Rule 25: All interactive elements have accessible labels + 44/48dp targets
+- [ ] Rule 25: All interactive elements have accessible labels + 44/48dp targets with `hitSlop` for small icons
 - [ ] Rule 28: Zero cross-feature imports (self-containment verified)
 - [ ] Rule 29: `_forbidden.md` exists, is specific, and has minimum 5 entries
 - [ ] Rule 30: Sensitive data masked in list/card views — full values only in detail screens
@@ -2117,6 +2189,13 @@ which file to open for any task without reading all files.]
 - [ ] Rule 64: Tenant data export triggers async backend call + `202 Accepted` success feedback — no in-app download
 - [ ] Rule 65: Every interactive control and critical state indicator has a deterministic `testID` in `[role]_[module]-[component]-[action/state]` format (e.g., `manager_members-addform-submit`)
 - [ ] Rule 66: Every custom hook, complex component, and state store has an exhaustive JSDoc / docstring block
+- [ ] Mobile Edge: KeyboardAvoidance wrapped around forms with `keyboardShouldPersistTaps="handled"`
+- [ ] Mobile Edge: Safe Area insets (`insets.top`, `insets.bottom`) used for screen headers and floating action buttons
+- [ ] Mobile Edge: Hardware back press listener (`BackHandler`) traps active bottom sheets and modals before popping screen
+- [ ] Mobile Edge: Dynamic Type font scaling tested; no fixed-height clipping on text containers
+- [ ] Mobile Edge: Orientation resilience — `useWindowDimensions()` used instead of static `Dimensions.get()`
+- [ ] Mock Scenario Registry: `mocks/scenarios/` implements ACTIVE, EMPTY, SERVER_500, TIMEOUT, UNAUTHORIZED presets
+- [ ] Standalone Harness: `tests/harness/bootstrap.ts` / `[Feature]Harness.tsx` present for isolated execution
 
 ## Architecture Exceptions & Decision Log (ADRs)
 [REQUIRED: Every non-obvious architecture choice, parameter value, or exception MUST be recorded here with its rationale. "None" is acceptable if strictly standard.]
@@ -2144,17 +2223,18 @@ None
 ## Module Run, Mock & Test Harness
 [REQUIRED: Exact commands and credentials to run, test, and mock THIS specific module in isolation.]
 
+- **Standalone Harness Entry:** `src/features/frontend_{role}/{role}_{module}/tests/harness/bootstrap.ts`
 - **Integration Test Execution:** `npm run test:integration -- src/features/frontend_{role}/{role}_{module}`
 - **Unit Test Execution:** `npm run test:unit -- src/features/frontend_{role}/{role}_{module}`
 - **Maestro E2E Suite:** `mobile_e2e/frontend_{role}_e2e/{role}_{module}/{role}_{module}.yaml`
 - **Primary Route & Stack:** `ROUTES.[ROLE_MODULE].LIST` via `config/{role_module}.url_config.ts`
 - **Seed Test User & Role:** e.g. `role: "MANAGER"`, `branchId: "branch-001"`, `tenantId: "tenant-dev"`
-- **Mock Scenario Toggles:**
-  - *Standard List:* MSW returns seeded fixtures array from `mocks/{role_module}.fixtures.ts`
-  - *Empty State:* Set filter or mock flag `?empty=true` to trigger `[Feature]EmptyState.tsx`
-  - *Error State:* Mock endpoint throws 500 / network error to trigger `[Feature]ErrorFallback.tsx`
-  - *Offline Blocker:* Simulate zero connectivity with empty cache to trigger `[Feature]OfflineBlocker.tsx`
-  - *Slow Network:* Simulated 2000ms latency to verify loading skeletons and button spinner states
+- **Mock Scenarios Registry:** `mocks/scenarios/{role_module}.scenarios.ts`
+  - *Standard List (ACTIVE):* MSW returns seeded fixtures array from `mocks/{role_module}.fixtures.ts`
+  - *Empty State (EMPTY):* Set filter or mock flag `?empty=true` to trigger `[Feature]EmptyState.tsx`
+  - *Error State (SERVER_500):* Mock endpoint throws 500 / network error to trigger `[Feature]ErrorFallback.tsx`
+  - *Offline Blocker (TIMEOUT):* Simulated high latency to trigger loading skeletons, button spinner states, or offline alert
+  - *Permission Denied (UNAUTHORIZED):* Simulated 401/403 to verify auth recovery and session expiry flow
 
 ## Module Portability & Host Integration Guide
 [REQUIRED: Exact 4-step instructions to copy and plug this module into another mobile project or host app.]

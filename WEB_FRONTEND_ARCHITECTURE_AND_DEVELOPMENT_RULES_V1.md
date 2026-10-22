@@ -1602,6 +1602,14 @@ can DO in this module? (4) What is strictly OFF-LIMITS for this role in this mod
 If an AI or engineer has only 30 seconds, reading this section alone must convey complete business context.
 Generic phrases like "handles X operations" are forbidden.]
 
+## Feature Ownership & System Context
+[REQUIRED: Must explicitly document backend ownership, persistence, and external jobs so an AI never makes assumptions about system topology.]
+
+- **Feature / Role Owner:** [e.g., "Gym Manager / Operations Team"]
+- **Backend Microservice / API Base:** [e.g., "members-service (`/api/v1/manager/members`)"]
+- **Authoritative Database Tables:** [e.g., `members`, `memberships`, `member_attendance_logs`]
+- **Background / Queued Jobs:** [e.g., `member_sync_queue`, `biometric_device_sync_cron` — "None" if purely synchronous]
+
 ## Dependency Manifest
 [REQUIRED: Explicit list of the exact stack technologies used by this module. Example: TanStack Query, Zustand, React Hook Form, Zod. This allows an AI to instantly know what stack is used.]
 
@@ -1623,6 +1631,8 @@ each folder, not just the folder name. Example:]
 | `manager_members_constants/` | Hardcoded data, dropdown options, query keys, enums | `ManagerMembersConstants.ts`, `ManagerMembersQueryKeys.ts` |
 | `manager_members_mocks/handlers/` | Module-specific MSW handlers for member endpoints | `ManagerMembersMockHandlers.ts` |
 | `manager_members_mocks/fixtures/` | Complete mock API datasets used by the member handlers | `ManagerMembersMockFixtures.ts` |
+| `manager_members_mocks/scenarios/` | Preset scenarios (ACTIVE, EMPTY, SERVER_500, TIMEOUT, UNAUTHORIZED) | `ManagerMembersMockScenarios.ts` |
+| `manager_members_tests/harness/` | Standalone module mounting harness with MSW for isolated execution | `ManagerMembersHarness.tsx`, `bootstrap.ts` |
 
 ### Approved External Dependencies
 
@@ -1852,6 +1862,18 @@ None
 |---|---|---|---|
 | v1.0.0 | [YYYY-MM-DD] | [Engineer/AI] | Initial canonical module implementation with MSW mocks and doc trio |
 
+## Feature Self-Audit & ZIP Portability Score
+[REQUIRED: Every module must score 8/8 before delivery freeze. Any unchecked box rejects the module from standalone release.]
+
+- [ ] **1. ZIP Self-Sufficiency:** Module can be zipped and given to an external AI agent with zero parent codebase context and zero missing types.
+- [ ] **2. Zero Cross-Module Business Imports:** Zero imports from sibling features or role containers.
+- [ ] **3. Mock Parity & Scenario Completeness:** Handlers cover all 5 canonical scenarios (ACTIVE, EMPTY, SERVER_500, TIMEOUT, UNAUTHORIZED).
+- [ ] **4. Standalone Harness / Bootstrap:** `bootstrap.ts` / `[Role][Module]Harness.tsx` mounts the module in total isolation.
+- [ ] **5. Token Integrity:** Zero hardcoded hex, RGB, or magic sizes; 100% theme token consumption.
+- [ ] **6. Triad UI States:** Skeleton loading, non-generic EmptyState, and ErrorFallback with retry CTA verified.
+- [ ] **7. Mutation Safety:** Idempotency key attached to all state-changing calls, double-click prevention verified.
+- [ ] **8. Responsive Breakpoints:** Verified on 320px, 375px, 768px, 1024px, and 1440px viewports without horizontal overflow.
+
 ## Rule Compliance Checklist
 [REQUIRED: Every checkbox must be honestly marked. Do NOT mark [x] if the rule is not
 actually implemented. An honest [ ] is better than a false [x].]
@@ -1882,7 +1904,7 @@ actually implemented. An honest [ ] is better than a false [x].]
 - [ ] Rule 44: No `console.log` in production code
 - [ ] Rule 48: Empty state component present per entity list
 - [ ] Rule 55: No `key={index}` on reorderable/filterable lists
-- [ ] Rule 64: Mobile-first — `flex-col sm:flex-row`, responsive breakpoints verified
+- [ ] Rule 64: Mobile-first — `flex-col sm:flex-row`, responsive breakpoints verified (320px, 375px, 768px, 1024px, 1440px)
 - [ ] Rule 68: Table column count matches header count exactly
 - [ ] Rule 71: Double verification — destructive actions use `useConfirm()` modal
 - [ ] Rule 72: API function naming follows verb contract
@@ -1892,6 +1914,8 @@ actually implemented. An honest [ ] is better than a false [x].]
 - [ ] Module-Owned Fixtures — feature-specific mock data lives inside the owning module
 - [ ] Global MSW Bootstrap Isolation — global MSW code contains infrastructure only
 - [ ] Rule 75D: MSW fixture covers ALL UI fields — no missing table columns, KPIs, chart series, filters, or detail fields; `## UI Data Requirements` section in `[moduleName]_features.md` is complete
+- [ ] Mock Scenario Registry — `[moduleName]_mocks/scenarios/` covers ACTIVE, EMPTY, SERVER_500, TIMEOUT, UNAUTHORIZED
+- [ ] Standalone Harness — `bootstrap.ts` / `[Role][Module]Harness.tsx` allows isolated component preview
 - [ ] Module Self-Containment — all feature-specific business code, components, hooks, state, API clients, types, schemas, constants, utilities, tests, mocks, fixtures, handlers, and documentation are owned by this feature module
 - [ ] Feature Dependency Firewall — zero imports from sibling business features or role-level business folders
 - [ ] AI Portability — this feature can be provided independently to an AI as the default repair context
@@ -1904,6 +1928,8 @@ actually implemented. An honest [ ] is better than a false [x].]
 - [ ] Rule 80: Currency/number formatting - feature-local `[module]FormatCurrency()` used for all monetary values (minor-unit input), no raw `.toFixed()` in JSX, no global business formatters (only `src/lib/display_value.ts` for neutral null fallback)
 - [ ] Rule 81: Button loading width stability — no layout shift on loading state, `min-w` or text+spinner pattern used
 - [ ] Rule 82: Toast deduplication — all `toast()` calls pass a stable `id`, no stacking identical toasts
+- [ ] Mutation Safety: `Idempotency-Key` (UUIDv4) attached to all payment, booking, and check-in mutations with button disable
+- [ ] Debounced Search: All live search/filter inputs debounced by ≥300ms
 - [ ] Design §3: Sidebar active = subtle gold border + bg (NOT solid primary)
 - [ ] Design §12: Z-index scale — header z-20, dropdowns z-30, modals z-40, toasts z-50
 - [ ] Design §28: Surface elevation — `bg-popover` for dropdowns, `bg-overlay` for modals
@@ -3302,6 +3328,55 @@ HttpResponse.json({
   meta: paginationMeta,
 })
 ```
+
+### Mock Scenarios Registry (`[moduleName].scenarios.ts`)
+
+Every feature module's mock suite MUST define a canonical scenarios registry at `[moduleName]_mocks/scenarios/[moduleName].scenarios.ts`.
+This ensures any engineer or AI agent can immediately switch scenarios and verify all UI states deterministically without manual mocking hacks.
+
+Standard mandatory scenario keys:
+1. `ACTIVE_RECORDS` (Default): Standard populated dataset for sunny-day rendering.
+2. `EMPTY_DATA`: Zero records array (`data: []`, `total: 0`) to verify the module's `EmptyState` component.
+3. `SERVER_500_ERROR`: Simulated 500 error response to verify the module's `error.tsx` boundary and retry CTA.
+4. `NETWORK_TIMEOUT`: Simulated high latency (15,000ms delay) to verify loading skeletons, button disabled states, and timeout errors.
+5. `UNAUTHORIZED_401` / `FORBIDDEN_403`: Session expiry or permission denial to verify redirect / auth toast.
+
+```typescript
+// Example: manager_members_mocks/scenarios/managerMembers.scenarios.ts
+export const MANAGER_MEMBERS_SCENARIOS = {
+  ACTIVE_RECORDS: {
+    status: 200,
+    envelope: { success: true, message: "OK", data: mockMembersList, meta: mockPaginationMeta }
+  },
+  EMPTY_DATA: {
+    status: 200,
+    envelope: { success: true, message: "No members found", data: [], meta: { total: 0, page: 1, limit: 10, totalPages: 0, hasNextPage: false, hasPrevPage: false } }
+  },
+  SERVER_500_ERROR: {
+    status: 500,
+    envelope: { success: false, message: "Internal server error occurred", data: null, errorCode: "ERR_INTERNAL_500" }
+  },
+  NETWORK_TIMEOUT: {
+    delayMs: 15000,
+    status: 504,
+    envelope: { success: false, message: "Gateway timeout", data: null, errorCode: "ERR_TIMEOUT" }
+  },
+  UNAUTHORIZED_401: {
+    status: 401,
+    envelope: { success: false, message: "Session expired", data: null, errorCode: "ERR_UNAUTHORIZED" }
+  }
+} as const;
+```
+
+### Standalone Module Harness / Bootstrap (`bootstrap.ts` / `[Role][Module]Harness.tsx`)
+
+To guarantee absolute **Feature ZIP Portability**, every module MUST include a self-contained mounting harness located inside `[moduleName]_tests/harness/` (e.g., `ManagerMembersHarness.tsx` or `bootstrap.ts`).
+
+The Harness MUST:
+1. Initialize the module's MSW worker with the active scenario;
+2. Wrap the primary client component (`[Role][Module]Main.tsx`) with necessary zero-business providers (`QueryClientProvider`, `ThemeTokenProvider`, mock session context);
+3. Expose a scenario selector dropdown in development mode so developers and automated test agents can toggle between `ACTIVE`, `EMPTY`, `500_ERROR`, and `TIMEOUT` live without reloading the whole application.
+
 
 ### Fixture Source-of-Truth Rule
 
