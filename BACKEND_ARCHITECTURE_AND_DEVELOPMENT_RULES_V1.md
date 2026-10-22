@@ -102,7 +102,12 @@ Before generating, auditing, or repairing ANY backend role module, verify ALL of
 [ ] Domain Module Quarantine: Domain module root contains ONLY [role]-[module].module.ts (aggregator module), master documentation, and child autonomous sub-modules {sub-module}/. Zero business implementation code in domain root.
 [ ] Sub-Module Autonomous Structure: 100% of controllers, services, repositories, DTOs, entities, and tests live inside autonomous sub-modules {sub-module}/
 [ ] Sub-Module Folder Pattern: Every sub-folder inside a sub-module follows {submodule}-{artifact}/ pattern (e.g. dashboard-controllers/, dashboard-services/)
-[ ] Sub-Module Documentation Trio: Every autonomous sub-module contains [role]-[submodule]-backend-feature.md (or _backend-feature.md, with all 22 canonical sections), [role]-[submodule]-backend-forbidden.md, and [role]-[submodule]-backend-contract.md
+[ ] Sub-Module Documentation Trio: Every autonomous sub-module contains [role]-[submodule]-backend-feature.md (with structured YAML frontmatter, all 22 canonical sections, Section 20 Standalone Harness, Section 21 Portability Guide), [role]-[submodule]-backend-forbidden.md, and [role]-[submodule]-backend-contract.md
+[ ] Universal API Response Envelope: Standardized discriminated union ApiResponse<T> = ApiSuccess<T> | ApiFailure with requestId, success, data, error, errorCode, statusCode
+[ ] Mandatory Ambient Host Stubs & Manifest: Sub-module contains contracts/core-contracts.stub.ts (stubbing core types, tenant context, event publisher, logger) and required-core-contracts.json (declaring external dependency budget <= 7)
+[ ] Standard Mock Scenario Catalog: Sub-module test harness/mocks implement the 8 standard scenarios (ACTIVE, EMPTY, UNAUTHORIZED, FORBIDDEN, NOT_FOUND, VALIDATION_ERROR, SERVER_500, TIMEOUT)
+[ ] Dual-Layer Multi-Tenancy Invariant: Database-per-tenant connection routing + mandatory gymId/branchId query predicate in every repository query
+[ ] Production Safety Guards: X-Idempotency-Key: UUIDv4 header on state mutations, distributed locking for concurrent resources, rate-limiting, and zero raw secrets
 ```
 
 **✅ COMPLIANT structure (Universal Day-1 Sub-Module Hierarchy):**
@@ -113,19 +118,28 @@ backend-manager/
 └── manager-modules/
     └── manager-attendance/
         ├── manager-attendance.module.ts              # Pure Aggregator NestJS Module
-        ├── manager-attendance-backend-feature.md
-        ├── attendance-dashboard/                     # Autonomous Sub-Module (AI Repair Unit)
-        │   ├── dashboard-controllers/
-        │   ├── dashboard-services/
-        │   ├── dashboard-dto/
-        │   ├── dashboard-repositories/
-        │   ├── dashboard-entities/
-        │   ├── dashboard-tests/
-        │   ├── attendance-dashboard.module.ts
+        ├── manager-attendance-backend-feature.md     # Master Domain Architecture Map
+        ├── manager-attendance-backend-forbidden.md   # Master Domain Boundary Directives
+        ├── manager-attendance-backend-contract.md   # Master Domain Contract
+        │
+        ├── attendance-dashboard/                     # Autonomous Sub-Module 1 (AI Repair & ZIP Unit)
+        │   ├── dashboard-controllers/                # {submodule}-controllers/
+        │   ├── dashboard-services/                   # {submodule}-services/
+        │   ├── dashboard-dto/                        # {submodule}-dto/ (Strict WET)
+        │   ├── dashboard-repositories/               # {submodule}-repositories/
+        │   ├── dashboard-entities/                   # {submodule}-entities/
+        │   ├── dashboard-tests/                      # {submodule}-tests/ (unit & integration)
+        │   │   ├── harness/                          # Standalone seeder & test harness
+        │   │   └── fixtures/                         # Mock scenario catalog (ACTIVE, EMPTY, etc.)
+        │   ├── contracts/                            # contracts/
+        │   │   └── core-contracts.stub.ts            # Ambient host stubs for standalone compilation
+        │   ├── required-core-contracts.json          # Machine-readable dependency manifest (<= 7)
+        │   ├── attendance-dashboard.module.ts        # Sub-Module NestJS definition
         │   ├── attendance-dashboard-backend-feature.md
         │   ├── attendance-dashboard-backend-forbidden.md
         │   └── attendance-dashboard-backend-contract.md
-        └── attendance-history/                       # Autonomous Sub-Module (AI Repair Unit)
+        │
+        └── attendance-history/                       # Autonomous Sub-Module 2 (AI Repair & ZIP Unit)
             └── ... (identical canonical micro-structure)
 ```
 
@@ -181,26 +195,32 @@ Every AI agent MUST consult this index before beginning any audit or implementat
 
 
 
-## TERMINOLOGY — WET DEVELOPMENT
+## CANONICAL LAW: WET vs DRY GOVERNANCE BOUNDARY
 
-WET development means deliberate explicitness and traceability.
+> ⛔ **ARCHITECTURAL GOVERNANCE INVARIANT — READ CAREFULLY:**
+> This codebase enforces a strict, mathematically defined boundary between **WET** (Write Everything Twice / Deliberate Isolation) and **DRY** (Don't Repeat Yourself / Reusable Platform Foundation).
+> - **WET applies STRICTLY to Business Logic & Feature Sub-Modules.**
+> - **DRY applies STRICTLY to Core Platform Infrastructure.**
+> Attempting to share business DTOs or feature logic across sub-modules creates cascading coupling that destroys autonomous AI repairability. Conversely, duplicating core security, tenant resolution, or response envelopes creates dangerous divergence.
 
-WET development does NOT mean uncontrolled duplication.
+### The Canonical WET vs DRY Governance Matrix
 
-Allowed:
-- Explicit module contracts
-- Visible authorization logic
-- Feature-local tests
-- Explicit integration boundaries
-- Clear mapping layers
+| Architectural Layer | Paradigm | Governance Rule & Scope | What Must Be Done | What Is Strictly Forbidden |
+|---|---|---|---|---|
+| **Business Feature DTOs** | **STRICT WET** | Sub-Module Local | Each `{submodule}-dto/` defines independent input/output DTOs with local class-validator rules | NEVER import or share DTOs with sibling sub-modules or parent domains |
+| **Business Services & Repositories** | **STRICT WET** | Sub-Module Local | Every sub-module owns its private query logic, domain rules, and entity mappers | NEVER inject sibling services or query sibling repositories directly |
+| **Feature Tests & Mock Scenarios** | **STRICT WET** | Sub-Module Local | Each `{submodule}-tests/` owns its local seeder, harness, and 8-state mock catalog (`fixtures/`) | NEVER depend on sibling test fixtures or shared business mock helpers |
+| **API Envelope & Serialization** | **STRICT DRY** | Platform Core (`src/core/`) | Universal `ApiResponse<T> = ApiSuccess<T> \| ApiFailure` discriminated union with `requestId` | Sub-modules MUST NOT define custom JSON wrapper envelopes |
+| **Tenant Context & Dynamic Routing** | **STRICT DRY** | Platform Core (`src/core/`) | Centralized JWT auth guard, AsyncLocalStorage `TenantContext`, and DataSource pool router | Sub-modules MUST NOT implement custom tenant resolution or bypass `TenantContext` |
+| **Database Pool Budget & Driver Config** | **STRICT DRY** | Platform Core (`src/core/`) | Centralized connection pool limits, timeouts, and statement timeouts (Rule 63) | Sub-modules MUST NOT open raw database connections or override pool limits |
+| **Structured Logging & Tracing** | **STRICT DRY** | Platform Core (`src/core/`) | Global `nestjs-pino` / structured logger injecting correlation ID, span ID, and tenant scope | Sub-modules MUST NOT introduce ad-hoc loggers or raw `console.log` |
+| **Event Bus & Outbox Infrastructure** | **STRICT DRY** | Platform Core (`src/core/`) | Shared transactional outbox publisher and message broker transport (Redis Streams) | Sub-modules emit typed events to the core bus; never communicate via HTTP with siblings |
 
-Forbidden duplication:
-- Duplicated security logic
-- Duplicated tenant filters
-- Duplicated infrastructure bootstrap
-- Duplicated validation rules without a shared source of truth
-- Divergent API response envelopes
-- Duplicated domain constants
+### AI Portability Resolution (How WET Sub-Modules Consume DRY Core)
+When a sub-module (e.g. `attendance-history/`) is zipped in isolation for autonomous AI repair:
+1. It contains a lightweight **Ambient Core Stub** (`contracts/core-contracts.stub.ts`) stubbing the core platform interfaces (`TenantContext`, `ApiResponse`, `EventPublisher`, `Logger`).
+2. It contains a **Machine-Readable Dependency Manifest** (`required-core-contracts.json`) declaring its consumed platform contracts (budget ≤ 7).
+3. The AI can compile, run unit tests, and verify repairs 100% offline without needing the entire monolith source tree.
 
 ---
 
@@ -367,9 +387,30 @@ To prevent architectural drift and eliminate monolithic backend sprawl, the back
 >    - Do not create premature abstractions across sibling sub-modules. Duplicate DTOs, mappers, and response transformers locally inside each `{submodule}-dto/` and `{submodule}-services/`.
 >    - If `attendance-dashboard` needs a member summary shape and `attendance-history` also needs a member summary shape, each sub-module defines its own local DTO/interface tailored specifically to its API contract.
 >
-> 7. **Backend Sub-Module ZIP Guarantee (Granular AI Repair Unit):**
+> 7. **Backend Sub-Module ZIP Guarantee & AI Dependency Boundary (Granular AI Repair Unit):**
 >    - When an API defect or logic bug occurs in `attendance-history`, the developer can zip ONLY `src/backend-manager/manager-modules/manager-attendance/attendance-history/`.
 >    - An AI receiving this zip gets a laser-focused context (controllers, services, DTOs, unit tests for history only), with 0% risk of breaking dashboard or analytics code.
+>    - **Ambient Host Stubs (`contracts/core-contracts.stub.ts`):** Every sub-module includes local TypeScript declaration stubs for core host interfaces (`TenantContext`, `ApiResponse`, `EventPublisher`, `Logger`, `ConfigService`). This guarantees the sub-module achieves 100% clean standalone compilation (`tsc --noEmit`) and offline unit test execution without needing the rest of the monolith repo.
+>    - **Machine-Readable Dependency Manifest (`required-core-contracts.json`):** Every sub-module declares its host contracts in a standardized manifest:
+>      ```json
+>      {
+>        "submodule": "attendance-history",
+>        "role": "manager",
+>        "domain": "manager-attendance",
+>        "externalDependencyBudget": 7,
+>        "consumedHostContracts": [
+>          "TenantContext",
+>          "ApiResponse",
+>          "EventPublisher",
+>          "PinoLogger",
+>          "AuthGuard"
+>        ],
+>        "mockCatalogImplemented": true,
+>        "offlineTestable": true
+>      }
+>      ```
+>    - **External Dependency Budget (Hard Ceiling ≤ 7):** A sub-module is strictly forbidden from depending on more than 7 host-level core contracts. Allowed core contracts: (1) Base Logger, (2) TenantContext / Multi-Tenancy DataSource, (3) Universal ApiResponse Envelope, (4) Auth Guard / Principal, (5) Event Publisher / Outbox, (6) Distributed Lock, (7) Cache / Rate Limiter.
+>    - **Sub-Module Local Event Constants:** Sub-modules define their emitted event names locally (e.g. `history-constants/attendance-history.events.ts`). The host aggregates them into `event-registry.constants.ts`. The sub-module never imports global event registries.
 >
 > 8. **Clean Sub-Folder vs Globally Unique File Naming:**
 >    - Sub-folders inside a sub-module use: `{submodule}-{artifact}/` (e.g. `dashboard-controllers/`, `dashboard-services/`, `dashboard-dto/`, `history-controllers/`).
@@ -490,9 +531,16 @@ AI agents MUST consult this table before creating any folder or file name. Any d
    - Tier 2: `backend-{role}/` (Role Container)
    - Tier 3: `{role}-modules/` ➔ `{role}-{domain}/` (Pure Feature Domain Module — Aggregator & Quarantine)
    - Tier 4: `{submodule}/` (Autonomous Sub-Module — **TERMINAL LEAF BUSINESS EXECUTION UNIT**)
-2. **Sub-submodules are STRICTLY FORBIDDEN:** Creating nested folders inside a sub-module that act as child sub-modules (e.g., `members-directory/directory-export/` or `attendance-history/biometrics/`) is a **CRITICAL P0 ARCHITECTURE VIOLATION**.
-3. **Artifact-Only Decomposition:** All decomposition inside an autonomous sub-module happens PURELY via standard canonical artifact folders (`{submodule}-controllers/`, `{submodule}-services/`, `{submodule}-repositories/`, `{submodule}-dto/`, `{submodule}-mappers/`, `{submodule}-domain/`, `{submodule}-types/`, `{submodule}-tests/`).
-4. **Deterministic 5-Gate Sub-Module Qualification Decision Matrix (Backend):**
+2. **Business Depth = 1 Law (Sub-Submodules STRICTLY FORBIDDEN):**
+   Inside an autonomous sub-module (`{submodule}/`), the **business nesting depth is strictly 1**. Creating nested folders that act as child business modules (e.g., `members-directory/directory-export/` or `attendance-history/biometrics/`) is a **CRITICAL P0 ARCHITECTURE VIOLATION**. All business code lives directly within standard single-level `{submodule}-{artifact}/` folders.
+3. **Artifact Depth Exemptions (Permitted Leaf Sub-Directories):**
+   The following deterministic leaf artifact directories are strictly permitted and exempt from the depth count:
+   - `{submodule}-tests/` (may contain sub-folders `harness/`, `fixtures/`, `unit/`, `integration/`)
+   - `{submodule}-locales/` (may contain language codes `en/`, `hi/` where backend localization is used)
+   - `contracts/` (contains `core-contracts.stub.ts`)
+   No other sub-directories of any kind are permitted beyond this depth boundary.
+4. **Artifact-Only Decomposition:** All decomposition inside an autonomous sub-module happens PURELY via standard canonical artifact folders (`{submodule}-controllers/`, `{submodule}-services/`, `{submodule}-repositories/`, `{submodule}-dto/`, `{submodule}-mappers/`, `{submodule}-domain/`, `{submodule}-types/`, `{submodule}-tests/`).
+5. **Deterministic 5-Gate Sub-Module Qualification Decision Matrix (Backend):**
    - **Gate 1 (Frontend Route / Tab Isomorphism):** Does this capability correspond to a distinct secondary tab or dedicated sub-route on the frontend (e.g., `/attendance/history`, `/billing/invoices`)? If YES → **Autonomous Sub-Module** (`{submodule}/`).
    - **Gate 2 (Entity / Lifecycle Independence):** Does this capability manage an independent sub-domain entity or distinct transactional lifecycle? If YES → **Autonomous Sub-Module**. If it is merely an additional query filter, patch endpoint, or export method on the existing entity → **Method/Controller** inside the existing sub-module.
    - **Gate 3 (File Count & Granularity Bounds — The Goldilocks Rule: 5–20 Files):**
@@ -602,6 +650,22 @@ This application is **multi-tenant**. Every feature module across every role MUS
 |---|---|---|
 | `gymId` | JWT payload ONLY | Primary tenant identifier (the gym/organization) |
 | `branchId` | JWT payload ONLY | Sub-tenant identifier (the gym branch) |
+
+### Canonical Dual-Layer Multi-Tenancy Architecture (The Belt-and-Suspenders Invariant)
+
+To guarantee 100% mathematical protection against cross-tenant data leaks without placing an unreasonable cognitive or implementation burden on feature developers or AI agents, the architecture enforces a **Dual-Layer Defense Model**:
+
+1. **Layer 1: Physical Infrastructure Isolation (Connection Routing — Rule 39):**
+   - The platform core dynamically resolves and routes requests to the specific tenant's dedicated database via `TenantContext` created strictly from the authenticated JWT.
+   - Cross-tenant SQL execution is physically blocked at the database instance/schema boundary.
+
+2. **Layer 2: Logical Application Isolation (Repository Query Predicates — Rule 0G):**
+   - Every ORM query, repository method, and SQL statement MUST explicitly bind `gymId` (and `branchId` where scoped) into the `WHERE` clause.
+   - **Why this is NOT redundant:** If a developer accidentally references a master DataSource, if connection pool caching leaks under high concurrency, or if an isolated test harness runs against an in-memory SQLite database, Layer 2 completely prevents cross-tenant data exposure.
+
+3. **Automated Enforcement (Zero Developer Burden):**
+   - Feature repositories extend the platform `TenantAwareRepository<T>` base class (or use TypeORM entity subscribers / Django tenant managers) which automatically injects `where: { gymId: currentTenant.gymId }` into AST query trees.
+   - Sub-modules declare their tenant scope in DTOs/repositories; the base repository handles AST predicate injection automatically, eliminating manual query duplication while guaranteeing mathematical security.
 
 ### Tenant Scope Classification
 
@@ -1208,7 +1272,8 @@ Never hardcode HTTP status code numbers (e.g., `200`, `400`, `500`) in controlle
   - NestJS: `HttpStatus` from `@nestjs/common` (e.g., `HttpStatus.OK`, `HttpStatus.CREATED`)
   - Django: `rest_framework.status` (e.g., `status.HTTP_200_OK`, `status.HTTP_201_CREATED`)
 * **Testing Rule:** This rule applies to EVERY test file without exception. In Python `pytest` suites, ALWAYS use `from http import HTTPStatus` (e.g., `HTTPStatus.OK`, `HTTPStatus.CREATED`). A raw `assert response.status_code == 200` in a test file = architecture violation.
-* **Audit Evidence Required:** When auditing, flag every occurrence of a raw integer HTTP status code as `NON_COMPLIANT`.
+* **Source Code vs Wire Serialization Clarification:** In TypeScript and Python source code, hardcoding integer status codes is strictly forbidden (use `HttpStatus.CREATED`, `HttpStatus.BAD_REQUEST`, etc.). Wire JSON payloads over HTTP network transport serialize these enums to their integer wire representations (`201`, `400`). Documentation examples showing JSON payloads illustrate the serialized wire representation, but in actual source code, `HttpStatus` enum MUST always be referenced.
+* **Audit Evidence Required:** When auditing, flag every occurrence of a raw integer HTTP status code in source code as `NON_COMPLIANT`.
 
 ## 10. Dynamic / Absolute Imports (No Hardcoded Relative Paths)
 *(Applicable to JavaScript/TypeScript Frameworks)*
@@ -1232,10 +1297,10 @@ For Non-NestJS projects, strictly adhere to the role and module isolation princi
 - Keep `serializers.py` strictly for validation and data formatting.
 
 
-## 11. Co-located Testing (Unit & E2E - Extreme Isolation)
-Never put tests in a global `tests/` or `pytest-tests/` directory separate from the application code. 
-* **The Rule:** Unit tests (`.spec.ts`) must live directly inside the module they are testing, adjacent to the micro-feature file (e.g., `admin-members-registration.service.spec.ts` next to `admin-members-registration.service.ts`). E2E / black-box API tests are written in Python pytest and live in a separate top-level `backend-e2e/` directory (see Rule 27). Do NOT co-locate pytest files inside the NestJS module folders.
-* **Why?** When an AI is asked to add a feature or fix a bug, providing the co-located `.spec.ts` file gives it complete unit-test context. The pytest E2E suite is decoupled from the Node.js runtime entirely.
+## 11. Co-located Unit & Integration Tests vs Centralized E2E Smoke Suite
+Never put unit or integration tests in a global `tests/` directory separate from the application code.
+* **The Rule:** Unit and integration tests (`.spec.ts`) and local test harnesses (`harness/`, `fixtures/`) MUST live directly inside the autonomous sub-module under `{submodule}-tests/` (e.g., `admin-members-registration.service.spec.ts`). Conversely, cross-system black-box E2E API tests are written in Python pytest and live in a separate top-level `backend-e2e/` directory (see Rule 27). Do NOT co-locate pytest files inside the NestJS module folders.
+* **Why?** When an AI is asked to add a feature or fix a bug in a zipped sub-module, providing the co-located `{submodule}-tests/` folder gives it 100% of the unit-test and harness context needed to verify fixes locally. The pytest E2E suite verifies cross-system behavior in staging/CI completely decoupled from the Node.js runtime.
 
 
 ## 12. Strict API Documentation (Swagger/OpenAPI)
@@ -1538,6 +1603,16 @@ Every autonomous backend sub-module MUST implement ALL 22 canonical sections bel
    npm test -- src/backend-[role]/[role]-modules/[role]-[domain]/[submodule]/
    ```
 5. **Standalone NestJS Testing Module**: Harness exports a standalone `createTestingModule()` with mocked external event busses and cache managers.
+6. **Standard 8-State Mock Scenario Catalog (`{submodule}-tests/fixtures/mock-scenarios.ts`)**:
+   Every sub-module harness MUST implement and own the 8 canonical mock scenarios for deterministic offline verification:
+   - `ACTIVE`: Normal populated success state (valid active tenant, active entity, populated collections).
+   - `EMPTY`: Zero records returned (valid tenant, empty results array / null item).
+   - `UNAUTHORIZED`: Unauthenticated caller (missing or expired JWT).
+   - `FORBIDDEN`: Cross-tenant boundary breach or insufficient role permissions.
+   - `NOT_FOUND`: Target resource ID does not exist for the authenticated `gymId`.
+   - `VALIDATION_ERROR`: Payload failing DTO class-validator rules (canonical 400 shape).
+   - `SERVER_500`: Simulated unhandled database disconnection or infrastructure panic.
+   - `TIMEOUT`: Simulated external service adapter timeout (`504`/`408`).
 
 ## 21. Module Portability & Host Integration Guide
 ### 4-Step Host Monolith Integration
@@ -1558,7 +1633,7 @@ Every autonomous backend sub-module MUST implement ALL 22 canonical sections bel
    Verify required Redis and database environment variables are configured in host `ConfigService`.
 
 ## 22. Deliverables & Version History
-### Sub-Module Self-Audit & ZIP Portability Score (8/8 Required for Release)
+### Sub-Module Self-Audit & ZIP Compliance Gate (10/10 Required for Release)
 - [ ] 1. **Autonomous Directory Structure**: All controllers, services, repositories, DTOs live inside `{submodule}-{artifact}/` sub-folders. Zero root business code in parent domain.
 - [ ] 2. **Zero Cross-Submodule Imports**: Sibling submodules do not import each other's `@Module`, `@Injectable()` services, or repositories.
 - [ ] 3. **Standalone Test Harness**: Includes working standalone harness in `harness/` with local seeders, runnable independently using SQLite or mocks without host application.
@@ -1566,7 +1641,9 @@ Every autonomous backend sub-module MUST implement ALL 22 canonical sections bel
 - [ ] 5. **Complete Repository & Query Isolation**: All queries live in local repository files with explicit tenant filtering and no leaked ORM entities to controllers.
 - [ ] 6. **Documentation Trio Present & Complete**: Submodule contains `_backend-feature.md` (all 22 canonical sections), `_backend-forbidden.md`, and `_backend-contract.md`.
 - [ ] 7. **Frozen API Contract Verified**: Complete parity with frontend `_features.md` requirements (Rule 82A satisfied).
-- [ ] 8. **AI Portability Guarantee**: Submodule folder can be independently zipped, provided to an AI agent, audited, repaired, and tested in total isolation.
+- [ ] 8. **Ambient Core Stubs & Machine-Readable Manifest**: Sub-module contains `contracts/core-contracts.stub.ts` and `required-core-contracts.json` declaring host contract consumption within budget (≤ 7).
+- [ ] 9. **Standard 8-State Mock Scenario Catalog**: Harness implements the 8 canonical scenarios (`ACTIVE`, `EMPTY`, `UNAUTHORIZED`, `FORBIDDEN`, `NOT_FOUND`, `VALIDATION_ERROR`, `SERVER_500`, `TIMEOUT`).
+- [ ] 10. **AI Portability Guarantee**: Submodule folder can be independently zipped, provided to an external autonomous AI agent, compiled cleanly (`tsc --noEmit`), tested, audited, and repaired in 100% total isolation.
 
 ### Version Changelog
 | Version | Date | Author | Changes |
@@ -1640,16 +1717,13 @@ Every autonomous sub-module MUST contain a `-backend-contract.md` freezing its p
   ```json
   {
     "success": true,
-    "statusCode": 201,
+    "statusCode": 201, // Wire representation of HttpStatus.CREATED (Rule 9/28)
     "message": "Resource created successfully",
+    "requestId": "123e4567-e89b-12d3-a456-426614174000",
     "data": {
       "id": "uuid",
       "status": "ACTIVE",
       "createdAt": "2026-10-23T00:00:00.000Z"
-    },
-    "meta": {
-      "timestamp": "2026-10-23T00:00:00.000Z",
-      "requestId": "uuid"
     }
   }
   ```
@@ -1811,18 +1885,31 @@ Before marking any migration PASS, ALL of the following MUST be verified with ev
 
 ## 28. Standardized Response Envelope (The API Contract)
 * **The Rule:** Every API endpoint — success or failure — must return a response in a single, predictable JSON "envelope" shape. Never return raw objects, raw arrays, or ad-hoc structures directly from controllers. Both Success and Error responses must share the EXACT SAME canonical type definition.
-* **The Complete Canonical Schema (all 8 fields — single source of truth):**
+* **The Complete Canonical Schema (Discriminated Union — single source of truth):**
   ```typescript
   // src/core/types/api-response.types.ts
-  export interface ApiResponse<T> {
-    success: boolean;                        // true on 2xx, false on all errors
+  import { HttpStatus } from '@nestjs/common';
+
+  export type ApiResponse<T> = ApiSuccess<T> | ApiFailure;
+
+  export interface ApiSuccess<T> {
+    success: true;                           // true on 2xx
     message: string;                         // human-readable, always present
-    data: T | null;                          // response payload OR null on error
+    data: T;                                 // payload data
     meta?: PaginationMeta;                   // present only on paginated list responses
-    error?: string;                          // error name / category (e.g. "NOT_FOUND")
-    errorCode?: string;                      // machine-readable DOMAIN.ENTITY.REASON (e.g. "BILLING.SUBSCRIPTION.EXPIRED")
-    statusCode?: number;                     // HTTP status code, present on error responses
-    validationErrors?: ValidationErrorItem[]; // present on canonical 400 validation failures; 422 only when explicitly approved by the endpoint API contract
+    requestId: string;                       // correlation/tracing UUID for observability
+    statusCode?: HttpStatus | number;        // HttpStatus enum in source code; integer over HTTP wire
+  }
+
+  export interface ApiFailure {
+    success: false;                          // false on all errors
+    message: string;                         // human-readable error summary
+    data: null;                              // ALWAYS null on error
+    error: string;                           // error category (e.g. "NOT_FOUND", "VALIDATION_ERROR")
+    errorCode: string;                       // machine-readable DOMAIN.ENTITY.REASON (e.g. "BILLING.SUBSCRIPTION.EXPIRED")
+    statusCode: HttpStatus | number;         // HttpStatus enum in source code; integer over HTTP wire
+    requestId: string;                       // correlation/tracing UUID matching error log
+    validationErrors?: ValidationErrorItem[]; // present on canonical 400 validation failures; 422 only when approved
   }
 
   export interface ValidationErrorItem {
@@ -1836,11 +1923,12 @@ Before marking any migration PASS, ALL of the following MUST be verified with ev
   |---|---|---|---|
   | `success` | `true` | `false` | `false` |
   | `message` | Always present | Always present | Always present |
-  | `data` | Present with payload | `null` | `null` |
+  | `data` | Present with payload `T` | `null` | `null` |
   | `meta` | Present if paginated | Absent | Absent |
+  | `requestId` | Always present (UUID) | Always present (UUID) | Always present (UUID) |
   | `error` | Absent | Present | `"VALIDATION_ERROR"` |
   | `errorCode` | Absent | Present where applicable | `"VALIDATION.DTO.FAILED"` |
-  | `statusCode` | Absent | Present | Present (`400`) |
+  | `statusCode` | Optional / 200/201 | Present | Present (`HttpStatus.BAD_REQUEST` / `400`) |
   | `validationErrors` | Absent | Absent | Present (array of field errors) |
 
 * **Rules:**
@@ -1848,8 +1936,9 @@ Before marking any migration PASS, ALL of the following MUST be verified with ev
   - `validationErrors` is ONLY present on validation failures — never on generic errors.
   - `errorCode` follows `DOMAIN.ENTITY.REASON` in `SCREAMING_SNAKE_CASE` (e.g., `BILLING.SUBSCRIPTION.EXPIRED`). The frontend relies on this code to trigger specific UI logic (e.g., redirecting to a payment page). See full definition in Rule 64.
   - `meta` is present only on paginated list responses. For non-paginated lists (e.g., dropdowns), `meta` must be `undefined` — never an empty object `{}`.
+  - **Source vs Wire Form:** In TypeScript code, always type and pass `HttpStatus` enum. Over HTTP transport, the interceptor/filter serializes this to the numeric status code.
 * **Implement via:** A global `ResponseInterceptor` (NestJS) that wraps all successful controller returns. A global `ValidationExceptionFilter` (Rule 98) that transforms `400` errors into the `validationErrors` shape. The AI should NEVER shape the raw response manually inside a controller or service.
-* **Why:** When an AI frontend agent hits an API, it needs a predictable contract. If success and error payloads have totally different shapes, the frontend's generic `ApiResponse<T>` parser becomes brittle. A singular standard envelope with one canonical schema — covering all 8 fields — eliminates all ambiguity and ensures Rules 64 and 98 are never treated as isolated additions.
+* **Why:** When an AI frontend agent hits an API, it needs a predictable contract. If success and error payloads have totally different shapes, the frontend's generic `ApiResponse<T>` parser becomes brittle. A singular standard envelope with one canonical schema — covering all fields — eliminates all ambiguity and ensures Rules 64 and 98 are never treated as isolated additions.
 
 
 ---
@@ -2039,8 +2128,8 @@ Rules:
 * **How to Apply to Different Frameworks:**
   - **NestJS (Node/TypeScript):** Do not use a static, monolithic ORM module root configuration. Use request-scoped providers or custom connection factories that cache and resolve database connection/client instances based on the trusted TenantContext created after JWT authentication and tenant authorization.
   - **Django (Python):** Use database routers (`db_for_read`, `db_for_write`) paired with thread-local storage or middleware to dynamically route queries to the correct database alias based on the request.
-* **Why:** If Gym A and Gym B share the same database tables, a single missing `WHERE tenant_id = X` clause in a business query results in a catastrophic cross-tenant data breach. Database-per-tenant completely eliminates this risk at the infrastructure level. Furthermore, it can reduce dataset size per tenant and improve isolation/performance characteristics, avoiding massive multi-tenant table bottlenecks.
-* **Tenant DB vs Query Filters (Belt & Suspenders):** Even though Database-per-Tenant provides physical isolation, ALL ORM queries MUST still strictly include `gymId` and `branchId` filters as mandated by Rule 0G and the Tenant Scope Classification. This double-security approach ensures logic remains perfectly isolated and future-proofs the codebase if tenants are ever merged into a shared DB.
+* **Why:** If Gym A and Gym B share the same database tables, a single missing `WHERE tenant_id = X` clause in a business query results in a catastrophic cross-tenant data breach. Database-per-tenant completely eliminates this risk at the infrastructure level. Furthermore, it reduces dataset size per tenant and avoids multi-tenant table locking bottlenecks.
+* **Tenant DB vs Query Filters (The Canonical Dual-Layer Invariant — Rule 0G):** Even though Database-per-Tenant provides physical infrastructure isolation, ALL ORM queries MUST still strictly bind `gymId` and `branchId` filters into repository query ASTs. This belt-and-suspenders architecture guarantees zero data leakage even in local test harnesses (in-memory SQLite) or during connection pool caching edge cases. To eliminate developer/AI implementation friction, repositories extend the core `TenantAwareRepository<T>` base class which injects these filters automatically.
 
 ### Tenant Database Lifecycle and Provisioning
 
@@ -3150,7 +3239,8 @@ When adding a new enum value, a database migration MUST be generated to update t
     "data": null,
     "error": "VALIDATION_ERROR",
     "errorCode": "VALIDATION.DTO.FAILED",
-    "statusCode": 400,
+    "statusCode": 400, // Wire representation of HttpStatus.BAD_REQUEST (Rule 9/28)
+    "requestId": "123e4567-e89b-12d3-a456-426614174000",
     "validationErrors": [
       { "field": "email",    "message": "email must be a valid email address" },
       { "field": "phone",    "message": "phone must not be empty" },
@@ -3819,11 +3909,12 @@ The AI MUST NOT claim `VERIFIED_DELIVERED_ZIP` unless file-writing tool evidence
 ## Rule 117 — Universal RAG-Ready API Projections (All Query Endpoints)
 * **The Problem:** Standard REST JSON responses contain excessive noise (UUIDs, nested metadata, timestamps) that waste LLM tokens and degrade AI comprehension when used by an internal Chatbot or AI agent.
 * **The Rule:** ALL read/query endpoints (`GET`) across all backend modules MUST support RAG-Ready API projections out-of-the-box. This is a universal architectural standard for all query endpoints — AI agents MUST implement this natively without pausing, asking for approval, or delaying development.
-* **Implementation:** 
+* **Implementation (Autonomous Sub-Module Local RAG Formatter Pattern):** 
   1. Every `GET` endpoint must support the query parameter `?format=rag`.
   2. When `?format=rag` is omitted or false, the endpoint returns the standard JSON response envelope (`ApiResponse<T>`).
   3. When `?format=rag=true` (or `?format=rag`) is passed, the endpoint returns a clean, token-optimized Markdown or flattened plain-text representation of the resource (e.g., returning `"Member: Rahul | Status: Active | Plan Expires: 5 Days"` instead of a 50-line nested JSON tree).
-  4. RAG endpoints remain strictly within their role and module boundary; do NOT create a generic root-level `_rag` namespace.
+  4. **Autonomous Sub-Module Self-Containment (Zero Global Helpers):** The sub-module implements its RAG projection locally within its own `{submodule}-mappers/{submodule}-rag.mapper.ts` (e.g. `attendance-history-rag.mapper.ts`) with ZERO external formatting dependencies. It directly serializes entity models into clean, deterministic markdown bullet points. An external AI receiving ONLY this sub-module folder can infer, run, test, and repair the RAG formatter without external platform utilities.
+  5. RAG endpoints remain strictly within their role and module boundary; do NOT create a generic root-level `_rag` namespace.
 * **Automated Security & Sanitization (Zero-Delay Built-in Protection):**
   - Tenant isolation is strictly preserved: RAG projections automatically inherit the query's tenant filter (`gymId`, `branchId` from JWT).
   - Sensitive fields are automatically excluded: Passwords, password hashes, credit card tokens, secret keys, internal salts, and any field marked with `@Exclude()` or serializer exclusion are stripped automatically.
@@ -4020,6 +4111,53 @@ In a modular monolith, individual role modules (e.g., `backend-superadmin/`, `ba
 - If the feature module correctly implements its side of the contract (e.g. `@UseGuards(JwtAuthGuard)`, valid DTO validation, correct entity mapping), the feature module itself is **COMPLIANT** within its supplied modular boundary.
 - The AI MUST NEVER stall, stop, or ask the user to provide host application slices or root bootstrap files.
 
+---
 
+## 14-GATE RELEASE FREEZE & AUTONOMOUS AI SUB-MODULE VERIFICATION MATRIX
 
+> ⛔ **CRITICAL RELEASE INVARIANT — 100% PASS REQUIRED:**
+> Before any backend autonomous sub-module (`{submodule}/`) can be certified, committed, frozen, or zipped for autonomous AI development or production deployment, it MUST achieve a deterministic `14/14 PASS` on this verification matrix. A single `FAIL` halts release.
 
+| Gate # | Gate Name | Scope | Verification Standard & Exact Condition | Failure Mode Consequence |
+|---|---|---|---|---|
+| **Gate 1** | **Universal 4-Tier Hierarchy Gate** | Structure | Tree strictly adheres to `backend-{role}/{role}-modules/{role}-{domain}/{submodule}/`. Aggregator module in domain root; all business logic inside child sub-modules. | Critical Structure Failure |
+| **Gate 2** | **Business Depth = 1 Gate** | Structure | Sub-submodules strictly forbidden. Business depth = 1. Artifact exemptions strictly limited to `{submodule}-tests/` (`harness/`, `fixtures/`, `unit/`, `integration/`), `{submodule}-locales/` (`en/`, `hi/`), and `contracts/`. | Nesting Violation |
+| **Gate 3** | **Sibling Isolation Firewall Gate** | Boundary | Zero sibling imports (`import '../sibling'`). Zero sibling DTOs, services, or repos imported. Zero domain-level shared business folders (`manager-attendance/common/` banned). | Cross-Submodule Coupling |
+| **Gate 4** | **WET vs DRY Governance Gate** | Architecture | Business DTOs, services, repos, mappers, and fixtures are strictly WET (sub-module local). Core infrastructure (logger, tenant context, envelope) is strictly DRY. | Architecture Drift |
+| **Gate 5** | **Dual-Layer Multi-Tenancy Gate** | Security | Layer 1: Connection routing via `TenantContext`. Layer 2: Mandatory `where: { gymId }` query AST predicate in all repository queries. JWT payload is sole tenant source. | P0 Cross-Tenant Vulnerability |
+| **Gate 6** | **Discriminated Union API Envelope Gate** | Contract | Universal `ApiResponse<T> = ApiSuccess<T> \| ApiFailure` with mandatory `requestId`, `success`, `message`, `data`, and typed `statusCode?: HttpStatus \| number`. | Frontend Contract Breach |
+| **Gate 7** | **HTTP Status Enum Law Gate** | Quality | TypeScript and Python source code ALWAYS references framework enum (`HttpStatus.OK`, `HttpStatus.CREATED`). Integer status codes in source code strictly banned. | Silent Auth/Authz Bug |
+| **Gate 8** | **Standalone Test Harness & Seeder Gate** | Portability | Working seeder (`[submodule].seed.ts`) and standalone harness (`[submodule].harness.ts`) runnable independently on in-memory SQLite / mock DataSource. | Unrunnable Sub-Module |
+| **Gate 9** | **8-State Mock Scenario Catalog Gate** | Quality | Harness fixtures implement the 8 canonical scenarios: `ACTIVE`, `EMPTY`, `UNAUTHORIZED`, `FORBIDDEN`, `NOT_FOUND`, `VALIDATION_ERROR`, `SERVER_500`, `TIMEOUT`. | Untestable Error Paths |
+| **Gate 10** | **Ambient Core Stubs & Manifest Gate** | Portability | Sub-module owns `contracts/core-contracts.stub.ts` and `required-core-contracts.json`. Consumed host platform contracts within hard budget ceiling (≤ 7). | Non-Compilable ZIP |
+| **Gate 11** | **Production Safety Guards Gate** | Safety | `X-Idempotency-Key` (UUIDv4) on non-naturally idempotent mutations; pessimistic locks on concurrent financial/inventory mutations; zero hardcoded secrets. | Race Condition / Loss |
+| **Gate 12** | **Documentation Trio Freshness Gate** | Docs | Contains `_backend-feature.md` (all 22 canonical sections complete), `_backend-forbidden.md`, and `_backend-contract.md`. | Context Hallucination |
+| **Gate 13** | **Local RAG Projection Self-Containment Gate** | AI Tools | Read endpoints support `?format=rag` using sub-module local mapper (`{submodule}-rag.mapper.ts`) with zero global helper dependencies. | LLM Tooling Failure |
+| **Gate 14** | **Automated CI Portability Gate** | Portability | Sub-module folder zipped alone compiles with `tsc --noEmit` and passes local unit test suite with 0 errors without host repository. | Autonomous ZIP Violation |
+
+---
+
+## AI_REPAIR_SCOPE.md MANDATORY SPECIFICATION
+
+Whenever an autonomous sub-module is zipped or handed to an external AI agent for bug repair or feature enhancement, the root of the sub-module directory MUST contain an `AI_REPAIR_SCOPE.md` file:
+
+```markdown
+# AI Repair Scope & Boundary Contract: [submodule-name]
+
+## 1. Allowed Writable Scope
+- This sub-module directory ONLY: `[submodule-name]/**`
+- Strictly prohibited from creating or modifying files outside this folder.
+
+## 2. Consumed Core Contracts (Budget <= 7)
+- Declared in `required-core-contracts.json`:
+  1. TenantContext (JWT Tenant Scope: gymId, branchId)
+  2. ApiResponse<T> (Universal Discriminated Union Envelope)
+  3. EventPublisher (Transactional Outbox Redis Stream)
+  4. PinoLogger (Structured Correlation Logger)
+  5. AuthGuard / RolesDecorator
+
+## 3. Local Offline Verification
+- Execute local test suite: `npm test`
+- Execute local compilation check: `npm run type-check` (or `tsc --noEmit`)
+- Verify with 8-State Mock Catalog in `tests/fixtures/mock-scenarios.ts`
+```

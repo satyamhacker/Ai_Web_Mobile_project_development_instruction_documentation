@@ -850,7 +850,10 @@ When the supplied ZIP root is one autonomous sub-module only (e.g., `attendance-
 - validate only the sub-module internal tree (`{submodule}-controllers/`, `{submodule}-services/`, `{submodule}-dto/`, `{submodule}-repositories/`, `{submodule}-tests/`, etc.) and its local Documentation Trio (`_backend-feature.md` with all 22 canonical sections, `_backend-forbidden.md`, `_backend-contract.md`);
 - treat the parent domain aggregator module, sibling sub-modules, role core, and host bootstrap as `OUTSIDE_SUPPLIED_SCOPE`;
 - do not create or demand parent domain or host wrapper folders;
-- verify standalone execution harness in `harness/` with local seeders;
+- verify standalone execution harness in `harness/` with local seeders (`[submodule].seed.ts`);
+- verify Module-Owned 8-State Mock Scenario Catalog (`fixtures/mock-scenarios.ts` covering `ACTIVE`, `EMPTY`, `UNAUTHORIZED`, `FORBIDDEN`, `NOT_FOUND`, `VALIDATION_ERROR`, `SERVER_500`, `TIMEOUT`);
+- verify Ambient Host Stubs (`contracts/core-contracts.stub.ts`) and Machine-Readable Manifest (`required-core-contracts.json`) with external budget ceiling ≤ 7;
+- verify universal discriminated union `ApiResponse<T> = ApiSuccess<T> | ApiFailure` envelope with `requestId` and `statusCode?: HttpStatus | number`;
 - provide exact integration instructions for the host domain aggregator module.
 
 A sub-module-only input must never fail merely because omitted parent domain or host folders are absent.
@@ -6553,16 +6556,41 @@ Pytest must not become internal unit testing.
 
 ## RULE 28 — CANONICAL API RESPONSE ENVELOPE
 
-Verify exact canonical fields and presence/absence conditions for:
+Verify exact canonical fields and presence/absence conditions for universal discriminated union:
+`ApiResponse<T> = ApiSuccess<T> | ApiFailure`
 
-- success;
-- message;
-- data;
-- meta;
-- error;
-- errorCode;
-- statusCode;
-- validationErrors.
+```typescript
+export interface ApiSuccess<T> {
+  success: true;
+  message: string;
+  data: T;
+  meta?: PaginationMeta;
+  requestId: string;
+  statusCode?: HttpStatus | number;
+}
+
+export interface ApiFailure {
+  success: false;
+  message: string;
+  data: null;
+  error: string;
+  errorCode: string;
+  statusCode: HttpStatus | number;
+  requestId: string;
+  validationErrors?: ValidationErrorItem[];
+}
+```
+
+Verify presence/absence rules:
+- `success`: `true` on 2xx, `false` on all errors.
+- `message`: human-readable, always present.
+- `data`: payload `T` on success, ALWAYS `null` on error.
+- `meta`: present only on paginated list responses, omitted on simple responses.
+- `requestId`: UUID correlation identifier, always present.
+- `error`: error category string, absent on success, present on error.
+- `errorCode`: machine-readable `DOMAIN.ENTITY.REASON` in SCREAMING_SNAKE_CASE.
+- `statusCode`: `HttpStatus` enum in TypeScript/Python code, serialized to numeric on wire.
+- `validationErrors`: present on canonical 400 validation failures.
 
 ---
 
