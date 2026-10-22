@@ -281,6 +281,66 @@ To prevent architectural drift and eliminate monolithic backend sprawl, the back
    - The developer provides **ONLY** that feature module folder (`src/backend-{role}/{role}-modules/{role}-{feature}/`) to the AI agent.
    - The AI agent will audit, repair, test, and deliver that module in complete isolation without requiring or modifying sibling modules or host application slices (`app.module.ts`, `main.ts`).
 
+### 0A.2 UNIVERSAL DAY-1 SUB-MODULE ARCHITECTURE & 1-TO-1 SUB-FEATURE ISOMORPHISM (MANDATORY)
+
+> ⛔ **THE LAW: BACKEND MIRRORS THE EXACT SAME SUB-MODULE GRANULARITY AS THE FRONTEND FROM DAY 1**
+>
+> Just as the frontend breaks every feature domain into autonomous sub-modules right from Day 1, the backend MUST mirror this exact same granularity to preserve **1-to-1 Architectural Isomorphism & Granular AI Repairability**.
+>
+> 1. **The Universal Backend 3-Tier Hierarchy:**
+>    ```text
+>    APPLICATION
+>      └── ROLE CONTAINER (e.g., src/backend-manager/)
+>            └── FEATURE DOMAIN MODULE (e.g., manager-attendance/, manager-profile/, manager-billing/)
+>                  ├── [role]-[module].module.ts          # Pure Aggregator NestJS Module (imports child sub-modules)
+>                  ├── [role]-[module]-backend-feature.md # Master Domain Documentation
+>                  ├── [role]-[module]-backend-forbidden.md
+>                  │
+>                  ├── {sub-module-1}/                   # 100% Autonomous Backend Sub-Module (e.g., attendance-dashboard/)
+>                  │    ├── {submodule}-controllers/     # dashboard-controllers/
+>                  │    │    └── [role]-[submodule]-[desc].controller.ts
+>                  │    ├── {submodule}-services/        # dashboard-services/
+>                  │    │    └── [role]-[submodule]-[desc].service.ts
+>                  │    ├── {submodule}-dto/             # dashboard-dto/
+>                  │    │    └── [role]-[submodule]-[desc].dto.ts
+>                  │    ├── {submodule}-repositories/    # dashboard-repositories/
+>                  │    ├── {submodule}-entities/        # dashboard-entities/ (or domain entities)
+>                  │    ├── {submodule}-tests/           # Unit & integration tests
+>                  │    ├── {sub-module}.module.ts       # Sub-module NestJS definition
+>                  │    └── {sub-module}-backend-feature.md
+>                  │
+>                  └── {sub-module-2}/                   # Autonomous Backend Sub-Module (e.g., attendance-history/)
+>                       ├── {submodule}-controllers/     # history-controllers/
+>                       ├── {submodule}-services/        # history-services/
+>                       ├── {submodule}-dto/             # history-dto/
+>                       └── ... (identical canonical micro-structure)
+>    ```
+>
+> 2. **Zero Root Code in Domain Module (Domain Quarantine):**
+>    - The parent domain module root (`manager-attendance/`) contains ONLY the parent aggregator module (`manager-attendance.module.ts`), master documentation, and child sub-module folders.
+>    - Placing loose controllers, services, repositories, or DTOs directly at the domain root is a **CRITICAL ARCHITECTURE VIOLATION**. 100% of implementation code lives inside its respective sub-module.
+>
+> 3. **Sub-Module Isolation Firewall (Zero Cross-Sub-Module Coupling):**
+>    - `attendance-dashboard` backend services MUST NEVER directly import internal repositories, services, or DTOs from `attendance-history`.
+>    - Sibling sub-modules communicate strictly via public interfaces, emitted domain events (Redis Streams/Outbox), or shared database transactions managed by an application workflow orchestrator.
+>
+> 4. **Backend Sub-Module ZIP Guarantee (Granular AI Repair Unit):**
+>    - When an API defect occurs in `attendance-history`, the developer can zip ONLY `src/backend-manager/manager-modules/manager-attendance/attendance-history/`.
+>    - An AI receiving this zip gets a laser-focused context (controllers, services, DTOs, unit tests for history only), with 0% risk of breaking dashboard or analytics code.
+>
+> 5. **Clean Sub-Folder vs Globally Unique File Naming:**
+>    - Sub-folders inside a sub-module use: `{submodule}-{artifact}/` (e.g. `dashboard-controllers/`, `dashboard-services/`, `dashboard-dto/`, `history-controllers/`).
+>    - Files inside those folders use: `[role]-[submodule]-[description].[type].ts` (e.g. `manager-attendance-dashboard-metrics.controller.ts`, `manager-attendance-history-query.service.ts`).
+>
+> 6. **Universal Mapping Across All Roles (Frontend ➔ Backend 1:1 Parity):**
+>    - `manager_profile/profile_overview` ➔ `manager-profile/profile-overview/`
+>    - `manager_profile/profile_security` ➔ `manager-profile/profile-security/`
+>    - `manager_attendance/attendance_dashboard` ➔ `manager-attendance/attendance-dashboard/`
+>    - `manager_attendance/attendance_history` ➔ `manager-attendance/attendance-history/`
+>    - `manager_billing/billing_invoices` ➔ `manager-billing/billing-invoices/`
+>    - `manager_members/members_directory` ➔ `manager-members/members-directory/`
+>
+
 ### Cross-Feature Workflow Exception
 
 Feature modules must not directly import sibling feature repositories, services, entities, or internal business logic.
