@@ -92,6 +92,11 @@ Document the mapping clearly so an AI cannot confuse `--primary` with `--text-pr
 
 ## 1. COLOR PALETTE
 
+> ⛔ **WEB TAILWIND TOKEN CONSUMPTION INVARIANT:**
+> In Next.js / Tailwind CSS v4, all visual tokens are mapped via `@theme inline` in `globals.css`.
+> React JSX components MUST consume semantic Tailwind utility classes (`bg-card`, `text-primary`, `border-border`, `bg-success-bg`).
+> Components MUST NEVER use inline styles (`style={{ backgroundColor: ... }}`), hardcoded hex values (`#FACC15`), or arbitrary bracket expressions (`bg-[var(--bg-card)]`) when a semantic utility class exists.
+
 *Note: For v1, the system defaults to Dark Mode. Light mode values are provided below for future-proofing and consistency.*
 
 ### Core Surface Tokens (The "Luxury Premium Gold" Theme)

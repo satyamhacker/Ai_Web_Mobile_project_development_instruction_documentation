@@ -32,6 +32,12 @@
 > ⛔ **NO-PAUSE ON MISSING RUNTIME / HOST CAPABILITY (MANDATORY ANTI-STALL RULE):**
 > Unavailability of a running web server (Next.js/Vite dev server), live backend API, real browser, or Playwright test runner is NEVER a reason to pause, stall, abort, or declare web frontend code creation, audit, or repair "BLOCKED". The AI MUST fix every issue that can be resolved in source files (pages, layouts, components, custom hooks, Zustand stores, Zod schemas, URL configs, MSW mock fixtures, Playwright test files, documentation trio) in this session. Only live browser automation or live API network execution is designated as `DEFERRED_TO_HOST_RUNTIME`. Missing runtime is strictly forbidden as a reason to pause.
 > ⛔ **OFFLINE / STATIC SCORING DIRECTIVE:** When live browser or runtime test execution is unavailable in the execution environment, ratings (1 to 10) MUST evaluate **Static Architecture & Code Completeness**. The AI MUST NOT penalize, artificially deduct points, or refuse to rate simply because a live browser or server is absent. State the Static Compliance Rating directly (up to 10.0), noting dynamic execution separately as `DEFERRED_TO_HOST_RUNTIME`.
+>
+> ⛔ **AI HALLUCINATION REDUCTION DISCIPLINE (TARGET < 5% HALLUCINATION RATE):**
+> AI coding models hallucinate when context is ambiguous, dependencies are hidden across deep trees, or contracts are assumed rather than explicitly declared. To reduce AI hallucination from the industry baseline (>80% in multi-file projects) to under 5%:
+> 1. The AI MUST NOT invent, guess, or assume API response fields, store actions, Next.js route paths, or UI props. Every contract MUST be verified against Zod schemas, TypeScript types, or `[moduleName]_features.md`.
+> 2. When creating or debugging a module, the AI MUST rely primarily on the module's documentation trio (`[moduleName]_features.md`, `[moduleName]_forbidden.md`, `[moduleName]_theme_contract.md`) and mock fixtures (`[moduleName]_mocks/fixtures/`), treating source code as the LAST resort.
+> 3. Every file and folder MUST satisfy the **5-Second Comprehension Invariant**—a newly initialized AI context or human developer must understand its exact responsibility, inputs, outputs, and boundaries within 5 seconds without inspecting parent or sibling files.
 
 ## RULE ENFORCEMENT & SEVERITY MODEL
 
@@ -162,6 +168,7 @@ Please follow these strict architectural rules:
 
 1. **Micro-Modularization, Feature-Based Sub-folders & File Size Ceilings (Crucial)**: 
 Break down all large or mixed files. Every **React component file** MUST contain one primary React component. Non-component files MAY contain multiple closely related declarations when they represent one cohesive responsibility, such as an API service for one entity family, a schema family, or a constants set. **CRITICAL:** Do not dump all these micro-files into a single flat directory. Group them logically into cohesive sub-folders within the module. 
+**The 5-Second Comprehension Invariant:** Every file and folder MUST be organized such that an AI agent or engineer understands its exact purpose, role, inputs, and boundaries within 5 seconds without reading past line 5 or inspecting parent/sibling files.
 **IMPORTANT FOLDER NAMING:** Always prefix the main internal folders with the module name exactly once (e.g., use `[moduleName]_components/`, `[moduleName]_store/`, `[moduleName]_api/` instead of generic names like `components/`). Do NOT double-prefix folders (e.g., if the module is `superadmin_analytics`, the folder MUST be `superadmin_analytics_components/`, NOT `superadmin_analytics_analytics_components/`). This ensures that when providing context to an AI (using `@`), the AI only loads the exact folder for this module, avoiding cross-module hallucinations. Inside these prefixed folders, group files logically (e.g., `[moduleName]_components/[role]_[module]_table/`).
 **File Size Ceiling:** React Component: hard maximum 300 lines. If a component's JSX grows beyond that, extract sub-sections into their own child component files inside the same feature folder to force real component-level granularity.
 
@@ -274,6 +281,12 @@ The following are NOT global infrastructure:
 Do NOT create a global business layer merely to avoid duplication.
 
 If two features contain similar business behavior, duplication is allowed and is preferred when duplication improves AI isolation and feature portability.
+
+### The "Shared Folder" Trap & Strict WET Invariant
+
+A common architectural antipattern is attempting to resolve cross-module needs by creating a `shared/` or `common/` dumping ground (e.g. `src/shared/`, `src/common/`, `src/components/shared/`, or role-level `frontend_{role}/shared/`).
+- **THE TRAP:** Within weeks, developers and AI agents place domain cards, date filters, member status pills, entity dropdowns, and business hooks into `shared/`. Then, modifying a component to satisfy Feature A silently breaks Feature B and Feature C, causing cross-module regressions and destroying tree-shaking.
+- **THE LAW:** Generic zero-business infrastructure belongs in `src/lib/` or `src/components/ui/` ONLY. Any component, hook, utility, or type containing a business noun, domain status, or business rule MUST remain strictly feature-local. If two features require similar business UI or logic, DUPLICATE IT LOCALLY under the Strict WET Principal. Creating `shared/` directories for business logic is STRICTLY FORBIDDEN.
 
 > ⛔ **ABSOLUTE PROHIBITION — AI AGENTS (CRITICAL ISOLATION INVARIANT):** 
 > **NEVER attempt to "DRY up" business components by moving them to global folders like `src/components/ui/` or `src/shared/`.** 
@@ -1517,6 +1530,11 @@ with only documented application-infrastructure changes allowed as exceptions.
 13. **Update AI-Context Documentation (The Feature Map)**:
 Once the entire refactor is complete, generate or update a `[moduleName]_features.md` documentation file inside the module's root folder. This document MUST serve as a master map for future AI sessions and human developers. A future AI reading only this file must be able to answer: What does this module do? What can the user do in it? What files handle what? What are the API endpoints? What must never be broken?
 
+### Source Code as Last Resort Mandate
+An AI agent or engineer MUST be able to completely understand the feature's business purpose, user flows, state lifecycle, API contracts, permissions, test requirements, and edge cases purely by reading `[moduleName]_features.md` and `[moduleName]_forbidden.md`.
+- **The Rule:** Source code inspection MUST be the last resort, never the starting point.
+- **The Rationale:** When an AI is forced to reverse-engineer business intent from JSX markup and complex React hooks, hallucinations soar to 80%. When the AI operates against verified contract documentation, guessing drops below 5%. If an AI cannot understand the feature without opening source code files, the documentation has FAILED.
+
 ### The Documentation Quality Standard
 
 **CRITICAL — The difference between useful and useless documentation:**
@@ -1760,6 +1778,19 @@ without reading all files.]
 | `ManagerMembersAddModal.tsx` | 3-tab add member form. Renders form and delegates submission to form/mutation hook. Closes on success. |
 | `ManagerMembersKPIs.tsx` | 4 stat cards (Total, Active, Expired, Due Today). Read-only display. |
 | `ManagerMembersEmptyState.tsx` | Empty state UI shown when table has zero rows. Has "Add Member" CTA. |
+
+## Module Run, Mock & Test Harness
+[REQUIRED: Exact commands, route paths, test credentials, and MSW mock scenario toggles to run, verify, and mock THIS specific module in complete isolation.]
+
+- **Primary Route Path:** `/frontend_{role}/{role}_{module}` (configured in `[moduleName]_url_config.ts`)
+- **Unit / Component Test Suite:** `npm run test -- src/app/frontend_{role}/{role}_{module}`
+- **Playwright E2E Suite:** `playwright_E2E/frontend_{role}_e2e/{role}_{module}/{role}_{module}.spec.ts`
+- **Seed Test User & Role:** e.g. `role: "MANAGER"`, `branchId: "branch-001"`, `tenantId: "tenant-dev"`
+- **Mock Scenario Toggles:**
+  - *Standard List:* MSW returns seeded fixtures array from `[moduleName]_mocks/fixtures/`
+  - *Empty State:* Query flag `?empty=true` triggers `[Module]EmptyState.tsx`
+  - *Error State:* Trigger 500 error / network failure to verify `error.tsx` boundary with retry CTA
+  - *Permission Denied:* Set role to unauthorized to verify 403 / redirect
 
 ## Rule Compliance Checklist
 [REQUIRED: Every checkbox must be honestly marked. Do NOT mark [x] if the rule is not
@@ -3178,6 +3209,40 @@ UI requires field
 → render from response
 ```
 
+### Byte-for-Byte Mock & Real API Envelope Symmetry
+
+A critical production bug occurs when an MSW mock handler returns bare data while the production backend returns a canonical response envelope (or vice versa).
+
+```typescript
+// ❌ FORBIDDEN MOCK ENVELOPE MISMATCH (Crash Anti-Pattern):
+// In MSW Mock Handler:
+HttpResponse.json({
+  id: "1",
+  name: "Rahul Sharma"
+})
+
+// But Real Backend API returns canonical ApiResponse<T> envelope:
+{
+  "success": true,
+  "message": "Member fetched successfully",
+  "data": {
+    "id": "1",
+    "name": "Rahul Sharma"
+  },
+  "meta": { "page": 1, "total": 1 }
+}
+// Consequence: Frontend code written against the bare mock accesses `response.name`. This passes mock tests, but crashes instantly in production with `TypeError: Cannot read properties of undefined (reading 'name')`!
+
+// ✔ MANDATORY CONTRACT LOCK:
+// Every MSW mock handler MUST return the canonical ApiResponse<T> envelope matching @/lib/api:
+HttpResponse.json({
+  success: true,
+  message: "Success",
+  data: memberData,
+  meta: paginationMeta,
+})
+```
+
 ### Fixture Source-of-Truth Rule
 
 MSW fixtures are mock implementations of the API contract. They are NOT an alternative business-data architecture.
@@ -3720,6 +3785,7 @@ If this is not possible, the module FAILS the portability and architecture revie
 * **The Problem:** The `[moduleName]_features.md` file provides module-level context, but AI agents also need granular, file-level context when editing a specific hook or component.
 * **The Rule:** Every Custom Hook, complex React Component, and State Store MUST have an exhaustive JSDoc block directly above its declaration.
 * **What to include:** Explain the business intent, state dependencies, and explicit edge cases. Example: `/** @description Manages local wizard state for Member Creation. @dependencies Requires auth session. @edge-case Resets to step 1 if the API throws 409 Conflict. */`
+* **Enforcing the 5-Second Comprehension Invariant:** This mandatory docstring ensures that any human engineer or AI agent immediately grasps the exact boundaries, non-responsibilities, and call flow of the file within 5 seconds without reading past line 5.
 
 ---
 
@@ -4024,7 +4090,7 @@ Every project MUST have a `globals.css` (or equivalent canonical theme styleshee
 | **Gate 4** | Zero Hardcoded Colors | Grep JSX for hex `#`, `rgb(`, raw Tailwind colors (`bg-red-500`), or arbitrary CSS var brackets | **STOP.** Hardcoded color = REJECTED DELIVERY |
 | **Gate 5** | Zero Forbidden Opacity Modifiers | Grep JSX for `bg-success/10`, `bg-danger/5`, etc. Only semantic background tokens permitted | **STOP.** Contrast/theme violation |
 | **Gate 6** | Centralized URL Config Present | `[moduleName]_url_config.ts` present, exports all routes/APIs with real paths (zero placeholders) | **STOP.** Missing config = REJECTED DELIVERY |
-| **Gate 7** | Feature Map Non-Generic | `[moduleName]_features.md` complete with real endpoints, flows, and component tree (no TBDs) | **STOP.** Generic doc = INCOMPLETE MODULE |
+| **Gate 7** | Feature Map Non-Generic | `[moduleName]_features.md` complete with real endpoints, flows, component tree, and Module Run, Mock & Test Harness (no TBDs) | **STOP.** Generic doc = INCOMPLETE MODULE |
 | **Gate 8** | TanStack Query v5 Compliance | Verify `isPending` used (no `isLoading`), no deprecated callbacks in `useQuery` | **STOP.** Broken server state / crash |
 | **Gate 9** | React Hook Form v7 Compliance | Verify `zodResolver` used, schemas co-located, zero Yup/Joi resolvers | **STOP.** Broken form validation |
 | **Gate 10** | Zero Barrel Files | Verify zero `index.ts`, `*Export.ts`, or re-export facades across entire module | **STOP.** Circular dependency risk |
@@ -4048,7 +4114,7 @@ Every project MUST have a `globals.css` (or equivalent canonical theme styleshee
 - [ ] **Zero Cross-Module Business Imports:** Zero imports from sibling feature modules. (Verified by ESLint boundaries). — *STOP if `import ... from '../sibling'` found.*
 - [ ] **No Role-Wide Business Buckets:** No generic `superadmin_components/`, `admin_hooks/`, etc., containing feature business logic. — *STOP if unowned bucket exists.*
 - [ ] **Root Quarantine Compliant:** ONLY routing files (`page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`, `not-found.tsx`, `template.tsx`, `default.tsx`), `[moduleName]_url_config.ts`, and the documentation trio (`[moduleName]_features.md`, `[moduleName]_forbidden.md`, `[moduleName]_theme_contract.md` or `_features.md`, `_forbidden.md`, `_theme_contract.md`) exist at feature root. All other files (.ts, .tsx) are in prefixed subfolders. — *STOP if any other code file is at root.*
-- [ ] **Feature Map Freshness:** `[moduleName]_features.md` contains real endpoints, data requirements table, component tree, and permissions without placeholder text. — *STOP if generic or outdated.*
+- [ ] **Feature Map Freshness:** `[moduleName]_features.md` contains real endpoints, data requirements table, component tree, permissions, and Module Run, Mock & Test Harness without placeholder text. — *STOP if generic or outdated.*
 - [ ] **Forbidden Patterns Enforced:** `[moduleName]_forbidden.md` present and specific to this module. — *STOP if missing.*
 - [ ] **Theme Contract Verified:** `[moduleName]_theme_contract.md` lists all consumed design tokens. — *STOP if missing.*
 - [ ] **URL Centralization Verified:** `[moduleName]_url_config.ts` present and consumed by all API and navigation call sites. — *STOP if raw URL in JSX/hooks.*
