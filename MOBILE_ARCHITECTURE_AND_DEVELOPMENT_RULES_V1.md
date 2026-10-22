@@ -485,6 +485,52 @@ To guarantee that any AI agent or mobile developer can repair, test, or expand a
    - Navigation orchestrators consume ONLY top-level route constants from `src/core/navigation/routes.ts` and feature navigator components. They MUST NOT import business state, business components, or domain hooks from feature modules.
    - If an issue occurs with tab switching, deep linking config, or drawer presentation, the repair context is STRICTLY `src/core/navigation/`, NEVER individual feature modules.
 
+6. **Feature Size Ceilings & Sub-Navigation Splitting Rule (Sub-Module Isolation Firewall):**
+   - **Maximum File Ceiling:** 100 source files per feature module.
+   - **Maximum Line-of-Code Ceiling:** 15,000 LOC per feature module.
+   - **Sub-Navigation Splitting:** When a mobile domain feature grows large (e.g. Attendance having Dashboard, History, Analytics, and Biometric Sync), the module folder MUST be partitioned into sub-feature domain folders matching the sub-navigation structure:
+     ```text
+     attendance/
+     ├── attendance_dashboard/
+     ├── attendance_history/
+     ├── attendance_analytics/
+     └── attendance_biometrics/
+     ```
+   - **Zero Cross-Sub-Module Imports (Absolute Decoupling):**
+     - Sibling sub-folders within the same parent domain MUST NEVER import components, hooks, state, types, mocks, or utils from each other.
+     - `attendance_dashboard` MUST NEVER import from `attendance_history`.
+     - `attendance_history` MUST NEVER import from `attendance_analytics`.
+   - **100% Self-Contained Sub-Module Directory:**
+     - Each sub-navigation folder is an autonomous micro-modular unit containing its own screens, components, hooks, stores, types, schemas, mocks, tests, and Documentation Trio (`[submodule]_features.md`, `[submodule]_forbidden.md`, `[submodule]_theme_contract.md`).
+   - **Parent Shared Folders Strictly Forbidden:**
+     - Creating `attendance/common/` or `attendance/shared/` is STRICTLY PROHIBITED. All shared code must either be pure domain-agnostic UI primitives in `src/core/ui/` or duplicated locally (Strict WET).
+   - **The Sub-Module ZIP Guarantee:**
+     - If an engineer or AI needs to fix a bug in `attendance_history`, they ZIP ONLY `src/features/frontend_{role}/attendance/attendance_history/`. The AI repairs the sub-module without ever needing the parent or sibling sub-modules.
+   - **Sub-Module Deletion Safety:**
+     - Completely deleting `attendance_analytics` MUST leave `attendance_dashboard` and `attendance_history` compiling and passing tests with ZERO missing imports.
+   - **Inter-Sub-Module Navigation:**
+     - Communication between sub-modules happens exclusively via React Navigation route dispatch with typed route params (`navigation.navigate('AttendanceHistory', { employeeId: 'EMP001' })`), never via shared stores or in-memory cross-references.
+   - **Sub-Module Role+Submodule Naming Invariant (AI Anti-Hallucination):**
+     - To eliminate AI naming hallucinations across split sub-modules, all mobile artifacts MUST carry the full `[Role][Submodule]` prefix:
+       - Screens: `[Role][Submodule][Screen]Screen.tsx` (e.g., `ManagerAttendanceDashboardScreen.tsx`, `ManagerAttendanceHistoryScreen.tsx`).
+       - Main Views: `[Role][Submodule][Screen]MainView.tsx`.
+       - Components: `[Role][Submodule][Name].tsx` (e.g., `ManagerAttendanceDashboardMetricCard.tsx`, `ManagerAttendanceHistoryFilterBar.tsx`).
+       - Custom Hooks: `use[Role][Submodule][Name].ts` (e.g., `useManagerAttendanceDashboardMetrics.ts`).
+       - Local Stores: `use[Role][Submodule]Store.ts` (e.g., `useManagerAttendanceDashboardStore.ts`).
+       - URL Config: `config/[role]_[submodule].url_config.ts`.
+       - Query Keys: `api/[role]_[submodule].query_keys.ts`.
+       - Documentation Trio: `[role]_[submodule]_features.md`, `[role]_[submodule]_forbidden.md`, `[role]_[submodule]_theme_contract.md`.
+   - **Zero Root Code in Parent Domain Folder (Parent Quarantine):**
+     - The parent grouping folder (e.g., `attendance/`) MUST NOT contain loose screens, components, hooks, or stores.
+     - It serves exclusively as a filesystem directory containing the self-contained sub-modules. Any top-level tab or stack navigator mounts the sub-module screens directly from their respective sub-folders.
+   - **Query Key & MSW Mock Namespace Separation:**
+     - Each mobile sub-module MUST isolate its TanStack Query keys with its own distinct sub-module namespace:
+       ```typescript
+       export const managerAttendanceDashboardKeys = { all: ['manager', 'attendance', 'dashboard'] as const }
+       export const managerAttendanceHistoryKeys = { all: ['manager', 'attendance', 'history'] as const }
+       ```
+     - MSW mock handlers MUST mock distinct sub-feature REST endpoints. Cross-sub-module query invalidation or shared cache keys are STRICTLY FORBIDDEN.
+
 ---
 
 ## Rule 0B — Hard Feature Write Boundary

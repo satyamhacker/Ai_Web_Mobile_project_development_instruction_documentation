@@ -619,22 +619,25 @@ Fixed-breakpoint-only specifications fail at intermediate viewport sizes. The fo
 - **Zoom compatibility:** All layouts MUST remain fully functional at 200% browser zoom without horizontal overflow or overlapping content.
 - **Text scaling:** Layouts MUST accommodate browser font-size scaling (user-set base font up to 200%) — use `rem`-relative units where practical.
 
-### Responsive Testing Requirements
+### Responsive Testing Requirements (The 7 Canonical Resolutions)
 
-Before a feature is considered complete, it MUST be verified at all of these conditions:
+Before a feature is considered complete, it MUST be verified at all 7 canonical screen resolutions without layout breakage or unintended overflow:
 
-| Test | Width / Condition | Pass Criteria |
+| Resolution Tier | Viewport Width | Pass Criteria |
 |---|---|---|
-| Narrow mobile | 320px | No horizontal overflow, all actions reachable |
-| Standard mobile | 375px | Card layouts readable, tables use card-stack |
-| Large mobile | 414px | No layout regressions |
-| Intermediate | 600px | Fluid layout holds, no broken wrapping |
-| Tablet | 768px | Sidebar collapses, tables scroll |
-| Large tablet | 1024px | Desktop patterns visible, sidebar icon-only |
-| Desktop | 1280px+ | Full layout, all columns visible |
-| 200% zoom | Any device | No horizontal scroll, no overlapping |
-| Long text | n/a | Localized strings (up to 2× English length) don't break layout |
-| Text scale 150% | Browser zoom | All text readable, no overflow |
+| **1. Ultra-Narrow Mobile** | `320px` | No horizontal overflow, all primary actions reachable, font-scaling holds |
+| **2. Standard Mobile** | `375px` | Card layouts readable, tables use card-stack, single-column forms |
+| **3. Large Mobile** | `425px` | KPI cards use 2-column grid, fluid text wrapping holds |
+| **4. Tablet** | `768px` | Sidebar collapses to icon-only (60px), multi-column forms adapt |
+| **5. Large Tablet / Laptop** | `1024px` | Full desktop navigation visible, dashboard cards render in 3-column row |
+| **6. Standard Desktop** | `1440px` | Full 240px sidebar + content area, tables display all columns |
+| **7. Ultra-Wide / Full HD** | `1920px` | Content bounded with max-width or fluid flexbox, no awkward whitespace gaps |
+| **200% Browser Zoom** | Any device | Zero overlapping elements, no horizontal overflow |
+| **Localized Text (2× length)** | Any device | Long Hindi/German strings wrap naturally without clipping buttons or cards |
+
+> ⛔ **ZERO HORIZONTAL SCROLL INVARIANT:**
+> The web application MUST NOT produce any horizontal window scrollbar (`overflow-x`) at ANY of the 7 resolutions above.
+> The only permitted horizontal scroll is strictly contained inside data tables configured with `overflow-x-auto` and sticky column headers. An uncontained body horizontal scroll is an immediate `NON_COMPLIANT` visual defect.
 
 ### Mobile Sidebar / Drawer Requirements
 - Focus trap while drawer is open.

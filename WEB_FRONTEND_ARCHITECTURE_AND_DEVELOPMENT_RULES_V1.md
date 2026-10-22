@@ -302,6 +302,134 @@ Every feature module MUST satisfy the **Feature ZIP Guarantee**:
 2. The feature MUST NEVER require sibling feature code or ask for other role folders.
 3. All dependencies on application-level infrastructure (API transport, theme tokens, icons) MUST be satisfied through the documented Core Application Contracts.
 
+### Zero Hidden Dependency Principle & Host Contract
+
+A module MUST NEVER rely on implicit global state, unstated route query parameters, or undocumented host runtime contexts.
+Every external host capability consumed by the module MUST declare its **Expected Shape** explicitly inside `[moduleName]_features.md` under `## Approved External Dependencies`:
+- **Auth Session Shape:** e.g., `interface ExpectedAuthUser { id: string; role: Role; branchId: string; }`
+- **Theme Contract:** e.g., `@theme inline` tokens consumed from `globals.css` listed in `[moduleName]_theme_contract.md`
+- **API Transport:** e.g., `apiFetch<T>(endpoint, options): Promise<ApiResponse<T>>`
+- **Zero Hidden Route Dependencies:** A module must extract all route parameters through typed Next.js `params` or its centralized `[moduleName]_url_config.ts`.
+
+### Feature Dependency Budget (Maximum 7 Core Infrastructure Dependencies)
+
+To guarantee portability and prevent spaghetti coupling, every feature module operates under a strict **External Dependency Budget**:
+- A feature module MUST NOT import from more than **7 distinct core application infrastructure files** (e.g., `@/lib/api`, `@/lib/logger`, `@/components/ui/button`, `@/components/ui/dialog`, `@/lib/socket`, `@/lib/display_value`, `@/lib/format_currency`).
+- If a feature module requires more than 7 external infrastructure imports, it indicates that the module is over-coupled or trying to do too many unrelated things. It MUST either:
+  1. Internalize helper logic locally (Strict WET), or
+  2. Split into distinct sub-feature modules.
+
+### The Copy-Paste Test & Feature Removal Test (Deletion Safety)
+
+Every feature module must pass two mechanical portability tests before it is approved for production:
+1. **The Copy-Paste Test:** If you copy the feature folder `src/app/frontend_{role}/{role}_{module}/` into an empty host application that supplies only the 7 standard core infrastructure contracts and run `npm test`, all module unit tests and MSW mock scenarios MUST pass immediately with zero compilation errors.
+2. **The Feature Removal Test (Deletion Safety):** If an engineer completely deletes the feature folder `src/app/frontend_{role}/{role}_{module}/` from the project:
+   - The project TypeScript build (`tsc --noEmit`) MUST STILL PASS.
+   - All sibling modules (`{role}_billing`, `{role}_reports`, etc.) MUST CONTINUE TO RUN with zero missing import errors.
+   - If deleting a feature breaks another feature's build, the architecture has FAILED the isolation invariant.
+
+### Feature Size Ceilings & Sub-Navigation Splitting Rule
+
+A single feature folder MUST NOT become an unmaintainable monolith.
+- **Maximum File Ceiling:** 100 source files per feature module.
+- **Maximum Line-of-Code Ceiling:** 15,000 LOC per feature module.
+- **Sub-Navigation Splitting Rule:** When a domain feature grows large (e.g. Attendance having Dashboard, History, Analytics, and Biometric Sync), the module folder MUST be partitioned into sub-feature domain folders matching the sub-navigation structure:
+  ```text
+  attendance/
+  ├── attendance_dashboard/
+  ├── attendance_history/
+  ├── attendance_analytics/
+  └── attendance_biometrics/
+  ```
+  Each sub-folder follows the exact same canonical micro-modular structure with its own components, hooks, tests, and documentation trio.
+
+### Sub-Module Isolation Firewall (Zero Cross-Sub-Module Imports & Sub-Module ZIP Guarantee)
+
+> ⛔ **ABSOLUTE RULE: SIBLING SUB-MODULES ARE 100% UNRELATED AT SOURCE CODE LEVEL**
+> 
+> When an oversized feature is split into sub-navigation domain folders (e.g., `attendance/` split into `attendance_dashboard/`, `attendance_history/`, `attendance_analytics/`, `attendance_biometrics/`), the **Zero Cross-Module Relationship & 100% Isolation Law** applies with identical, ruthless strictness between sibling sub-folders:
+>
+> 1. **Zero Cross-Sub-Module Imports (Absolute Decoupling):**
+>    - `attendance_dashboard` MUST NEVER import any component, hook, state, type, mock, or utility from `attendance_history`.
+>    - `attendance_history` MUST NEVER import anything from `attendance_analytics` or `attendance_dashboard`.
+>    - Neither sub-folder has ANY knowledge of the internal code, state, or types of any sibling sub-folder.
+>
+> 2. **100% Self-Contained Sub-Module Directory:**
+>    - Every sub-navigation folder is an autonomous, complete micro-modular application:
+>      ```text
+>      attendance/
+>      ├── attendance_dashboard/
+>      │    ├── components/
+>      │    ├── hooks/
+>      │    ├── api/
+>      │    ├── state/
+>      │    ├── types/
+>      │    ├── schemas/
+>      │    ├── mocks/
+>      │    ├── tests/
+>      │    ├── attendance_dashboard_features.md
+>      │    ├── attendance_dashboard_forbidden.md
+>      │    └── attendance_dashboard_theme_contract.md
+>      ├── attendance_history/
+>      │    ├── components/
+>      │    ├── hooks/
+>      │    ├── api/
+>      │    ├── state/
+>      │    ├── types/
+>      │    ├── schemas/
+>      │    ├── mocks/
+>      │    ├── tests/
+>      │    ├── attendance_history_features.md
+>      │    ├── attendance_history_forbidden.md
+>      │    └── attendance_history_theme_contract.md
+>      ├── attendance_analytics/
+>      └── attendance_biometrics/
+>      ```
+>
+> 3. **Parent Shared Folders Are STRICTLY FORBIDDEN:**
+>    - Creating a shared folder inside the parent (e.g. `attendance/common/`, `attendance/shared/`, or `attendance/components/`) is **STRICTLY PROHIBITED**.
+>    - *Why?* A shared parent folder immediately breaks the AI Zip Guarantee. If `attendance_history` depends on `attendance/common/`, zipping only `attendance_history/` will produce broken imports and compilation errors for an AI.
+>
+> 4. **Strict WET (Write Everything Twice) Between Sub-Modules:**
+>    - If both `attendance_dashboard` and `attendance_history` require an `AttendanceStatusBadge`, a date range picker, or a table row formatter, each sub-module MUST define its own copy locally inside its own `components/` or `utils/`.
+>    - If the UI element is a pure, domain-agnostic primitive with zero business rules (e.g. generic `<Button>`, `<Dialog>`), it is consumed from core application UI (`@/components/ui/`). But any business-aware UI or logic MUST be duplicated locally.
+>
+> 5. **The Sub-Module ZIP Guarantee (Granular AI Repair Unit):**
+>    - If a bug occurs in `attendance_history`, the developer does NOT need to zip the entire parent `attendance/` folder.
+>    - The developer zips **ONLY `attendance_history/`**!
+>    - An AI receiving `attendance_history.zip` has 100% complete context, runs its own local unit tests, runs its own MSW mocks, reads its own Documentation Trio, and repairs the bug in one shot with zero missing dependency errors.
+>
+> 6. **Sub-Module Deletion Safety (Zero Blast-Radius):**
+>    - If an engineer completely deletes `attendance_analytics/` or `attendance_biometrics/`:
+>      - `tsc --noEmit` MUST compile with zero errors.
+>      - `attendance_dashboard` and `attendance_history` MUST continue to build, render, and pass all tests without missing a single import.
+>
+> 7. **Navigation & Inter-Module Communication Boundary:**
+>    - The ONLY permissible communication between sibling sub-modules is via **URL Navigation & Typed Query Parameters** (e.g., navigating from Dashboard to History via `router.push('/attendance/history?employeeId=EMP001')`).
+>    - Sibling sub-modules MUST NEVER share React Context, Zustand stores, or in-memory state.
+>
+> 8. **Sub-Module Role+Submodule Naming Invariant (AI Anti-Hallucination):**
+>    - To eliminate AI naming hallucinations across split sub-modules, all artifacts MUST carry the full `[Role][Submodule]` prefix:
+>      - Components: `[Role][Submodule][Name].tsx` (e.g., `ManagerAttendanceDashboardMetricCard.tsx`, `ManagerAttendanceHistoryFilterBar.tsx`).
+>      - Custom Hooks: `use[Role][Submodule][Name].ts` (e.g., `useManagerAttendanceDashboardMetrics.ts`).
+>      - Local Stores: `use[Role][Submodule]Store.ts` (e.g., `useManagerAttendanceDashboardStore.ts`).
+>      - URL Config: `config/[role]_[submodule].url_config.ts`.
+>      - Query Keys: `api/[role]_[submodule].query_keys.ts`.
+>      - Documentation Trio: `[role]_[submodule]_features.md`, `[role]_[submodule]_forbidden.md`, `[role]_[submodule]_theme_contract.md`.
+>
+> 9. **Zero Root Code in Parent Domain Folder (Parent Quarantine):**
+>    - The parent grouping folder (e.g., `attendance/`) MUST NOT contain loose executable source files, shared hooks, or root components.
+>    - It serves exclusively as a filesystem directory containing the self-contained sub-modules. Any top-level layout or tab switcher lives in the shell/navigation layer, never as an un-isolated business component directly inside `attendance/`.
+>
+> 10. **Query Key & MSW Mock Namespace Separation:**
+>     - Each sub-module MUST isolate its TanStack Query keys with its own distinct sub-module namespace:
+>       ```typescript
+>       export const managerAttendanceDashboardKeys = { all: ['manager', 'attendance', 'dashboard'] as const }
+>       export const managerAttendanceHistoryKeys = { all: ['manager', 'attendance', 'history'] as const }
+>       ```
+>     - MSW mock handlers MUST mock distinct sub-feature REST endpoints (e.g., `/api/manager/attendance/dashboard/metrics` vs `/api/manager/attendance/history`). Cross-sub-module query invalidation or shared cache keys are STRICTLY FORBIDDEN.
+>
+
 ---
 
 ### 1B. HIERARCHICAL MODULE BOUNDARY — FEATURE MODULE IS THE AI REPAIR UNIT
@@ -896,6 +1024,23 @@ Every child folder MUST inherit Role + Module identity.
 - ✅ **GOOD:** `admin_members_table/`, `admin_members_filters/`, `admin_members_profile/`
 - ❌ **BAD:** `table/`, `filters/`, `profile/`, `modal/`
 *Why:* When you ZIP a child folder and give it to an AI, it instantly knows the full context without relying on parent path information.
+
+### No Magic / Ambiguous File Names Rule
+
+Generic, uninformative file names degrade AI reasoning speed and create search ambiguity across large codebases.
+- ❌ **STRICTLY FORBIDDEN FILE NAMES:**
+  `config.ts`, `utils.ts`, `helpers.ts`, `common.ts`, `shared.ts`, `misc.ts`, `types.ts`, `api.ts`, `constants.ts`, `styles.ts`, `store.ts`
+- ✅ **MANDATORY DESCRIPTIVE FILE NAMES:**
+  Every file MUST state its role, module, and exact domain responsibility:
+  - `AdminMembersApiClient.ts` (not `api.ts`)
+  - `AdminMembersUrlConfig.ts` (not `config.ts`)
+  - `AdminMembersFormatting.ts` (not `utils.ts`)
+  - `AdminMembersValidationSchema.ts` (not `schema.ts`)
+  - `AdminMembersTypes.ts` (not `types.ts`)
+  - `useAdminMembersStore.ts` (not `store.ts`)
+  - `AdminMembersPermissionRules.ts` (not `permissions.ts`)
+*Enforcing the 1-Glance Comprehension Rule:* An AI or engineer scanning a directory listing must immediately comprehend the exact purpose of every file without opening it.
+
 3B. **Backend-Ready Centralized Data (Single Source of Truth)**: 
 Find all hardcoded UI data (dropdown options, filter lists, default preset arrays, payment modes, etc.) scattered across the UI components. Extract them into feature-specific constant files alongside their components (e.g., `AdminBillingPaymentModeConstants.ts` inside the `admin_billing_constants/` folder) or a module-level constants file prefixed with the full Role+Module name (e.g., `AdminBillingConstants.ts`) for data used across multiple sub-folders.
 *Why?* Centralizing static UI configuration minimizes UI changes when a backend source is introduced; the backend transition must still update the API contract, types, schema, mock layer, and API client as required. Derive your TypeScript types directly from these central arrays where applicable.
@@ -1641,15 +1786,17 @@ This section MUST contain an explicit inventory of everything outside the featur
 Example:
 
 ```text
-## Approved External Dependencies
+## Approved External Dependencies & Expected Host Contract
+[REQUIRED: Maximum 7 Application Infrastructure items permitted under the Feature Dependency Budget. Each dependency MUST document its exact expected TypeScript interface/contract so an isolated AI never guesses.]
 
-### Application Infrastructure
-- `@/lib/api` — global HTTP transport only
-- `@/lib/logger` — application logging infrastructure
-- `@/components/ui/Dialog` — zero-business-logic dialog primitive
+### Application Infrastructure (Budget: ≤7 dependencies)
+- `@/lib/api` — `apiFetch<T>(endpoint: string, options?: RequestInit): Promise<ApiResponse<T>>`
+- `@/lib/logger` — `logger.info(msg, meta)`, `logger.error(msg, error)`
+- `@/components/ui/Dialog` — zero-business-logic primitive `{ open: boolean, onOpenChange: (open: boolean) => void }`
+- Host Session Context — `interface ExpectedAuthUser { id: string; role: Role; branchId: string; }`
 
 ### Business Feature Dependencies
-- None
+- None (STRICTLY FORBIDDEN under Strict WET Principal)
 
 ### Role-Level Business Dependencies
 - None
@@ -1920,8 +2067,12 @@ actually implemented. An honest [ ] is better than a false [x].]
 - [ ] Feature Dependency Firewall — zero imports from sibling business features or role-level business folders
 - [ ] AI Portability — this feature can be provided independently to an AI as the default repair context
 - [ ] Hard Write Boundary — normal feature repairs can be completed without changing sibling business modules
-- [ ] Approved External Dependencies — every external application-infrastructure dependency is explicitly documented
+- [ ] Approved External Dependencies — every external application-infrastructure dependency is explicitly documented with its expected TypeScript interface (Budget: ≤7 dependencies)
 - [ ] Mock Ownership documented in `[moduleName]_features.md`
+- [ ] Copy-Paste Test Passed — module compiles and tests pass in isolated host harness with core contracts
+- [ ] Feature Removal Test Passed — deleting this feature module does not break the TypeScript compilation of any sibling feature
+- [ ] No Magic File Names — zero generic `utils.ts`, `helpers.ts`, `common.ts`, `config.ts`, `types.ts`; all files use descriptive Role+Module names
+- [ ] Stress Test Datasets — `[moduleName]_mocks/fixtures/` provides Tier 1 (10), Tier 2 (100), and Tier 3 (500+) records for virtualization and pagination testing
 - [ ] Rule 76: CODEOWNERS covers security-critical paths
 - [ ] Rule 78: En-dash fallback — `displayValue()` used for all nullable fields in tables and profiles
 - [ ] Rule 79: Unsaved changes guard — `useUnsavedChangesGuard(isDirty)` on all complex forms and wizards
@@ -1930,6 +2081,7 @@ actually implemented. An honest [ ] is better than a false [x].]
 - [ ] Rule 82: Toast deduplication — all `toast()` calls pass a stable `id`, no stacking identical toasts
 - [ ] Mutation Safety: `Idempotency-Key` (UUIDv4) attached to all payment, booking, and check-in mutations with button disable
 - [ ] Debounced Search: All live search/filter inputs debounced by ≥300ms
+- [ ] Zero Horizontal Scroll: Verified across 320px, 375px, 425px, 768px, 1024px, 1440px, 1920px (except contained data tables)
 - [ ] Design §3: Sidebar active = subtle gold border + bg (NOT solid primary)
 - [ ] Design §12: Z-index scale — header z-20, dropdowns z-30, modals z-40, toasts z-50
 - [ ] Design §28: Surface elevation — `bg-popover` for dropdowns, `bg-overlay` for modals
@@ -3377,6 +3529,19 @@ The Harness MUST:
 2. Wrap the primary client component (`[Role][Module]Main.tsx`) with necessary zero-business providers (`QueryClientProvider`, `ThemeTokenProvider`, mock session context);
 3. Expose a scenario selector dropdown in development mode so developers and automated test agents can toggle between `ACTIVE`, `EMPTY`, `500_ERROR`, and `TIMEOUT` live without reloading the whole application.
 
+### Dataset Scale & Stress Testing Fixtures (10, 100, 500+ Records)
+
+To guarantee that UI components, virtualized tables, and pagination controls perform smoothly under enterprise loads without UI freezing or DOM thrashing, every feature module's `[moduleName]_mocks/fixtures/` MUST provide three deterministic scale tiers:
+1. **Tier 1 (Small / 10 records):** For baseline rendering and snapshot tests.
+2. **Tier 2 (Standard / 100 records):** Exercises multi-page pagination, table search filters, and sorting.
+3. **Tier 3 (Stress / 500+ records):** Stress-tests virtualization (`@tanstack/react-virtual`), infinite scroll, and browser memory consumption.
+
+```typescript
+// Example: manager_members_mocks/fixtures/managerMembers.fixtures.ts
+export const MOCK_MEMBERS_TIER_1_SMALL   = generateMockMembers(10);
+export const MOCK_MEMBERS_TIER_2_MEDIUM  = generateMockMembers(100);
+export const MOCK_MEMBERS_TIER_3_STRESS  = generateMockMembers(500);
+```
 
 ### Fixture Source-of-Truth Rule
 
