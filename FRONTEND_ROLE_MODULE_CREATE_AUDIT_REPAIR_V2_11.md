@@ -6,17 +6,28 @@
 
 ## Master Cross-Document Precedence Order
 
-When instructions conflict across documents, apply this exact order of authority:
+Apply the following order only for the active platform.
 
-1. Security, privacy, legal, authorization, tenant isolation, and data-protection rules
+### Shared precedence for all platforms
+1. Security, privacy, legal, authorization, tenant isolation, and data protection
 2. Accessibility and platform-native safety requirements
 3. Explicit user-approved scope and verified API contracts
+
+### Web mode only (Mode A & Mode B)
+4. `WEB_FRONTEND_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md`
+5. `WEB_FRONTEND_UI_UX_DESIGN.md`
+6. `FRONTEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_V2_11.md` for execution workflow, audit sequencing, delivery artifacts, and reporting
+7. Feature-local documentation trio (`_features.md`, `_forbidden.md`, `_theme_contract.md`)
+8. Existing implementation conventions
+
+### Mobile mode only (Mode C & Mode D)
 4. `MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md`
 5. `MOBILE_UI_UX_DESIGN.md` for visual/token decisions
 6. `FRONTEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_V2_11.md` for execution workflow, audit sequencing, delivery artifacts, and reporting
 7. Feature-local documentation trio (`_features.md`, `_forbidden.md`, `_theme_contract.md`)
 8. Existing implementation conventions
 
+A document for the inactive platform MUST NOT be loaded, applied, or used as a tie-breaker.
 A lower-priority rule MUST NOT override a higher-priority rule.
 Any unresolved conflict MUST be recorded as `BLOCKED_BY_SUPPLIED_CONTRACT` rather than resolved through invention.
 
@@ -965,6 +976,24 @@ If the frontend calls an API, you may audit:
 * how the UI consumes the response
 
 But do NOT judge whether the backend itself is correctly implemented.
+
+## BACKEND-ASSURANCE BOUNDARY
+
+A frontend-only audit may verify that the frontend:
+- sends the expected authenticated request;
+- handles 401, 403, and permission-masked responses correctly;
+- does not treat client-side permission checks as authorization;
+- documents backend authorization requirements in the API contract.
+
+A frontend-only audit MUST NOT claim that backend authorization, tenant isolation,
+database isolation, idempotency persistence, or resource-ownership enforcement has
+been verified unless backend source code and backend tests are explicitly supplied.
+
+Use this exact status when backend implementation evidence is not supplied:
+
+`BACKEND_ENFORCEMENT_REQUIRED_NOT_VERIFIABLE_FROM_FRONTEND`
+
+Frontend permission-denied UX tests do not replace backend integration or authorization tests.
 
 ---
 
@@ -5149,7 +5178,7 @@ Verify:
 - Exactly one canonical representation of each feature exists.
 - No parallel route tree or duplicate directory exists for the same feature.
 - Next.js route files (`page.tsx`, `loading.tsx`, `error.tsx`, `not-found.tsx`) are physically owned by the feature module and not duplicated.
-- Any route group serves only as routing infrastructure and contains no duplicated business implementation.
+- Next.js route groups `(group_name)` are STRICTLY FORBIDDEN to prevent route collisions and retain clean 1:1 physical file path-to-URL mapping.
 
 > ⛔ **ISOLATED MODULE SCOPE NOTE:** When auditing an isolated role or feature module ZIP (e.g. `superadmin.zip`), verify canonical routing exclusively *within the supplied module tree*. The AI MUST NOT stop, stall, or demand the host application's root route tree or sibling route groups.
 
@@ -5551,27 +5580,12 @@ Explicitly audit:
 60. centralized unauthenticated redirect handling;
 61. mechanical ESLint/pre-commit enforcement.
 
-For Rule 59 verify the complete source contract, including:
+For Rule 59 verify the canonical discriminated union `ApiResponse<T>` contract from `WEB_FRONTEND_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md`:
 
-```text
-success
-message
-data
-meta?
-error?
-errorCode?
-statusCode?
-validationErrors?
-```
-
-and exact:
-
-```text
-ValidationErrorItem
-PaginationMeta
-```
-
-semantics.
+- `ApiSuccess<T>`: `success: true`, `message: string`, `data: T` (guaranteed non-null payload), `meta?: PaginationMeta`, `requestId: string`.
+- `ApiFailure`: `success: false`, `message: string`, `data: null` (explicitly null), `error?: string`, `errorCode: string`, `statusCode: number`, `requestId: string`, `validationErrors?: ValidationErrorItem[]`.
+- Type narrowing: `ApiResponse<T> = ApiSuccess<T> | ApiFailure`.
+- Ensure exact `ValidationErrorItem` and `PaginationMeta` semantics.
 
 ---
 
@@ -5719,7 +5733,7 @@ Audit all details of:
    - human approval for AI-generated changes.
 78. en-dash nullable display fallback and `displayValue`.
 79. complex-form unsaved-change guard including browser exit AND client-side navigation.
-80. centralized currency/number formatter, minor-unit semantics, no raw `.toFixed()`.
+80. feature-local currency/number formatter (WET inside `[moduleName]_utils/`), minor-unit integer contract, no raw `.toFixed()`, zero global business formatters (only `src/lib/display_value.ts` for neutral en-dash null fallback).
 81. loading-width stability.
 82. toast deduplication, including:
    - stable IDs;

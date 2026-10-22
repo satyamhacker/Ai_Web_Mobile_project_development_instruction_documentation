@@ -1200,7 +1200,9 @@ Every `[moduleName]_url_config.ts` MUST follow this exact shape. AI agents MUST 
 ```typescript
 // [moduleName]_url_config.ts
 // Owned by: [role]/[module] feature module
-// DO NOT import this file from outside this module boundary.
+// API endpoint exports MUST NOT be imported outside this feature module.
+// Route exports may be imported only by the owning role-level navigation layer
+// for navigation wiring. Sibling business features must never import either export.
 
 // ─── Internal Navigation Routes ────────────────────────────────────────────
 // These are the Next.js page routes owned by this module.
@@ -1228,6 +1230,21 @@ export const [MODULE_NAME]_API = {
   delete: (id: string) => `/api/v1/[role]/[module]/${id}` as const,
 } as const;
 ```
+
+### Module URL Config Import Boundary & Allowed Exports
+
+Only two module URL exports are permitted from `[moduleName]_url_config.ts`:
+- `[MODULE_NAME]_ROUTES` — internal browser navigation paths
+- `[MODULE_NAME]_API` — backend endpoint paths
+
+`[MODULE_NAME]_URLS`, `ROUTES_CONFIG`, endpoint constants scattered across API files, or alternative route naming objects are forbidden.
+
+**Import boundary:**
+- `[MODULE_NAME]_API` may be imported only inside the owning feature module (by its own API client and MSW handlers).
+- `[MODULE_NAME]_ROUTES` may be imported by:
+  1. the owning feature module (for internal links, redirections, and tab views); and
+  2. the owning role-level navigation configuration only (sidebar, navbar, breadcrumbs).
+- A sibling feature module MUST NOT import another feature's `_ROUTES` or `_API`. Cross-module business consumption is strictly prohibited.
 
 **Rules:**
 - Replace `[MODULE_NAME]`, `[role]`, `[module]` with the actual values.
@@ -1337,6 +1354,10 @@ Feature modules may import ONLY from the following approved external application
 
 Every allowed import path must be classified as transport, auth, security, platform provider, design primitive, generated contract, or observability.
 Any path not in this allowlist is forbidden by default. Sibling feature modules are strictly excluded from this allowlist.
+
+`src/lib/display_value.ts` may export only `displayValue()` for neutral rendering of nullish or empty UI values.
+A global business formatter library is forbidden.
+Currency, dates, phone numbers, tax, invoices, membership lifecycle labels, financial values, and feature-specific status formatting MUST remain feature-local inside `[moduleName]_utils/`.
 
 ---
 
@@ -1933,9 +1954,20 @@ Co-location rule (Unit & Component Tests ONLY):
 
 **Complete Isolation for E2E Testing (The AI Zip Principle):**
 1. **Top-Level Mirrored Folders:** All E2E tests MUST live in a completely separate top-level `playwright_E2E/` directory, entirely decoupled from the `src/` app folder. The internal directory structure of `playwright_E2E/` MUST mirror the frontend route structure, but the role container must be suffixed with `_e2e` (e.g., `playwright_E2E/frontend_admin_e2e/admin_members/admin_members_e2e.spec.ts`).
-2. **WET Over DRY (Module-Level):** Frontend E2E tests must be 100% self-contained at the **MODULE level**. Do NOT create a global `shared/` or `utils/` folder for E2E business fixtures or business helpers. If both the `admin_members` test and `admin_billing` test need a login helper, duplicate it directly into BOTH the `admin_members` and `admin_billing` test folders.
-   - **Why:** If a UI bug occurs in the Members feature, a developer must be able to ZIP only the `playwright_E2E/frontend_admin_e2e/admin_members/` folder and feed it to the AI. If the AI is missing parent helpers, it hallucinates.
-3. **No Cross-Module Business Imports:** A test script in `playwright_E2E/frontend_manager_e2e/manager_members/` MUST NOT import a business fixture or business helper from `playwright_E2E/frontend_manager_e2e/manager_billing/`.
+### E2E WET/DRY Boundary
+
+Business-specific E2E fixtures, feature workflows, permissions, data setup, assertions, and domain helpers MUST remain module-local and may be duplicated under WET.
+
+Approved global E2E infrastructure may be shared only for:
+- authenticated session/bootstrap setup;
+- browser/context lifecycle;
+- non-business accessibility helpers;
+- screenshot/video/reporting setup;
+- environment/base URL configuration;
+- test-account provisioning where centrally required.
+
+Global E2E helpers MUST NOT contain business fixtures, module-specific workflow logic, feature assertions, or role-specific product behavior.
+A test script in `playwright_E2E/frontend_manager_e2e/manager_members/` MUST NOT import a business fixture or business helper from `playwright_E2E/frontend_manager_e2e/manager_billing/`.
 
 ### Controlled Framework-Neutral Test-Support Layer (Exception to WET Rule)
 
@@ -2284,11 +2316,24 @@ Global interceptor handles only truly global concerns such as authentication exp
 18. **Enterprise Accessibility (a11y)**:
 Ensure UI components are accessible. Use semantic HTML, include `aria-label` tags for icon-only buttons, and ensure modals and dropdowns can be navigated via keyboard (Tab trapping, Esc to close).
 
-19. **Interactive Data Tables (Clickable Rows)**:
-Whenever displaying a list of entities in a table, the entire row MUST be clickable. Add `cursor-pointer` to the `<tr>` element. Remove redundant "View/Eye" buttons. Action buttons (Edit, Delete) must have `e.stopPropagation()`. A clickable table row MUST provide an equivalent keyboard-accessible interaction. Do not rely on `cursor-pointer` alone. Enter/Space or a semantic link/button MUST provide the same navigation/action. Nested Edit/Delete controls MUST remain independently keyboard accessible.
+19. **Interactive Data Tables (Clickable Rows & Explicit Interaction Models)**:
+A production entity table row MUST be clickable only when that row has one canonical detail destination and clicking the row does not conflict with selection, inline editing, drag-and-drop, bulk actions, or nested interactive controls.
+When row navigation is appropriate, add `cursor-pointer` to the `<tr>` element. Remove redundant "View/Eye" buttons. Action buttons (Edit, Delete) must have `e.stopPropagation()`. A clickable table row MUST provide an equivalent keyboard-accessible interaction. Do not rely on `cursor-pointer` alone. Enter/Space or a semantic link/button MUST provide the same navigation/action. Nested Edit/Delete controls MUST remain independently keyboard accessible.
 
-20. **Searchable Dropdowns for Large Datasets**:
-Whenever presenting a dropdown for a large dataset, you MUST NOT use a native HTML `<select>` element. You must implement a custom popover/dropdown component that includes a search `<input>` field at the top.
+For non-clickable rows, provide explicit accessible row actions where applicable. The module documentation must state the table interaction model: `ROW_NAVIGATION`, `EXPLICIT_ACTIONS`, `INLINE_EDITING`, `SELECTION`, or `READ_ONLY`.
+
+20. **Searchable Dropdowns for Large Datasets & Selection Controls**:
+Use a native `<select>` for a small static option set of 20 or fewer options where search is not required.
+
+Use an accessible searchable combobox/popover when any of the following applies:
+- more than 20 options;
+- asynchronously loaded options;
+- server-side search;
+- option metadata beyond a plain label;
+- user needs to find an item by typing;
+- list size can grow beyond the small static threshold.
+
+A custom dropdown MUST implement proper keyboard navigation, focus management, selection announcement, escape behavior, and accessible labels.
 
 21. **Real-Time Communication (In-House WebSocket Architecture)**:
 For any real-time in-app communication, the project strictly uses an in-house WebSocket architecture. Real-time communication MUST use WebSocket transport through `socket.io-client`. Long-polling transport MUST be disabled by configuration (`transports: ['websocket']`) unless a documented infrastructure exception exists. Do NOT rely on SSE or external managed services like Pusher/Supabase.
@@ -3348,13 +3393,13 @@ EVERY frontend API client function that performs a mutation MUST require an `ide
 Example:
 ```typescript
 import { apiFetch } from '@/lib/api';
-import { MANAGER_MEMBERS_URLS } from '@/app/frontend_manager/manager_members/manager_members_url_config';
+import { MANAGER_MEMBERS_API } from '@/app/frontend_manager/manager_members/manager_members_url_config';
 
 export const updateMemberProfile = async (
   id: string,
   body: unknown,
   idempotencyKey: string,
-) => apiFetch(MANAGER_MEMBERS_URLS.PROFILE(id), {
+) => apiFetch(MANAGER_MEMBERS_API.detail(id), {
   method: 'PATCH',
   body: JSON.stringify(body),
   headers: {
