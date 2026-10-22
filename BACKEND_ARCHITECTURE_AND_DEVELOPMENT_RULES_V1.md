@@ -98,28 +98,45 @@ Before generating, auditing, or repairing ANY backend role module, verify ALL of
 [ ] backend-{role}/ exists (or is created/normalized in RBG 1)
 [ ] {role}-core/ exists inside backend-{role}/ (or host-provided when feature slice is audited)
 [ ] {role}-modules/ exists inside backend-{role}/ (or feature module directory normalized in RBG 1)
-[ ] ALL business feature modules exist ONLY inside {role}-modules/
-[ ] No feature module exists directly under backend-{role}/
-[ ] Every sub-folder inside a feature module follows {module}-{artifact}/ pattern
+[ ] ALL business feature domain modules exist ONLY inside {role}-modules/
+[ ] Domain Module Quarantine: Domain module root contains ONLY [role]-[module].module.ts (aggregator module), master documentation, and child autonomous sub-modules {sub-module}/. Zero business implementation code in domain root.
+[ ] Sub-Module Autonomous Structure: 100% of controllers, services, repositories, DTOs, entities, and tests live inside autonomous sub-modules {sub-module}/
+[ ] Sub-Module Folder Pattern: Every sub-folder inside a sub-module follows {submodule}-{artifact}/ pattern (e.g. dashboard-controllers/, dashboard-services/)
+[ ] Sub-Module Documentation Trio: Every autonomous sub-module contains [role]-[submodule]-backend-feature.md (or _backend-feature.md, with all 22 canonical sections), [role]-[submodule]-backend-forbidden.md, and [role]-[submodule]-backend-contract.md
 ```
 
-**✅ COMPLIANT structure:**
+**✅ COMPLIANT structure (Universal Day-1 Sub-Module Hierarchy):**
 
 ```text
-backend-admin/
-├── admin-core/
-└── admin-modules/
-    ├── admin-auth/
-    └── admin-members/
+backend-manager/
+├── manager-core/
+└── manager-modules/
+    └── manager-attendance/
+        ├── manager-attendance.module.ts              # Pure Aggregator NestJS Module
+        ├── manager-attendance-backend-feature.md
+        ├── attendance-dashboard/                     # Autonomous Sub-Module (AI Repair Unit)
+        │   ├── dashboard-controllers/
+        │   ├── dashboard-services/
+        │   ├── dashboard-dto/
+        │   ├── dashboard-repositories/
+        │   ├── dashboard-entities/
+        │   ├── dashboard-tests/
+        │   ├── attendance-dashboard.module.ts
+        │   ├── attendance-dashboard-backend-feature.md
+        │   ├── attendance-dashboard-backend-forbidden.md
+        │   └── attendance-dashboard-backend-contract.md
+        └── attendance-history/                       # Autonomous Sub-Module (AI Repair Unit)
+            └── ... (identical canonical micro-structure)
 ```
 
 **❌ NON-COMPLIANT structure (ARCHITECTURE FAILURE — STOP IMMEDIATELY):**
 
 ```text
-backend-admin/
-├── admin-core/
-├── admin-auth/      ← WRONG: must be inside admin-modules/ — RECORD NON_COMPLIANT
-└── admin-members/   ← WRONG: must be inside admin-modules/ — RECORD NON_COMPLIANT
+backend-manager/
+├── manager-core/
+├── manager-attendance/  ← WRONG: must be inside manager-modules/ — RECORD NON_COMPLIANT
+│   ├── loose-service.ts ← WRONG: zero root business code permitted in domain module root!
+│   └── common/          ← WRONG: parent shared folders strictly forbidden under WET!
 ```
 
 > **Failing ANY item above in Audit Mode = ARCHITECTURE FAILURE. Record `NON_COMPLIANT` with file and line evidence.**
@@ -256,16 +273,16 @@ Do not silently accept or introduce a competing stack.
 
 ### 0A. HIERARCHICAL MODULE BOUNDARY — FEATURE MODULE IS THE AI REPAIR UNIT
 
-The backend strictly follows a 3-tier hierarchy:
+The backend strictly follows a 4-tier hierarchy (Universal Day-1 Sub-Module Architecture):
 
 ```text
 APPLICATION
-  └── DOMAIN / ROLE CONTAINER (e.g. backend-admin)
-        └── FEATURE MODULE
-              └── SUB-FEATURE / USE CASE
+  └── ROLE CONTAINER (e.g., backend-manager/)
+        └── FEATURE DOMAIN MODULE (e.g., manager-modules/manager-attendance/)
+              └── AUTONOMOUS SUB-MODULE / USE CASE (e.g., attendance-dashboard/, attendance-history/)
 ```
 
-**AI Repair Boundary = FEATURE MODULE**
+**AI Repair Boundary = AUTONOMOUS SUB-MODULE (Default Granular AI Repair Unit) or FEATURE DOMAIN (Complete Domain Slice)**
 **Role/Domain Container = NOT the default repair boundary**
 
 ### 0A.1 1-TO-1 FRONTEND FEATURE ISOMORPHISM & AI REPAIR HAND-OFF (MANDATORY)
@@ -287,52 +304,78 @@ To prevent architectural drift and eliminate monolithic backend sprawl, the back
 >
 > Just as the frontend breaks every feature domain into autonomous sub-modules right from Day 1, the backend MUST mirror this exact same granularity to preserve **1-to-1 Architectural Isomorphism & Granular AI Repairability**.
 >
-> 1. **The Universal Backend 3-Tier Hierarchy:**
+> 1. **The Universal Backend 4-Tier Hierarchy:**
 >    ```text
 >    APPLICATION
 >      └── ROLE CONTAINER (e.g., src/backend-manager/)
->            └── FEATURE DOMAIN MODULE (e.g., manager-attendance/, manager-profile/, manager-billing/)
->                  ├── [role]-[module].module.ts          # Pure Aggregator NestJS Module (imports child sub-modules)
->                  ├── [role]-[module]-backend-feature.md # Master Domain Documentation
->                  ├── [role]-[module]-backend-forbidden.md
+>            └── FEATURE DOMAIN MODULE (e.g., manager-modules/manager-attendance/)
+>                  ├── [role]-[module].module.ts              # Pure Aggregator NestJS Module (imports child sub-modules)
+>                  ├── [role]-[module]-backend-feature.md     # Master Domain Documentation
+>                  ├── [role]-[module]-backend-forbidden.md   # Domain-level Forbidden Invariants
 >                  │
->                  ├── {sub-module-1}/                   # 100% Autonomous Backend Sub-Module (e.g., attendance-dashboard/)
->                  │    ├── {submodule}-controllers/     # dashboard-controllers/
+>                  ├── {sub-module-1}/                       # 100% Autonomous Backend Sub-Module (e.g., attendance-dashboard/)
+>                  │    ├── {submodule}-controllers/         # dashboard-controllers/
 >                  │    │    └── [role]-[submodule]-[desc].controller.ts
->                  │    ├── {submodule}-services/        # dashboard-services/
+>                  │    ├── {submodule}-services/            # dashboard-services/
 >                  │    │    └── [role]-[submodule]-[desc].service.ts
->                  │    ├── {submodule}-dto/             # dashboard-dto/
+>                  │    ├── {submodule}-dto/                 # dashboard-dto/
 >                  │    │    └── [role]-[submodule]-[desc].dto.ts
->                  │    ├── {submodule}-repositories/    # dashboard-repositories/
->                  │    ├── {submodule}-entities/        # dashboard-entities/ (or domain entities)
->                  │    ├── {submodule}-tests/           # Unit & integration tests
->                  │    ├── {sub-module}.module.ts       # Sub-module NestJS definition
->                  │    └── {sub-module}-backend-feature.md
+>                  │    ├── {submodule}-repositories/        # dashboard-repositories/
+>                  │    ├── {submodule}-mappers/             # dashboard-mappers/
+>                  │    ├── {submodule}-domain/              # dashboard-domain/
+>                  │    ├── {submodule}-types/               # dashboard-types/
+>                  │    ├── {submodule}-constants/           # dashboard-constants/
+>                  │    ├── {submodule}-exceptions/          # dashboard-exceptions/
+>                  │    ├── {submodule}-tests/               # Unit, integration & harness tests
+>                  │    │    ├── unit/
+>                  │    │    └── harness/                    # Standalone Run & Test Harness (SQLite/in-memory)
+>                  │    ├── {sub-module}.module.ts           # Sub-module NestJS definition
+>                  │    ├── {sub-module}-backend-feature.md  # Autonomous Sub-Module Spec (all 22 canonical sections)
+>                  │    ├── {sub-module}-backend-forbidden.md# Sibling isolation & WET rules
+>                  │    └── {sub-module}-backend-contract.md # Exposed API & Event contracts
 >                  │
->                  └── {sub-module-2}/                   # Autonomous Backend Sub-Module (e.g., attendance-history/)
->                       ├── {submodule}-controllers/     # history-controllers/
->                       ├── {submodule}-services/        # history-services/
->                       ├── {submodule}-dto/             # history-dto/
->                       └── ... (identical canonical micro-structure)
+>                  └── {sub-module-2}/                       # Autonomous Backend Sub-Module (e.g., attendance-history/)
+>                       ├── {submodule}-controllers/         # history-controllers/
+>                       ├── {submodule}-services/            # history-services/
+>                       ├── {submodule}-dto/                 # history-dto/
+>                       ├── {submodule}-repositories/        # history-repositories/
+>                       ├── {submodule}-tests/               # history-tests/
+>                       ├── {sub-module}.module.ts           # Sub-module NestJS definition
+>                       ├── {sub-module}-backend-feature.md  # All 22 canonical sections
+>                       ├── {sub-module}-backend-forbidden.md
+>                       └── {sub-module}-backend-contract.md
 >    ```
 >
-> 2. **Zero Root Code in Domain Module (Domain Quarantine):**
+> 2. **Zero Root Business Code in Domain Module (Domain Quarantine):**
 >    - The parent domain module root (`manager-attendance/`) contains ONLY the parent aggregator module (`manager-attendance.module.ts`), master documentation, and child sub-module folders.
->    - Placing loose controllers, services, repositories, or DTOs directly at the domain root is a **CRITICAL ARCHITECTURE VIOLATION**. 100% of implementation code lives inside its respective sub-module.
+>    - Placing loose controllers, services, repositories, entities, or DTOs directly at the domain root is a **CRITICAL ARCHITECTURE VIOLATION**. 100% of implementation code lives inside its respective sub-module.
 >
-> 3. **Sub-Module Isolation Firewall (Zero Cross-Sub-Module Coupling):**
->    - `attendance-dashboard` backend services MUST NEVER directly import internal repositories, services, or DTOs from `attendance-history`.
->    - Sibling sub-modules communicate strictly via public interfaces, emitted domain events (Redis Streams/Outbox), or shared database transactions managed by an application workflow orchestrator.
+> 3. **Parent Shared Folder Ban (No Domain "Common" or "Shared"):**
+>    - Creating `manager-attendance/common/`, `manager-attendance/shared/`, `manager-attendance/services/`, or `manager-attendance/utils/` is **STRICTLY PROHIBITED**.
+>    - Every reusable helper, DTO, mapper, or query helper needed by multiple sub-modules MUST be duplicated locally in each sub-module following the Strict WET Principle, or promoted to `{role}-core/` only if universally required across all domains of the role.
 >
-> 4. **Backend Sub-Module ZIP Guarantee (Granular AI Repair Unit):**
->    - When an API defect occurs in `attendance-history`, the developer can zip ONLY `src/backend-manager/manager-modules/manager-attendance/attendance-history/`.
+> 4. **Sibling Sub-Module Isolation & NestJS DI Boundary (Zero Cross-Submodule Imports):**
+>    - `attendance-dashboard` backend services MUST NEVER directly import internal repositories, services, or DTOs from `attendance-history` (`import from '../attendance-history'`).
+>    - In NestJS, a sub-module MUST NOT import a sibling sub-module's `@Module` or inject a sibling's `@Injectable()` service directly. Direct inter-submodule imports create invisible tight coupling that breaks the Backend Sub-Module ZIP Guarantee.
+>
+> 5. **Framework Boundary Invariants (Foreign Keys & Reads vs Events vs Transactions):**
+>    - **Read Queries & Foreign Keys:** TypeORM / Prisma / SQL relations and foreign keys for reads are 100% permitted within query builders, services, and repositories (e.g., joining `members` with `attendance` records for a dashboard query). Reading related tables via ORM relations does NOT violate isolation.
+>    - **Cross-Domain/Cross-Submodule Mutation Side-Effects:** Mutations that trigger side-effects in other domains or sibling sub-modules (e.g., attendance check-in awards reward points or sends a push notification) MUST be decoupled via Domain Events (emitted to Redis Streams / Transactional Outbox pattern). The triggering sub-module never directly calls the secondary sub-module's mutation service.
+>    - **Multi-Table Atomic Transactions:** When an atomic workflow genuinely requires coordinated mutations across multiple database tables, it MUST be orchestrated by an approved Application Workflow Orchestrator service (e.g., Saga/Orchestrator) at an approved boundary, not by direct inter-submodule imports.
+>
+> 6. **Strict WET Principle for Backend Sub-Modules:**
+>    - Do not create premature abstractions across sibling sub-modules. Duplicate DTOs, mappers, and response transformers locally inside each `{submodule}-dto/` and `{submodule}-services/`.
+>    - If `attendance-dashboard` needs a member summary shape and `attendance-history` also needs a member summary shape, each sub-module defines its own local DTO/interface tailored specifically to its API contract.
+>
+> 7. **Backend Sub-Module ZIP Guarantee (Granular AI Repair Unit):**
+>    - When an API defect or logic bug occurs in `attendance-history`, the developer can zip ONLY `src/backend-manager/manager-modules/manager-attendance/attendance-history/`.
 >    - An AI receiving this zip gets a laser-focused context (controllers, services, DTOs, unit tests for history only), with 0% risk of breaking dashboard or analytics code.
 >
-> 5. **Clean Sub-Folder vs Globally Unique File Naming:**
+> 8. **Clean Sub-Folder vs Globally Unique File Naming:**
 >    - Sub-folders inside a sub-module use: `{submodule}-{artifact}/` (e.g. `dashboard-controllers/`, `dashboard-services/`, `dashboard-dto/`, `history-controllers/`).
 >    - Files inside those folders use: `[role]-[submodule]-[description].[type].ts` (e.g. `manager-attendance-dashboard-metrics.controller.ts`, `manager-attendance-history-query.service.ts`).
 >
-> 6. **Universal Mapping Across All Roles (Frontend ➔ Backend 1:1 Parity):**
+> 9. **Universal Mapping Across All Roles (Frontend ➔ Backend 1:1 Parity):**
 >    - `manager_profile/profile_overview` ➔ `manager-profile/profile-overview/`
 >    - `manager_profile/profile_security` ➔ `manager-profile/profile-security/`
 >    - `manager_attendance/attendance_dashboard` ➔ `manager-attendance/attendance-dashboard/`
@@ -340,11 +383,10 @@ To prevent architectural drift and eliminate monolithic backend sprawl, the back
 >    - `manager_billing/billing_invoices` ➔ `manager-billing/billing-invoices/`
 >    - `manager_members/members_directory` ➔ `manager-members/members-directory/`
 >
-> 7. **Meaningful Domain-Prefixed Submodule Naming Standard (No Lazy Names):**
+> 10. **Meaningful Domain-Prefixed Submodule Naming Standard (No Lazy Names):**
 >    - Every backend submodule folder MUST follow the exact semantic formula: `{submodule}` where `{submodule}` matches `{domain}-{capability}` (e.g., `attendance-dashboard/`, `attendance-history/`, `profile-overview/`, `billing-invoices/`).
 >    - **The 5-Second Comprehension Invariant:** Anyone inspecting ONLY the submodule folder name MUST instantly know within 5 seconds its parent domain and exact business capability/API intent.
 >    - **Strictly Banned Lazy/Ambiguous Names:** Never use generic or lazy names such as `tab1/`, `main/`, `default/`, `api/`, `details/` (must be `members-detail`), `common/`, `shared/`, `temp/`, or `misc/`. Lazy names are treated as **Critical Naming Violations**.
->
 
 ### Cross-Feature Workflow Exception
 
@@ -403,24 +445,40 @@ Never double-prefix feature names or folders. If a backend module is named `admi
 
 ### 0H. CANONICAL NAMING SINGLE SOURCE OF TRUTH (GAP-14 Fix)
 
-To eliminate all ambiguity between Rule 0F and Rule 2 (file naming), the following is the definitive unified rule:
+To eliminate all ambiguity between Rule 0F, Rule 0A.2, and Rule 2 (file naming), the following is the definitive unified rule across the hierarchy:
 
 | Level | Pattern | Correct Example | FORBIDDEN Example |
 |---|---|---|---|
-| Root feature module folder | `{role}-{module}/` | `admin-members/` | `members/` or `admin-admin-members/` |
-| Sub-folders inside a feature module | `{module}-{artifact}/` ONLY | `members-services/` | `admin-members-services/` |
-| Files inside those sub-folders | `{role}-{module}-{description}.{type}.ts` | `admin-members-registration.service.ts` | `members-registration.service.ts` |
+| Role Container | `backend-{role}/` | `backend-admin/` | `admin/` or `backend_admin/` |
+| Feature Domain Module | `{role}-{domain}/` | `admin-members/`, `manager-attendance/` | `members/` or `admin-admin-members/` |
+| Autonomous Sub-Module | `{submodule}/` | `members-directory/`, `attendance-dashboard/` | `tab1/`, `api/`, `shared/`, `common/` |
+| Sub-folders inside Sub-Module | `{submodule}-{artifact}/` ONLY | `directory-services/`, `dashboard-controllers/` | `admin-directory-services/`, `common/` |
+| Files inside Sub-Module folders | `[role]-[submodule]-[description].[type].ts` | `admin-members-directory-command.controller.ts` | `directory-command.controller.ts` |
 
-**The key rule in one sentence:** Folders use the MODULE name as prefix; files use the ROLE+MODULE name as prefix. Never mix them up.
+**The key rule in one sentence:** Sub-folders inside a sub-module use the SUBMODULE capability as prefix; files inside those folders use the ROLE+SUBMODULE+DESCRIPTION formula. Never mix them up.
 
 ```text
-admin-members/                                    ← root: {role}-{module}
-├── members-services/                             ← sub-folder: {module}-{artifact}
-│   └── admin-members-registration.service.ts     ← file: {role}-{module}-{description}
-├── members-controllers/                          ← sub-folder: {module}-{artifact}
-│   └── admin-members-command.controller.ts       ← file: {role}-{module}-{description}
-└── members-dto/                                  ← sub-folder: {module}-{artifact}
-    └── admin-members-create.dto.ts               ← file: {role}-{module}-{description}
+backend-admin/
+└── admin-modules/
+    └── admin-members/                                            ← domain root: {role}-{domain} (quarantined)
+        ├── admin-members.module.ts                               ← domain aggregator module
+        ├── admin-members-backend-feature.md                      ← domain master doc
+        │
+        └── members-directory/                                    ← autonomous sub-module: {submodule}
+            ├── directory-controllers/                            ← sub-folder: {submodule}-{artifact}
+            │   ├── admin-members-directory-command.controller.ts ← file: {role}-{submodule}-{desc}
+            │   └── admin-members-directory-query.controller.ts
+            ├── directory-services/                               ← sub-folder: {submodule}-{artifact}
+            │   └── admin-members-directory-query.service.ts      ← file: {role}-{submodule}-{desc}
+            ├── directory-dto/                                    ← sub-folder: {submodule}-{artifact}
+            │   └── admin-members-directory-filter.dto.ts
+            ├── directory-repositories/
+            ├── directory-tests/
+            │   └── harness/                                      ← standalone test harness
+            ├── members-directory.module.ts                       ← sub-module NestJS definition
+            ├── members-directory-backend-feature.md              ← documentation trio (22 canonical sections)
+            ├── members-directory-backend-forbidden.md
+            └── members-directory-backend-contract.md
 ```
 
 AI agents MUST consult this table before creating any folder or file name. Any deviation = architecture violation.
@@ -817,7 +875,7 @@ admin-core/
 
 * **Global Infrastructure Exception:** The ONLY allowed generic un-prefixed folders are `src/core/` and `src/infrastructure/` which contain NO business logic, only pure framework plumbing (see Rule 10 Edge Case C). These root-level generic folders may contain standard un-prefixed sub-folders (like `src/core/utils/`, `src/core/dtos/`, `src/core/config/`) provided they are strictly global and cross-cutting. Never put business logic in these generic folders.
   
-  **Canonical Mandatory Backend Structure — Complete Physical Module Tree:**
+  **Canonical Mandatory Backend Structure — Complete Physical Sub-Module Tree:**
 
   > The following structure is mandatory. Any deviation is considered architecture non-compliant. AI agents MUST use this tree as the reference template when generating any backend role module.
 
@@ -833,83 +891,110 @@ admin-core/
   │   │   └── admin-core-response.interceptor.ts
   │   └── admin-core.module.ts                            <-- Role root NestJS module
   │
-  └── admin-modules/                                      <-- ALL feature modules live here
+  └── admin-modules/                                      <-- ALL feature domain modules live here
       │
-      ├── admin-auth/                                     <-- Feature module (example)
-      │   ├── auth-controllers/
-      │   │   ├── admin-auth-command.controller.ts        <-- Write operations (POST/PATCH/DELETE)
-      │   │   └── admin-auth-query.controller.ts          <-- Read operations (GET)
-      │   ├── auth-services/
-      │   │   ├── admin-auth-login.service.ts
-      │   │   ├── admin-auth-token-refresh.service.ts
-      │   │   └── admin-auth-orchestrator.service.ts      <-- Orchestrator: opens TX, calls services
-      │   ├── auth-repositories/
-      │   │   ├── admin-auth-read.repository.ts           <-- Concern-based split (Rule 7)
-      │   │   └── admin-auth-write.repository.ts          <-- Concern-based split (Rule 7)
-      │   ├── auth-mappers/
-      │   │   └── admin-auth.mapper.ts                    <-- toDomain() / toEntity() ONLY
-      │   ├── auth-domain/
-      │   │   └── admin-auth.domain.ts                    <-- Pure domain model — zero ORM imports
-      │   ├── auth-dto/
-      │   │   ├── admin-auth-login.dto.ts
-      │   │   └── admin-auth-token-response.dto.ts
-      │   ├── auth-types/
-      │   │   └── admin-auth-jwt-payload.type.ts
-      │   ├── auth-constants/
-      │   │   └── admin-auth.constants.ts
-      │   ├── auth-exceptions/
-      │   │   └── admin-auth.exceptions.ts
-      │   ├── auth-locales/
-      │   │   ├── en/
-      │   │   │   ├── admin-auth-errors.json
-      │   │   │   └── admin-auth-messages.json
-      │   │   └── hi/
-      │   │       ├── admin-auth-errors.json
-      │   │       └── admin-auth-messages.json
-      │   ├── admin-auth.module.ts                        <-- NestJS module registration
-      │   ├── admin-auth-backend-feature.md               <-- MANDATORY: module doc (Rule 19)
-      │   ├── admin-auth-dependencies.md                  <-- MANDATORY: dependency graph (Rule 49)
-      │   └── admin-auth-forbidden.md                     <-- MANDATORY: forbidden patterns (Rule 78)
+      ├── admin-attendance/                               <-- Domain Module (Domain Quarantine)
+      │   ├── admin-attendance.module.ts                  <-- Pure Aggregator NestJS Module (imports child sub-modules)
+      │   ├── admin-attendance-backend-feature.md         <-- Master Domain Documentation
+      │   ├── admin-attendance-backend-forbidden.md       <-- Master Domain Invariants
+      │   │
+      │   ├── attendance-dashboard/                       <-- Autonomous Sub-Module (AI Repair Unit)
+      │   │   ├── dashboard-controllers/
+      │   │   │   ├── admin-attendance-dashboard-command.controller.ts  <-- Mutations (POST/PATCH/DELETE)
+      │   │   │   └── admin-attendance-dashboard-query.controller.ts    <-- Queries (GET)
+      │   │   ├── dashboard-services/
+      │   │   │   ├── admin-attendance-dashboard-metrics.service.ts
+      │   │   │   └── admin-attendance-dashboard-orchestrator.service.ts<-- Orchestrator: opens TX, coordinates services
+      │   │   ├── dashboard-repositories/
+      │   │   │   ├── admin-attendance-dashboard-read.repository.ts     <-- Concern-based split (Rule 7)
+      │   │   │   └── admin-attendance-dashboard-write.repository.ts
+      │   │   ├── dashboard-mappers/
+      │   │   │   └── admin-attendance-dashboard.mapper.ts              <-- toDomain() / toEntity() ONLY
+      │   │   ├── dashboard-domain/
+      │   │   │   └── admin-attendance-dashboard.domain.ts              <-- Pure domain model — zero ORM imports
+      │   │   ├── dashboard-dto/
+      │   │   │   ├── admin-attendance-dashboard-filter.dto.ts
+      │   │   │   └── admin-attendance-dashboard-summary-response.dto.ts
+      │   │   ├── dashboard-types/
+      │   │   │   └── admin-attendance-dashboard.types.ts
+      │   │   ├── dashboard-constants/
+      │   │   │   └── admin-attendance-dashboard.constants.ts
+      │   │   ├── dashboard-exceptions/
+      │   │   │   └── admin-attendance-dashboard.exceptions.ts
+      │   │   ├── dashboard-locales/
+      │   │   │   ├── en/
+      │   │   │   │   ├── admin-attendance-dashboard-errors.json
+      │   │   │   │   └── admin-attendance-dashboard-messages.json
+      │   │   │   └── hi/
+      │   │   │       ├── admin-attendance-dashboard-errors.json
+      │   │   │       └── admin-attendance-dashboard-messages.json
+      │   │   ├── dashboard-tests/
+      │   │   │   ├── unit/
+      │   │   │   │   └── admin-attendance-dashboard-metrics.service.spec.ts
+      │   │   │   └── harness/                                      <-- Standalone Run & Test Harness
+      │   │   │       ├── attendance-dashboard.harness.ts
+      │   │   │       └── attendance-dashboard.seed.ts
+      │   │   ├── attendance-dashboard.module.ts                    <-- Sub-module NestJS definition
+      │   │   ├── attendance-dashboard-backend-feature.md           <-- MANDATORY: 22 canonical sections
+      │   │   ├── attendance-dashboard-backend-forbidden.md         <-- MANDATORY: sibling isolation & WET rules
+      │   │   └── attendance-dashboard-backend-contract.md          <-- MANDATORY: exposed contracts
+      │   │
+      │   └── attendance-history/                         <-- Autonomous Sub-Module (AI Repair Unit)
+      │       ├── history-controllers/
+      │       ├── history-services/
+      │       ├── history-repositories/
+      │       ├── history-dto/
+      │       ├── history-tests/
+      │       │   ├── unit/
+      │       │   └── harness/
+      │       ├── attendance-history.module.ts
+      │       ├── attendance-history-backend-feature.md
+      │       ├── attendance-history-backend-forbidden.md
+      │       └── attendance-history-backend-contract.md
       │
-      └── admin-members/                                  <-- Another feature module (same pattern)
-          ├── members-controllers/
-          ├── members-services/
-          ├── members-repositories/
-          ├── members-mappers/
-          ├── members-domain/
-          ├── members-dto/
-          ├── members-types/
-          ├── members-constants/
-          ├── members-exceptions/
-          ├── members-locales/
-          ├── admin-members.module.ts
+      └── admin-members/                                  <-- Another feature domain module (same pattern)
+          ├── admin-members.module.ts                     <-- Pure Aggregator NestJS Module
           ├── admin-members-backend-feature.md
-          ├── admin-members-dependencies.md
-          └── admin-members-forbidden.md
+          ├── admin-members-backend-forbidden.md
+          ├── members-directory/                          <-- Autonomous Sub-Module
+          │   ├── directory-controllers/
+          │   ├── directory-services/
+          │   ├── directory-dto/
+          │   ├── directory-repositories/
+          │   ├── directory-tests/
+          │   ├── members-directory.module.ts
+          │   ├── members-directory-backend-feature.md
+          │   ├── members-directory-backend-forbidden.md
+          │   └── members-directory-backend-contract.md
+          └── members-registration/                       <-- Autonomous Sub-Module
+              └── ... (identical canonical micro-structure)
   ```
 
-### Mandatory Feature Module Structure
+### Mandatory Autonomous Sub-Module Structure
 
-> ⛔ **ALL folders listed as REQUIRED below must exist for every feature module.**
-> **Consequence of missing folders:** AI agents given only the module root will generate files in wrong locations, create barrel-file imports, and break the naming convention — causing cascading violations across Rules 0F, 0H, 2, and 84.
+> ⛔ **UNIVERSAL SUB-MODULE ISOLATION LAW:**
+> Under the Universal Day-1 Sub-Module Architecture (Rule 0A.2), ALL implementation code lives inside autonomous sub-modules (`{sub-module}/`).
+> Placing loose controllers, services, repositories, or DTOs directly at the domain module root is a **CRITICAL ARCHITECTURE VIOLATION**.
+> Domain module root contains ONLY the pure aggregator module (`[role]-[domain].module.ts`), master documentation, and child sub-module folders.
 
-Every feature module MUST contain ALL of these sub-folders:
-- `{module}-controllers/` — REQUIRED — STOP if absent
-- `{module}-services/` — REQUIRED — STOP if absent
-- `{module}-repositories/` — REQUIRED — STOP if absent
-- `{module}-dto/` — REQUIRED — STOP if absent
-- `{module}-types/` — REQUIRED — STOP if absent
-- `{module}-constants/` — REQUIRED — STOP if absent
-- `{module}-exceptions/` — REQUIRED — STOP if absent
-- `{module}-domain/` — REQUIRED — STOP if absent (Rule 89 domain/entity separation depends on this)
-- `{module}-mappers/` — REQUIRED — STOP if absent (Rule 89 mapper pattern depends on this)
+Every autonomous sub-module MUST contain ALL of these sub-folders:
+- `{submodule}-controllers/` — REQUIRED — STOP if absent
+- `{submodule}-services/` — REQUIRED — STOP if absent
+- `{submodule}-repositories/` — REQUIRED — STOP if absent
+- `{submodule}-dto/` — REQUIRED — STOP if absent
+- `{submodule}-types/` — REQUIRED — STOP if absent
+- `{submodule}-constants/` — REQUIRED — STOP if absent
+- `{submodule}-exceptions/` — REQUIRED — STOP if absent
+- `{submodule}-domain/` — REQUIRED — STOP if absent (Rule 89 domain/entity separation depends on this)
+- `{submodule}-mappers/` — REQUIRED — STOP if absent (Rule 89 mapper pattern depends on this)
+- `{submodule}-tests/` — REQUIRED — STOP if absent (MUST contain `unit/` and `harness/` for standalone execution)
 
-Conditionally required (MUST exist when the module has the corresponding artifact — absence when the artifact exists = VIOLATION):
-- `{module}-locales/` — REQUIRED when the module has user-facing error/message strings (Rule 107)
-- `{module}-jobs/` — REQUIRED when the module has background jobs (Rule 23, Rule 42)
-- `{module}-adapters/` — REQUIRED when the module calls external services (Rule 8 Edge Case D)
+Conditionally required (MUST exist when the sub-module has the corresponding artifact — absence when the artifact exists = VIOLATION):
+- `{submodule}-locales/` — REQUIRED when the sub-module has user-facing error/message strings (Rule 107)
+- `{submodule}-jobs/` — REQUIRED when the sub-module has background jobs (Rule 23, Rule 42)
+- `{submodule}-adapters/` — REQUIRED when the sub-module calls external services (Rule 8 Edge Case D)
 
-> **An AI creating a module MUST create all REQUIRED folders even if they start empty.** Empty sub-folders with a `.gitkeep` file satisfy the structure requirement. Missing folders violate Rules 0F, 0G-D, and 0H.
+> **An AI creating an autonomous sub-module MUST create all REQUIRED folders even if they start empty.** Empty sub-folders with a `.gitkeep` file satisfy the structure requirement. Missing folders violate Rules 0A.2, 0F, 0G-D, and 0H.
 
 ## 3. Strict Validation & DTO Isolation
 Never mix data validation logic (checking if email is valid, password length) with business logic (saving to DB). 
@@ -1063,31 +1148,29 @@ The exported class MUST follow PascalCase matching the filename: `admin-billing-
 
 Orchestrators MUST live inside the module's `{module}-services/` sub-folder alongside other sub-services.
 
-### Feature Module File Rule
+### Module Registration & Aggregator Rule
 
-Every feature module MUST contain exactly one module registration file.
-
-Pattern:
-`{role}-{module}.module.ts`
-
-Examples:
-- `admin-members.module.ts`
-- `manager-billing.module.ts`
-
-Multiple NestJS module files inside a feature module are forbidden.
+Under the Universal Day-1 Sub-Module Architecture (Rule 0A.2):
+1. **Domain Aggregator Module:** Every domain module root (`admin-members/`, `manager-attendance/`) MUST contain exactly one pure aggregator module:
+   - Pattern: `{role}-{domain}.module.ts` (e.g., `admin-members.module.ts`, `manager-attendance.module.ts`).
+   - Responsibility: Imports and aggregates child sub-module NestJS modules. Contains zero controllers, services, or repositories directly.
+2. **Autonomous Sub-Module Module:** Inside each autonomous sub-module directory, there is exactly one sub-module registration file:
+   - Pattern: `{submodule}.module.ts` (e.g., `attendance-dashboard.module.ts`, `attendance-history.module.ts`, `members-directory.module.ts`).
+   - Responsibility: Bundles and registers controllers, services, repositories, and local providers for that specific sub-module.
+3. Multiple NestJS module definition files within a single sub-module directory are strictly forbidden.
 
 ### Edge Case C: Shared Utility Bloat (The "No Common Folder" Rule)
 *Scenario:* Developers dump code into a global `utils/`, `common/`, or `shared/` folder to adhere to the DRY (Don't Repeat Yourself) principle. 
 *Solution:* **WET over DRY for AI (Write Everything Twice).**
-Strictly ban global `common/` or `shared/` folders. If a helper, enum, or type is used by the Billing module, put it in `backend-manager/manager-modules/manager-billing/billing-mappers/` (or `billing-constants/`, `billing-types/` respectively). If the Attendance module needs the exact same helper, **duplicate the code** into `backend-admin/admin-modules/admin-attendance/attendance-mappers/`. 
-* **Crucial Clarification (Domain vs Module):** WET duplication applies strictly at the **module level, not the domain level**. No shared folder is allowed at ANY level. Even if both the `billing` module and `attendance` module live under the same `manager` domain, they MUST get their own independent copies of a shared utility. There is no `manager/shared/` folder.
-* **Why?** In an AI-driven codebase, code repetition is entirely acceptable because AI writes the code. If we use a global `common/` folder, an AI might modify a shared function to fix a bug in HR, inadvertently breaking the Finance module. Complete module isolation guarantees 0% cross-module side effects.
+Strictly ban global `common/` or `shared/` folders. If a helper, enum, or type is used by the Billing module, put it in `backend-manager/manager-modules/manager-billing/billing-invoices/invoice-mappers/` (or `invoice-constants/`, `invoice-types/` respectively). If the Attendance module needs the exact same helper, **duplicate the code** into `backend-admin/admin-modules/admin-attendance/attendance-dashboard/dashboard-mappers/`. 
+* **Crucial Clarification (Domain vs Sub-Module WET Law):** Under the Universal Day-1 Sub-Module Architecture, WET duplication applies strictly at the **sub-module level**. No shared folder is allowed at ANY level — neither at domain level (e.g., `manager-attendance/common/`, `manager-attendance/shared/`, or `manager-attendance/services/` is strictly banned) nor between sibling sub-modules (e.g., `attendance-dashboard/` vs `attendance-history/`). If both `attendance-dashboard` and `attendance-history` need a date formatter, member query helper, or status enum, each gets its own independent copy locally inside its own sub-module directory. There is NO `attendance/common/` or `attendance/shared/` folder.
+* **Why?** In an AI-driven codebase, code repetition is entirely acceptable because AI writes the code. If we use a shared folder, an AI might modify a shared function to fix a bug in HR or Dashboard, inadvertently breaking the Finance or History sub-module. Complete sub-module isolation guarantees 0% cross-submodule side effects.
 
 > ⛔ **ABSOLUTE PROHIBITION — AI AGENTS:**
-> **NEVER move business logic, utilities, or services to global folders like `src/shared/` or `src/common/`.**
-> **Consequence of violation:** AI modifying a shared function to fix module A will silently break module B — this is architecturally FORBIDDEN and constitutes scope expansion (Invariant 3 violation).
-> **Anything containing domain-specific business behavior MUST be duplicated per feature, NEVER globalized.**
-> **Finding a `src/shared/` or `src/common/` folder with business logic = immediate `NON_COMPLIANT` — record it, do not touch the file, request owner decision.**
+> **NEVER move business logic, utilities, or services to global folders like `src/shared/` or domain-level folders like `manager-attendance/common/`.**
+> **Consequence of violation:** AI modifying a shared function to fix sub-module A will silently break sub-module B — this is architecturally FORBIDDEN and constitutes scope expansion (Invariant 3 violation).
+> **Anything containing domain-specific business behavior MUST be duplicated per sub-module, NEVER globalized.**
+> **Finding a `src/shared/`, `src/common/`, or domain-level `attendance/common/` folder with business logic = immediate `NON_COMPLIANT` — record it, do not touch the file, request owner decision.**
 > Only pure infrastructure plumbing (database connection pools, global interceptors, guards — see infrastructure exception below) belongs in `src/core/` or `src/infrastructure/`.
 * **Infrastructure Exception (Framework-Level vs Business-Logic-Level):** The WET-over-DRY / no-shared-folder rule applies strictly to **BUSINESS LOGIC utilities** (domain-specific helpers, formatters, validators). It does **NOT** apply to genuine framework-level infrastructure that every module is architecturally required to **extend OR consistently reference for correctness** (i.e., a single shared registry or config that MUST stay identical across all modules to function correctly — duplicating it would produce inconsistency, not isolation) — e.g. `BaseEntity` (Rule 58), the global `ResponseInterceptor` (Rule 28), `RolesGuard`/`@Roles()` decorator (Rule 83), the structured logger (Rule 14), `AsyncLocalStorage` context propagation (Rule 57), the centralized rate-limit tiers config (Rule 44), the event-registry constants (Rule 50), the Feature Flag Service (Rule 108), and the global database connection pool config (Rule 63). These live in a single, clearly-named `src/core/` or `src/infrastructure/` folder — **NOT** `src/shared/` or `src/common/` (to avoid becoming a dumping ground). This folder is intentionally small, framework-plumbing-only, and rarely touched — it does not carry the same "AI breaks module B while fixing module A" risk because it contains **no business logic**, only structural contracts that every module must extend or reference by architectural design.
 
@@ -1189,15 +1272,20 @@ Never put tests in a global `tests/` or `pytest-tests/` directory separate from 
 
 ## 19. Module-Level Feature Documentation
 *(Crucial for AI Context & Onboarding)*
-* **The Rule:** Every single module must contain a `[role]-[module]-backend-feature.md` file at its root (e.g., `backend-admin/admin-modules/admin-auth/admin-auth-backend-feature.md`). 
-* **Why:** Before an AI or a new human developer makes any changes to a module, they will read this file first. It acts as the ultimate localized context guide, instantly explaining the routing, file responsibilities, and logic, drastically reducing the risk of hallucination or breaking existing architecture.
+* **The Rule:** Under the Universal Day-1 Sub-Module Architecture (Rule 0A.2), every autonomous backend sub-module MUST contain its dedicated **Autonomous Sub-Module Documentation Trio** directly inside its directory (e.g., `src/backend-manager/manager-modules/manager-attendance/attendance-dashboard/`):
+  1. `[role]-[submodule]-backend-feature.md` (or `_backend-feature.md`) — Master architectural map containing ALL 22 Canonical Sections.
+  2. `[role]-[submodule]-backend-forbidden.md` (or `_backend-forbidden.md`) — Concrete, sub-module-specific forbidden anti-patterns and boundary invariants.
+  3. `[role]-[submodule]-backend-contract.md` (or `_backend-contract.md`) — Frozen API, DTO, and domain event contract definitions.
+* **Why:** Before an AI or a new human developer makes any changes to a sub-module, they read this trio first. It acts as the ultimate localized context guide, instantly explaining the routing, file responsibilities, database queries, and invariants, drastically reducing the risk of hallucination or breaking existing architecture.
 
 ### Documentation Placement Rule
 
-The following files MUST exist directly inside the feature module root:
-- `{role}-{module}-backend-feature.md`
-- `{role}-{module}-dependencies.md`
-- `{role}-{module}-forbidden.md`
+The Documentation Trio MUST exist directly inside each autonomous sub-module root:
+- `{submodule}-backend-feature.md` (or `_backend-feature.md`)
+- `{submodule}-backend-forbidden.md` (or `_backend-forbidden.md`)
+- `{submodule}-backend-contract.md` (or `_backend-contract.md`)
+
+Master domain-level documentation (`[role]-[domain]-backend-feature.md`, `[role]-[domain]-backend-forbidden.md`) lives at the parent domain root.
 
 These files MUST NOT be placed inside:
 - `docs/`
@@ -1206,7 +1294,7 @@ These files MUST NOT be placed inside:
 
 ### Documentation Quality Standard
 
-**The purpose of `-backend-feature.md` is that an AI given ONLY that file + the module folder can fully understand, modify, or debug the module without reading anything else. Generic boilerplate defeats this entirely.**
+**The purpose of `-backend-feature.md` is that an AI given ONLY that file + the sub-module folder can fully understand, modify, test, or debug the sub-module without reading anything else. Generic boilerplate defeats this entirely.**
 
 #### ❌ BAD — What AI agents produce without quality enforcement:
 ```markdown
@@ -1254,140 +1342,319 @@ Never call AdminBillingWalletRepository directly from outside this module.
 - Edge Cases with fewer than 3 concrete, module-specific entries
 - Generic warnings not tied to a specific rule number (e.g., "be careful with transactions" with no Rule citation)
 - Feature Inventory rows where Purpose column is just "Handles X"
+- Missing any of the 22 Canonical Sections
 
 **Documentation Freshness Rule:** `-backend-feature.md` MUST be updated in the same commit as any code change to the module. A stale feature doc is worse than no doc — it actively misleads AI agents.
 
 ---
 
-### Mandatory `[role]-[module]-backend-feature.md` Template
-Every backend module MUST use this minimum structure:
+### Mandatory `[role]-[submodule]-backend-feature.md` Template (22 Canonical Sections)
+
+Every autonomous backend sub-module MUST implement ALL 22 canonical sections below:
 
 ```markdown
-# [Module Name] Backend Feature Map
+# [Role] [Sub-Module Name] Backend Feature Map
 
-## Module Purpose
-[REQUIRED: 3+ sentences. What business problem does this module solve? What are
-the key invariants (e.g., "all mutations go through the Orchestrator")? What
-should an AI NEVER do in this module?]
+## 1. Scope and Non-Scope
+- **In-Scope**: [REQUIRED: 3+ concrete bullet points defining exact API capabilities owned by this sub-module]
+- **Non-Scope / Delegated**: [REQUIRED: Capabilities explicitly owned by other sub-modules or services — e.g., auth verification handled by JwtAuthGuard, payments delegated to payment adapter]
 
-## Directory Structure
-| File | Responsibility |
-|---|---|
-| [role]-[module]-command.controller.ts | [REQUIRED: exact HTTP mutations it handles] |
-| [role]-[module]-query.controller.ts | [REQUIRED: exact read endpoints it handles] |
-| {module}-services/[role]-[module]-orchestrator.service.ts | [REQUIRED: what it orchestrates] |
-| {module}-repositories/[role]-[module]-<concern>.repository.ts | [REQUIRED: what queries it owns] |
-| {module}-dto/[role]-[module]-create.dto.ts | [REQUIRED: what it validates] |
-| {module}-repositories/[role]-[module].entity.ts | [REQUIRED: what DB table it maps to] |
+## 2. Sub-Module Directory & Component Inventory
+| Directory / File | Type | Responsibility |
+|---|---|---|
+| `{submodule}-controllers/[role]-[submodule]-command.controller.ts` | Command Controller | Handles write mutations (POST/PATCH/DELETE) |
+| `{submodule}-controllers/[role]-[submodule]-query.controller.ts` | Query Controller | Handles read queries (GET) |
+| `{submodule}-services/[role]-[submodule]-orchestrator.service.ts` | Orchestrator | Coordinates transactions and domain sub-services |
+| `{submodule}-services/[role]-[submodule]-[desc].service.ts` | Domain Service | Encapsulates specific business calculation or logic |
+| `{submodule}-repositories/[role]-[submodule]-read.repository.ts` | Read Repository | Executes parameterized read queries & joins |
+| `{submodule}-repositories/[role]-[submodule]-write.repository.ts` | Write Repository | Executes transactional mutations with tenant scoping |
+| `{submodule}-dto/[role]-[submodule]-[desc].dto.ts` | Validation DTO | Class-validator request payloads |
+| `{submodule}-mappers/[role]-[submodule].mapper.ts` | Data Mapper | Pure bidirectional toDomain() and toEntity() transforms |
+| `{submodule}-domain/[role]-[submodule].domain.ts` | Domain Model | Framework-free pure domain entities |
+| `{submodule}-tests/harness/[submodule].harness.ts` | Test Harness | Standalone execution harness with seeders |
 
-## Feature Inventory
-[REQUIRED: One row per endpoint. Purpose must be a full sentence, not "Handles X".]
-| Controller/Endpoint | HTTP | Path | Purpose | Request DTO | Response DTO |
+## 3. Controller & Endpoint Inventory
+| Controller | Method | Path | Purpose | Status Codes | Auth Guards |
 |---|---|---|---|---|---|
+| `[role]-[submodule]-command.controller.ts` | POST | `/api/v1/[role]/[submodule]/action` | Performs business mutation | 201, 400, 403, 409 | `JwtAuthGuard`, `RolesGuard` |
+| `[role]-[submodule]-query.controller.ts` | GET | `/api/v1/[role]/[submodule]` | Retrieves paginated records | 200, 400, 401 | `JwtAuthGuard`, `RolesGuard` |
 
-## Approved External Dependencies
-[REQUIRED: Explicitly list all external dependencies. If none, write "None".]
-- **Business Feature Dependencies**: [e.g., MemberModule]
-- **Infrastructure Dependencies**: [e.g., CacheManager, Database]
-- **Runtime/Event Dependencies**: [e.g., BILLING.PAYMENT.FAILED]
+## 4. Frozen API Contract
+### Request Shapes
+| Endpoint | Method | Request DTO | Validated Fields |
+|---|---|---|---|
+| `POST /...` | POST | `[role]-[submodule]-create.dto.ts` | `field1: string (IsNotEmpty), field2: number (Min(1))` |
 
-## Data and State Architecture
-[REQUIRED: Fill every field. Write "none" only if genuinely none.]
-- DB Entities: [entity names and their table names]
-- Redis Caching Keys: [key patterns and TTLs, e.g., `billing:wallet:{memberId}` TTL 5min]
-- Event Emitters: [event names from event-registry.constants.ts, e.g., BILLING.PAYMENT.FAILED]
-- Background Jobs: [queue names and what triggers them]
-- Idempotency Keys: [which endpoints require Idempotency-Key header — Rule 103]
-
-## Business Flow / Key Sequences
-[REQUIRED: For each non-trivial mutation, describe the exact execution chain.]
-**Example — Plan Purchase:**
-1. AdminBillingPlanCommandController receives POST /billing/plans/purchase
-2. Validates AdminBillingPlanPurchaseDto (Rule 3)
-3. Calls AdminBillingOrchestratorService.purchasePlan(dto)
-4. Orchestrator opens DB transaction
-5. Calls AdminBillingWalletRepository.deductBalance() with pessimistic lock (Rule 41)
-6. Calls MemberPlanRepository.createPlanRecord()
-7. Commits transaction — emits BILLING.PLAN.PURCHASED event
-8. EventBus listener triggers NotificationService (decoupled — Rule 8)
-
-## File Responsibility Map
-[REQUIRED: One line per file stating its single responsibility and what it must NOT do.]
-- `admin-billing-orchestrator.service.ts` — Opens transactions, calls domain sub-services. MUST NOT contain business logic.
-- `admin-billing-wallet.repository.ts` — Raw DB queries for wallet table only. MUST NOT call other repositories.
-- `admin-billing-plan-purchase.service.ts` — Plan purchase business logic only. MUST NOT touch wallet directly.
-
-## Permissions and Security
-[REQUIRED: List every endpoint with its required role(s) and any resource-level checks.]
-| Endpoint | Required Role(s) | Resource-Level Check |
+### Response Shapes
+| Endpoint | Response Envelope DTO | Wrapped Data Fields |
 |---|---|---|
-| POST /billing/wallet/topup | MANAGER, ADMIN | Actor must belong to same branch as member |
-| GET /billing/history | MANAGER, ADMIN, MEMBER | Member can only see own history |
+| `POST /...` | `ApiResponse<[role]-[submodule]-response.dto.ts>` | `id, status, createdAt, ...` |
 
-CODEOWNERS path: `src/backend-[role]/[role]-[module]/` → @[reviewer-handle]
+## 5. UI-Required Fields Mapping (Rule 82A Parity)
+[REQUIRED: List every field consumed by the frontend UI — table columns, KPI cards, charts, badges, filters. Backend MUST guarantee 100% parity with frontend `_features.md`.]
+- **Table Columns**: `[col1, col2, col3, statusBadge]`
+- **KPI Metrics**: `[metric1, metric2]`
+- **Filter / Search Inputs**: `[search, dateRange, statusFilter]`
 
-## Edge Cases / AI Warnings
-[REQUIRED: Minimum 3 entries. Each must cite a specific Rule number and explain
-the exact consequence of violating it — not just "be careful".]
-- [Specific invariant]: [What breaks if violated] — see Rule [N]
-- [Concurrency risk]: [Race condition scenario] — requires pessimistic lock (Rule 41)
-- [Transaction boundary]: [What must be atomic and why] — see Rule 8
+## 6. Query & Mutation Flow / Key Sequences
+[REQUIRED: Exact step-by-step execution chain for non-trivial flows.]
+1. Controller receives request, validates DTO via ValidationPipe.
+2. Extracts `gymId` and `branchId` from `@CurrentUser()` JWT context.
+3. Orchestrator opens database transaction (`UnitOfWork`).
+4. Read repository fetches aggregate root with pessimistic lock (`SELECT FOR UPDATE`).
+5. Domain service applies business invariants.
+6. Write repository persists state change.
+7. Outbox record inserted for domain event.
+8. Transaction commits and returns canonical ApiResponse envelope.
 
-## Frozen API Contract
-[REQUIRED at API Contract Freeze (Rule 67). Copy the exact frozen contract from the frontend
-`_features.md`. Backend AI reads THIS section instead of needing the frontend folder.]
-
-### Request Shape
-| Endpoint | Method | Request DTO fields |
+## 7. Permissions, RBAC & Tenant Isolation Rules
+| Endpoint | Required Roles | Tenant Scoping Filter |
 |---|---|---|
-| [e.g. POST /billing/wallet/topup] | POST | [e.g. memberId: string, amountMinor: number] |
+| `POST /...` | `MANAGER`, `ADMIN` | `where: { gymId: jwt.gymId, branchId: jwt.branchId }` |
+| `GET /...` | `MANAGER`, `ADMIN` | `where: { gymId: jwt.gymId }` |
 
-### Response Shape
-| Endpoint | Response DTO fields | Notes |
-|---|---|---|
-| [e.g. POST /billing/wallet/topup] | [e.g. walletId, newBalanceMinor, processedAt] | [any computed/joined fields] |
+## 8. Data and State Architecture
+- **DB Entities**: `[entity names and physical table names]`
+- **Table Relationships**: `[Foreign keys and cascade rules]`
+- **Soft-Delete Policy**: `deletedAt IS NULL` filter enforced on all queries (Rule 29).
 
-### UI-Required Fields
-[REQUIRED: List every field consumed by the frontend UI — table columns, KPIs, charts, badges,
-filters, dropdowns, detail views. Backend MUST return all of them (Rule 82A).]
-- Table: [field list]
-- KPI cards: [field list]
-- Charts: [series names and their data fields]
-- Status badges: [field list]
+## 9. Repository Layer & Query Methods
+- Concern-based splitting: read and write repositories separated.
+- N+1 Prevention: All relations eagerly joined or mapped in single query (Rule 34).
+- Parameterized Queries: 100% ORM-managed or parameterized query builder (Rule 7).
 
-### Pagination / Error Contract
-- Pagination: [paginated? yes/no — if yes, include PaginationMeta]
-- Validation errors: statusCode 400, errorCode `VALIDATION.DTO.FAILED`, validationErrors array
-- Business errors: errorCode `DOMAIN.ENTITY.REASON` format
+## 10. Caching Strategy & Redis Key Registry
+- **Cache Key Pattern**: `[role]:[domain]:[submodule]:{gymId}:{entityId}`
+- **TTL**: `300s`
+- **Invalidation Triggers**: Cache evicted on mutation commit via `CacheManager.del()`.
 
-## Rule Compliance Checklist
-- [ ] Rule 7: Approved project ORM used for all DB access (no raw SQL outside parameterized/prepared queries)
-- [ ] Rule 19: This file updated in same commit as any code change (Freshness Rule)
-- [ ] Rule 23: Heavy tasks (emails, PDFs, bulk ops) moved to background jobs
-- [ ] Rule 28: All responses wrapped in canonical envelope via ResponseInterceptor
-- [ ] Rule 29: Soft-delete by default. (Exception: Immutable event logs (Rule 118) and financial ledgers (Rule 119) are strictly append-only and exempt from standard soft-delete rules. Furthermore, the 90-day tenant hard-delete (Rule 110) must explicitly archive/retain legally required financial/audit ledgers rather than blindly deleting them.)
-- [ ] Rule 115: AI-contextual docstrings added to entities/services/controllers
-- [ ] Rule 116: OpenAPI documentation and MCP-ready conventions implemented where applicable.
-- [ ] Rule 117: Universal RAG projection (`?format=rag`) implemented for all GET query endpoints with automated field masking.
-- [ ] Rule 103: Every mutation endpoint declares its retry-safety classification: naturally idempotent, Idempotency-Key protected, or intentionally non-retriable. Idempotency-Key is implemented wherever Rule 103 requires it.
-- [ ] Rule 34: N+1 queries prevented — eager loading used where needed
-- [ ] Rule 36: Fail-Fast applied — null checks at service layer, DB constraints enforced
-- [ ] Rule 41: Pessimistic locking on all concurrent balance/inventory mutations
-- [ ] Rule 48: Read (query) and write (command) controllers are separate files
-- [ ] Rule 56: findByIdOrThrow() used — null never propagates silently
-- [ ] Rule 62: Explicit return types on all service and repository methods
-- [ ] Rule 76: Every file starts with // RESPONSIBILITY: comment
-- [ ] Rule 79: Every file has // FLOW: comment below RESPONSIBILITY
-- [ ] Rule 80: Framework-appropriate method documentation on all service methods, repositories, and utilities
-- [ ] Rule 83: RBAC enforced at controller layer via @Roles() — never inline in services
-- [ ] Rule 85: Guard clauses used — no nested if/else beyond 2 levels
-- [ ] Rule 82A: Response DTO satisfies complete frontend UI Data Requirements from the Frozen API Contract section in this `-backend-feature.md` — no missing table columns, KPI fields, chart series, or relationship fields
-- [ ] Rule 82A-SYNC: Frozen API Contract section in this file is up-to-date with frontend `_features.md` API contract
-- [ ] Rule 86: Verb contract naming applied (createX, findXById, findXByIdOrThrow)
-- [ ] Rule 87: Service methods have one clear responsibility; methods above the 20-line soft ceiling include a documented reason or are decomposed where complexity requires it.
-- [ ] Rule 89: Domain objects used in services — ORM entities stay in repository layer
-- [ ] Rule 92: All ORM orderBy/where with user input validated against allowlist
-- [ ] Rule 93: If module touches auth/billing/webhooks/tenant — CODEOWNERS human review required
+## 11. Event Emitter & Consumer Registry
+- **Emitted Events**: `[DOMAIN].[ENTITY].[ACTION]` (from `event-registry.constants.ts`)
+- **Transport**: Transactional Outbox ➔ Redis Streams (Rule 8 Edge Case A.1).
+- **Consumed Events**: Handled via idempotent event consumers.
+
+## 12. Background Jobs & Distributed Queue Tasks
+- **Queue Name**: `[role]-[submodule]-queue`
+- **Trigger Condition**: Heavy export, PDF, or bulk operation.
+- **Idempotency Guarantee**: BullMQ jobId keyed by `requestId` or entity UUID.
+
+## 13. Concurrency, Locks & Idempotency Rules
+- **Pessimistic Locking**: `SELECT FOR UPDATE` applied on inventory/balance mutations (Rule 41).
+- **Idempotency Key**: Required on mutation routes via `Idempotency-Key` header (Rule 103).
+
+## 14. Error & Exception Registry
+| Exception Class | Domain Error Code | HTTP Status | User Message Key |
+|---|---|---|---|
+| `[submodule]NotFoundException` | `[DOMAIN].[ENTITY].NOT_FOUND` | `HttpStatus.NOT_FOUND` | `errors.[submodule].notFound` |
+| `[submodule]ConflictException` | `[DOMAIN].[ENTITY].CONFLICT` | `HttpStatus.CONFLICT` | `errors.[submodule].conflict` |
+
+## 15. Security, PII & Audit Logging Requirements
+- **PII Masking**: Mask phone numbers, emails, and financial identifiers before logging (Rule 35).
+- **Audit Logging**: Write audit log entry for every critical mutation (Rule 14).
+
+## 16. Approved External & Infrastructure Dependencies
+- **Core Dependencies**: `@/core/guards/`, `@/core/interceptors/`
+- **Sibling Sub-Module Dependencies**: **NONE** (Zero cross-submodule imports).
+- **External Adapters**: Third-party integrations wrapped in local adapters (Rule 8 Edge Case D).
+
+## 17. File Responsibility Map & Architecture Exceptions
+- Every file declares `// RESPONSIBILITY:` and `// FLOW:` header (Rule 76, 79).
+- Any documented exception contains `// architecture-exception: [reason]` (Rule 17).
+
+## 18. ADR (Architectural Decision Records) & Known Contract Gaps
+- **ADR-001**: [Decision description, rationale, consequences]
+- **Known Contract Gaps**: None.
+
+## 19. Rule Compliance Checklist (35+ Verification Items)
+- [ ] Rule 0A.2: Universal Day-1 Sub-Module Architecture verified
+- [ ] Rule 0A.2: Zero root business code in domain module root (Domain Quarantine)
+- [ ] Rule 0A.2: Parent shared folder banned (`manager-attendance/common/` absent)
+- [ ] Rule 0A.2: Zero cross-submodule imports; sibling `@Module` or service NOT imported
+- [ ] Rule 0A.2: Strict WET Principle applied to DTOs, mappers, and helpers
+- [ ] Rule 0G: Tenant isolation verified (`gymId`/`branchId` from JWT, never body)
+- [ ] Rule 7: Approved project ORM used; parameterized queries only
+- [ ] Rule 8: Event-driven cross-module communication (Redis Streams/Outbox)
+- [ ] Rule 8: Orchestrator pattern used for multi-table transactions
+- [ ] Rule 9: HTTP status codes use `HttpStatus` enum (never raw integers)
+- [ ] Rule 11: Co-located unit tests and standalone test harness present
+- [ ] Rule 12: OpenAPI / Swagger annotations on all endpoints
+- [ ] Rule 13: Strongly typed ConfigService used (no raw `process.env`)
+- [ ] Rule 14: Structured logging via `nestjs-pino` with correlation ID
+- [ ] Rule 17: Standardized backend-driven pagination, sorting, and filtering
+- [ ] Rule 19: Documentation Trio present and up-to-date (Freshness Rule)
+- [ ] Rule 20: Standalone Run, Mock & Test Harness fully documented in Section 20
+- [ ] Rule 21: Module Portability & Host Integration Guide documented in Section 21
+- [ ] Rule 23: Heavy tasks dispatched to BullMQ background queues
+- [ ] Rule 28: ResponseInterceptor wraps all responses in canonical envelope
+- [ ] Rule 29: Soft-delete by default (`deletedAt IS NULL`)
+- [ ] Rule 34: N+1 queries eliminated via eager loading / query builders
+- [ ] Rule 36: Fail-Fast null checks applied in domain services
+- [ ] Rule 41: Pessimistic locking on concurrent balance/inventory mutations
+- [ ] Rule 48: Command (write) and query (read) controllers in separate files
+- [ ] Rule 56: `findByIdOrThrow()` used — null never silently propagated
+- [ ] Rule 62: Explicit TypeScript return types on all methods
+- [ ] Rule 76: Every file starts with `// RESPONSIBILITY:` comment
+- [ ] Rule 79: Every file has `// FLOW:` comment below RESPONSIBILITY
+- [ ] Rule 80: JSDoc method documentation on all service/repo methods
+- [ ] Rule 82A: Complete UI data requirement parity with frontend `_features.md`
+- [ ] Rule 83: RBAC enforced at controller layer via `@Roles()` guard
+- [ ] Rule 85: Guard clauses used — max 2 nesting levels
+- [ ] Rule 86: Verb contract naming applied (`createX`, `findXByIdOrThrow`)
+- [ ] Rule 87: Methods adhere to 20-line soft ceiling or decomposed
+- [ ] Rule 89: Pure domain models in services; ORM entities stay in repo layer
+- [ ] Rule 92: OrderBy/where parameters validated against strict allowlist
+- [ ] Rule 103: Idempotency-Key enforced on non-naturally idempotent mutations
+- [ ] Rule 115: AI-contextual docstrings on entities, services, controllers
+- [ ] Rule 117: Universal RAG projection (`?format=rag`) supported
+
+## 20. Standalone Run, Mock & Test Harness
+### How to Run this Sub-Module Standalone
+1. **Harness Location**: `{submodule}-tests/harness/[submodule].harness.ts`
+2. **In-Memory / SQLite Database**: Harness initializes a lightweight SQLite or Testcontainers PostgreSQL DataSource with local entity definitions.
+3. **Local Seed Data**: `{submodule}-tests/harness/[submodule].seed.ts` populates realistic tenant, member, and domain records.
+4. **Execution Command**:
+   ```bash
+   npm test -- src/backend-[role]/[role]-modules/[role]-[domain]/[submodule]/
+   ```
+5. **Standalone NestJS Testing Module**: Harness exports a standalone `createTestingModule()` with mocked external event busses and cache managers.
+
+## 21. Module Portability & Host Integration Guide
+### 4-Step Host Monolith Integration
+1. **Drop-in Directory Placement**:
+   Copy `{submodule}/` into `src/backend-[role]/[role]-modules/[role]-[domain]/`.
+2. **Aggregator Module Registration**:
+   In `[role]-[domain].module.ts`, add `[Submodule]Module` to the `imports` array:
+   ```typescript
+   @Module({
+     imports: [AttendanceDashboardModule, AttendanceHistoryModule],
+     exports: [AttendanceDashboardModule, AttendanceHistoryModule],
+   })
+   export class ManagerAttendanceModule {}
+   ```
+3. **Database Migration Execution**:
+   Run the sub-module migration files to ensure tables and indexes exist.
+4. **Environment / Token Verification**:
+   Verify required Redis and database environment variables are configured in host `ConfigService`.
+
+## 22. Deliverables & Version History
+### Sub-Module Self-Audit & ZIP Portability Score (8/8 Required for Release)
+- [ ] 1. **Autonomous Directory Structure**: All controllers, services, repositories, DTOs live inside `{submodule}-{artifact}/` sub-folders. Zero root business code in parent domain.
+- [ ] 2. **Zero Cross-Submodule Imports**: Sibling submodules do not import each other's `@Module`, `@Injectable()` services, or repositories.
+- [ ] 3. **Standalone Test Harness**: Includes working standalone harness in `harness/` with local seeders, runnable independently using SQLite or mocks without host application.
+- [ ] 4. **Complete DTO & Validation Isolation**: Every input payload is strictly validated using local Class-Validator DTOs; no shared DTOs with sibling submodules.
+- [ ] 5. **Complete Repository & Query Isolation**: All queries live in local repository files with explicit tenant filtering and no leaked ORM entities to controllers.
+- [ ] 6. **Documentation Trio Present & Complete**: Submodule contains `_backend-feature.md` (all 22 canonical sections), `_backend-forbidden.md`, and `_backend-contract.md`.
+- [ ] 7. **Frozen API Contract Verified**: Complete parity with frontend `_features.md` requirements (Rule 82A satisfied).
+- [ ] 8. **AI Portability Guarantee**: Submodule folder can be independently zipped, provided to an AI agent, audited, repaired, and tested in total isolation.
+
+### Version Changelog
+| Version | Date | Author | Changes |
+|---|---|---|---|
+| `1.0.0` | `2026-10-23` | AI Architect | Initial autonomous sub-module creation with complete 22-section spec |
+```
+
+---
+
+### Mandatory `[role]-[submodule]-backend-forbidden.md` Template
+
+Every autonomous sub-module MUST contain a `-backend-forbidden.md` detailing concrete boundary anti-patterns:
+
+```markdown
+# [Role] [Sub-Module Name] Forbidden Invariants & Anti-Patterns
+
+## 1. Sibling Sub-Module Isolation Violations (P0 Architecture Failure)
+- ❌ **FORBIDDEN**: Importing sibling sub-module services, controllers, repositories, or DTOs:
+  `import { AttendanceHistoryService } from '../attendance-history/...'`
+- ❌ **FORBIDDEN**: Importing a sibling's `@Module` inside this sub-module's NestJS module.
+- ❌ **FORBIDDEN**: Injecting a sibling sub-module's service directly into this sub-module's constructors.
+- ✅ **MANDATORY**: Decouple sibling interactions via Domain Events (Redis Streams / Outbox) or an Application Workflow Orchestrator.
+
+## 2. Shared Folder & DRY Violations (P0 Architecture Failure)
+- ❌ **FORBIDDEN**: Creating or importing from domain-level shared folders:
+  `src/backend-manager/manager-modules/manager-attendance/common/`
+  `src/backend-manager/manager-modules/manager-attendance/shared/`
+- ❌ **FORBIDDEN**: Moving business helpers, formatters, or DTOs to parent domain root.
+- ✅ **MANDATORY**: Follow Strict WET Principle. Duplicate helpers, mappers, and DTOs locally within `{submodule}-dto/`, `{submodule}-services/`, and `{submodule}-mappers/`.
+
+## 3. Multi-Tenancy & Security Violations (P0 Security Failure)
+- ❌ **FORBIDDEN**: Accepting `gymId` or `branchId` from request body, query params, or client headers.
+- ❌ **FORBIDDEN**: Executing any database query without explicit tenant filter (`gymId: jwt.gymId`).
+- ❌ **FORBIDDEN**: Exposing internal `gymId` or `branchId` in response DTOs.
+- ✅ **MANDATORY**: Extract tenant identifiers exclusively from the verified JWT payload.
+
+## 4. Database & Query Violations
+- ❌ **FORBIDDEN**: Writing raw unparameterized SQL strings.
+- ❌ **FORBIDDEN**: Leaking TypeORM / ORM entity instances outside the repository layer to controllers.
+- ❌ **FORBIDDEN**: Bypassing soft-delete (`deletedAt IS NULL`) on business entities.
+- ❌ **FORBIDDEN**: Omitting pessimistic locking on concurrent balance or inventory mutations.
+
+## 5. Framework & Controller Violations
+- ❌ **FORBIDDEN**: Returning hardcoded numeric HTTP status codes (e.g., `res.status(200)`). Use `HttpStatus.OK`.
+- ❌ **FORBIDDEN**: Combining command (write) and query (read) endpoints in a single monolithic controller.
+- ❌ **FORBIDDEN**: Using raw `process.env` in services. Use strongly-typed `ConfigService`.
+```
+
+---
+
+### Mandatory `[role]-[submodule]-backend-contract.md` Template
+
+Every autonomous sub-module MUST contain a `-backend-contract.md` freezing its public external interface:
+
+```markdown
+# [Role] [Sub-Module Name] Frozen API & Event Contract
+
+## Public HTTP Endpoints
+### 1. `POST /api/v1/[role]/[submodule]/action`
+- **Request Headers**:
+  - `Authorization: Bearer <jwt>` (Required)
+  - `Idempotency-Key: <uuid>` (Required for mutations)
+- **Request Body (JSON)**:
+  ```json
+  {
+    "name": "string",
+    "amountMinor": 1000
+  }
+  ```
+- **Response Body (JSON - Canonical Envelope)**:
+  ```json
+  {
+    "success": true,
+    "statusCode": 201,
+    "message": "Resource created successfully",
+    "data": {
+      "id": "uuid",
+      "status": "ACTIVE",
+      "createdAt": "2026-10-23T00:00:00.000Z"
+    },
+    "meta": {
+      "timestamp": "2026-10-23T00:00:00.000Z",
+      "requestId": "uuid"
+    }
+  }
+  ```
+
+## Emitted Domain Events
+### `[DOMAIN].[ENTITY].[ACTION]`
+- **Topic / Stream**: `[domain]-events`
+- **Payload Schema**:
+  ```json
+  {
+    "eventId": "uuid-v4",
+    "eventName": "[DOMAIN].[ENTITY].[ACTION]",
+    "eventVersion": 1,
+    "tenantScope": {
+      "gymId": "uuid",
+      "branchId": "uuid"
+    },
+    "aggregateId": "uuid",
+    "occurredAt": "2026-10-23T00:00:00.000Z",
+    "correlationId": "uuid",
+    "payload": {
+      "entityId": "uuid",
+      "action": "ACTION_NAME"
+    }
+  }
+  ```
 ```
 
 ## 20. Performance & Network Optimization (Compression, Rate Limiting & Caching)
