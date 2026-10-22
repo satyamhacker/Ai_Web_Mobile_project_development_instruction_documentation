@@ -1181,6 +1181,14 @@ Never use relative imports (like `../../` or `./`) for importing components, con
 *Why?* This allows files to be moved around easily without breaking import paths and makes it much easier to copy-paste code snippets or have an AI generate standalone code without worrying about relative directory depth.
 *Consequence of violation:* Relative imports break module extraction and portability, produce fragile import chains that fail during refactoring, and bypass ESLint boundary protection. Finding ANY relative import (`../` or `./`) outside of Next.js routing convention = IMMEDIATE `NON_COMPLIANT` AUDIT FAILURE.
 
+### Generated Code Exception to Absolute Imports
+
+The absolute-import rule applies strictly to handwritten application and feature code.
+
+Generated code located under `src/generated/**` (such as OpenAPI, Orval, or swagger-codegen artifacts) may use internal relative imports as required by the generator engine. Generated files MUST NOT be manually refactored, edited, or rewritten merely to satisfy handwritten import style conventions.
+
+Generator configuration and generated output integrity must be verified automatically in CI. Handwritten feature code consuming generated contracts MUST import them exclusively through approved absolute paths (e.g., `@/generated/openapi/...`).
+
 11. **Centralized URL Configuration (No Hardcoded URLs)**: 
 Never hardcode URLs (e.g., `/api/auth/refresh`, `/login`, etc.) directly into API wrappers or React components. Each module must have exactly one centralized URL configuration file, named exactly `[moduleName]_url_config.ts` (e.g., `admin_billing_url_config.ts`). This file must export all internal page routes and external API routes used by that module as named constants. Module-owned API/navigation call sites MUST use their module URL config. Global infrastructure may receive a fully constructed path/URL as an argument and MUST NOT own module-specific URLs.
 *Consequence of violation:* Hardcoded URLs create silent 404s upon routing refactors, break multi-tenant reverse proxy mappings, and make centralized URL auditing impossible. Finding raw endpoint strings in components or hooks = `NON_COMPLIANT`.
@@ -1320,7 +1328,7 @@ Feature modules may import ONLY from the following approved external application
 - `src/lib/permissions/*` (Role and permission evaluator utilities)
 - `src/lib/monitoring/*` (Error monitoring and telemetry adapters)
 - `src/lib/telemetry/*` (Logging and telemetry infrastructure)
-- `src/lib/formatters.ts` (`displayValue()` zero-business primitive only)
+- `src/lib/display_value.ts` (`displayValue()` zero-business neutral null/empty-state primitive only)
 - `src/components/ui/*` (Zero-business UI primitives: Button, Input, Dialog, Tooltip, etc.)
 - `src/components/providers/*` (Application-level React context providers)
 - `src/design-system/*` (Global design tokens and theme constants)
@@ -1649,7 +1657,7 @@ without reading every component file. Example:]
 HTTP method, endpoint, request shape, and response type. "List all endpoint builders"
 is not acceptable — actually list them.]
 
-All calls go through `apiFetch` at `@/lib/api`. Response envelope: `{ success: boolean, message: string, data: T | null, meta?: PaginationMeta, error?: string, errorCode?: string, statusCode?: number, validationErrors?: ValidationErrorItem[] }`
+All calls go through `apiFetch` at `@/lib/api`. Response envelope: `ApiResponse<T>` discriminated union (`ApiSuccess<T> | ApiFailure` per Rule 59).
 
 | Function | Method | Endpoint | Request | Response `data` type |
 |---|---|---|---|---|
@@ -1781,7 +1789,7 @@ actually implemented. An honest [ ] is better than a false [x].]
 - [ ] Rule 76: CODEOWNERS covers security-critical paths
 - [ ] Rule 78: En-dash fallback — `displayValue()` used for all nullable fields in tables and profiles
 - [ ] Rule 79: Unsaved changes guard — `useUnsavedChangesGuard(isDirty)` on all complex forms and wizards
-- [ ] Rule 80: Currency/number formatting - feature-local `[module]FormatCurrency()` used for all monetary values (minor-unit input), no raw `.toFixed()` in JSX, no global formatters.ts
+- [ ] Rule 80: Currency/number formatting - feature-local `[module]FormatCurrency()` used for all monetary values (minor-unit input), no raw `.toFixed()` in JSX, no global business formatters (only `src/lib/display_value.ts` for neutral null fallback)
 - [ ] Rule 81: Button loading width stability — no layout shift on loading state, `min-w` or text+spinner pattern used
 - [ ] Rule 82: Toast deduplication — all `toast()` calls pass a stable `id`, no stacking identical toasts
 - [ ] Design §3: Sidebar active = subtle gold border + bg (NOT solid primary)
@@ -2504,24 +2512,34 @@ Example:
 `APP_MODULE_FILTERS_V1`
 `APP_DASHBOARD_LAYOUT_V1`
 
-59. **Standardized `ApiResponse<T>` Generic (The API Contract)**:
-Every API call must be typed using a global `ApiResponse<T>` generic interface that matches the canonical `ApiResponse<T>` envelope defined in this Rule 59. Both Success and Error responses must share this exact canonical shape:
+59. **Standardized `ApiResponse<T>` Generic (Discriminated Union Contract)**:
+Every API call must be typed using a global `ApiResponse<T>` discriminated union that matches the canonical envelope defined below. A discriminated union on `success` guarantees that valid payloads always have data and error payloads always have error details, making invalid states (like `success: true` with `data: null` or error codes) impossible in TypeScript.
 
 ```typescript
-export interface ApiResponse<T> {
-  success: boolean;                         // true on 2xx, false on all errors
-  message: string;                          // human-readable, always present
-  data: T | null;                           // response payload OR null on error
-  meta?: PaginationMeta;                    // present only on paginated list responses
-  error?: string;                           // error name / category (e.g. "NOT_FOUND")
-  errorCode?: string;                       // machine-readable DOMAIN.ENTITY.REASON code
-  statusCode?: number;                      // HTTP status code, present on error responses
+export type ApiSuccess<T> = {
+  success: true;                            // true on 2xx
+  message: string;                          // human-readable success description
+  data: T;                                  // guaranteed non-null payload for success
+  meta?: PaginationMeta;                    // present on paginated list responses
+  requestId: string;                        // trace identifier from API Gateway
+};
+
+export type ApiFailure = {
+  success: false;                           // false on all errors (4xx, 5xx)
+  message: string;                          // human-readable error message
+  data: null;                               // payload is explicitly null on failure
+  error?: string;                           // error category (e.g. "NOT_FOUND", "UNAUTHORIZED")
+  errorCode: string;                        // stable machine-readable DOMAIN.ENTITY.REASON code
+  statusCode: number;                       // HTTP status code (400, 401, 403, 404, 409, 500)
+  requestId: string;                        // trace identifier for error tracking and support
   validationErrors?: ValidationErrorItem[]; // present ONLY on 400 validation failures
-}
+};
+
+export type ApiResponse<T> = ApiSuccess<T> | ApiFailure;
 
 export interface ValidationErrorItem {
   field: string;    // exact DTO property name, dot-notation for nested fields
-  message: string;  // human-readable error from class-validator
+  message: string;  // human-readable validation error message
 }
 
 export interface PaginationMeta {
@@ -2534,7 +2552,10 @@ export interface PaginationMeta {
 }
 ```
 
-This interface is the single source of truth for all API response parsing across the application. Never define a partial or alternative shape.
+The backend OpenAPI contract, generated frontend transport types (`@/generated/openapi/*`), module Zod schemas, MSW fixtures, and API clients MUST conform strictly to this discriminated union contract.
+- `success: true` MUST always contain valid `data` and `requestId`.
+- `success: false` MUST always contain `data: null`, a stable machine-readable `errorCode`, numeric `statusCode`, and `requestId`.
+This eliminates ambiguous null/error states and guarantees type narrowing in client code.
 
 60. **No Direct `router.push('/login')` in Components**:
 Handle unauthenticated redirects centrally in `middleware.ts` or an API interceptor.
@@ -3244,7 +3265,8 @@ Never render completely blank table cells or profile field values when an API re
 - **Why:** A blank cell is visually indistinguishable from a broken render or a missing API field. An en-dash is an explicit, intentional signal to the user that the data does not exist. This is especially critical in financial tables, member profiles, and audit logs where a blank value could be misread as a data integrity issue.
 - ❌ **BAD:** `<td>{member.trainerName}</td>` — renders nothing if `null`
 - ✅ **GOOD:** `<td>{displayValue(member.trainerName)}</td>` — renders `—` explicitly
-- **Centralize the fallback:** Define a shared utility `displayValue` in `src/lib/formatters.ts`. `displayValue()` accepts all primitive display values required by the UI, including string, number, boolean, null, and undefined, while preserving meaningful zero/false values. *(Note: `displayValue()` contains zero business logic and qualifies as approved global infrastructure under Rule 63. It is the only formatter permitted in `src/lib/`. All other formatters must remain feature-local per Rule 80).*
+- **Centralize the neutral fallback:** Define a shared zero-business utility `displayValue` in `src/lib/display_value.ts`. `displayValue()` accepts primitive display values required by the UI, including string, number, boolean, null, and undefined, rendering an en-dash (`—`) for nullish/empty values while preserving meaningful zero (`0`) and false values.
+*(Note: `src/lib/display_value.ts` contains zero business logic and qualifies as approved global presentation infrastructure under Rule 63. No general `src/lib/formatters.ts` business library may exist. All business-aware formatters—currency, date, phone, tax, invoice, etc.—MUST remain strictly feature-local inside `[moduleName]_utils/` per Rule 80).*
 
 79. **Unsaved Changes Guard (Data Loss Prevention)**:
 Any complex form or multi-step wizard MUST implement a "Dirty State Guard" to prevent accidental data loss. Rule 79 supersedes Rule 46 for scope; Rule 46 defines only the browser `beforeunload` mechanism.
@@ -3262,7 +3284,7 @@ Any complex form or multi-step wizard MUST implement a "Dirty State Guard" to pr
 80. **Currency & Number Formatting Standardization**:
 Never manually concatenate currency symbols, format numbers with raw `.toFixed()`, or build locale strings directly inside JSX or component logic. All financial values and large numeric metrics MUST be piped through a centralized formatting utility.
 - **Minor-unit contract:** API monetary values are stored as minor units (paise, cents). Always divide by the appropriate currency subunit divisor (e.g., 100 for INR) before formatting. Never pass a raw API minor-unit value to a display formatter that expects major units — this causes a 100× display error.
-- **Required utilities:** Define `[module]FormatCurrency(amountMinor: number, currencyCode: string, locale: string): string` locally inside the feature module. **Do NOT use a global `src/lib/formatters.ts`.** Each feature module must own its own formatting utility to prevent cross-module coupling. This is the single source of truth for numeric display formatting within that feature.
+- **Required utilities:** Define `[module]FormatCurrency(amountMinor: number, currencyCode: string, locale: string): string` locally inside the feature module under `[moduleName]_utils/`. **Do NOT create or use a global `src/lib/formatters.ts`.** Each feature module must own its own formatting utility to prevent cross-module coupling. The only permitted global presentation utility is `src/lib/display_value.ts` for zero-business en-dash fallbacks.
 - **Locale consistency:** The utility must use the `Intl.NumberFormat` API to ensure consistent comma separators, decimal places, and currency symbol placement based on the app's configured locale — never hardcoded.
 - **Decimal precision:** Financial values MUST use the feature-local currency formatter. Metric counts (e.g., total members) must display with comma separators but no decimals.
 - **This rule is the numeric parallel to Rule 24** (which standardizes date/time formatting via `date-fns`/`dayjs`). Just as Rule 24 forbids raw `new Date()` in JSX, this rule forbids raw number concatenation.
