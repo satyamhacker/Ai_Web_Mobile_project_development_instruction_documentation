@@ -1963,6 +1963,19 @@ understand the full journey without reading every file.]
 - **Persisted state (offline requirement):** Yes / No — if Yes, document cache strategy and invalidation triggers
 - **Storage keys used:** ["None" or namespaced constants e.g. `MEMBERS_FILTER_PREFS_V1`] — if yes, document strategy
 
+## Module Architecture Flow
+```text
+Screen (Route Entry in screens/ ≤80 lines)
+      ↓
+Child Components (Thin Composition in components/)
+      ↓
+Custom Hooks / Store (Zustand UI State + TanStack Query Server State)
+      ↓
+Feature API Client (api/*api.ts via networkClient with ApiResponse<T>)
+      ↓
+MSW Handlers / Fixtures (Dev/Test) OR Real Backend API (Prod)
+```
+
 ## API Contract
 [REQUIRED: Every function in the feature's api file listed with exact HTTP method,
 endpoint, request shape, and response type. "TBD" is not acceptable.]
@@ -2141,6 +2154,15 @@ None
   - *Empty State:* Set filter or mock flag `?empty=true` to trigger `[Feature]EmptyState.tsx`
   - *Error State:* Mock endpoint throws 500 / network error to trigger `[Feature]ErrorFallback.tsx`
   - *Offline Blocker:* Simulate zero connectivity with empty cache to trigger `[Feature]OfflineBlocker.tsx`
+  - *Slow Network:* Simulated 2000ms latency to verify loading skeletons and button spinner states
+
+## Module Portability & Host Integration Guide
+[REQUIRED: Exact 4-step instructions to copy and plug this module into another mobile project or host app.]
+
+1. **Folder Transfer:** Copy `src/features/frontend_{role}/{role}_{module}` into target mobile project.
+2. **Route Registration:** Register route `ROUTES.[ROLE_MODULE].*` in host navigation stack.
+3. **Core Contracts Alignment:** Verify target host provides core application plumbing (`networkClient`, `useThemeTokens()`, `showToast()`).
+4. **Mock / Live Backend Verification:** Verify immediate standalone execution via feature-owned MSW fixtures, or connect to production backend via `config/{role_module}.url_config.ts`.
 
 ## Module Changelog & Revision History
 [REQUIRED: Every major modification, schema change, or bug fix MUST append an entry here to preserve AI audit trail.]
@@ -2241,6 +2263,13 @@ artificially duplicating mandatory application infrastructure.
 A common architectural antipattern is attempting to resolve cross-module needs by creating a `shared/` or `common/` dumping ground (e.g. `shared/ui/`, `shared/hooks/`, `shared/utils/`).
 - **THE TRAP:** Within weeks, developers and AI agents place business cards, attendance filters, status badges, and domain hooks into `shared/`. Then, modifying a component to satisfy Feature A silently breaks Feature B and Feature C.
 - **THE LAW:** Generic zero-business infrastructure belongs in `src/core/` ONLY. Any component, hook, utility, or type containing a business noun, domain status, or business rule MUST remain strictly feature-local. If two features require similar business UI or logic, DUPLICATE IT LOCALLY under the Strict WET Principal. Creating `shared/` directories for business logic is STRICTLY FORBIDDEN.
+
+### The Feature ZIP Guarantee (Self-Sufficiency Invariant)
+
+Every mobile feature module MUST satisfy the **Feature ZIP Guarantee**:
+1. An AI agent or human developer MUST be able to zip ONLY the feature folder (`src/features/frontend_{role}/{role}_{module}/`) along with the Documentation Trio (`[featureName]_features.md`, `[featureName]_forbidden.md`, `[featureName]_theme_contract.md`), drop it into an isolated prompt or project, and completely understand, run, mock, test, and repair it.
+2. The feature MUST NEVER require sibling feature code or ask for other role folders.
+3. All dependencies on core application infrastructure (network client, theme tokens, hardware keychain) MUST be satisfied through the documented Core Application Contracts.
 
 Enforce mechanically via `eslint-plugin-boundaries` so violations are caught in CI, not in
 code review.
@@ -3388,7 +3417,8 @@ Every feature's `_features.md` MUST define these sections with non-generic conte
 18. `## Logical Integration Points (Zero Code Imports)` (documents conceptual cross-feature touchpoints with zero code imports)
 19. `## Known Contract Gaps & Bug Log`
 20. `## Module Run, Mock & Test Harness` (isolated test commands, Maestro suite, test user credentials, mock scenario toggles)
-21. `## Module Changelog & Revision History` (documents version history and rationale for AI audit trail)
+21. `## Module Portability & Host Integration Guide` (4-step host integration instructions)
+22. `## Module Changelog & Revision History` (documents version history and rationale for AI audit trail)
 
 CI MUST fail when a changed feature source file does not have a corresponding update to its `[feature]_features.md`, unless the change is test-only or a documented no-behavior-change refactor.
 
@@ -4128,7 +4158,7 @@ and MUST NOT claim that a ZIP was generated.
 | **Gate 4** | Zero Hardcoded Colors or Insets | Grep for hex `#`, `rgb(`, raw sizes without `// design-exception: <reason>` | **STOP.** Hardcoded style = REJECTED DELIVERY |
 | **Gate 5** | Hardware-Backed Secure Storage Only | Verify auth tokens, refresh tokens, and biometric keys use `react-native-keychain` / Keystore. Zero tokens in `AsyncStorage` | **STOP.** Insecure storage = CRITICAL SECURITY VULNERABILITY |
 | **Gate 6** | Centralized URL Config Present | `config/[featureName].url_config.ts` present, exports all routes/APIs with real paths (zero placeholders) | **STOP.** Missing config = REJECTED DELIVERY |
-| **Gate 7** | Feature Map Non-Generic | `[featureName]_features.md` complete with all 21 mandatory sections (no TBDs or boilerplate) | **STOP.** Generic doc = INCOMPLETE MODULE |
+| **Gate 7** | Feature Map Non-Generic | `[featureName]_features.md` complete with all 22 mandatory sections (no TBDs or boilerplate) | **STOP.** Generic doc = INCOMPLETE MODULE |
 | **Gate 8** | TanStack Query & Hook Architecture | Query keys registered in `[featureName].query_keys.ts` with resource identity; screens NOT calling `useMutation` directly; cache invalidation via `useMutation({ onSuccess: () => queryClient.invalidateQueries(...) })` per Rule 60 | **STOP.** Broken server state / crash |
 | **Gate 9** | Form Architecture Compliance | React Hook Form + Zod validator class/schema; zero Yup/Joi; controlled inputs | **STOP.** Broken form validation |
 | **Gate 10** | Screen Thinness Ceilings Enforced | All screens in `screens/` ≤ **80 lines**; composition only; zero business logic or direct API calls | **STOP.** Monolithic screen = ARCHITECTURE FAILURE |

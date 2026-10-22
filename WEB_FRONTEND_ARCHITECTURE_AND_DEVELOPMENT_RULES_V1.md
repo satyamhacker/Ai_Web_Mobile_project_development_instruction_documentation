@@ -295,6 +295,13 @@ A common architectural antipattern is attempting to resolve cross-module needs b
 > **Consequence of violation:** AI modifying a shared business component to fix Module A will silently break Module B, triggering cross-module regression cascades and defeating bundle tree-shaking.
 > **Finding ANY business logic inside `src/components/ui/` or global folders = IMMEDIATE NON_COMPLIANT AUDIT FAILURE.**
 
+### The Feature ZIP Guarantee (Self-Sufficiency Invariant)
+
+Every feature module MUST satisfy the **Feature ZIP Guarantee**:
+1. An AI agent or human developer MUST be able to zip ONLY the feature folder (`src/app/frontend_{role}/{role}_{module}/`) along with the Documentation Trio (`[moduleName]_features.md`, `[moduleName]_forbidden.md`, `[moduleName]_theme_contract.md`), drop it into an isolated prompt or project, and completely understand, run, mock, test, and repair it.
+2. The feature MUST NEVER require sibling feature code or ask for other role folders.
+3. All dependencies on application-level infrastructure (API transport, theme tokens, icons) MUST be satisfied through the documented Core Application Contracts.
+
 ---
 
 ### 1B. HIERARCHICAL MODULE BOUNDARY — FEATURE MODULE IS THE AI REPAIR UNIT
@@ -1699,7 +1706,20 @@ without reading every component file. Example:]
 - **MSW handler location:** [actual module-owned handler file]
 - **MSW fixture location:** [actual module-owned fixture file]
 - **MSW global bootstrap:** [actual global registration/bootstrap file, if applicable]
-- **MSW scenarios:** [normal / empty / error / filter / sort / pagination / permission-denied, as applicable]
+- **MSW scenarios:** [normal / empty / error / filter / sort / pagination / permission-denied / slow-network, as applicable]
+
+## Module Architecture Flow
+```text
+Page (Route Entry & Quarantine: page.tsx)
+      ↓
+Child Components (Thin Composition, ≤300 lines in [moduleName]_components/)
+      ↓
+Custom Hooks / Store (Zustand UI State + TanStack Query Server State)
+      ↓
+Module API Client ([moduleName]_api/*Api.ts via apiFetch with ApiResponse<T>)
+      ↓
+MSW Handlers / Fixtures (Dev/Test) OR Real Backend API (Prod)
+```
 
 ## API Contract
 [REQUIRED: Every API function in the module's API file must be listed with its exact
@@ -1815,6 +1835,15 @@ None
   - *Empty State:* Query flag `?empty=true` triggers `[Module]EmptyState.tsx`
   - *Error State:* Trigger 500 error / network failure to verify `error.tsx` boundary with retry CTA
   - *Permission Denied:* Set role to unauthorized to verify 403 / redirect
+  - *Slow Network:* Simulated 2000ms latency to verify loading skeletons and button spinners
+
+## Module Portability & Host Integration Guide
+[REQUIRED: Exact 4-step instructions to copy and plug this module into another project or host app.]
+
+1. **Folder Transfer:** Copy `src/app/frontend_{role}/{role}_{module}` into the target project's feature directory.
+2. **Route Registration:** Register route `/frontend_{role}/{role}_{module}` in host navigation/router config.
+3. **Core Contracts Alignment:** Verify target host provides core application plumbing (`@/lib/api`, `@/lib/logger`, `@/components/ui/` primitives).
+4. **Mock / Live Backend Verification:** Verify immediate standalone execution via module-owned MSW fixtures, or connect to production backend via `[moduleName]_url_config.ts`.
 
 ## Module Changelog & Revision History
 [REQUIRED: Every major modification, schema change, or bug fix MUST append an entry here to preserve AI audit trail.]
