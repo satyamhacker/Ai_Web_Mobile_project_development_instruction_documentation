@@ -1,5 +1,31 @@
 # 🎨 SMART GYM 360 — GLOBAL DESIGN SYSTEM
 
+## Master Cross-Document Precedence Order
+
+When instructions conflict across documents, apply this exact order of authority:
+
+1. Security, privacy, legal, authorization, tenant isolation, and data-protection rules
+2. Accessibility and browser platform safety requirements (WCAG 2.2 AA)
+3. Explicit user-approved scope and verified API contracts
+4. `WEB_FRONTEND_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md`
+5. `WEB_FRONTEND_UI_UX_DESIGN.md` for visual/token decisions
+6. Execution workflow documents (when supplied: `FRONTEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_V2_11.md` or standalone execution mode; when unsupplied, `WEB_FRONTEND_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md` serves as the self-contained authority) for audit sequencing, delivery artifacts, and reporting
+7. Sub-module documentation trio (`[role]_[submodule]_features.md`, `[role]_[submodule]_forbidden.md`, `[role]_[submodule]_theme_contract.md`)
+8. Existing implementation conventions
+
+A lower-priority rule MUST NOT override a higher-priority rule.
+Any unresolved conflict MUST be recorded as `BLOCKED_BY_SUPPLIED_CONTRACT` rather than resolved through invention.
+
+## Canonical Rule Reference Policy
+
+When a rule is repeated for convenience:
+- The first named canonical section is authoritative;
+- Repeated copies must link to or reference the canonical rule;
+- Repeated copies must not redefine, weaken, or conflict with the canonical wording;
+- Any conflicting duplicate wording is obsolete and must be removed during the next document revision.
+
+---
+
 ## PLATFORM APPLICABILITY MATRIX
 
 This document governs the **web frontend only** (Next.js / React / Tailwind). Rules reference web-specific technologies such as semantic HTML, Tailwind CSS, `prefers-reduced-motion` media queries, and CSS variables.
@@ -16,7 +42,7 @@ This document governs the **web frontend only** (Next.js / React / Tailwind). Ru
 | Typography scale and font loading | ✅ (`next/font`) | ❌ (RN uses native fonts) | — |
 | CTA gradient restriction (ERP dashboard) | ✅ | ✅ | ✅ |
 
-**Conflict Resolution Hierarchy:** When rules in this document conflict with each other or with other documents, resolve using this precedence order (highest to lowest):
+**Conflict Resolution Hierarchy:** When rules in this document conflict across documents, resolve using the **Master Cross-Document Precedence Order** defined at the top of this document (Security/Privacy > Platform/A11y > Explicit Contracts > Normative Architecture V1 > UI/UX Design > Execution Workflow V2.11 / Standalone Mode > Documentation Trio > Conventions). Within internal visual/token concerns, apply:
 1. **Security & Privacy** — authentication, authorization, PII handling
 2. **Legal / Compliance** — WCAG 2.2 AA, data protection requirements
 3. **Accessibility** — WCAG, keyboard navigation, screen-reader support
@@ -25,7 +51,7 @@ This document governs the **web frontend only** (Next.js / React / Tailwind). Ru
 6. **Architecture Rules** — isolation, naming, state management
 7. **Visual Preferences** — colors, spacing, micro-animations
 
-Deviations from this hierarchy MUST be documented in the affected module's `[moduleName]_features.md`.
+Deviations from this hierarchy MUST be documented in the affected sub-module's `[role]_[submodule]_features.md`.
 
 ---
 
@@ -33,9 +59,9 @@ This document defines the application's global visual language, semantic theme t
 
 This document is NOT intended to be copied wholesale into every feature-module prompt.
 
-Feature modules consume the global design system through semantic theme tokens and approved zero-business UI primitives.
+Feature modules and autonomous sub-modules consume the global design system through semantic theme tokens and approved zero-business UI primitives.
 
-Every feature module must maintain its own `[moduleName]_theme_contract.md` describing the exact global theme tokens it consumes.
+Every autonomous sub-module must maintain its own `[role]_[submodule]_theme_contract.md` describing the exact global theme tokens it consumes.
 
 ### Specific Restrictions (The ERP Context)
 - **Dashboard Consistency:** The ERP relies on the 5-color core architecture (Gold Primary, Blue Info, Green Success, Amber Warning, Red Danger).
@@ -73,8 +99,8 @@ Document the mapping clearly so an AI cannot confuse `--primary` with `--text-pr
 - Feature-specific icons, static UI constants, labels and configuration
 - API/server data, module state, tests, MSW fixtures/handlers, feature behavior
 
-### MODULE THEME CONTRACT owns:
-- The exact list of global semantic tokens required by the module
+### SUB-MODULE THEME CONTRACT owns:
+- The exact list of global semantic tokens required by the autonomous sub-module
 - Any explicitly justified feature-local visual token
 
 ### GLOBAL DESIGN MUST NOT own:
@@ -84,13 +110,21 @@ Document the mapping clearly so an AI cannot confuse `--primary` with `--text-pr
 - Member/plan/payment/etc. business data
 - Feature API behavior, specific constants, or business feature logic
 
-> **CRITICAL WARNING TO AI AGENTS (COMPONENT ISOLATION):**
+> **CRITICAL WARNING TO AI AGENTS (COMPONENT ISOLATION & SUB-MODULE WET PRINCIPLE):**
 > Do NOT create or move "business-aware" components (e.g., Date Filters with "Last 3 Months" presets, Status Badges with hardcoded "Active" text) into global folders like `src/components/ui/` just to avoid code duplication. 
-> Global design/UI folders are STRICTLY for zero-business, dumb primitives. Business components MUST be duplicated per feature.
+> Global design/UI folders are STRICTLY for zero-business, dumb primitives.
+> Furthermore, within a module container (e.g., `attendance/`), DO NOT create shared parent folders like `attendance/common/` or `attendance/components/` to share components between sibling sub-modules (e.g., between `attendance_dashboard` and `attendance_history`).
+> Each sub-module MUST remain 100% self-contained. Shared UI patterns, badges, and filters MUST be duplicated locally inside `{submodule}/components/` in strict accordance with the WET (Write Everything Twice) principle.
+> Every autonomous sub-module must maintain its own `[role]_[submodule]_theme_contract.md`.
 
 ---
 
 ## 1. COLOR PALETTE
+
+> ⛔ **WEB TAILWIND TOKEN CONSUMPTION INVARIANT:**
+> In Next.js / Tailwind CSS v4, all visual tokens are mapped via `@theme inline` in `globals.css`.
+> React JSX components MUST consume semantic Tailwind utility classes (`bg-card`, `text-primary`, `border-border`, `bg-success-bg`).
+> Components MUST NEVER use inline styles (`style={{ backgroundColor: ... }}`), hardcoded hex values (`#FACC15`), or arbitrary bracket expressions (`bg-[var(--bg-card)]`) when a semantic utility class exists.
 
 *Note: For v1, the system defaults to Dark Mode. Light mode values are provided below for future-proofing and consistency.*
 
@@ -144,6 +178,11 @@ Document the mapping clearly so an AI cannot confuse `--primary` with `--text-pr
 | `--info-bg` | `#172554` | `#DBEAFE` |
 | `--purple-text` | `#D8B4FE` | `#7E22CE` |
 | `--purple-bg` | `#3B0764` | `#EDE9FE` |
+
+**Semantic Background Rule:**
+Feature JSX must use approved semantic tokens only: `bg-success-bg`, `bg-warning-bg`, `bg-danger-bg`, `bg-info-bg`, `bg-purple-bg`.
+Raw opacity modifiers on semantic colors (e.g., `bg-success/10`, `bg-danger/5`) are strictly forbidden because they destroy WCAG contrast ratios and break light/dark mode scaling.
+Always pair solid background tokens with their corresponding text-on-* token (e.g. `bg-success` with `text-on-success`, `bg-primary` with `text-on-primary`).
 
 ### Payment Mode Tokens
 | Token | Dark Mode (Default) | Light Mode |
@@ -439,10 +478,19 @@ Badges are small pill-shaped labels: `border-radius: var(--radius-full)`, `paddi
 - Sortable headers must expose current sorting state through accessible labels.
 - Row-click navigation must not prevent keyboard users from reaching inline actions.
 - Row actions must be keyboard accessible and visible on `focus-within`. On touch/mobile use always-visible actions or an accessible overflow menu.
-- On mobile, choose one documented pattern:
-  1. Horizontal scroll with frozen primary identifier, or
-  2. Convert each record into an accessible card layout.
 - Never hide essential financial, status, or permission information solely because of viewport size.
+
+### Responsive Table Decision Matrix
+
+On mobile viewports (`<768px`), determine the table responsive strategy deterministically using this matrix:
+
+| Viewport / Data Condition | Required Mobile (<768px) Strategy | Behavior & Safeguards |
+|---|---|---|
+| **1–4 Compact Columns** | Horizontal scroll | Minimal horizontal padding, preserve standard table layout |
+| **Primary Record + Actions** (Members, Staff, Gyms) | Accessible Card Stack (`Mobile Card-Stack Table Pattern`) | Each row becomes a card, primary identifier is title, status badge top-right, remaining columns stacked as `Label: Value` |
+| **Financial / Compliance Data** (Ledger, Invoices, Billing) | Horizontal scroll with sticky frozen primary identifier | Never hide essential monetary amounts, timestamps, or status badges |
+| **Editable Data Table** (Inline cell editing) | Dedicated mobile edit drawer or modal | Do NOT edit inline inside table cells on mobile viewports |
+| **Dense Analytical Table** | Horizontal scroll with clear visual scroll hint | Sticky first column, visual edge shadow indicator on scroll container |
 
 ### 5c. Form Layout
 - **Simple form** (≤6 fields): single column, centered card, max-width 560px
@@ -600,22 +648,25 @@ Fixed-breakpoint-only specifications fail at intermediate viewport sizes. The fo
 - **Zoom compatibility:** All layouts MUST remain fully functional at 200% browser zoom without horizontal overflow or overlapping content.
 - **Text scaling:** Layouts MUST accommodate browser font-size scaling (user-set base font up to 200%) — use `rem`-relative units where practical.
 
-### Responsive Testing Requirements
+### Responsive Testing Requirements (The 7 Canonical Resolutions)
 
-Before a feature is considered complete, it MUST be verified at all of these conditions:
+Before a feature is considered complete, it MUST be verified at all 7 canonical screen resolutions without layout breakage or unintended overflow:
 
-| Test | Width / Condition | Pass Criteria |
+| Resolution Tier | Viewport Width | Pass Criteria |
 |---|---|---|
-| Narrow mobile | 320px | No horizontal overflow, all actions reachable |
-| Standard mobile | 375px | Card layouts readable, tables use card-stack |
-| Large mobile | 414px | No layout regressions |
-| Intermediate | 600px | Fluid layout holds, no broken wrapping |
-| Tablet | 768px | Sidebar collapses, tables scroll |
-| Large tablet | 1024px | Desktop patterns visible, sidebar icon-only |
-| Desktop | 1280px+ | Full layout, all columns visible |
-| 200% zoom | Any device | No horizontal scroll, no overlapping |
-| Long text | n/a | Localized strings (up to 2× English length) don't break layout |
-| Text scale 150% | Browser zoom | All text readable, no overflow |
+| **1. Ultra-Narrow Mobile** | `320px` | No horizontal overflow, all primary actions reachable, font-scaling holds |
+| **2. Standard Mobile** | `375px` | Card layouts readable, tables use card-stack, single-column forms |
+| **3. Large Mobile** | `425px` | KPI cards use 2-column grid, fluid text wrapping holds |
+| **4. Tablet** | `768px` | Sidebar collapses to icon-only (60px), multi-column forms adapt |
+| **5. Large Tablet / Laptop** | `1024px` | Full desktop navigation visible, dashboard cards render in 3-column row |
+| **6. Standard Desktop** | `1440px` | Full 240px sidebar + content area, tables display all columns |
+| **7. Ultra-Wide / Full HD** | `1920px` | Content bounded with max-width or fluid flexbox, no awkward whitespace gaps |
+| **200% Browser Zoom** | Any device | Zero overlapping elements, no horizontal overflow |
+| **Localized Text (2× length)** | Any device | Long Hindi/German strings wrap naturally without clipping buttons or cards |
+
+> ⛔ **ZERO HORIZONTAL SCROLL INVARIANT:**
+> The web application MUST NOT produce any horizontal window scrollbar (`overflow-x`) at ANY of the 7 resolutions above.
+> The only permitted horizontal scroll is strictly contained inside data tables configured with `overflow-x-auto` and sticky column headers. An uncontained body horizontal scroll is an immediate `NON_COMPLIANT` visual defect.
 
 ### Mobile Sidebar / Drawer Requirements
 - Focus trap while drawer is open.
@@ -775,6 +826,22 @@ All UI produced for this application MUST meet **WCAG 2.2 AA** at minimum. This 
    - Status colors must never be the only way to communicate meaning.
    - Respect `prefers-reduced-motion` for non-essential animation.
    - Minimum contrast must meet WCAG AA requirements.
+
+---
+
+## 13A. ACCESSIBILITY AUTOMATION GATE
+
+To guarantee that WCAG 2.2 AA compliance is mechanically verified and regressions are prevented:
+- **Automated Axe-Core Checks:** Run automated accessibility checks with `axe-core` (`@axe-core/playwright` in E2E and `vitest-axe` in component tests) across all feature screens, forms, modals, tables, empty states, and error states.
+- **Keyboard Navigation Automation:** E2E suites must verify keyboard-only workflows:
+  - Tab order follows logical visual layout.
+  - Interactive elements have visible focus outlines (`--focus-ring`).
+  - Escape closes all modals, drawers, and popovers.
+  - Enter / Space activates buttons and accordion toggles.
+- **Focus Restoration Invariant:** Closing a modal, drawer, or dropdown MUST restore keyboard focus to the triggering element.
+- **Form Error Connection:** Form errors must be programmatically connected via `aria-describedby` and invalid inputs must expose `aria-invalid="true"`.
+- **Screen Reader Announcements:** Dynamic state changes (toasts, validation errors, async save success) must use `aria-live="polite"` or `role="alert"`.
+- **Note:** Automated tools catch ~40% of accessibility defects. Manual keyboard verification and zoom testing (up to 200%) remain mandatory before release.
 
 ---
 
@@ -1054,7 +1121,7 @@ English is typically the shortest language. Designs MUST accommodate translated 
 | Toast messages | Max-width container, word-wrap enabled — backend messages render as-is. |
 
 ### Locale-Aware Formatting
-- **Dates:** Always format via `date-fns` or `dayjs` with locale parameter — never hardcode `DD/MM/YYYY`.
+- **Dates:** Always format via `date-fns` with locale parameter — never hardcode `DD/MM/YYYY` (Rule 24).
 - **Numbers:** Use `Intl.NumberFormat` with the app locale — Indian numbering system for INR (`₹1,23,456.00`).
 - **Currency:** Use `[module]FormatCurrency()` utility per Architecture Rule 80.
 - **Pluralization:** Use `next-intl` plural rules — never hardcode `"1 member"` / `"2 members"` logic in JSX.
@@ -1063,7 +1130,7 @@ English is typically the shortest language. Designs MUST accommodate translated 
 Although RTL is not the current primary requirement, designs MUST NOT use hardcoded `margin-left`, `padding-left`, `text-align: left`, or `float: left` in reusable components. Use logical CSS properties (`margin-inline-start`, `padding-inline-start`) or Tailwind logical variants (`ms-*`, `ps-*`) in shared primitives.
 
 ### Localization File Location
-Per Architecture Rule 18: locale files MUST be co-located inside the feature module at `[moduleName]_locales/[moduleName]_{lang}.json`. Never create a central `src/messages/` directory.
+Per Architecture Rule 18: locale files MUST be co-located inside the autonomous sub-module at `locales/[role]_[submodule]_{lang}.json` (e.g., `src/app/frontend_admin/admin_members/members_directory/locales/admin_members_directory_en.json`). Never create a central `src/messages/` or `src/locales/` directory.
 
 ---
 
@@ -1144,13 +1211,13 @@ Usage pattern:
 The project uses `next-intl` for internationalization.
 
 ### Locale File Location
-Per Architecture Rule 18, locales MUST be co-located inside the feature module, NEVER in a central `src/messages/` or `src/locales/` directory.
+Per Architecture Rule 18, locales MUST be co-located inside the autonomous sub-module at `locales/`, NEVER in a central `src/messages/` or `src/locales/` directory.
 
 ```text
-src/app/(admin)/admin-members/_locales/
-    ├── admin_members_en.json    ← English (default)
-    ├── admin_members_hi.json    ← Hindi (optional)
-    └── [moduleName]_[lang].json ← Pattern for future locales
+src/app/frontend_admin/admin_members/members_directory/locales/
+    ├── admin_members_directory_en.json    ← English (default / source of truth)
+    ├── admin_members_directory_hi.json    ← Hindi (active language)
+    └── [role]_[submodule]_[lang].json     ← Pattern for future locales
 ```
 
 ### Feature Translation Key Naming
@@ -1200,15 +1267,18 @@ A feature screen or component is NOT considered release-ready until ALL applicab
 - [ ] All documented user flows work end-to-end (no placeholder `onClick` handlers)
 - [ ] All form validations work client-side and display server errors correctly
 - [ ] All mutations show correct success/error feedback via toast
+- [ ] All state-changing mutations (`POST`, `PUT`, `PATCH`, `DELETE`) attach `X-Idempotency-Key: UUIDv4` header
+- [ ] All toasts specify deterministic `toastId` (or `id`) to prevent duplicate toast cascades on rapid clicks
 - [ ] All API-driven data renders from real MSW fixture or backend response
 
 ### State Coverage (Section 24 — Async UI State System)
 - [ ] **Loading state:** Layout-matching skeleton implemented (not a generic spinner)
+- [ ] **Loading stabilization:** Skeleton containers reserve explicit `min-w-[...]` and `min-h-[...]` dimensions matching final content to guarantee Cumulative Layout Shift (CLS) < 0.1
 - [ ] **Empty state:** Dedicated `[Module]EmptyState.tsx` with icon, message, and contextual CTA
 - [ ] **Error state:** Non-technical error message + Retry button
 - [ ] **Permission-denied state:** Clear restriction message + next-step guidance
 - [ ] **Offline state:** Non-blocking indicator (if feature declares offline support)
-- [ ] **Partial-data state:** UI handles nullable fields gracefully via `displayValue()`
+- [ ] **Partial-data state:** UI handles nullable fields gracefully via `displayValue()` — renders en-dash (`—`), zero empty `<td></td>` or blank cards
 
 ### Accessibility (WCAG 2.2 AA — Section 13)
 - [ ] All interactive elements keyboard-accessible (Tab navigation verified)
@@ -1236,9 +1306,13 @@ A feature screen or component is NOT considered release-ready until ALL applicab
 
 ### Security & Permissions
 - [ ] Frontend permission checks control UI visibility only (not authorization enforcement)
-- [ ] Server-side authorization enforced for every protected operation
+- [ ] Server-side authorization requirements are documented for every protected operation.
+  - When backend source code and authorization tests are supplied: server-side authorization is verified for every protected operation.
+  - When backend evidence is not supplied: mark `BACKEND_ENFORCEMENT_REQUIRED_NOT_VERIFIABLE_FROM_FRONTEND`; verify only that frontend permission checks are UX controls and that the UI handles 401, 403, and permission-masked responses correctly.
 - [ ] Sensitive data masked in list views via `maskSensitiveData()` (Rule 43)
 - [ ] No tokens, secrets, or PII in error logs or analytics
+- [ ] Zero private secrets in frontend code; only `NEXT_PUBLIC_*` public variables permitted
+- [ ] Business entity persistence banned in `localStorage` / `sessionStorage` (only non-sensitive UI preferences like theme mode and sidebar collapsed state permitted)
 
 ### Localization (Section 32)
 - [ ] No hardcoded English strings in JSX (all via `t('key')`)
@@ -1246,7 +1320,7 @@ A feature screen or component is NOT considered release-ready until ALL applicab
 - [ ] Dates/numbers/currency use locale-aware formatters
 
 ### API Integration
-- [ ] All displayed fields have a documented API source in `[moduleName]_features.md`
+- [ ] All displayed fields have a documented API source in `[role]_[submodule]_features.md`
 - [ ] MSW fixture covers all rendered UI fields (Rule 75D)
 - [ ] No component-level hardcoded business fallback data
 
@@ -1256,8 +1330,9 @@ A feature screen or component is NOT considered release-ready until ALL applicab
 - [ ] E2E test covers critical user flows (login, CRUD, destructive actions)
 
 ### Documentation & Observability
-- [ ] `[moduleName]_features.md` updated if user flows, API, permissions, or state changed
-- [ ] `[moduleName]_theme_contract.md` lists all consumed tokens
+- [ ] `[role]_[submodule]_features.md` updated if user flows, API, permissions, or state changed (with all 22 canonical sections, Section 20 Standalone Harness, Section 21 Portability Guide)
+- [ ] `[role]_[submodule]_theme_contract.md` lists all consumed tokens
+- [ ] `[role]_[submodule]_forbidden.md` present with zero cross-submodule import guarantees
 - [ ] Error monitoring wired for critical flows (Rule 15E)
 - [ ] Web vitals within budget: LCP < 2.5s, CLS < 0.1, INP < 200ms
 
@@ -1265,4 +1340,5 @@ A feature screen or component is NOT considered release-ready until ALL applicab
 - [ ] Route JS bundle < 200KB (gzipped) for new routes
 - [ ] Images use `next/image` with explicit dimensions
 - [ ] Heavy components use `next/dynamic` (code-split)
-- [ ] Search/filter inputs debounced ≥ 300ms
+- [ ] Search/filter inputs debounced ≥ 300ms
+- [ ] Virtualization via `@tanstack/react-virtual` enabled for all tables, lists, or grids rendering > 50 items
