@@ -1,5 +1,31 @@
 # 🎨 SMART GYM 360 — GLOBAL DESIGN SYSTEM
 
+## Master Cross-Document Precedence Order
+
+When instructions conflict across documents, apply this exact order of authority:
+
+1. Security, privacy, legal, authorization, tenant isolation, and data-protection rules
+2. Accessibility and browser platform safety requirements (WCAG 2.2 AA)
+3. Explicit user-approved scope and verified API contracts
+4. `WEB_FRONTEND_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md`
+5. `WEB_FRONTEND_UI_UX_DESIGN.md` for visual/token decisions
+6. Execution workflow documents (when supplied: `FRONTEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_V2_11.md` or standalone execution mode; when unsupplied, `WEB_FRONTEND_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md` serves as the self-contained authority) for audit sequencing, delivery artifacts, and reporting
+7. Sub-module documentation trio (`[role]_[submodule]_features.md`, `[role]_[submodule]_forbidden.md`, `[role]_[submodule]_theme_contract.md`)
+8. Existing implementation conventions
+
+A lower-priority rule MUST NOT override a higher-priority rule.
+Any unresolved conflict MUST be recorded as `BLOCKED_BY_SUPPLIED_CONTRACT` rather than resolved through invention.
+
+## Canonical Rule Reference Policy
+
+When a rule is repeated for convenience:
+- The first named canonical section is authoritative;
+- Repeated copies must link to or reference the canonical rule;
+- Repeated copies must not redefine, weaken, or conflict with the canonical wording;
+- Any conflicting duplicate wording is obsolete and must be removed during the next document revision.
+
+---
+
 ## PLATFORM APPLICABILITY MATRIX
 
 This document governs the **web frontend only** (Next.js / React / Tailwind). Rules reference web-specific technologies such as semantic HTML, Tailwind CSS, `prefers-reduced-motion` media queries, and CSS variables.
@@ -16,7 +42,7 @@ This document governs the **web frontend only** (Next.js / React / Tailwind). Ru
 | Typography scale and font loading | ✅ (`next/font`) | ❌ (RN uses native fonts) | — |
 | CTA gradient restriction (ERP dashboard) | ✅ | ✅ | ✅ |
 
-**Conflict Resolution Hierarchy:** When rules in this document conflict with each other or with other documents, resolve using this precedence order (highest to lowest):
+**Conflict Resolution Hierarchy:** When rules in this document conflict across documents, resolve using the **Master Cross-Document Precedence Order** defined at the top of this document (Security/Privacy > Platform/A11y > Explicit Contracts > Normative Architecture V1 > UI/UX Design > Execution Workflow V2.11 / Standalone Mode > Documentation Trio > Conventions). Within internal visual/token concerns, apply:
 1. **Security & Privacy** — authentication, authorization, PII handling
 2. **Legal / Compliance** — WCAG 2.2 AA, data protection requirements
 3. **Accessibility** — WCAG, keyboard navigation, screen-reader support

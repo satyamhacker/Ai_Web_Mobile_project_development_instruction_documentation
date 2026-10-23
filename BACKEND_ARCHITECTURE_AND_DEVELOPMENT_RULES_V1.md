@@ -333,6 +333,7 @@ To prevent architectural drift and eliminate monolithic backend sprawl, the back
 >                  ├── [role]-[module].module.ts              # Pure Aggregator NestJS Module (imports child sub-modules)
 >                  ├── [role]-[module]-backend-feature.md     # Master Domain Documentation
 >                  ├── [role]-[module]-backend-forbidden.md   # Domain-level Forbidden Invariants
+>                  ├── [role]-[module]-dependencies.md        # Cross-Domain & Event Dependencies Map (Rule 49)
 >                  │
 >                  ├── {sub-module-1}/                       # 100% Autonomous Backend Sub-Module (e.g., attendance-dashboard/)
 >                  │    ├── {submodule}-controllers/         # dashboard-controllers/
@@ -506,12 +507,16 @@ To eliminate all ambiguity between Rule 0F, Rule 0A.2, and Rule 2 (file naming),
 
 **The key rule in one sentence:** Sub-folders inside a sub-module use the SUBMODULE capability as prefix; files inside those folders use the ROLE+SUBMODULE+DESCRIPTION formula. Never mix them up.
 
+- **Sub-Module NestJS Registration File Exemption:** Sub-module registration files (`{submodule}.module.ts`, e.g., `members-directory.module.ts`, `attendance-dashboard.module.ts`) and sub-module documentation trio files (`{submodule}-backend-feature.md`, `{submodule}-backend-forbidden.md`, `{submodule}-backend-contract.md`) are explicitly exempt from the `[role]-` prefix rule because they represent the autonomous capability itself and are uniquely identified by their sub-module directory name. All executable service, controller, repository, and DTO files inside `{submodule}-{artifact}/` MUST carry the full `[role]-[submodule]-[description].[type].ts` prefix.
+
 ```text
 backend-admin/
 └── admin-modules/
     └── admin-members/                                            ← domain root: {role}-{domain} (quarantined)
         ├── admin-members.module.ts                               ← domain aggregator module
         ├── admin-members-backend-feature.md                      ← domain master doc
+        ├── admin-members-backend-forbidden.md                    ← domain forbidden rules
+        ├── admin-members-dependencies.md                         ← cross-domain & event dependencies map (Rule 49)
         │
         └── members-directory/                                    ← autonomous sub-module: {submodule}
             ├── directory-controllers/                            ← sub-folder: {submodule}-{artifact}
@@ -524,7 +529,7 @@ backend-admin/
             ├── directory-repositories/
             ├── directory-tests/
             │   └── harness/                                      ← standalone test harness
-            ├── members-directory.module.ts                       ← sub-module NestJS definition
+            ├── members-directory.module.ts                       ← sub-module NestJS definition (exempt from role-prefix)
             ├── members-directory-backend-feature.md              ← documentation trio (22 canonical sections)
             ├── members-directory-backend-forbidden.md
             └── members-directory-backend-contract.md
@@ -893,7 +898,7 @@ Rename all controllers, services, and models to be extremely descriptive based o
 When you tag a file for AI context (e.g., `@[Filename]`), the AI should instantly know exactly what module it belongs to and what it does, even without seeing the folder path. Duplicate filename collisions are eliminated.
 - ❌ **BAD:** `auth.py`, `utils.js`, `helpers.ts`, `SearchBar.tsx`
 - ✅ **GOOD:** `admin-billing-jwt-token-generator.utils.ts`, `admin-billing-stripe-payment-webhook.controller.ts`, `admin-attendance-member-registration-validator.py`
-* **The Rule (CRITICAL):** Every single file name MUST begin with the parent domain/role name (e.g., `superadmin`, `manager`) followed by the module name as a prefix. This applies to EVERYTHING: modules, controllers, services, DTOs, types, constants, utilities, and tests. *(Exception: Global configuration, constants, types, utilities, and root tooling files like `api-response.types.ts`, `database.config.ts`, or `event-registry.constants.ts` are exempt from the module prefix rule when placed in global infrastructure directories such as `src/core/`, `src/infrastructure/`, or root-level tooling folders like `scripts/`.)* Just as the frontend uses `AdminBillingInvoiceSearchBox.tsx`, the backend MUST use `admin-billing-invoice-search-box.controller.ts`.
+* **The Rule (CRITICAL):** Every single file name MUST begin with the parent domain/role name (e.g., `superadmin`, `manager`) followed by the module name as a prefix. This applies to EVERYTHING: modules, controllers, services, DTOs, types, constants, utilities, and tests. *(Exceptions: (1) Global configuration, constants, types, utilities, and root tooling files like `api-response.types.ts`, `database.config.ts`, or `event-registry.constants.ts` are exempt from the module prefix rule when placed in global infrastructure directories such as `src/core/`, `src/infrastructure/`, or root-level tooling folders like `scripts/`. (2) Sub-module registration files (`{submodule}.module.ts`, e.g., `members-directory.module.ts`, `attendance-dashboard.module.ts`) and documentation trio files (`{submodule}-backend-feature.md`, `{submodule}-backend-forbidden.md`, `{submodule}-backend-contract.md`) are explicitly exempt from the `[role]-` prefix rule per Rule 0H because they uniquely identify the autonomous sub-module itself.)* Just as the frontend uses `AdminBillingInvoiceSearchBox.tsx`, the backend MUST use `admin-billing-invoice-search-box.controller.ts`.
 * **Component/Class Internal Naming:** The exported class name MUST exactly match the filename logic (converted to PascalCase). For example, `superadmin-auth.module.ts` must export `class SuperadminAuthModule`. `manager-auth.controller.ts` must export `class ManagerAuthController`. This prevents AI hallucination.
 * **Business Folders Prefixing (CRITICAL):** NEVER use generic names for ANY structural business folders (e.g., `modules/`, `common/`, `config/`, `database/`, `utils/`, `i18n/`, `middleware/`, etc.) anywhere in the project. ALL business folders MUST be explicitly prefixed with their parent domain/role name.
   - ❌ **BAD:** `backend-superadmin/core/`, `backend-manager/modules/`, `backend-admin/config/`, `backend-trainer/utils/`
@@ -940,7 +945,7 @@ The `{role}-core/` folder is strictly a **framework infrastructure container**. 
 - Interceptors (e.g., response interceptor, logging interceptor)
 - Pipes (e.g., validation pipe wrappers)
 - Middleware (e.g., tenant resolution middleware)
-- Framework infrastructure (e.g., the role's root NestJS module file)
+- Framework infrastructure (e.g., the role's root NestJS module file, `{role}-core-feature-flag.service.ts` per Rule 108 — cross-cutting flag resolution plumbing only, zero domain business logic)
 
 **FORBIDDEN inside `{role}-core/` — Architecture Violation:**
 - Any business logic service (e.g., `admin-members-suspension.service.ts`)
@@ -3182,8 +3187,8 @@ When adding a new enum value, a database migration MUST be generated to update t
   export const SCHEDULED_JOBS_REGISTRY = [
     {
       name: 'MembershipExpiryNotifier',
-      module: 'members',
-      file: 'src/backend-manager/manager-modules/manager-members/members-jobs/manager-members-expiry-notifier.job.ts',
+      module: 'members-roster',
+      file: 'src/backend-manager/manager-modules/manager-members/members-roster/roster-jobs/manager-members-roster-expiry-notifier.job.ts',
       schedule: '0 9 * * *',          // Every day at 9:00 AM UTC
       description: 'Sends renewal reminder notifications to members whose membership expires in 3 days.',
       touchesEntities: ['members', 'notifications'],
@@ -3193,8 +3198,8 @@ When adding a new enum value, a database migration MUST be generated to update t
     },
     {
       name: 'WalletAutoDeductionJob',
-      module: 'billing',
-      file: 'src/backend-manager/manager-modules/manager-billing/billing-jobs/manager-billing-wallet-auto-deduction.job.ts',
+      module: 'billing-subscriptions',
+      file: 'src/backend-manager/manager-modules/manager-billing/billing-subscriptions/subscriptions-jobs/manager-billing-subscriptions-wallet-auto-deduction.job.ts',
       schedule: '0 0 1 * *',          // 1st of every month at midnight UTC
       description: 'Auto-deducts monthly plan fees from member wallets for active auto-renew subscriptions.',
       touchesEntities: ['wallets', 'subscriptions', 'payment_transactions'],
@@ -3713,6 +3718,7 @@ This is the **authoritative list of languages** this project supports. There is 
 ## Rule 108 — Centralized Feature Flags
 * **The Rule:** Toggling business logic branches based on environment variables (e.g., `if (process.env.ENABLE_NEW_BILLING)`) is strictly forbidden.
 * **Implementation:** Always use a centralized `{role}-core-feature-flag.service.ts` (e.g. `AdminCoreFeatureFlagService`, backed by the master database or an external provider like LaunchDarkly). Feature flags must be evaluated dynamically per-tenant, allowing gradual rollouts, canary deployments, and per-gym toggles without requiring a server restart.
+* **Framework Infrastructure Classification (Rule 2 Harmony):** Although Rule 2 restricts `{role}-core/` to framework infrastructure with zero domain business logic, the feature flag resolution mechanism (`{role}-core-feature-flag.service.ts`) qualifies as cross-cutting framework infrastructure because it provides tenant/user evaluation plumbing, caching, and LaunchDarkly/DB provider integration without containing any domain business rules or entity logic. Business modules consume this service via contract injection to query flag state (e.g., `this.featureFlagService.isEnabled('tenant-123', 'ENABLE_NEW_BILLING')`).
 
 
 ## Rule 109 — Multi-Currency Monetary Amounts

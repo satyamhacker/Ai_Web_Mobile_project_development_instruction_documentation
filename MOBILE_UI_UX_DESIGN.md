@@ -9,7 +9,7 @@ When instructions conflict across documents, apply this exact order of authority
 3. Explicit user-approved scope and verified API contracts
 4. `MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md`
 5. `MOBILE_UI_UX_DESIGN.md` for visual/token decisions
-6. `FRONTEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_V2_11.md` for execution workflow, audit sequencing, delivery artifacts, and reporting
+6. Execution workflow documents (when supplied: `FRONTEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_V2_11.md` or standalone execution mode; when unsupplied, `MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md` Section 67 serves as the self-contained authority) for audit sequencing, delivery artifacts, and reporting
 7. Sub-module documentation trio (`[role]_[submodule]_features.md`, `[role]_[submodule]_forbidden.md`, `[role]_[submodule]_theme_contract.md`)
 8. Existing implementation conventions
 

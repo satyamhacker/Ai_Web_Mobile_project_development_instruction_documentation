@@ -1,5 +1,29 @@
 # Enterprise-Grade, AI-Friendly Web Frontend Architecture Guidelines
 
+## Master Cross-Document Precedence Order
+
+When instructions conflict across documents, apply this exact order of authority:
+
+1. Security, privacy, legal, authorization, tenant isolation, and data-protection rules
+2. Accessibility and browser platform safety requirements (WCAG 2.2 AA)
+3. Explicit user-approved scope and verified API contracts
+4. `WEB_FRONTEND_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md`
+5. `WEB_FRONTEND_UI_UX_DESIGN.md` for visual/token decisions
+6. Execution workflow documents (when supplied: `FRONTEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_V2_11.md` or standalone execution mode; when unsupplied, `WEB_FRONTEND_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md` serves as the self-contained authority) for audit sequencing, delivery artifacts, and reporting
+7. Sub-module documentation trio (`[role]_[submodule]_features.md`, `[role]_[submodule]_forbidden.md`, `[role]_[submodule]_theme_contract.md`)
+8. Existing implementation conventions
+
+A lower-priority rule MUST NOT override a higher-priority rule.
+Any unresolved conflict MUST be recorded as `BLOCKED_BY_SUPPLIED_CONTRACT` rather than resolved through invention.
+
+## Canonical Rule Reference Policy
+
+When a rule is repeated for convenience:
+- The first named canonical section is authoritative;
+- Repeated copies must link to or reference the canonical rule;
+- Repeated copies must not redefine, weaken, or conflict with the canonical wording;
+- Any conflicting duplicate wording is obsolete and must be removed during the next document revision.
+
 > ⛔⛔⛔ **AI AGENT — MANDATORY ENFORCEMENT & INTEGRITY DIRECTIVE — READ FIRST** ⛔⛔⛔
 >
 > **ARCHITECTURAL COMPLIANCE IS MANDATORY. FOLLOW THE SEVERITY MODEL AND CANONICAL REPAIR PROTOCOL.**
@@ -93,7 +117,7 @@ Before generating, auditing, or repairing ANY frontend role module, verify ALL o
 | **Centralized URL Config** | `[role]_[submodule].url_config.ts` (or `config/[role]_[submodule].url_config.ts`) MUST exist and define all routes and API endpoints as `as const`. | Missing URL config = HARDCODED ROUTE RISK. In repair: generate centralized URL config in RBG 1. |
 | **Universal API Envelope Contract** | Every API response MUST conform to the discriminated union `ApiResponse<T> = ApiSuccess<T> | ApiFailure` with `requestId`, `success: boolean`, typed `data` on success, and `errorCode`, `statusCode`, `message` on failure. | Ad-hoc or untyped API response = ARCHITECTURE VIOLATION. In repair: align to canonical envelope in RBG 1. |
 | **Ambient Host Contract Stubs** | Every autonomous sub-module MUST declare or include `contracts/host-stubs.d.ts` (stubbing `@/lib/api`, `@/lib/logger`, `@/components/ui/*`, `@/lib/socket`, `@/lib/display_value`) guaranteeing 100% standalone TypeScript compilation (`tsc --noEmit`) and mock test execution when zipped. | Missing ambient stubs for external host contracts = PORTABILITY VIOLATION (P1). In repair: add `contracts/host-stubs.d.ts` in RBG 1. |
-| **Production Edge-Case Safety Invariants** | Sub-module code MUST enforce: (1) `X-Idempotency-Key: UUIDv4` on state-changing mutations, (2) `displayValue()` fallback for nullable data, (3) ≥300ms search debounce, (4) min-w/min-h loading stabilization (CLS < 0.1), (5) toast deduplication `toastId`, (6) `@tanstack/react-virtual` for lists > 50 items, (7) zero client secret exposure, (8) zero business entity persistence in `localStorage`. | Missing safety guards = NON_COMPLIANT. In repair: add required edge-case safety guards in RBG 1. |
+| **Production Edge-Case Safety Invariants** | Sub-module code MUST enforce: (1) `Idempotency-Key: UUIDv4` on state-changing mutations, (2) `displayValue()` fallback for nullable data, (3) ≥300ms search debounce, (4) min-w/min-h loading stabilization (CLS < 0.1), (5) toast deduplication `toastId`, (6) `@tanstack/react-virtual` for lists > 50 items, (7) zero client secret exposure, (8) zero business entity persistence in `localStorage`. | Missing safety guards = NON_COMPLIANT. In repair: add required edge-case safety guards in RBG 1. |
 
 > ⛔ **Skipping this gate in audit invalidates downstream compliance results. In repair, all structural defects must be resolved in RBG 1.**
 
@@ -119,7 +143,7 @@ This document governs the **web frontend only** (Next.js / React / TypeScript / 
 | Feature isolation, module naming, AI repair boundary | Both platforms | |
 | Security principles (auth, permissions, PII) | Both platforms | |
 
-**Conflict Resolution Hierarchy:** When rules in this document conflict with each other or with other documents, resolve using this precedence order (highest to lowest):
+**Conflict Resolution Hierarchy:** When rules in this document conflict across documents, resolve using the **Master Cross-Document Precedence Order** defined at the top of this document (Security/Privacy > Platform/A11y > Explicit Contracts > Normative Architecture V1 > UI/UX Design > Execution Workflow V2.11 / Standalone Mode > Documentation Trio > Conventions). Within internal concerns, apply:
 1. **Security & Privacy** — authentication, authorization, PII handling, XSS prevention
 2. **Legal / Compliance** — WCAG 2.2 AA, data protection, financial regulations
 3. **Accessibility** — keyboard navigation, screen-reader support, reduced motion
@@ -136,7 +160,7 @@ Deviations from this hierarchy MUST be documented in the affected module's `[mod
 > This document strictly governs the **Web Frontend Client Tier** (Next.js / React / TypeScript / Tailwind CSS).
 > - **Backend Architectural Patterns Out of Scope for Frontend:** Server-side event-driven architecture patterns (including the Transactional Outbox Pattern, Redis Streams, Kafka event topics, Saga workflow orchestrators, CQRS write/read model segregation, database transaction boundaries, and NestJS/Django service layers) are strictly governed by their dedicated specification: `BACKEND_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md`.
 > - **Frontend Interaction Boundaries:** The Web Frontend client interacts with backend services strictly via:
->   1. **RESTful / RPC Command Endpoints:** Mutation operations MUST attach an `X-Idempotency-Key: UUIDv4` HTTP header (preventing double-submission / race conditions) and conform to the canonical `ApiResponse<T>` envelope.
+>   1. **RESTful / RPC Command Endpoints:** Mutation operations MUST attach an `Idempotency-Key: UUIDv4` HTTP header (preventing double-submission / race conditions) and conform to the canonical `ApiResponse<T>` envelope.
 >   2. **Server-Sent Events (SSE) / WebSockets:** Real-time data streams (e.g., live attendance tracking, notifications) are consumed exclusively through the centralized socket client adapter (`@/lib/socket`).
 >   3. **Strict Isolation:** The frontend client NEVER interacts directly with backend database stores, cache layers, or message brokers. All communication crosses the API Gateway boundary.
 
@@ -315,6 +339,7 @@ Every feature module MUST satisfy the **Feature ZIP Guarantee**:
 1. An AI agent or human developer MUST be able to zip ONLY the feature folder (`src/app/frontend_{role}/{role}_{module}/`) along with the Documentation Trio (`[moduleName]_features.md`, `[moduleName]_forbidden.md`, `[moduleName]_theme_contract.md`), drop it into an isolated prompt or project, and completely understand, run, mock, test, and repair it.
 2. The feature MUST NEVER require sibling feature code or ask for other role folders.
 3. All dependencies on application-level infrastructure (API transport, theme tokens, icons) MUST be satisfied through the documented Core Application Contracts.
+4. **Scope of Isolated Sub-Module Testing vs Host E2E:** Inside the isolated sub-module ZIP, 100% self-sufficient testing is achieved via local integration tests and the mock scenario harness (`tests/` and `tests/harness/` with in-memory MSW scenarios). Full-system Playwright E2E test suites reside in the host repository (`playwright_E2E/frontend_{role}_e2e/{role}_{feature}/`) and are classified as `DEFERRED_TO_HOST_RUNTIME` when auditing/testing an isolated sub-module ZIP in a browser-less or standalone AI environment. An isolated sub-module ZIP is 100% self-sufficient for unit, component, and scenario-based harness testing without requiring host Playwright E2E runners.
 
 ### Zero Hidden Dependency Principle & Host Contract
 
@@ -377,13 +402,16 @@ declare module '@/lib/display_value' {
 }
 
 declare module '@/components/ui/*' {
-  import React from 'react';
-  const Component: React.FC<any>;
+  import type React from 'react';
+  // Ambient fallback stubs for host UI primitives during isolated compilation.
+  // Uses generic Record<string, unknown> with PropsWithChildren to satisfy strict Rule 27 (zero raw any).
+  export type StubComponentProps = React.PropsWithChildren<Record<string, unknown>>;
+  const Component: React.FC<StubComponentProps>;
   export default Component;
-  export const Button: React.FC<any>;
-  export const Dialog: React.FC<any>;
-  export const Input: React.FC<any>;
-  export const Card: React.FC<any>;
+  export const Button: React.FC<StubComponentProps>;
+  export const Dialog: React.FC<StubComponentProps>;
+  export const Input: React.FC<StubComponentProps>;
+  export const Card: React.FC<StubComponentProps>;
 }
 ```
 
@@ -884,10 +912,18 @@ The canonical autonomous sub-module structure MUST contain:
 ├── state/                                                # use[Role][Submodule]Store.ts
 ├── utils/                                                # [role]_[submodule][Util].ts
 ├── locales/                                              # [role]_[submodule]_[lang].json
-├── mocks/                                                # Local MSW handlers & mock fixtures
+├── mocks/                                                # Local MSW handlers, mock fixtures & scenarios
 │   ├── fixtures/
-│   └── handlers/
-└── tests/                                                # Co-located Vitest / RTL tests
+│   │   └── [role]_[submodule].fixtures.ts
+│   ├── handlers/
+│   │   └── [role]_[submodule].handlers.ts
+│   └── scenarios/
+│       └── [role]_[submodule].scenarios.ts
+└── tests/                                                # Co-located Vitest / RTL tests & test harness
+    ├── [role]_[submodule].integration.test.tsx
+    └── harness/
+        ├── bootstrap.ts
+        └── [Role][Submodule]Harness.tsx
 ```
 
 ### Mandatory vs Conditionally Required Artifacts (GAP-FIX)
@@ -912,8 +948,8 @@ The canonical autonomous sub-module structure MUST contain:
 | `state/` | **Conditionally Required** | MUST exist when sub-module has shared client state | `NON_COMPLIANT` if client state is stored in global or component state |
 | `utils/` | **Conditionally Required** | MUST exist when sub-module has formatters/helpers | `NON_COMPLIANT` if helpers are placed in global `src/lib/` |
 | `locales/` | **MANDATORY FOR ALL SUB-MODULES** | Every sub-module (`_en.json` + active languages) | `NON_COMPLIANT` — Hardcoded strings in JSX |
-| `mocks/` | **MANDATORY FOR ALL SUB-MODULES** | Every sub-module (fixtures + MSW handlers) | `NON_COMPLIANT` — Untestable/unmocked module |
-| `tests/` | **MANDATORY FOR ALL SUB-MODULES** | Every sub-module (co-located RTL/Vitest) | `NON_COMPLIANT` — Zero test verification |
+| `mocks/` | **MANDATORY FOR ALL SUB-MODULES** | Every sub-module (fixtures/, handlers/, scenarios/ for ACTIVE, EMPTY, SERVER_500, TIMEOUT, UNAUTHORIZED) | `NON_COMPLIANT` — Untestable/unmocked module |
+| `tests/` | **MANDATORY FOR ALL SUB-MODULES** | Every sub-module (co-located RTL/Vitest integration tests + tests/harness/bootstrap.ts & [Role][Submodule]Harness.tsx) | `NON_COMPLIANT` — Zero test verification |
 
 Anything containing business behavior specific to the sub-feature MUST live inside that sub-module. Creating empty folders when no artifacts exist is not required, but **omitting a folder when the artifact or trigger condition exists is an ARCHITECTURAL VIOLATION.**
 
@@ -969,8 +1005,16 @@ src/app/
     │   │   │   └── host-stubs.d.ts
     │   │   ├── mocks/
     │   │   │   ├── fixtures/
-    │   │   │   └── handlers/
+    │   │   │   │   └── superadmin_plans_list.fixtures.ts
+    │   │   │   ├── handlers/
+    │   │   │   │   └── superadmin_plans_list.handlers.ts
+    │   │   │   └── scenarios/
+    │   │   │       └── superadmin_plans_list.scenarios.ts
     │   │   ├── tests/
+    │   │   │   ├── superadmin_plans_list.integration.test.tsx
+    │   │   │   └── harness/
+    │   │   │       ├── bootstrap.ts
+    │   │   │       └── SuperadminPlansListHarness.tsx
     │   │   ├── config/
     │   │   │   └── superadmin_plans_list.url_config.ts
     │   │   ├── superadmin_plans_list_features.md
@@ -1176,12 +1220,17 @@ Rename all components, files, and folders to be extremely descriptive based on e
 To eliminate AI naming hallucinations, strictly follow this pattern:
 
 
-- **Folders (CRITICAL ENFORCEMENT):** ALL folders MUST use `snake_case` (e.g., role containers `frontend_admin/`, feature domains `admin_members/`, sub-modules `members_directory/`, and canonical sub-folders `components/`, `hooks/`, `api/`, `state/`, `types/`, `schemas/`, `utils/`, `mocks/`, `tests/`, `contracts/`). You are STRICTLY FORBIDDEN from using PascalCase or camelCase for folder names (e.g., NEVER use `AdminMembers/` or `adminMembers/`). Next.js App Router relies on lowercase/snake_case paths, and mixing casing causes fatal Linux CI/CD build failures.
-- **Component Files:** PascalCase with Role+Submodule (e.g., `AdminMembersDirectoryTable.tsx`, `AdminMembersDirectoryForm.tsx`, `AdminMembersDirectoryEmptyState.tsx`)
-- **Business Logic Files (Constants, Schemas, QueryKeys, API, Types):** PascalCase with Role+Submodule or snake_case with role and submodule (e.g., `AdminMembersDirectoryConstants.ts`, `admin_members_directory.schemas.ts`, `admin_members_directory.query_keys.ts`, `admin_members_directory.api.ts`, `admin_members_directory.types.ts`).
-- **Hook Files:** camelCase with `use` + Role+Submodule (e.g., `useAdminMembersDirectory.ts`, `useAdminMembersDirectoryTable.ts`)
-- **Store Files:** camelCase with `use` + Role+Submodule + `Store` (e.g., `useAdminMembersDirectoryStore.ts`)
-- **Special Config/Doc Files:** snake_case with role and submodule (e.g., `admin_members_directory.url_config.ts`, `admin_members_directory_features.md`, `admin_members_directory_forbidden.md`, `admin_members_directory_theme_contract.md`)
+- **Folders (CRITICAL ENFORCEMENT):** ALL folders MUST use `snake_case` (e.g., role containers `frontend_admin/`, feature domains `admin_members/`, sub-modules `members_directory/`, and canonical sub-folders `components/`, `hooks/`, `api/`, `state/`, `types/`, `schemas/`, `constants/`, `utils/`, `mocks/`, `tests/`, `contracts/`, `config/`). You are STRICTLY FORBIDDEN from using PascalCase or camelCase for folder names (e.g., NEVER use `AdminMembers/` or `adminMembers/`). Next.js App Router relies on lowercase/snake_case paths, and mixing casing causes fatal Linux CI/CD build failures.
+- **Component Files:** PascalCase with `[Role][Submodule][Name].tsx` (e.g., `AdminMembersDirectoryTable.tsx`, `AdminMembersDirectoryForm.tsx`, `AdminMembersDirectoryEmptyState.tsx`). PascalCase is strictly reserved for React components.
+- **API Client:** Lowercase snake_case with dot notation: `[role]_[submodule].api.ts` (e.g., `admin_members_directory.api.ts`).
+- **Types:** Lowercase snake_case with dot notation: `[role]_[submodule].types.ts` (e.g., `admin_members_directory.types.ts`).
+- **Schemas:** Lowercase snake_case with dot notation: `[role]_[submodule].schemas.ts` (e.g., `admin_members_directory.schemas.ts`).
+- **Constants:** Lowercase snake_case with dot notation: `[role]_[submodule].constants.ts` (e.g., `admin_members_directory.constants.ts`).
+- **Query Keys:** Lowercase snake_case with dot notation: `[role]_[submodule].query_keys.ts` (e.g., `admin_members_directory.query_keys.ts`).
+- **Hook Files:** camelCase with `use` + Role+Submodule: `use[Role][Submodule][Name].ts` (e.g., `useAdminMembersDirectory.ts`, `useAdminMembersDirectoryTable.ts`).
+- **Store Files:** camelCase with `use` + Role+Submodule + `Store`: `use[Role][Submodule]Store.ts` (e.g., `useAdminMembersDirectoryStore.ts`).
+- **Special Config & Documentation Files:** snake_case with role and submodule (`config/[role]_[submodule].url_config.ts`, `[role]_[submodule]_features.md`, `[role]_[submodule]_forbidden.md`, `[role]_[submodule]_theme_contract.md`).
+- **Ban on Dual Casing:** Allowing both PascalCase and snake_case for the same artifact class (e.g. `AdminMembersDirectoryApi.ts` vs `admin_members_directory.api.ts`) is STRICTLY FORBIDDEN. Every artifact class has exactly one canonical casing convention.
 
 ### Locale File Naming Convention (GAP-1 Fix)
 Locale files MUST follow: `[role]_[submodule]_{lang}.json`
@@ -1191,24 +1240,30 @@ Locale files are grouped by sub-module, NOT by language.
 Do NOT create `src/locales/en/` global folders.
 
 ### URL Config Contract (GAP-2 Fix)
-Every feature module MUST have exactly one `[moduleName]_url_config.ts` which MUST export two distinct typed contracts:
-1. `[MODULE_NAME]_ROUTES`: Internal UI navigation route paths owned by this module.
-2. `[MODULE_NAME]_API`: Backend API endpoint paths consumed by this module.
+Every autonomous sub-module MUST have exactly one `config/[role]_[submodule].url_config.ts` which MUST export two distinct typed contracts:
+1. `[ROLE]_[SUBMODULE]_ROUTES`: Internal UI navigation route paths owned by this module.
+2. `[ROLE]_[SUBMODULE]_API`: Backend API endpoint paths consumed by this module.
 3. NO hardcoded base URLs — only paths relative to API base.
 4. NO business logic — only URL string definitions.
 
 **Usage Restrictions:**
-- Navigation components (sidebar, header, breadcrumbs) may import ONLY `[MODULE_NAME]_ROUTES`.
-- Feature API clients may import ONLY `[MODULE_NAME]_API`.
+- Navigation components (sidebar, header, breadcrumbs) may import ONLY `[ROLE]_[SUBMODULE]_ROUTES`.
+- Feature API clients may import ONLY `[ROLE]_[SUBMODULE]_API`.
 - A sibling feature module may NEVER import either object.
 - API endpoint strings must NEVER be consumed by navigation UI.
 
 Example export shape:
 ```typescript
-export const ADMIN_MEMBERS_URLS = {
-  LIST:   '/api/v1/admin/members',
-  DETAIL: (id: string) => `/api/v1/admin/members/${id}`,
-  CREATE: '/api/v1/admin/members',
+// config/admin_members_directory.url_config.ts
+export const ADMIN_MEMBERS_DIRECTORY_ROUTES = {
+  root: '/admin/members_directory',
+  detail: (id: string) => `/admin/members_directory/${id}`,
+} as const;
+
+export const ADMIN_MEMBERS_DIRECTORY_API = {
+  list:   '/api/v1/admin/members',
+  detail: (id: string) => `/api/v1/admin/members/${id}`,
+  create: '/api/v1/admin/members',
 } as const;
 ```
 
@@ -1566,16 +1621,16 @@ Generated code located under `src/generated/**` (such as OpenAPI, Orval, or swag
 Generator configuration and generated output integrity must be verified automatically in CI. Handwritten feature code consuming generated contracts MUST import them exclusively through approved absolute paths (e.g., `@/generated/openapi/...`).
 
 11. **Centralized URL Configuration (No Hardcoded URLs)**: 
-Never hardcode URLs (e.g., `/api/auth/refresh`, `/login`, etc.) directly into API wrappers or React components. Each module must have exactly one centralized URL configuration file, named exactly `[moduleName]_url_config.ts` (e.g., `admin_billing_url_config.ts`). This file must export all internal page routes and external API routes used by that module as named constants. Module-owned API/navigation call sites MUST use their module URL config. Global infrastructure may receive a fully constructed path/URL as an argument and MUST NOT own module-specific URLs.
+Never hardcode URLs (e.g., `/api/auth/refresh`, `/login`, etc.) directly into API wrappers or React components. Each autonomous sub-module must have exactly one centralized URL configuration file, placed at `config/[role]_[submodule].url_config.ts` (e.g., `config/admin_billing_invoices.url_config.ts`). This file must export all internal page routes and external API routes used by that module as named constants: `[ROLE]_[SUBMODULE]_ROUTES` and `[ROLE]_[SUBMODULE]_API`. Module-owned API/navigation call sites MUST use their module URL config. Global infrastructure may receive a fully constructed path/URL as an argument and MUST NOT own module-specific URLs.
 *Consequence of violation:* Hardcoded URLs create silent 404s upon routing refactors, break multi-tenant reverse proxy mappings, and make centralized URL auditing impossible. Finding raw endpoint strings in components or hooks = `NON_COMPLIANT`.
 
-### CANONICAL `[moduleName]_url_config.ts` TEMPLATE (GAP-18 Fix)
+### CANONICAL `config/[role]_[submodule].url_config.ts` TEMPLATE (GAP-18 Fix)
 
-Every `[moduleName]_url_config.ts` MUST follow this exact shape. AI agents MUST generate this file for every module — no improvisation allowed.
+Every sub-module `config/[role]_[submodule].url_config.ts` MUST follow this exact shape. AI agents MUST generate this file for every module — no improvisation allowed.
 
 ```typescript
-// [moduleName]_url_config.ts
-// Owned by: [role]/[module] feature module
+// config/[role]_[submodule].url_config.ts
+// Owned by: [role]/[domain]/[submodule] autonomous sub-module
 // API endpoint exports MUST NOT be imported outside this feature module.
 // Route exports may be imported only by the owning role-level navigation layer
 // for navigation wiring. Sibling business features must never import either export.
@@ -2787,7 +2842,7 @@ To ensure enterprise reliability, prevent double-submissions, guarantee zero dat
 
 1. **Idempotency Key (`Idempotency-Key: UUIDv4`) on All State Mutations:**
    - Every state-changing HTTP mutation (`POST`, `PUT`, `PATCH`, `DELETE`) initiated by an API client or TanStack Query mutation hook MUST attach a unique client-generated UUIDv4 header:
-     `Idempotency-Key: crypto.randomUUID()` (or `uuidv4()`). (Backend CORS allows both `Idempotency-Key` and `X-Idempotency-Key`).
+     The canonical HTTP transport header is strictly `Idempotency-Key: UUIDv4` (e.g., injecting `{'Idempotency-Key': crypto.randomUUID()}` or `uuidv4()`). Note: Per Backend Rule 103, server-side infrastructure is configured to accept both `Idempotency-Key` and `X-Idempotency-Key` for multi-platform transport resilience, but frontend mutation clients MUST send `Idempotency-Key: UUIDv4` deterministically.
    - If a network failure occurs and the client retries, the exact same idempotency key is transmitted. This prevents duplicate financial transactions, double billing charges, or redundant entity creations.
 
 2. **Universal Null-Safe Fallback (`displayValue()` Invariant):**
@@ -3425,11 +3480,17 @@ src/app/
             ├── contracts/
             │   └── host-stubs.d.ts
             ├── tests/
+            │   ├── manager_members_directory.integration.test.tsx
+            │   └── harness/
+            │       ├── bootstrap.ts
+            │       └── ManagerMembersDirectoryHarness.tsx
             ├── mocks/
+            │   ├── fixtures/
+            │   │   └── manager_members_directory.fixtures.ts
             │   ├── handlers/
-            │   │   └── ManagerMembersDirectoryMockHandlers.ts
-            │   └── fixtures/
-            │       └── ManagerMembersDirectoryMockFixtures.ts
+            │   │   └── manager_members_directory.handlers.ts
+            │   └── scenarios/
+            │       └── manager_members_directory.scenarios.ts
             ├── config/
             │   └── manager_members_directory.url_config.ts
             ├── manager_members_directory_features.md
@@ -4361,6 +4422,8 @@ The following are the ONLY approved npm packages for feature modules. AI agents 
 | Framework | `next` | 15.x | CRA, Remix, Vite standalone |
 | UI State | `zustand` | 5.x | Redux, MobX, Jotai, Recoil |
 | Server State | `@tanstack/react-query` | 5.x | SWR, Apollo Client |
+| List Virtualization | `@tanstack/react-virtual` | 3.x | `react-window`, `react-virtualized` |
+| HTTP Status Codes | `http-status-codes` | 2.x | Magic integer literals (e.g., 200, 404, 500) |
 | Forms | `react-hook-form` | 7.x | Formik, Final Form |
 | Form Validation | `zod` | 3.x | Yup, Joi |
 | Form Resolver | `@hookform/resolvers` | 3.x | — |
@@ -4372,6 +4435,19 @@ The following are the ONLY approved npm packages for feature modules. AI agents 
 | Routing Progress | `nextjs-toploader` | latest | — |
 | i18n | `next-intl` | latest | i18next, react-i18next |
 | Theme | `next-themes` | latest | — |
+
+### Approved Test & Tooling Infrastructure Registry (Scoped to `tests/`, `mocks/`, and `playwright_E2E/`)
+
+The following packages are approved exclusively for testing, mock interception, and test runner execution. They MUST NOT be imported into runtime feature components, hooks, or stores:
+
+| Concern | Approved Package | Version Lock | FORBIDDEN Alternatives |
+|---|---|---|---|
+| Mock Service Worker | `msw` | 2.x | miragejs, nock (for browser/RTL) |
+| Unit / Component Test Runner | `vitest` | latest | jest (for new web features) |
+| React Component Testing | `@testing-library/react` | latest | enzyme |
+| DOM Assertions | `@testing-library/jest-dom` | latest | chai, custom DOM matchers |
+| User Event Simulation | `@testing-library/user-event` | latest | fireEvent raw triggers |
+| Browser E2E Testing | `@playwright/test` | latest | cypress, puppeteer, selenium |
 
 **Rules:**
 - Introducing a package NOT in this list requires: (a) adding it to this registry, (b) documenting the justification in the feature's `_features.md`, and (c) explicit human developer approval.
@@ -4652,15 +4728,15 @@ Every project MUST have a `globals.css` (or equivalent canonical theme styleshee
 | **Gate 3** | CSS Token Mapping Verified | `globals.css` / `@theme inline` mapping verified — all semantic tokens produce valid Tailwind classes | **STOP.** Broken styles in light/dark mode |
 | **Gate 4** | Zero Hardcoded Colors | Grep JSX for hex `#`, `rgb(`, raw Tailwind colors (`bg-red-500`), or arbitrary CSS var brackets | **STOP.** Hardcoded color = REJECTED DELIVERY |
 | **Gate 5** | Zero Forbidden Opacity Modifiers | Grep JSX for `bg-success/10`, `bg-danger/5`, etc. Only semantic background tokens permitted | **STOP.** Contrast/theme violation |
-| **Gate 6** | Centralized URL Config Present | `[moduleName]_url_config.ts` present, exports all routes/APIs with real paths (zero placeholders) | **STOP.** Missing config = REJECTED DELIVERY |
-| **Gate 7** | Feature Map Non-Generic | `[moduleName]_features.md` complete with real endpoints, flows, component tree, and Module Run, Mock & Test Harness (no TBDs) | **STOP.** Generic doc = INCOMPLETE MODULE |
+| **Gate 6** | Centralized URL Config Present | `config/[role]_[submodule].url_config.ts` present, exports `[ROLE]_[SUBMODULE]_ROUTES` and `[ROLE]_[SUBMODULE]_API` with real paths (zero placeholders) | **STOP.** Missing config = REJECTED DELIVERY |
+| **Gate 7** | Feature Map Non-Generic | `[role]_[submodule]_features.md` complete with real endpoints, flows, component tree, and Module Run, Mock & Test Harness (no TBDs) | **STOP.** Generic doc = INCOMPLETE MODULE |
 | **Gate 8** | TanStack Query v5 Compliance | Verify `isPending` used (no `isLoading`), no deprecated callbacks in `useQuery` | **STOP.** Broken server state / crash |
 | **Gate 9** | React Hook Form v7 Compliance | Verify `zodResolver` used, schemas co-located, zero Yup/Joi resolvers | **STOP.** Broken form validation |
 | **Gate 10** | Zero Barrel Files | Verify zero `index.ts`, `*Export.ts`, or re-export facades across entire module | **STOP.** Circular dependency risk |
 | **Gate 11** | Scope Integrity Verified | Changed-file list produced — strictly target module files changed (or approved infrastructure) | **STOP.** Scope leak = REJECTED DELIVERY |
 | **Gate 12** | Multi-Tenancy Enforced | Verify `gymId`/`branchId` extracted from auth/session context, never from client body | **STOP.** Cross-tenant data vulnerability |
 | **Gate 13** | Complete Async States | Verify loading skeletons, empty states (`[Module]EmptyState.tsx`), and error states implemented | **STOP.** Blank screen on async fetch |
-| **Gate 14** | Consolidated Integration Guide & Re-Audit Included | `INTEGRATION_GUIDE.md` (consolidating changelog, route preservation matrix, host integration, and verification commands), `RE_AUDIT_CHECKLIST_RESULT.md`, and `playwright_E2E/` present inside ZIP root | **STOP.** Missing deliverable = REJECTED DELIVERY |
+| **Gate 14** | Consolidated Integration Guide & Re-Audit Included | `INTEGRATION_GUIDE.md` (consolidating changelog, route preservation matrix, host integration, and verification commands), `RE_AUDIT_CHECKLIST_RESULT.md`, and local test harness + mirrored `playwright_E2E/` present | **STOP.** Missing deliverable = REJECTED DELIVERY |
 
 > ⛔ **If ANY source-level code gate fails: STATUS = `REPAIR_REQUIRED`. Fix the source code. Once all source-level code fixes are written, package and deliver the ZIP with deferred/out-of-scope items explicitly documented.**
 
@@ -4706,7 +4782,7 @@ Every project MUST have a `globals.css` (or equivalent canonical theme styleshee
 ### 5. Testing & Verification Gate
 - [ ] **Interaction Testing (Behavioral Proof):** Unit/component tests verify real user actions (click -> submit -> visible state update). Button existence checks alone are REJECTED. — *STOP if tests are superficial.*
 - [ ] **Coverage Standards:** Custom hooks tested at ≥80% branch coverage; utilities tested at ≥90% branch coverage. — *STOP if coverage below threshold.*
-- [ ] **Isolated Playwright E2E:** Critical flows covered in mirrored `playwright_E2E/frontend_{role}_e2e/{role}_{module}/` directory. — *STOP if E2E missing for critical CRUD.*
+- [ ] **Isolated Playwright E2E:** Critical flows covered in mirrored `playwright_E2E/frontend_{role}_e2e/{role}_{module}/` directory (classified as `DEFERRED_TO_HOST_RUNTIME` during standalone/browser-less AI ZIP evaluation; sub-module `tests/` and `tests/harness/` provide 100% self-sufficient offline verification). — *STOP if E2E missing for critical CRUD.*
 - [ ] **Zero Fake Test Assertions:** Zero `expect(true).toBe(true)` or tautological assertions. — *STOP if fake test found.*
 
 ### 6. Performance & UX Gate

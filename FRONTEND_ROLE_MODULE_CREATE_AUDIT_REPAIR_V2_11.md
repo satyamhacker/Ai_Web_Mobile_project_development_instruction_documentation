@@ -695,10 +695,10 @@ src/features/frontend_{role}/{role}_{domain}/
     ├── api/              ← {role}_{submodule}.api.ts + query_keys.ts
     ├── schemas/          ← {role}_{submodule}.schema.ts
     ├── types/            ← {role}_{submodule}.types.ts
-    ├── config/           ← {role}_{submodule}.url_config.ts
-    ├── mocks/            ← {role}_{submodule}.fixtures.ts + handlers.ts (MUTABLE)
+    ├── config/           ← config/{role}_{submodule}.url_config.ts
+    ├── mocks/            ← {role}_{submodule}.fixtures.ts + {role}_{submodule}.handlers.ts + scenarios/{role}_{submodule}.scenarios.ts (MUTABLE)
     ├── state/            ← {role}_{submodule}.store.ts
-    ├── tests/            ← integration tests
+    ├── tests/            ← integration tests + harness/bootstrap.ts & {Role}{Submodule}Harness.tsx
     ├── utils/            ← {role}{Submodule}FormatCurrency.ts (WET)
     ├── _locales/         ← {role}_{submodule}_en.json + _hi.json
     ├── {role}_{submodule}_features.md (ALL 22 canonical sections)
@@ -10081,11 +10081,11 @@ The AI MUST evaluate every item below against the created mobile module and reco
 
 ## 43P-ARCH — Architecture & Structure
 
-- [ ] **43P-ARCH-01:** Feature folder path is `src/features/frontend_{role}/{role}_{domain}/{domain}_{capability}/` — `frontend_` prefix present on role container and Tier 4 leaf sub-module path enforced
-- [ ] **43P-ARCH-02:** All screens in `screens/` are ≤80 lines — thin composition only, zero business logic, zero direct API calls
+- [ ] **43P-ARCH-01:** Feature folder path is strictly `src/features/frontend_{role}/{role}_{domain}/{domain}_{capability}/` — `frontend_` prefix present on role container and Tier 4 leaf sub-module path enforced. (Any external prompt or legacy checklist expecting `src/app/mobile_{role}/` is strictly obsolete per Master Cross-Document Precedence Order).
+- [ ] **43P-ARCH-02:** All screens in `screens/` are ≤80 lines — hard gate, thin composition only, zero business logic, zero direct API calls
 - [ ] **43P-ARCH-03:** Every screen renders exactly ONE `[Role][Module][Screen]MainView.tsx` component
-- [ ] **43P-ARCH-04:** All components in `components/` are ≤200 lines
-- [ ] **43P-ARCH-05:** All hooks in `hooks/` are ≤150 lines
+- [ ] **43P-ARCH-04:** All components in `components/` are ≤200 lines — hard ceiling with documented exception in `_features.md` if cohesive logic requires
+- [ ] **43P-ARCH-05:** All hooks in `hooks/` are ≤150 lines — hard ceiling with documented exception in `_features.md` if cohesive logic requires
 - [ ] **43P-ARCH-06:** All API files in `api/` are ≤150 lines
 - [ ] **43P-ARCH-07:** All schema files in `schemas/` are ≤150 lines
 - [ ] **43P-ARCH-08:** All type files in `types/` are ≤150 lines
@@ -10132,6 +10132,8 @@ The AI MUST evaluate every item below against the created mobile module and reco
 - [ ] **43P-MOCK-08:** Empty-result scenario is reachable (zero records triggers EmptyState component)
 - [ ] **43P-MOCK-09:** Error scenario is reachable (mock handler can return error to trigger ErrorFallback)
 - [ ] **43P-MOCK-10:** NO toast-only mutation success — UI list/detail MUST visibly reflect the mutation result
+- [ ] **43P-MOCK-11:** Canonical mock scenarios registry present at `mocks/scenarios/{role}_{module}.scenarios.ts` covering ACTIVE, EMPTY, SERVER_500, TIMEOUT, UNAUTHORIZED
+- [ ] **43P-MOCK-12:** Standalone test harness present at `tests/harness/bootstrap.ts` and `tests/harness/{Role}{Submodule}Harness.tsx` enabling 100% self-sufficient offline mock execution
 
 ## 43P-DESIGN — Design Token Compliance
 

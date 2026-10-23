@@ -9,7 +9,7 @@ When instructions conflict across documents, apply this exact order of authority
 3. Explicit user-approved scope and verified API contracts
 4. `MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md`
 5. `MOBILE_UI_UX_DESIGN.md` for visual/token decisions
-6. `FRONTEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_V2_11.md` for execution workflow, audit sequencing, delivery artifacts, and reporting
+6. Execution workflow documents (when supplied: `FRONTEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_V2_11.md` or standalone execution mode; when unsupplied, `MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md` Section 67 serves as the self-contained authority) for audit sequencing, delivery artifacts, and reporting
 7. Sub-module documentation trio (`[role]_[submodule]_features.md`, `[role]_[submodule]_forbidden.md`, `[role]_[submodule]_theme_contract.md`)
 8. Existing implementation conventions
 
@@ -1317,11 +1317,23 @@ http.post(MANAGER_MEMBERS_URLS.CREATE, async ({ request }) => {
   const dto = await request.json();
   const newMember = { id: uuid(), ...dto };
   memberFixtures.push(newMember); // ✅ MUTATES in-memory state
-  return HttpResponse.json({ success: true, data: newMember });
+  return HttpResponse.json({
+    success: true,
+    message: 'Member created successfully',
+    data: newMember,
+    requestId: 'req-mock-create-01',
+    statusCode: 201,
+  });
 }),
 http.delete(MANAGER_MEMBERS_URLS.DELETE(':id'), ({ params }) => {
   memberFixtures = memberFixtures.filter(m => m.id !== params.id); // ✅ MUTATES
-  return HttpResponse.json({ success: true, data: null });
+  return HttpResponse.json({
+    success: true,
+    message: 'Member deleted successfully',
+    data: null,
+    requestId: 'req-mock-delete-01',
+    statusCode: 200,
+  });
 }),
 ```
 
@@ -1358,24 +1370,59 @@ Standard mandatory scenario keys:
 export const MANAGER_MEMBERS_SCENARIOS = {
   ACTIVE_RECORDS: {
     status: 200,
-    envelope: { success: true, message: "OK", data: memberFixtures, meta: mockPaginationMeta }
+    envelope: {
+      success: true,
+      message: "OK",
+      data: memberFixtures,
+      meta: mockPaginationMeta,
+      requestId: "req-mock-active-01",
+      statusCode: 200,
+    }
   },
   EMPTY_DATA: {
     status: 200,
-    envelope: { success: true, message: "No members found", data: [], meta: { total: 0, page: 1, limit: 10, totalPages: 0, hasNextPage: false, hasPrevPage: false } }
+    envelope: {
+      success: true,
+      message: "No members found",
+      data: [],
+      meta: { total: 0, page: 1, limit: 10, totalPages: 0, hasNextPage: false, hasPrevPage: false },
+      requestId: "req-mock-empty-01",
+      statusCode: 200,
+    }
   },
   SERVER_500_ERROR: {
     status: 500,
-    envelope: { success: false, message: "Internal server error occurred", data: null, errorCode: "ERR_INTERNAL_500" }
+    envelope: {
+      success: false,
+      message: "Internal server error occurred",
+      data: null,
+      errorCode: "ERR_INTERNAL_500",
+      statusCode: 500,
+      requestId: "req-mock-err-500",
+    }
   },
   NETWORK_TIMEOUT: {
     delayMs: 15000,
     status: 504,
-    envelope: { success: false, message: "Gateway timeout", data: null, errorCode: "ERR_TIMEOUT" }
+    envelope: {
+      success: false,
+      message: "Gateway timeout",
+      data: null,
+      errorCode: "ERR_TIMEOUT",
+      statusCode: 504,
+      requestId: "req-mock-err-504",
+    }
   },
   UNAUTHORIZED_401: {
     status: 401,
-    envelope: { success: false, message: "Session expired", data: null, errorCode: "ERR_UNAUTHORIZED" }
+    envelope: {
+      success: false,
+      message: "Session expired",
+      data: null,
+      errorCode: "ERR_UNAUTHORIZED",
+      statusCode: 401,
+      requestId: "req-mock-err-401",
+    }
   }
 } as const;
 ```
@@ -1423,17 +1470,21 @@ Real Backend returns canonical ApiResponse<T> envelope:
   "data": {
     "id": "1",
     "name": "Rahul Sharma"
-  }
+  },
+  "requestId": "req-12345",
+  "statusCode": 200
 }
 Consequence: Code written against the mock reads `response.name`, which passes mock tests but crashes instantly in production with `TypeError: Cannot read properties of undefined (reading 'name')`!
 
 ✔ MANDATORY CONTRACT LOCK:
-Every MSW mock handler MUST return the canonical 8-field ApiResponse<T> envelope:
+Every MSW mock handler MUST return the canonical 6-field/8-field ApiResponse<T> envelope:
 HttpResponse.json({
   success: true,
   message: 'Success',
   data: memberData,
   meta: paginationMeta,
+  requestId: 'req-mock-123',
+  statusCode: 200,
 })
 ```
 

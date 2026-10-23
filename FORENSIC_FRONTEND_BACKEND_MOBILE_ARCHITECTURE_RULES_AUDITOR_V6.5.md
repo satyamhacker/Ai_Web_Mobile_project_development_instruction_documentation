@@ -1318,7 +1318,7 @@ TOTAL BATCHES:     [N]
 BATCH SIZING RATIONALE:
 [Brief explanation of why you grouped modules this way]
 
-Please reply **"Begin Batch 1 and generate downloadable files"** to start the zero-sampling deep audit.
+Please reply **"Begin Batch 1 and generate downloadable files"** (or any affirmative response such as "continue", "proceed", "go ahead") to start the zero-sampling deep audit.
 Or reply **"Adjust"** if you want to change the batch grouping.
 ```
 
@@ -2412,7 +2412,7 @@ The auditor MUST strictly verify the Canonical Naming Rules based on the supplie
 7C. Zero Barrel Files Ban: NO `index.ts` or re-export facades across the entire module. All imports must be direct absolute paths (`@/...`).
 
 **If MOBILE FRONTEND (React Native) is in scope:**
-8. Domain Container: `src/features/frontend_{role}/{role}_{domain}/` containing ONLY `screens/Manager[Domain]Navigator.tsx` shell and autonomous sub-modules (`{domain}_{capability}/`).
+8. Domain Container: `src/features/frontend_{role}/{role}_{domain}/` containing ONLY `screens/Manager[Domain]Navigator.tsx` shell and autonomous sub-modules (`{domain}_{capability}/`). (Canonical Authority Note: React Native mobile modules reside strictly under `src/features/frontend_{role}/...`; any legacy checklist or external prompt referencing `src/app/mobile_{role}/` is strictly obsolete per Master Cross-Document Precedence Order).
 9. Child folders inside Sub-Module use standard flat naming (e.g., `screens/`, `components/`, `hooks/`, `api/`, `config/`, `state/`, `types/`, `schemas/`, `mocks/`, `utils/`, `tests/`).
 10. Component files MUST use PascalCase with feature-prefix (e.g., `ManagerAttendanceDashboardCard.tsx`).
 11. Hook files MUST use camelCase with `use` prefix + feature name (e.g., `useManagerAttendanceDashboard.ts`).
@@ -2421,6 +2421,7 @@ The auditor MUST strictly verify the Canonical Naming Rules based on the supplie
 14. Query key registry MUST exist per feature inside `api/` or `config/` (e.g., `attendance_dashboard.query_keys.ts`).
 15. Locale files MUST be named `{role}_{submodule}_{lang}.json` and live in `_locales/` sub-folder.
 16. Documentation trio MUST exist: `{role}_{submodule}_features.md` (with all 22 canonical sections), `{role}_{submodule}_forbidden.md`, `{role}_{submodule}_theme_contract.md` — missing any = INCOMPLETE MODULE.
+16A. Platform-Specific 22 Canonical Sections: The 22 Canonical Sections are domain-specialized per platform: Web/Mobile frontend 22 sections focus on UI views, forms, query keys, design tokens, and locales; Backend 22 sections focus on controllers, DTOs, repositories, Redis caching, outbox events, and database migrations. An audit checklist evaluating Backend files against frontend section names or vice-versa is invalid; evaluate against the platform-specific 22-section schema defined in the respective normative architecture document.
 
 **If BACKEND (NestJS) is in scope:**
 
@@ -3452,7 +3453,7 @@ Aesthetic preference is not a documented rule.
 1. The React Native theme module MUST implement ALL token categories: Color, Status, Payment, Spacing, Typography, Radius, Layout tokens (Section 5A), Icon size tokens (Section 5B), Touch Target, Motion, Opacity, Skeleton, Elevation, Z-Index.
 2. No raw hex/RGB colors or arbitrary dp values in any feature component.
 3. Motion durations MUST use named token constants from the theme module.
-4. **AUDIT CHECK (not a repair action):** Verify whether CI is configured to fail when the theme module references an unknown token. If no such CI check exists, classify as `FAIL — CI_TOKEN_VALIDATION_MISSING`.
+4. **CI Token Validation Gate (Host CI vs Isolated Sub-Module Scope):** Verify whether CI is configured to fail when the theme module references an unknown token. If auditing an isolated sub-module ZIP, record this as `HOST_CI_RESPONSIBILITY / DEFERRED_TO_HOST_CI`; if auditing a full host repository and no check exists, classify as `FAIL — CI_TOKEN_VALIDATION_MISSING`.
 5. **FLAT CAMELCASE TOKEN SHAPE ENFORCEMENT (CRITICAL):** Mobile tokens use a FLAT camelCase shape -- NOT nested object paths. Verify:
    - `tokens.color.card` (NOT `tokens.color.surface.card`) -- wrong nested path = FAIL
    - `tokens.color.foreground` (NOT `tokens.color.text.primary`) -- wrong nested path = FAIL
@@ -4729,6 +4730,18 @@ Never invent:
 - API behavior
 
 If exact lines cannot be established, use exact path + symbol + evidence anchor.
+
+### Minimum Required Fields Annex for `NOT_VERIFIED` Findings
+When a requirement is evaluated as `NOT_VERIFIED` (e.g., source file is not in scope, or evidence is inconclusive), the auditor is NOT required to invent speculative blast radiuses or root causes. Instead, a lightweight 8-field format is mandatory:
+1. **Issue ID & Title**: `### ISSUE-[NNN] [P2] — [Short title]`
+2. **Status**: `NOT_VERIFIED`
+3. **Rule Violated / Evaluated**: `[full source-rule identity]`
+4. **File / Scope Evaluated**: `[file or directory path inspected]`
+5. **Evidence Status**: `INCONCLUSIVE_OR_OUTSIDE_SUPPLIED_SCOPE`
+6. **Reason Not Verified**: `[concrete statement of what file or host artifact was absent]`
+7. **Verification Prerequisite**: `[exact condition required to verify in host environment]`
+8. **Fix Classification**: `HOST_RUNTIME_BLOCKED_VERIFICATION` or `EXTERNAL_PRODUCT_DECISION_BLOCKED`
+*(All remaining fields default to `N/A — NOT_VERIFIED` to eliminate hallucinated dependencies or root causes).*
 
 ---
 
