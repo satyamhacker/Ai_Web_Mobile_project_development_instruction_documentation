@@ -190,7 +190,7 @@ Every AI agent executing this prompt MUST strictly obey these invariants at all 
 5. **DO NOT REPAIR CODE:** You MUST NOT edit, create, refactor, or improve any source code, test, mock, migration, or configuration file during the audit. **VIOLATION = output is completely invalid and must be regenerated from scratch.**
 6. **DO NOT SKIP PASS GATE ITEMS 11-14:** Before marking ANY rule PASS, you MUST explicitly confirm all 14 items in Section 20. Skipping items 11-14 is the leading cause of fabricated PASS results. **VIOLATION = PASS is treated as NOT_VERIFIED.**
 7. **DO NOT SKIP SECTION 85 VERIFICATION LEDGER:** This is MANDATORY before publishing the final report. **VIOLATION = report is not forensically valid.**
-8. **DO NOT SKIP WEB ARCHITECTURE INVARIANTS (SECTION 39):** When auditing Web Frontend (Next.js App Router), you MUST explicitly audit all 14 Web Architecture Invariants (Canonical Module Hierarchy, Root Quarantine, Barrel Ban, Zero Business Logic in `src/components/ui/`, TanStack Query v5 `isPending`, RHF v7 + Zod, Idempotency-Key on mutations, MSW Rule 75D complete data contract parity, Multi-currency integer minor units, En-dash `displayValue()` fallback, Unsaved-changes guard, Co-located `_locales/`, and Documentation Trio). Skipping these or treating them as generic UI checks = AUDIT FAILURE.
+8. **DO NOT SKIP WEB ARCHITECTURE INVARIANTS (SECTION 39):** When auditing Web Frontend (Next.js App Router), you MUST explicitly audit all 14 Web Architecture Invariants (Canonical Module Hierarchy, Root Quarantine, Barrel Ban, Zero Business Logic in `src/components/ui/`, TanStack Query v5 `isPending`, RHF v7 + Zod, Idempotency-Key on mutations, MSW Rule 75D complete data contract parity, Multi-currency integer minor units, En-dash `displayValue()` fallback, Unsaved-changes guard, Co-located `locales/` or `_locales/`, and Documentation Trio). Skipping these or treating them as generic UI checks = AUDIT FAILURE.
 9. **UNIVERSAL DAY-1 SUB-MODULE ARCHITECTURE & SIBLING ISOLATION INVARIANT:**
    When auditing Web, Mobile, or Backend modules:
    - **Domain Root Quarantine:** Domain container root contains ONLY the navigation shell (`layout.tsx`, `Navigator.tsx`, or aggregator `.module.ts`), default redirect (`page.tsx`), and autonomous sub-module folders. Loose `components/`, `hooks/`, `mocks/`, `services/`, `controllers/`, or `utils/` directly at domain root = IMMEDIATE ARCHITECTURE VIOLATION.
@@ -2249,7 +2249,7 @@ Audit whether the role container's sidebar navigation aligns strictly 1-to-1 wit
 4. **Navigation Shell Isolation Audit:**
    - Are Sidebar, Header, Breadcrumbs, and Layout components isolated inside that role's navigation module (`{role}_navigation/`)?
    - Do navigation components import business state, business components, or domain hooks from feature modules (violating shell isolation)?
-     → If YES: Flag as `FINDING: NAVIGATION_SHELL_DOMAIN_POLLUTION` (Severity: CRITICAL). Remediation: Navigation shell must consume ONLY exported typed URL contracts (`[moduleName]_url_config.ts`).
+     → If YES: Flag as `FINDING: NAVIGATION_SHELL_DOMAIN_POLLUTION` (Severity: CRITICAL). Remediation: Navigation shell must consume ONLY exported typed URL contracts (`[role]_[submodule]_url_config.ts` or `url_config.ts`).
 
 ---
 
@@ -2285,7 +2285,7 @@ Audit whether the mobile primary navigation (Bottom Tab Navigator / Drawer Navig
 4. **Navigation Shell Isolation Audit:**
    - Are root navigation orchestrators (`RootNavigator`, `BottomTabNavigator`, `DrawerNavigator`) isolated inside core navigation (`src/core/navigation/` or `{role}_navigation/`)?
    - Do navigation orchestrators import business state, business components, or domain hooks from feature modules (violating shell isolation)?
-     → If YES: Flag as `FINDING: NAVIGATION_SHELL_DOMAIN_POLLUTION` (Severity: CRITICAL). Remediation: Navigation shell must consume only the route-contract export approved by the active frontend architecture document. For the current web architecture, navigation may consume `[MODULE_NAME]_ROUTES` from the owning feature's `[moduleName]_url_config.ts`. Navigation MUST NOT import feature business components, hooks, stores, schemas, API clients, fixtures, handlers, or business constants.
+     → If YES: Flag as `FINDING: NAVIGATION_SHELL_DOMAIN_POLLUTION` (Severity: CRITICAL). Remediation: Navigation shell must consume only the route-contract export approved by the active frontend architecture document. For the current web architecture, navigation may consume `[SUBMODULE]_ROUTES` from the owning feature's `[role]_[submodule]_url_config.ts` (or `url_config.ts`). Navigation MUST NOT import feature business components, hooks, stores, schemas, API clients, fixtures, handlers, or business constants.
 
 ---
 
@@ -2405,7 +2405,7 @@ The auditor MUST strictly verify the Canonical Naming Rules based on the supplie
    - Autonomous Sub-Module: `{domain}_{capability}/` (e.g., `attendance_dashboard/`, `attendance_history/`).
 4. Inside Sub-Modules: Standard canonical folders are used (`components/`, `hooks/`, `api/`, `mocks/`, `utils/`, `state/`, `types/`, `schemas/`, `tests/`).
 5. Files MUST use `PascalCase` or `camelCase` with `{Role}{Submodule}{Name}` prefix (e.g., `ManagerAttendanceDashboardMetricCard.tsx`, `useManagerAttendanceDashboardMetrics.ts`).
-6. Locale files MUST be named `[submodule]_{lang}.json` and live in `[submodule]_locales/` or `_locales/`.
+6. Locale files MUST be named `[submodule]_{lang}.json` and live in `locales/` or `_locales/`.
 7. URL Config files MUST export typed contracts (`[SUBMODULE]_ROUTES` and `[SUBMODULE]_API`) with UPPER_SNAKE_CASE keys and `as const`.
 7A. Root Quarantine Rule: Strictly ONLY Next.js routing files (`page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`, `not-found.tsx`), `url_config.ts`, and the documentation trio (`_features.md`, `_forbidden.md`, `_theme_contract.md`) are permitted at the container root. Loose implementation files at domain root = `CRITICAL ARCHITECTURE VIOLATION`.
 7B. Mandatory Documentation Trio: Every autonomous sub-module MUST contain all THREE: `[role]_[submodule]_features.md` (with all 22 canonical sections), `[role]_[submodule]_forbidden.md`, and `[role]_[submodule]_theme_contract.md`. Missing any file = INCOMPLETE MODULE.
@@ -2760,7 +2760,7 @@ Check for:
 
 **4. Navigation Links** — Do all sidebar / tab / breadcrumb links targeting specific views use the correct `?view=` parameter?
 
-**5. Per-View Isolation** — Does each view component live in the module's own prefixed `_components/` subfolder? Does any view component import directly from a sibling view component (isolation violation)?
+**5. Per-View Isolation** — Does each view component live in the module's own `components/` subfolder (e.g., `components/` or `[Submodule]Views/`)? Does any view component import directly from a sibling view component (isolation violation)?
 
 **6. Permission-Gated Views** — If any view is permission-restricted, is the restriction enforced BEFORE rendering the view component?
 
@@ -3031,14 +3031,14 @@ If the target is Web (Next.js App Router / React / TypeScript / Tailwind CSS), i
 - Server data (API responses) MUST NOT be duplicated into Zustand stores as a secondary cache.
 
 ### 6. Client UI State via Module-Scoped Zustand (Rule 5)
-- Shared client UI state MUST use feature-scoped Zustand stores (`[moduleName]_store/`).
+- Shared client UI state MUST use feature-scoped Zustand stores (`state/`).
 - No giant monolithic global store.
 - Zustand store hard ceiling: **180 lines**.
 
 ### 7. Form Architecture (Rule 15B, Rule 16)
 - React Hook Form **v7** + Zod + `@hookform/resolvers/zod`.
 - No Yup, no Joi, no uncontrolled inputs.
-- Zod schemas co-located in `[moduleName]_schemas/`.
+- Zod schemas co-located in `schemas/`.
 
 ### 8. Mutational Idempotency Contract (Rule 83, Extended Rule 14)
 - EVERY mutating API client function (POST, PATCH, PUT, DELETE) MUST require an `idempotencyKey: string` parameter.
@@ -3046,7 +3046,7 @@ If the target is Web (Next.js App Router / React / TypeScript / Tailwind CSS), i
 - Keys generated once per user intent and reused on retries.
 
 ### 9. MSW Fixture & Mock Completeness (Rule 75, 75A-75D)
-- Module-owned mocks in `[moduleName]_mocks/` (fixtures and handlers).
+- Module-owned mocks in `mocks/` (fixtures and handlers).
 - Rule 75D UI Data Contract Parity: MSW handlers and fixtures must cover 100% of UI data dependencies: every table column, row field, KPI card, chart series, dropdown option, filter, search, sort, pagination, empty state, and error state. Minimal mocks or hardcoded JSX fallbacks = IMMEDIATE FAIL.
 
 ### 10. Multi-Currency Monetary Contract (Rule 80, Extended Rule 20)
@@ -3058,7 +3058,7 @@ If the target is Web (Next.js App Router / React / TypeScript / Tailwind CSS), i
 - All nullable or optional fields rendered via `displayValue()` showing en-dash (`—`).
 - `displayValue()` MUST be imported from `src/lib/display_value.ts` (neutral zero-business empty-state primitive).
 - **Prohibition of Global Business Formatters:** Finding a general `src/lib/formatters.ts` business library = NON_COMPLIANT.
-- All business formatters (`formatCurrency`, dates, phone, tax, invoice) MUST be feature-local inside `[moduleName]_utils/` (Strict WET isolation).
+- All business formatters (`formatCurrency`, dates, phone, tax, invoice) MUST be feature-local inside `utils/` (Strict WET isolation).
 - Zero blank table cells or empty data values.
 
 ### 12. Complex-Form Unsaved Changes Guard (Rule 79)
@@ -3066,17 +3066,17 @@ If the target is Web (Next.js App Router / React / TypeScript / Tailwind CSS), i
 - Intercepts both browser tab close (`beforeunload`) AND Next.js client-side router navigation.
 
 ### 13. Module-Co-located Internationalization (i18n) (Rule 18, Extended Rule 18)
-- Feature owns `[moduleName]_locales/` folder with `[moduleName]_en.json` (base) AND all active target language files (e.g. `[moduleName]_hi.json`).
+- Feature owns `locales/` or `_locales/` folder with `[submodule]_[lang].json` (e.g. `[submodule]_en.json` base AND all active target language files like `[submodule]_hi.json`).
 - Zero hardcoded English strings in JSX; all user-facing text uses `t('KEY')` via `next-intl`.
 - No central `src/messages/` dumping directory.
 
 ### 14. Mandatory Module Documentation Trio & Centralized URL Config (Rule 11, Rule 13, Rule 40)
-- `[moduleName]_features.md` with all 22 canonical sections (no generic boilerplate or TBDs, including Section 20 Standalone Harness, Section 21 Portability Guide, and Section 22 Version History + Portability Score).
-- `[moduleName]_forbidden.md` detailing module-specific anti-patterns.
-- `[moduleName]_theme_contract.md` listing all consumed semantic design tokens.
-- `[moduleName]_url_config.ts` exporting exactly two typed contracts:
-  1. `[MODULE_NAME]_ROUTES` (browser navigation paths)
-  2. `[MODULE_NAME]_API` (backend API endpoint paths)
+- `[role]_[submodule]_features.md` (or `_features.md`) with all 22 canonical sections (no generic boilerplate or TBDs, including Section 20 Standalone Harness, Section 21 Portability Guide, and Section 22 Version History + Portability Score).
+- `[role]_[submodule]_forbidden.md` (or `_forbidden.md`) detailing module-specific anti-patterns.
+- `[role]_[submodule]_theme_contract.md` (or `_theme_contract.md`) listing all consumed semantic design tokens.
+- `[role]_[submodule]_url_config.ts` (or `url_config.ts`) exporting exactly two typed contracts:
+  1. `[SUBMODULE]_ROUTES` (browser navigation paths)
+  2. `[SUBMODULE]_API` (backend API endpoint paths)
   All string literals MUST use `as const`. Navigation shell/sidebar MUST import ONLY `_ROUTES`, never `_API`. `_API` MUST NOT be imported outside the owning feature module.
 
 ---
@@ -3173,8 +3173,8 @@ If the target is Mobile (React Native), inspect ALL of the following where appli
 ### Design Token Shape & Modern Hook Architecture (CRITICAL)
 - Feature UI MUST consume tokens dynamically via `const tokens = useThemeTokens()`; static import of `tokens.ts` directly in feature UI is a CRITICAL VIOLATION (`FAIL — STATIC_TOKEN_IMPORT_BANNED`)
 - Mobile tokens use FLAT camelCase shape — nested paths are WRONG:
-  - CORRECT: `tokens.color.card`, `tokens.color.foreground`, `tokens.color.statusSuccessBg`, `tokens.color.statusDangerText`, `tokens.color.textMuted`
-  - WRONG: `tokens.color.surface.card`, `tokens.color.text.primary`, `tokens.color.status.successBg`
+  - CORRECT: `tokens.color.card`, `tokens.color.foreground`, `tokens.color.statusSuccessBg`, `tokens.color.statusDangerText`, `tokens.color.muted`
+  - WRONG: `tokens.color.surface.card`, `tokens.color.text.primary`, `tokens.color.status.successBg`, `tokens.color.textMuted`
 - Canonical payment tokens MUST be used for payment badges:
   - `tokens.color.payCashText` / `tokens.color.payCashBg`
   - `tokens.color.payUpiText` / `tokens.color.payUpiBg`
@@ -3211,7 +3211,7 @@ If the target is Mobile (React Native), inspect ALL of the following where appli
 - `formatCurrency` MUST NOT be imported from `src/core/` -- duplicated per feature (Strict WET)
 - Null/undefined amounts MUST return en-dash from `formatCurrency` -- never blank or N/A
 - Unsupported currency codes MUST throw -- never silently default to divisor 100
-- Masked amount display MUST use `tokens.color.textMuted` and `maskSensitiveData()` -- never raw asterisks
+- Masked amount display MUST use `tokens.color.muted` and `maskSensitiveData()` -- never raw asterisks
 
 ### Async States (Mobile-Specific)
 - Every list screen MUST have `[Feature]ListSkeleton.tsx` mimicking exact card layout
@@ -3250,8 +3250,9 @@ If the target is Backend (NestJS / Django / TypeScript / Python), inspect ALL of
   - `{submodule}-controllers/`
   - `{submodule}-services/`
   - `{submodule}-dto/`
-  - `{submodule}-repositories/`
-  - `{submodule}-entities/`
+  - `{submodule}-repositories/` (contains repositories and `*.entity.ts` TypeORM/Prisma schema mappings)
+  - `{submodule}-domain/` (pure enterprise business models, domain events, domain exceptions)
+  - `{submodule}-mappers/` (entity-to-domain and domain-to-DTO translators)
   - `{submodule}-tests/`
 - **File Naming Formula (Anti-Double-Prefixing Rule 0F & 0H):**
   - Sub-folders use the module/submodule prefix ONLY: `{submodule}-{artifact}/` (e.g. `dashboard-controllers/`, `dashboard-services/`). NEVER `manager-dashboard-controllers/`.
@@ -3271,12 +3272,12 @@ If the target is Backend (NestJS / Django / TypeScript / Python), inspect ALL of
 
 ### 4. Database Relations & Foreign Keys vs Event Communication
 - **Read Operations & Foreign Keys:** Normal TypeORM relations (`relations: ['employee']`, `leftJoinAndSelect`) and database foreign keys are 100% permitted and required for data queries. Direct joins in repository queries are standard and MUST NOT be replaced with premature event emitters.
-- **Cross-Domain Write Side-Effects:** State-change mutations affecting another domain MUST use `EventEmitter2` (`emit` & `@OnEvent`) or an outbox-backed event registry (`event-registry.constants.ts`). Direct cross-domain service injection is FORBIDDEN.
+- **Cross-Domain Write Side-Effects:** State-change mutations affecting another domain MUST use an outbox-backed event registry (`event-registry.constants.ts`) published via Transactional Outbox + Redis Streams (Section 30). In-process `EventEmitter2` is reserved strictly for non-critical ephemeral in-process notifications and MUST NOT be used as the durable transport for critical domain events. Direct cross-domain service injection is FORBIDDEN.
 - **Cross-Feature Multi-Table Atomic Transactions:** Managed exclusively by an application orchestrator (`src/infrastructure/workflows/`), never by sibling-to-sibling service cross-calling.
 
-### 5. ApiResponse<T> Standard 8-Field Envelope & Discriminated Union (Rule 28, Rule 64, Rule 82)
-- All endpoints MUST return the canonical 8-field envelope:
-  `success`, `statusCode`, `message`, `data`, `meta`, `error`, `errorCode`, `validationErrors`.
+### 5. ApiResponse<T> Standard Envelope & Discriminated Union (Rule 28, Rule 64, Rule 82)
+- All endpoints MUST return the canonical envelope with `requestId` and payload/error fields:
+  `requestId`, `success`, `statusCode`, `message`, `data`, `meta`, `error`, `errorCode`, `validationErrors`.
 - `data` is ALWAYS `null` on error; `data` is ALWAYS a single, explicitly typed DTO on success (no polymorphic bags of mixed objects).
 - Error responses MUST use SCREAMING_SNAKE_CASE `errorCode` (`DOMAIN.ENTITY.REASON`, e.g., `ATTENDANCE.CHECKIN.ALREADY_RECORDED`).
 
@@ -3298,7 +3299,7 @@ If the target is Backend (NestJS / Django / TypeScript / Python), inspect ALL of
      - Section 7: Permissions, RBAC & Multi-Tenancy Isolation (`gymId`/`branchId` from JWT)
      - Section 20: Standalone Run, Mock & Test Harness (location: `{submodule}-tests/harness/[submodule].harness.ts`, local seeders: `[submodule].seed.ts`, in-memory SQLite / Testcontainers DB, standalone execution command)
      - Section 21: Module Portability & Host Integration Guide (4-step drop-in instructions)
-     - Section 22: Deliverables, Version History & 8/8 Portability Score
+     - Section 22: Deliverables, Version History & 10/10 Portability Score
   2. `[role]-[submodule]-backend-forbidden.md` (or `_backend-forbidden.md`): Concrete sub-module-specific forbidden anti-patterns (no sibling imports, no parent shared folders, no tenant bypass).
   3. `[role]-[submodule]-backend-contract.md` (or `_backend-contract.md`): Frozen public endpoint URLs, request/response DTO schemas, and emitted event payloads.
 
@@ -3456,7 +3457,7 @@ Aesthetic preference is not a documented rule.
    - `tokens.color.card` (NOT `tokens.color.surface.card`) -- wrong nested path = FAIL
    - `tokens.color.foreground` (NOT `tokens.color.text.primary`) -- wrong nested path = FAIL
    - `tokens.color.statusSuccessBg`, `tokens.color.statusDangerText`, `tokens.color.statusSuccessText` (NOT `tokens.color.status.*`) -- wrong nested path = FAIL
-   - `tokens.color.textMuted` (NOT `tokens.color.text.muted`) -- wrong nested path = FAIL
+   - `tokens.color.muted` (NOT `tokens.color.text.muted` or `tokens.color.textMuted`) -- wrong path = FAIL
    - Any nested token path in mobile StyleSheets = `FAIL - WRONG_TOKEN_PATH`
 
 ---
@@ -4154,7 +4155,7 @@ Under the Universal Day-1 Sub-Module Architecture (Rule 0A.2), every autonomous 
 > last_verified_date: "YYYY-MM-DD"
 > last_verified_commit: "commit-sha-or-host-unavailable"
 > documentation_status: "current"
-> portability_score: "8/8"
+> portability_score: "10/10"
 > ---
 > ```
 > Missing or non-structured frontmatter = `FAIL — DOCUMENTATION_HEADER_INVALID`.
@@ -4185,7 +4186,7 @@ Every `_backend-feature.md` file MUST contain ALL 22 of these canonical sections
 [ ] 19. ## Rule Compliance Checklist (35+ Verification Items)
 [ ] 20. ## Standalone Run, Mock & Test Harness (Location: harness/[submodule].harness.ts, local seeders: [submodule].seed.ts, in-memory SQLite/Testcontainers DB, standalone execution command)
 [ ] 21. ## Module Portability & Host Integration Guide (4-step drop-in instructions)
-[ ] 22. ## Deliverables & Version History (8/8 Portability Score)
+[ ] 22. ## Deliverables & Version History (10/10 Portability Score)
 ```
 
 ### `_backend-forbidden.md` AUDIT
@@ -5797,7 +5798,7 @@ The audit is complete only when ALL of the following are true:
 [ ] — Web: Multi-Currency Minor Unit Contract checked (integer subunit formatting, no raw /100 in JSX)
 [ ] — Web: En-Dash Nullable Fallback checked (displayValue() used, zero blank cells)
 [ ] — Web: Unsaved Changes Guard checked on complex forms (browser exit + router navigation)
-[ ] — Web: Module-Co-located Locales checked (en + active languages in _locales/)
+[ ] — Web: Module-Co-located Locales checked (en + active languages in locales/ or _locales/)
 [ ] — Web: Centralized URL Config checked (_url_config.ts exports all routes as const)
 [ ] Backend architecture checked when applicable
 [ ] — Backend: Universal Day-1 Sub-Module Architecture checked (backend-{role}/{role}-modules/{role}-{domain}/{sub-module}/)
@@ -5805,12 +5806,12 @@ The audit is complete only when ALL of the following are true:
 [ ] — Backend: Anti-Double-Prefixing & Naming Formula checked (folders: {submodule}-{artifact}/, files: [role]-[submodule]-[description].[type].ts)
 [ ] — Backend: Sibling Sub-Module Isolation Firewall checked (attendance-dashboard never imports services/repos from attendance-history)
 [ ] — Backend: Strict WET Principle checked (shared DTOs/validators duplicated locally, zero shared domain common/ folders)
-[ ] — Backend: Sub-Module Documentation Trio checked (_backend-feature.md with all 22 canonical sections, Section 20 Standalone Harness & Seeders, Section 21 Portability Guide, Section 22 8/8 Portability Score, _backend-forbidden.md, and _backend-contract.md)
+[ ] — Backend: Sub-Module Documentation Trio checked (_backend-feature.md with all 22 canonical sections, Section 20 Standalone Harness & Seeders, Section 21 Portability Guide, Section 22 10/10 Portability Score, _backend-forbidden.md, and _backend-contract.md)
 [ ] — Backend: Modular Monolith Isolation Check done (.forFeature() used, no .forRoot() in feature modules)
 [ ] — Backend: Database Reads & Foreign Keys checked (TypeORM relations: [...] & leftJoinAndSelect for reads, no unnecessary event emitters)
-[ ] — Backend: Cross-Domain Mutations checked (EventEmitter2 emit & @OnEvent used for cross-domain side-effects)
+[ ] — Backend: Cross-Domain Mutations checked (Transactional Outbox + Redis Streams / event registry used for cross-domain side-effects)
 [ ] — Backend: Orchestrator-owns-transactions check done (atomic multi-table writes managed by workflow orchestrator)
-[ ] — Backend: ApiResponse<T> 8-Field Envelope checked (success, statusCode, message, data, meta, error, errorCode, validationErrors)
+[ ] — Backend: ApiResponse<T> Envelope checked (requestId, success, statusCode, message, data, meta, error, errorCode, validationErrors)
 [ ] — Backend: Multi-Tenancy JWT Isolation checked (gymId/branchId resolved from JWT context, never client body/params)
 [ ] — Backend: TypeORM Migrations checked (synchronize: false in production/staging)
 [ ] — Backend: Soft-Deletes checked (@DeleteDateColumn() in repository layer, no hard DELETE)

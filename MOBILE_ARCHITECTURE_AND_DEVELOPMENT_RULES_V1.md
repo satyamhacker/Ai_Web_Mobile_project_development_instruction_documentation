@@ -87,16 +87,16 @@ Before generating, auditing, or repairing ANY mobile feature module, verify ALL 
 
 | Verification Item | Requirement | Consequence of Failure |
 |---|---|---|
-| **Role Container** | Must be `src/features/frontend_{role}/` (e.g., `src/features/frontend_admin/`) | Unprefixed role container = ARCHITECTURE VIOLATION. In repair: move to canonical prefix in RBG 1. |
+| **Role Container & Canonical Path** | Must be `src/features/frontend_{role}/` (e.g., `src/features/frontend_admin/`), containing `{role}_{domain}/{domain}_{capability}/`. React Native mobile modules reside strictly under `src/features/frontend_{role}/`, NEVER under `src/app/mobile_{role}/` or root `src/screens/`. | Unprefixed role container or wrong root path = ARCHITECTURE VIOLATION. In repair: move to canonical prefix in RBG 1. |
 | **Canonical Feature Module** | Must be `src/features/frontend_{role}/{role}_{module}/` (e.g., `src/features/frontend_manager/manager_members/`) — path MUST start with `src/features/` and module MUST be prefixed with role name | Unprefixed or wrong-path placement = NON_COMPLIANT. In repair: relocate and rename in RBG 1. |
-| **Thin Screen Composition** | Screens in `screens/` MUST only compose components; hard maximum **80 lines**; ZERO business logic, state calculations, or direct API calls. Screen renders `<SafeAreaView>`, `<StatusBar>`, extracts route params, and renders ONE `[Role][Module][Screen]MainView.tsx` component. | Heavy screen = ARCHITECTURE VIOLATION. In repair: extract to MainView component in RBG 1. |
-| **Prefixed Component Files** | Components in `components/` MUST use PascalCase with **Role+Module** prefix (e.g., `ManagerMembersMemberCard.tsx`, NOT `MembersMemberCard.tsx`). Max **200 lines**. | Unprefixed or role-missing component = NON_COMPLIANT. In repair: rename to Role+Module prefixed in RBG 1. |
-| **Feature Custom Hooks** | Hooks in `hooks/` MUST use camelCase with `use` + **Role+Module** name (e.g., `useManagerMembers.ts`, `useManagerMembersFilters.ts`). Max **150 lines**. | Generic or role-missing hook name = NON_COMPLIANT. In repair: rename to Role+Module hook in RBG 1. |
-| **Root Quarantine** | Feature domain root (`src/features/frontend_{role}/{role}_{module}/`) contains ONLY `screens/Manager[Domain]Navigator.tsx` (pure navigation shell) and autonomous sub-module directories `{submodule}/`. 100% of feature business code lives inside autonomous sub-modules. Inside each autonomous sub-module, only route screens, `config/[role]_[submodule].url_config.ts`, and the Documentation Trio (`[role]_[submodule]_features.md`, `[role]_[submodule]_forbidden.md`, `[role]_[submodule]_theme_contract.md`) are allowed at root. | Any business code in domain root or non-quarantine file in sub-module root = NON_COMPLIANT. In repair: move to correct subfolder in RBG 1. |
+| **Thin Screen Composition** | Screens in `screens/` MUST only compose components; hard ceiling **80 lines** (zero exceptions); ZERO business logic, state calculations, or direct API calls. Screen renders `<SafeAreaView>`, `<StatusBar>`, extracts route params, and renders ONE `[Role][Module][Screen]MainView.tsx` component. | Heavy screen or logic in screen = ARCHITECTURE VIOLATION. In repair: extract to MainView component in RBG 1. |
+| **Prefixed Component Files** | Components in `components/` MUST use PascalCase with **Role+Module** prefix (e.g., `ManagerMembersMemberCard.tsx`, NOT `MembersMemberCard.tsx`). Hard ceiling **200 lines** (exceeding requires `// architecture-exception: <reason>` and entry in `_features.md`). | Unprefixed component or undocumented >200 lines = NON_COMPLIANT. In repair: rename to Role+Module prefixed in RBG 1. |
+| **Feature Custom Hooks** | Hooks in `hooks/` MUST use camelCase with `use` + **Role+Module** name (e.g., `useManagerMembers.ts`, `useManagerMembersFilters.ts`). Hard ceiling **150 lines** (exceeding requires `// architecture-exception: <reason>` and entry in `_features.md`). | Generic hook name or undocumented >150 lines = NON_COMPLIANT. In repair: rename to Role+Module hook in RBG 1. |
+| **Root Quarantine** | Feature domain root (`src/features/frontend_{role}/{role}_{module}/`) contains ONLY `screens/Manager[Domain]Navigator.tsx` (pure navigation shell) and autonomous sub-module directories `{submodule}/`. 100% of feature business code lives inside autonomous sub-modules. Inside each autonomous sub-module, the sub-module root contains ONLY canonical subfolders (`screens/`, `components/`, `hooks/`, `api/`, `state/`, `types/`, `schemas/`, `mocks/`, `utils/`, `tests/`, `_locales/`, `config/`) and the Documentation Trio (`[role]_[submodule]_features.md`, `[role]_[submodule]_forbidden.md`, `[role]_[submodule]_theme_contract.md`). Route screens live strictly inside `screens/`, never loose at sub-module root. | Any business code in domain root or loose screen/code file at sub-module root = NON_COMPLIANT. In repair: move to correct subfolder in RBG 1. |
 | **Central Hardware Secure Storage** | Auth tokens, refresh tokens, biometric keys MUST use iOS Keychain / Android Keystore via `react-native-keychain`. NEVER `AsyncStorage`. | Tokens in AsyncStorage = CRITICAL SECURITY AUDIT FAILURE. In repair: replace with `react-native-keychain` wrapper in RBG 1. |
 | **Sub-Module Documentation Trio** | Every autonomous sub-module MUST contain `[role]_[submodule]_features.md` (with all 22 canonical sections, Section 20 Standalone Harness, Section 21 Portability Guide), `[role]_[submodule]_forbidden.md`, and `[role]_[submodule]_theme_contract.md`. | Missing doc artifact = INCOMPLETE MODULE. In repair: generate missing docs from source in RBG 1. |
 | **Centralized URL Config** | `config/[role]_[submodule].url_config.ts` MUST exist inside each sub-module and define all routes and API endpoints as `as const`. | Missing URL config = HARDCODED ROUTE RISK. In repair: generate centralized URL config in RBG 1. |
-| **Query Key Registry** | `api/[featureName].query_keys.ts` or `config/[featureName].query_keys.ts` MUST exist and namespace all TanStack Query keys with resource identity. | Missing query key factory = CACHE INCONSISTENCY RISK. In repair: create query key registry in RBG 1. |
+| **Query Key Registry** | `api/[role]_[submodule].query_keys.ts` or `config/[role]_[submodule].query_keys.ts` MUST exist and namespace all TanStack Query keys with resource identity. | Missing query key factory = CACHE INCONSISTENCY RISK. In repair: create query key registry in RBG 1. |
 | **Zero Cross-Feature Imports** | A feature MUST NOT import business components, hooks, or state from sibling features. | Sibling import = VIOLATION OF RULE 28 (WET PRINCIPAL). In repair: duplicate the required business artifact locally inside the owning feature module (Strict WET Principal) in RBG 1. Moving business logic to `src/core/` is STRICTLY FORBIDDEN. |
 | **No Barrel Files** | NO `index.ts` or re-export facades. All imports must be direct absolute paths (`@/...`). | Barrel file = CIRCULAR DEPENDENCY RISK. In repair: remove barrel files and update imports in RBG 1. |
 
@@ -329,18 +329,18 @@ The same principle applies to every role and every domain.
 | `[role]_[submodule]_forbidden.md` (or `_forbidden.md`) | **MANDATORY FOR ALL SUB-MODULES** | Every single autonomous sub-module | `NON_COMPLIANT` — Sub-module lacks safety boundaries & WET rules |
 | `[role]_[submodule]_theme_contract.md` (or `_theme_contract.md`) | **MANDATORY FOR ALL SUB-MODULES** | Every single autonomous sub-module | `NON_COMPLIANT` — Visual portability contract unverified |
 | `config/[role]_[submodule].url_config.ts` | **MANDATORY FOR ALL SUB-MODULES** | Every sub-module with routes or API calls | `NON_COMPLIANT` — URL centralization contract broken |
-| `api/[featureName].query_keys.ts` | **MANDATORY FOR ALL MODULES** | Every module with API calls | `NON_COMPLIANT` — Cache key consistency broken |
+| `api/[role]_[submodule].query_keys.ts` (or `config/`) | **MANDATORY FOR ALL MODULES** | Every module with API calls | `NON_COMPLIANT` — Cache key consistency broken |
 | `screens/` | **MANDATORY FOR ALL MODULES** | Every feature module with UI | `NON_COMPLIANT` — Missing screen entry points |
 | `components/` | **MANDATORY FOR ALL MODULES** | Every feature module with UI | `NON_COMPLIANT` — Missing view layer |
 | `hooks/` | **MANDATORY FOR ALL MODULES** | Any component with logic/state | `NON_COMPLIANT` — Logic coupled to view |
 | `api/` | **MANDATORY FOR ALL MODULES** | Any API call | `NON_COMPLIANT` — API centralization broken |
 | `types/` | **MANDATORY FOR ALL MODULES** | Every feature module | `NON_COMPLIANT` — Type isolation contract broken |
 | `schemas/` | **MANDATORY FOR ALL MODULES** | Every module with forms/API responses | `NON_COMPLIANT` — Runtime validation missing |
-| `mocks/` | **MANDATORY FOR ALL MODULES** | Every feature module (fixtures + MSW handlers) | `NON_COMPLIANT` — Untestable/unmocked module |
+| `mocks/` | **MANDATORY FOR ALL MODULES** | Every feature module (scenarios/ registry, mutable fixtures, and MSW handlers) | `NON_COMPLIANT` — Untestable/unmocked module |
 | `_locales/` | **MANDATORY FOR ALL MODULES** | Every feature module (`_en.json` + active languages) | `NON_COMPLIANT` — Hardcoded strings in JSX |
 | `state/` | **Conditionally Required** | MUST exist when module has shared client state | `NON_COMPLIANT` if client state is stored in global or component state |
 | `utils/` | **Conditionally Required** | MUST exist when module has formatters/helpers | `NON_COMPLIANT` if helpers are placed in global `src/core/` |
-| `tests/` | **MANDATORY FOR ALL MODULES** | Every feature module (integration tests) | `NON_COMPLIANT` — Zero integration test verification |
+| `tests/` | **MANDATORY FOR ALL MODULES** | Every feature module (harness/ bootstrap, [Submodule]Harness.tsx, and integration tests) | `NON_COMPLIANT` — Zero integration test verification |
 
 ---
 
@@ -520,13 +520,21 @@ To guarantee that any AI agent or mobile developer can repair, test, or expand a
                  │    ├── screens/                                 # [Role][Submodule][Screen]Screen.tsx
                  │    ├── components/                              # [Role][Submodule][Name].tsx
                  │    ├── hooks/                                   # use[Role][Submodule][Name].ts
-                 │    ├── api/                                     # [role]_[submodule].api.ts
+                 │    ├── api/                                     # [role]_[submodule].api.ts, [role]_[submodule].query_keys.ts
                  │    ├── state/                                   # use[Role][Submodule]Store.ts
                  │    ├── types/ & schemas/                        # Zod schemas & types
                  │    ├── mocks/                                   # scenarios/, fixtures, MSW handlers
-                 │    ├── utils/
-                 │    ├── tests/                                   # Integration tests
+                 │    │    ├── scenarios/[role]_[submodule].scenarios.ts # Scenario registry (active, empty, error, timeout)
+                 │    │    ├── [role]_[submodule].fixtures.ts      # Mutable in-memory seed data
+                 │    │    └── [role]_[submodule].handlers.ts      # MSW handlers that mutate state
+                 │    ├── utils/                                   # Local WET formatters
+                 │    ├── tests/                                   # Integration & Harness tests
+                 │    │    ├── harness/
+                 │    │    │    ├── bootstrap.ts                   # Standalone harness bootstrap
+                 │    │    │    └── [Role][Submodule]Harness.tsx   # Standalone isolated test harness
+                 │    │    └── [role]_[submodule].integration.test.ts
                  │    ├── config/[role]_[submodule].url_config.ts
+                 │    ├── _locales/[role]_[submodule]_en.json
                  │    ├── [role]_[submodule]_features.md
                  │    ├── [role]_[submodule]_forbidden.md
                  │    └── [role]_[submodule]_theme_contract.md
@@ -668,26 +676,15 @@ tests, and the context file — lives inside that single folder. Zero need to op
 
 ### File Size Governance
 
-The following are target review thresholds, not reasons for artificial splitting:
+The following are hard architectural ceilings and decomposition limits:
 
-- Screens: target ≤80 lines; hard requirement remains: no direct API calls and no
-  business/state calculation beyond route-param extraction.
-- Components: target ≤200 lines; split when the file owns more than one visual
-  responsibility.
-- Hooks/API modules: target ≤150 lines; split when the file owns more than one
-  independent data/action responsibility.
-- Stores: target ≤180 lines; split by separate UI concern.
-- Utilities: target ≤120 lines; split only when utilities are unrelated.
+- **Screens (≤80 lines — HARD CEILING, ZERO EXCEPTIONS):** Screen files in `screens/` MUST NOT contain direct API calls, state management, or business/state calculation beyond route-param extraction. They render `<SafeAreaView>`, `<StatusBar>`, and compose the single `[Role][Module][Screen]MainView.tsx` component.
+- **Components (≤200 lines — HARD CEILING):** Presentational widgets and bottom sheets in `components/`. If a component exceeds 200 lines, it MUST be decomposed into sub-components unless granted a documented exception (`// architecture-exception: <reason>`) and cataloged in Section 17 of `_features.md`.
+- **Hooks & API Modules (≤150 lines — HARD CEILING):** Custom hooks and API service files. Exceeding 150 lines requires splitting query, mutation, and UI state concerns unless covered by a documented exception.
+- **State Stores (≤180 lines — HARD CEILING):** Zustand stores in `state/`. Monolithic stores are banned; stores must be decomposed into atomic domain slices.
+- **Utilities & Schemas (≤120 lines / ≤150 lines — HARD CEILING):** Single-purpose pure functions and Zod schemas.
 
-A file may exceed a target only where it has one coherent responsibility,
-extraction would worsen coupling, and the reason is documented in the feature
-`_features.md`.
-
-- Screen: target ≤80 lines; hard rule remains: no business logic or direct API calls.
-- Component: target ≤200 lines; split when it owns more than one visual responsibility.
-- Hook/API: target ≤150 lines; split when it owns more than one data/action concern.
-- Store: target ≤180 lines; split by independent UI concern.
-- Utility: target ≤120 lines; split only when functions have unrelated responsibility.
+A file may exceed its ceiling only where it has one coherent responsibility, extraction would worsen coupling, and the reason is explicitly documented with an inline `// architecture-exception: <specific reason>` comment and listed in the feature `_features.md` under Section 17 (Architecture Exceptions).
 
 ## File-Size Exception Process
 
@@ -711,16 +708,16 @@ Exceptions are forbidden for:
 - API modules containing UI logic;
 - stores importing components or screens.
 
-| File Type | Target Threshold | Decompose Strategy | Enforcement Nature |
+| File Type | Hard Ceiling | Decompose Strategy | Enforcement Nature |
 |---|---|---|---|
-| Screen / Route entry point (`*Screen.tsx`) | **≤80 lines** | Route orchestrator only; zero business logic or direct API calls | **HARD STOP** — Composition only |
-| Feature Component / Widget | **≤200 lines** | Extract sub-components when owning multiple visual concerns | **Target Review Threshold** |
-| Custom Hook / Controller | **≤150 lines** | Split query, mutation, and UI state concerns | **Target Review Threshold** |
-| Validation Schema (`.schemas.ts`) | **≤150 lines** | Split by sub-step or domain entity | **Target Review Threshold** |
-| API service file (`.api.ts`) | **≤150 lines** | Separate queries from mutations or sub-resources | **Target Review Threshold** |
-| State Store (`.store.ts`) | **≤180 lines** | Decompose into atomic domain slices | **Target Review Threshold** |
-| Type file (`.types.ts`) | **≤150 lines** | Split payload, entity, and UI types | **Target Review Threshold** |
-| Utility file (`.utils.ts`) | **≤120 lines** | Extract pure single-purpose functions | **Target Review Threshold** |
+| Screen / Route entry point (`*Screen.tsx`) | **≤80 lines** | Route orchestrator only; zero business logic or direct API calls | **HARD STOP — ZERO EXCEPTIONS** |
+| Feature Component / Widget | **≤200 lines** | Extract sub-components when owning multiple visual concerns | **HARD CEILING (Exception requires `// architecture-exception`)** |
+| Custom Hook / Controller | **≤150 lines** | Split query, mutation, and UI state concerns | **HARD CEILING (Exception requires `// architecture-exception`)** |
+| Validation Schema (`.schemas.ts`) | **≤150 lines** | Split by sub-step or domain entity | **HARD CEILING (Exception requires `// architecture-exception`)** |
+| API service file (`.api.ts`) | **≤150 lines** | Separate queries from mutations or sub-resources | **HARD CEILING (Exception requires `// architecture-exception`)** |
+| State Store (`.store.ts`) | **≤180 lines** | Decompose into atomic domain slices | **HARD CEILING (Exception requires `// architecture-exception`)** |
+| Type file (`.types.ts`) | **≤150 lines** | Split payload, entity, and UI types | **HARD CEILING (Exception requires `// architecture-exception`)** |
+| Utility file (`.utils.ts`) | **≤120 lines** | Extract pure single-purpose functions | **HARD CEILING (Exception requires `// architecture-exception`)** |
 
 If a file exceeds its ceiling: split by **feature responsibility**, not randomly by line count.
 Never create dumping folders named `helpers/`, `common/`, or `misc/`.
@@ -812,11 +809,16 @@ src/
             │   ├── trainer_members.url_config.ts   ← internal routes + API endpoints
             │   └── trainer_members.navigation.ts   ← feature navigation descriptor
             ├── mocks/
+            │   ├── scenarios/
+            │   │   └── trainer_members.scenarios.ts ← scenarios registry (active, empty, error, timeout)
             │   ├── trainer_members.fixtures.ts    ← initial seed data (mutable in-memory)
             │   └── trainer_members.handlers.ts    ← MSW handlers that mutate in-memory state
             ├── state/
             │   └── trainer_members.store.ts
             ├── tests/
+            │   ├── harness/
+            │   │   ├── bootstrap.ts               ← standalone harness bootstrap
+            │   │   └── TrainerMembersHarness.tsx  ← isolated zero-business test harness
             │   └── trainer_members.integration.test.ts
             ├── utils/
             │   └── trainerMembersFormatCurrency.ts  ← feature-local currency formatter (WET)
@@ -867,9 +869,15 @@ API / Types / Schema / Store / Config (dot-notation, role_module-prefixed, lower
   trainer_members.url_config.ts     ← lives inside config/ sub-folder
   trainer_members.query_keys.ts     ← lives inside api/ sub-folder
 
-Mocks (mutable in-memory state):
+Mocks (mutable in-memory state & scenarios):
+  mocks/scenarios/trainer_members.scenarios.ts ← scenarios registry (ACTIVE_RECORDS, EMPTY_DATA, SERVER_500_ERROR, NETWORK_TIMEOUT, UNAUTHORIZED_401)
   trainer_members.fixtures.ts       ← initial seed data array
   trainer_members.handlers.ts       ← MSW handlers that READ/MUTATE in-memory state
+
+Tests (isolated integration & harness):
+  tests/harness/bootstrap.ts        ← standalone harness bootstrap
+  tests/harness/TrainerMembersHarness.tsx ← isolated zero-business test harness
+  tests/trainer_members.integration.test.ts ← integration tests
 
 Feature-local utilities (WET — never shared to src/core/):
   trainerMembersFormatCurrency.ts   ← inside utils/ sub-folder
@@ -1167,20 +1175,31 @@ Financial, destructive, identity, role, permission, and tenant-changing mutation
 - ONE central network-client module for the whole app — one HTTP client
   instance, one place where auth headers, tenant headers (`x-tenant-id`), and
   correlation IDs are attached. No feature creates its own separate HTTP client.
-- Every response is normalized into ONE canonical 8-field `ApiResponse<T>` shape:
+- Every response is normalized into ONE canonical `ApiResponse<T>` discriminated union shape:
   ```typescript
-  export interface ApiResponse<T> {
-    success: boolean;
+  export type ApiResponse<T> = ApiSuccess<T> | ApiFailure;
+
+  export interface ApiSuccess<T> {
+    success: true;
     message: string;
-    data: T | null;
+    data: T;
     meta?: PaginationMeta;
-    error?: string;
-    errorCode?: string;
+    requestId: string;
     statusCode?: number;
+  }
+
+  export interface ApiFailure {
+    success: false;
+    message: string;
+    data: null;
+    error?: string;
+    errorCode: string;
+    statusCode: number;
+    requestId: string;
     validationErrors?: ValidationErrorItem[];
   }
   ```
-  This matches the backend's canonical envelope exactly. There is NO second or partial mobile version.
+  This matches the backend and web canonical envelope exactly. There is NO second or partial mobile version.
   Every feature's API layer returns this shape — never raw, un-normalized responses.
 - User-facing error messages: Client-authored UI text MUST use i18n keys (`t('...')`).
   Backend `ApiResponse.message` may be shown directly only when the backend
@@ -1427,17 +1446,21 @@ export type ApiResponse<T> = ApiSuccess<T> | ApiFailure;
 
 export interface ApiSuccess<T> {
   success: true;
-  message?: string;
+  message: string;
   data: T;
   meta?: PaginationMeta;
+  requestId: string;
+  statusCode?: number;
 }
 
 export interface ApiFailure {
   success: false;
-  error?: string;
-  errorCode?: string;
   message: string;
+  data: null;
+  error?: string;
+  errorCode: string;
   statusCode: number;
+  requestId: string;
   validationErrors?: ValidationErrorItem[];
 }
 
@@ -1515,9 +1538,9 @@ visually renders with placeholder values.
 
 ## Rule 7B — URL Config Contract
 
-Every feature module MUST have exactly one `[moduleName].url_config.ts` (e.g., `members.url_config.ts`).
+Every feature module MUST have exactly one `[role]_[submodule].url_config.ts` (e.g., `manager_members.url_config.ts`).
 
-**Placement:** This file lives inside the feature's `config/` sub-folder (e.g., `src/features/frontend_manager/manager_members/config/members.url_config.ts`), NOT in the feature root.
+**Placement:** This file lives inside the feature's `config/` sub-folder (e.g., `src/features/frontend_manager/manager_members/config/manager_members.url_config.ts`), NOT in the feature root.
 
 **Separation of Concerns (no conflict with Rule 20):**
 - **Base URL** (e.g., `https://api.example.com`) lives in Rule 20 infrastructure — defined per environment via native build configuration and set centrally in the network client. Feature modules MUST NOT define or read the base URL.
@@ -1531,8 +1554,8 @@ This file MUST export:
 
 Example export shape:
 ```typescript
-// src/features/frontend_manager/manager_members/config/members.url_config.ts
-export const MEMBERS_URLS = {
+// src/features/frontend_manager/manager_members/config/manager_members.url_config.ts
+export const MANAGER_MEMBERS_URLS = {
   LIST:   '/api/v1/manager/members',
   DETAIL: (id: string) => `/api/v1/manager/members/${id}`,
   CREATE: '/api/v1/manager/members',
@@ -1542,18 +1565,18 @@ This guarantees a single source of truth for endpoints and prevents scattered ha
 
 ## Rule 7C — Query Key Registry (Canonical Factory Pattern)
 
-Every feature module MUST contain a dedicated query key registry file inside its `api/` or `config/` folder (e.g., `members.query_keys.ts`). This prevents the AI from inventing inconsistent, uncoordinated query keys like `['members']`, `['member']`, or `['member-list']`.
+Every feature module MUST contain a dedicated query key registry file inside its `api/` or `config/` folder (e.g., `manager_members.query_keys.ts`). This prevents the AI from inventing inconsistent, uncoordinated query keys like `['members']`, `['member']`, or `['member-list']`.
 
 ```typescript
-// src/features/frontend_manager/manager_members/api/members.query_keys.ts
-export const MEMBERS_QUERY_KEYS = {
+// src/features/frontend_manager/manager_members/api/manager_members.query_keys.ts
+export const MANAGER_MEMBERS_QUERY_KEYS = {
   all:     ['manager_members'] as const,
-  lists:   () => [...MEMBERS_QUERY_KEYS.all, 'list'] as const,
+  lists:   () => [...MANAGER_MEMBERS_QUERY_KEYS.all, 'list'] as const,
   list:    (filters: Record<string, unknown>) =>
-             [...MEMBERS_QUERY_KEYS.lists(), filters] as const,
-  details: () => [...MEMBERS_QUERY_KEYS.all, 'detail'] as const,
+             [...MANAGER_MEMBERS_QUERY_KEYS.lists(), filters] as const,
+  details: () => [...MANAGER_MEMBERS_QUERY_KEYS.all, 'detail'] as const,
   detail:  (id: string) =>
-             [...MEMBERS_QUERY_KEYS.details(), id] as const,
+             [...MANAGER_MEMBERS_QUERY_KEYS.details(), id] as const,
 };
 ```
 
@@ -1915,7 +1938,7 @@ The config module MUST:
   which validates presence/shape at app startup or runtime.
 
 > **Separation of Infra vs Feature URL Concerns:** Rule 20 governs the BASE URL (scheme + host + port) only.
-> Feature endpoint PATHS live in each feature's `config/members.url_config.ts` (Rule 7B).
+> Feature endpoint PATHS live in each feature's `config/manager_members.url_config.ts` (Rule 7B).
 > These two concerns MUST NEVER be merged into a single file or a single rule.
 
 ## Rule 21 — Over-The-Air (OTA) Updates & Hotfix Strategy
@@ -2179,7 +2202,7 @@ Generic phrases like "handles X operations" are forbidden.]
 | Folder | Responsibility | Key Files |
 |---|---|---|
 | `screens/` | Thin screen orchestrators (≤80 lines, zero business logic) | `ManagerMembersListScreen.tsx`, `ManagerMembersDetailScreen.tsx` |
-| `components/` | Presentational UI components and bottom sheets (≤200 lines) | `ManagerMembersCard.tsx`, `ManagerMembersFilterSheet.tsx`, `ManagerMembersEmptyState.tsx` |
+| `components/` | Presentational UI components and bottom sheets (≤200 lines) | `ManagerMembersMemberCard.tsx`, `ManagerMembersFilterSheet.tsx`, `ManagerMembersEmptyState.tsx` |
 | `hooks/` | Domain query and mutation hooks (≤150 lines) | `useManagerMembersList.ts`, `useManagerMembersMutations.ts` |
 | `api/` | All API calls for this sub-module via `networkClient` | `manager_members.api.ts` |
 | `types/` | TypeScript interfaces for entities, navigation param lists, DTOs | `manager_members.types.ts` |
@@ -2187,7 +2210,7 @@ Generic phrases like "handles X operations" are forbidden.]
 | `state/` | Feature-scoped Zustand store for transient UI state (≤180 lines) | `useManagerMembersStore.ts` |
 | `config/` | Sub-module route constants and URL definitions | `manager_members.url_config.ts` |
 | `mocks/` | Module-specific MSW handlers, fixtures, and scenarios | `manager_members.handlers.ts`, `manager_members.fixtures.ts`, `manager_members.scenarios.ts` |
-| `tests/` | Integration tests and standalone mounting harness | `manager_members.test.tsx`, `MembersHarness.tsx`, `bootstrap.ts` |
+| `tests/` | Integration tests and standalone mounting harness | `manager_members.integration.test.ts`, `MembersHarness.tsx`, `bootstrap.ts` |
 
 ### Approved External Dependencies & Expected Host Contract
 [REQUIRED: Maximum 7 Application Infrastructure items permitted under the Feature Dependency Budget. Each dependency MUST document its exact expected TypeScript interface/contract so an isolated AI never guesses.]
@@ -2210,7 +2233,7 @@ Each row must have a real Purpose description, real API endpoints, and an accura
 
 | Screen / Sheet | Route / Stack Name | What the User Can Do | Key Components | Main API Calls | Status |
 |---|---|---|---|---|---|
-| Members List | `ManagerMembersList` | View paginated list, search, pull-to-refresh, tap card to navigate to detail | `ManagerMembersCard.tsx`, `ManagerMembersFilterSheet.tsx` | `fetchMembers()` | Complete |
+| Members List | `ManagerMembersList` | View paginated list, search, pull-to-refresh, tap card to navigate to detail | `ManagerMembersMemberCard.tsx`, `ManagerMembersFilterSheet.tsx` | `fetchMembers()` | Complete |
 | Member Detail | `ManagerMembersDetail` | View profile tabs, status badge, renewal CTA | `ManagerMembersDetailHeader.tsx`, `ManagerMembersTabs.tsx` | `fetchMemberById()` | Complete |
 | Add Member Sheet | `ManagerMembersAdd` | 3-step registration wizard: Personal Info → Plan → Payment | `ManagerMembersAddForm.tsx` | `createMember()` | Complete |
 
@@ -2221,7 +2244,7 @@ Each row must have a real Purpose description, real API endpoints, and an accura
 |---|---|
 | `ManagerMembersListScreen.tsx` | Thin screen orchestrator (≤80 lines). Renders SafeAreaView and MainView. |
 | `ManagerMembersMainView.tsx` | Composes header, search bar, and FlashList. Zero direct API calls. |
-| `ManagerMembersCard.tsx` | Single list item with masked phone. Handles tap → navigates to detail. |
+| `ManagerMembersMemberCard.tsx` | Single list item with masked phone. Handles tap → navigates to detail. |
 | `ManagerMembersDetailScreen.tsx` | Screen wrapper for member profile. Extracts route param `memberId`. |
 | `ManagerMembersEmptyState.tsx` | Empty state shown when list has zero items. Has "Add Member" CTA. |
 | `ManagerMembersListSkeleton.tsx` | Loading skeleton matching member card dimensions. |
@@ -2578,9 +2601,10 @@ A common architectural antipattern is attempting to resolve cross-module needs b
 ### The Feature ZIP Guarantee (Self-Sufficiency Invariant)
 
 Every mobile feature module MUST satisfy the **Feature ZIP Guarantee**:
-1. An AI agent or human developer MUST be able to zip ONLY the feature folder (`src/features/frontend_{role}/{role}_{module}/`) along with the Documentation Trio (`[featureName]_features.md`, `[featureName]_forbidden.md`, `[featureName]_theme_contract.md`), drop it into an isolated prompt or project, and completely understand, run, mock, test, and repair it.
+1. An AI agent or human developer MUST be able to zip ONLY the sub-module folder (`src/features/frontend_{role}/{role}_{domain}/{domain}_{capability}/`) along with the Documentation Trio (`[role]_[submodule]_features.md`, `[role]_[submodule]_forbidden.md`, `[role]_[submodule]_theme_contract.md`), drop it into an isolated prompt or project, and completely understand, run, mock, test, and repair it.
 2. The feature MUST NEVER require sibling feature code or ask for other role folders.
 3. All dependencies on core application infrastructure (network client, theme tokens, hardware keychain) MUST be satisfied through the documented Core Application Contracts.
+4. **Scope of Isolated Sub-Module Testing vs Host E2E:** Inside the isolated sub-module ZIP, 100% self-sufficient testing is achieved via local integration tests and the mock scenario harness (`tests/` and `tests/harness/` with in-memory MSW scenarios). Full-system Maestro E2E test suites reside in the host repository (`mobile_e2e/frontend_{role}_e2e/{role}_{feature}/`) and are classified as `DEFERRED_TO_HOST_RUNTIME` when auditing/testing an isolated sub-module ZIP in an emulator-less or standalone AI environment. An isolated sub-module ZIP is 100% self-sufficient for unit, integration, and scenario-based harness testing without requiring host E2E runners.
 
 Enforce mechanically via `eslint-plugin-boundaries` so violations are caught in CI, not in
 code review.
@@ -3665,8 +3689,8 @@ For sensitive screens:
    - Every list screen has a dedicated `EmptyState` component? (Rule 51)
    - New tokens added to `MOBILE_UI_UX_DESIGN.md` before implementation? (Rule 52)
    - `[featureName]_theme_contract.md` updated with any newly used tokens? (Rule 52A)
-   - `members.url_config.ts` exists in `config/` sub-folder — no hardcoded URLs in `*.api.ts`? (Rule 7B)
-   - Query keys use the canonical factory from `members.query_keys.ts`? (Rule 7C)
+   - `manager_members.url_config.ts` (or `[role]_[submodule].url_config.ts`) exists in `config/` sub-folder — no hardcoded URLs in `*.api.ts`? (Rule 7B)
+   - Query keys use the canonical factory from `manager_members.query_keys.ts` (or `[role]_[submodule].query_keys.ts`)? (Rule 7C)
    - Mutations use dedicated mutation hooks — no inline `useMutation` in screens/components? (Rule 7C)
    - Every POST/PATCH/PUT/DELETE mutation uses a required stable Idempotency-Key; the same key is reused on retry and a new key is generated only for a new user intent? (Rule 53)
    - Token refresh is single-flight? (Rule 54)
@@ -3813,18 +3837,18 @@ The mobile frontend uses a co-located locale file architecture. The active launc
 Each feature module owns its own translation keys.
 
 ### Locale File Naming Convention
-Locale files MUST follow: `[featureName]_{lang}.json`
-- ✅ **GOOD:** `members_en.json`, `members_hi.json`
-- ❌ **BAD:** `en.json`, `translation.json`, `index.json`
+Locale files MUST follow: `[role]_[submodule]_{lang}.json` (e.g., `manager_members_en.json`, `manager_members_hi.json`)
+- ✅ **GOOD:** `manager_members_en.json`, `manager_members_hi.json`
+- ❌ **BAD:** `en.json`, `translation.json`, `members_en.json` (missing role prefix)
 
 The `_locales/` folder inside each feature MUST contain ONLY locale files for that feature.
 Locale files are grouped by feature, NOT by language.
 Do NOT create `src/locales/en/` or any global language folder.
 
 ```json
-// src/features/frontend_manager/manager_members/_locales/members_en.json
+// src/features/frontend_manager/manager_members/_locales/manager_members_en.json
 {
-  "members": {
+  "manager_members": {
     "PAGE_TITLE": "Members",
     "ADD_MEMBER": "Add Member"
   }
@@ -4068,18 +4092,20 @@ TOTAL RBGs:              [N]
 RBG GROUPING RATIONALE:
 [Why these batches are grouped together — dependency order]
 
-Reply "Begin RBG 1" to start controlled repair execution.
+Reply "Begin RBG 1" to start controlled repair execution (Interactive Mode).
 Or reply "Adjust" to change the grouping.
 ```
 
-Do NOT start any repair until the user approves the RBG Plan.
+**Approval Policy:**
+- **Interactive Repair Mode:** Do NOT start any repair until the user approves the RBG Plan.
+- **Autonomous / Single-Shot Mode (Mode D / Headless CI / Batch Runner):** When invoked in autonomous execution mode or headless pipeline, the RBG Plan is pre-authorized. The AI automatically publishes the RBG Plan and immediately begins executing RBG 1 through RBG N in strict dependency order without blocking on user input.
 
 #### RBG EXECUTION RULES
 
 1. **PRIOR RBG DEPENDENCY PRE-CHECK (MANDATORY for RBG N where N > 1):** Before executing any fix in RBG N, verify that every artifact from previous RBGs that the current RBG depends on is actually in place. If a prior RBG fix is missing or incomplete → repair it BEFORE starting the current RBG and record as `PRIOR_RBG_FIX_INCOMPLETE`. This is a targeted dependency check only — not a full re-audit of all previous RBGs.
 2. Execute ALL findings from the current RBG before moving to the next RBG.
 3. After completing each RBG, checkpoint and display the RBG Completion Dashboard.
-4. Do NOT start the next RBG until the user replies "continue" or "Begin RBG N+1".
+4. **Interactive vs Autonomous Progression:** In interactive mode, pause and await user "continue" or "Begin RBG N+1" before proceeding. In autonomous / single-shot mode (Mode D), automatically progress to the next RBG upon successful checkpoint validation.
 5. Within an RBG, apply fixes in dependency order (architecture → state → UI → tests → docs).
 6. Never apply a fix from RBG 3 while RBG 1 is still in progress.
 
