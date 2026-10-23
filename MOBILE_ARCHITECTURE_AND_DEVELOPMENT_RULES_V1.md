@@ -292,23 +292,26 @@ frontend_manager_store/
 frontend_manager_api/
 ```
 
-when those files contain business behavior belonging to individual features. Feature-specific responsibilities MUST remain inside the owning feature:
+when those files contain business behavior belonging to individual features. Feature-specific responsibilities MUST remain inside the owning feature's autonomous sub-modules:
 
 ```text
 src/features/
 └── frontend_manager/
     ├── manager_members/
-    │   ├── components/
-    │   ├── hooks/
-    │   ├── api/
-    │   └── ...
+    │   └── members_directory/
+    │       ├── components/
+    │       ├── hooks/
+    │       ├── api/
+    │       └── ...
     ├── manager_attendance/
-    │   ├── components/
-    │   ├── hooks/
-    │   ├── api/
-    │   └── ...
+    │   └── attendance_dashboard/
+    │       ├── components/
+    │       ├── hooks/
+    │       ├── api/
+    │       └── ...
     └── manager_billing/
-        └── ...
+        └── billing_invoices/
+            └── ...
 ```
 
 The same principle applies to every role and every domain.
@@ -758,10 +761,13 @@ src/
     i18n/
       i18n.ts
       useTranslation.ts
+    hooks/
+      useDebounce.ts
+      useUnsavedChangesGuard.ts
+      useConfirm.ts
     utils/
       displayValue.ts
       formatNumber.ts
-      useDebounce.ts
       handleValidationErrors.ts
     observability/
       sentry.ts
@@ -773,50 +779,53 @@ src/
 ├── frontend_manager/
 │   └── manager_members/
 └── frontend_trainer/
-    └── trainer_members/                  ← entire feature lives here
-        ├── screens/                      ← thin composition only (≤80 lines each)
-        │   ├── TrainerMembersListScreen.tsx      ← renders <SafeAreaView>+<StatusBar>+<TrainerMembersListMainView/>
-        │   ├── TrainerMembersDetailScreen.tsx    ← renders <SafeAreaView>+<StatusBar>+<TrainerMembersDetailMainView/>
-        │   ├── TrainerMembersAddScreen.tsx       ← renders <SafeAreaView>+<StatusBar>+<TrainerMembersAddMainView/>
-        │   └── TrainerMembersNavigator.tsx       ← feature-owned stack navigator
-        ├── components/
-        │   ├── TrainerMembersListMainView.tsx    ← ≤200 lines — main orchestrator for list screen
-        │   ├── TrainerMembersDetailMainView.tsx  ← ≤200 lines — main orchestrator for detail screen
-        │   ├── TrainerMembersAddMainView.tsx     ← ≤200 lines — main orchestrator for add screen
-        │   ├── TrainerMembersMemberCard.tsx      ← Role+Module prefixed
-        │   ├── TrainerMembersMemberCard.test.tsx
-        │   ├── TrainerMembersMemberListItem.tsx
-        │   └── TrainerMembersEmptyState.tsx
-        ├── hooks/
-        │   ├── useTrainerMembers.ts             ← Role+Module prefixed
-        │   ├── useTrainerMembers.test.ts
-        │   ├── useTrainerMembersFilters.ts
-        │   └── useTrainerMembersFilters.test.ts
-        ├── schemas/
-        │   └── trainer_members.schema.ts
-        ├── types/
-        │   └── trainer_members.types.ts
-        ├── api/
-        │   ├── trainer_members.api.ts
-        │   └── trainer_members.query_keys.ts
-        ├── config/
-        │   ├── trainer_members.url_config.ts   ← internal routes + API endpoints
-        │   └── trainer_members.navigation.ts   ← feature navigation descriptor
-        ├── mocks/
-        │   ├── trainer_members.fixtures.ts    ← initial seed data (mutable in-memory)
-        │   └── trainer_members.handlers.ts    ← MSW handlers that mutate in-memory state
-        ├── state/
-        │   └── trainer_members.store.ts
-        ├── tests/
-        │   └── trainer_members.integration.test.ts
-        ├── utils/
-        │   └── trainerMembersFormatCurrency.ts  ← feature-local currency formatter (WET)
-        ├── _locales/
-        │   ├── trainer_members_en.json
-        │   └── trainer_members_hi.json
-        ├── trainer_members_features.md
-        ├── trainer_members_forbidden.md
-        └── trainer_members_theme_contract.md
+    └── trainer_members/                  ← domain container
+        ├── screens/                      ← Pure Navigational Shell
+        │   └── TrainerMembersNavigator.tsx   ← feature-owned stack navigator
+        │
+        └── members_directory/            ← autonomous sub-module (AI repair unit)
+            ├── screens/                  ← thin composition only (≤80 lines each)
+            │   ├── TrainerMembersListScreen.tsx      ← renders <SafeAreaView>+<StatusBar>+<TrainerMembersListMainView/>
+            │   ├── TrainerMembersDetailScreen.tsx    ← renders <SafeAreaView>+<StatusBar>+<TrainerMembersDetailMainView/>
+            │   └── TrainerMembersAddScreen.tsx       ← renders <SafeAreaView>+<StatusBar>+<TrainerMembersAddMainView/>
+            ├── components/
+            │   ├── TrainerMembersListMainView.tsx    ← ≤200 lines — main orchestrator for list screen
+            │   ├── TrainerMembersDetailMainView.tsx  ← ≤200 lines — main orchestrator for detail screen
+            │   ├── TrainerMembersAddMainView.tsx     ← ≤200 lines — main orchestrator for add screen
+            │   ├── TrainerMembersMemberCard.tsx      ← Role+Module prefixed
+            │   ├── TrainerMembersMemberCard.test.tsx
+            │   ├── TrainerMembersMemberListItem.tsx
+            │   └── TrainerMembersEmptyState.tsx
+            ├── hooks/
+            │   ├── useTrainerMembers.ts             ← Role+Module prefixed
+            │   ├── useTrainerMembers.test.ts
+            │   ├── useTrainerMembersFilters.ts
+            │   └── useTrainerMembersFilters.test.ts
+            ├── schemas/
+            │   └── trainer_members.schema.ts
+            ├── types/
+            │   └── trainer_members.types.ts
+            ├── api/
+            │   ├── trainer_members.api.ts
+            │   └── trainer_members.query_keys.ts
+            ├── config/
+            │   ├── trainer_members.url_config.ts   ← internal routes + API endpoints
+            │   └── trainer_members.navigation.ts   ← feature navigation descriptor
+            ├── mocks/
+            │   ├── trainer_members.fixtures.ts    ← initial seed data (mutable in-memory)
+            │   └── trainer_members.handlers.ts    ← MSW handlers that mutate in-memory state
+            ├── state/
+            │   └── trainer_members.store.ts
+            ├── tests/
+            │   └── trainer_members.integration.test.ts
+            ├── utils/
+            │   └── trainerMembersFormatCurrency.ts  ← feature-local currency formatter (WET)
+            ├── _locales/
+            │   ├── trainer_members_en.json
+            │   └── trainer_members_hi.json
+            ├── trainer_members_features.md
+            ├── trainer_members_forbidden.md
+            └── trainer_members_theme_contract.md
 ```
 
 ### Hyper-Descriptive, Module-Prefixed Naming (AI Context Guarantee)
@@ -879,27 +888,26 @@ Mandatory documentation files (feature root level):
 
 | Pattern | Example | Why permitted |
 |---|---|---|
-| `use` prefix on hooks | `useMembers.ts` | React/RN framework convention; feature name follows immediately |
-| dot-notation API/type files | `members.api.ts` | Feature name IS the prefix, separated by dot |
-| `*.integration.test.ts` suffix | `members.integration.test.ts` | Test type suffix is structural, feature still prefixed |
-| `*_features.md`, `*_forbidden.md` | `members_features.md` | Mandatory doc format — feature name leads |
-| `_locales/{lang}.json` | `_locales/en.json` | Standardized locale filename; feature ownership is established by the containing feature folder |
+| `use` prefix on hooks | `useTrainerMembers.ts` | React/RN framework convention; Role+Module name follows immediately |
+| dot-notation API/type files | `trainer_members.api.ts` | Role+Module name IS the prefix, separated by dot |
+| `*.integration.test.ts` suffix | `trainer_members.integration.test.ts` | Test type suffix is structural, Role+Module still prefixed |
+| `*_features.md`, `*_forbidden.md` | `trainer_members_features.md` | Mandatory doc format — Role+Module name leads |
+| `_locales/{feature}_{lang}.json` | `_locales/trainer_members_en.json` | Explicitly prefixed with Role+Module per Rule 61 |
 
 **What is forbidden regardless:**
 ```
 ❌ BAD:  Card.tsx, hook.ts, api.ts, store.ts, types.ts
-❌ BAD:  useData.ts, loadItems.ts, getData.ts   ← no role\+module identity
+❌ BAD:  useData.ts, useMembers.ts, loadItems.ts, getData.ts   ← missing role+module identity
 ✅ GOOD: TrainerMembersMemberCard.tsx, useTrainerMembers.ts, trainer_members.api.ts
 ```
 
-**AI warning:** Do NOT rename `useMembers.ts` to `membersUseHook.ts` or similar to
-"fix" the prefix. `useMembers.ts` is the correct, compliant filename.
+**AI warning:** Do NOT rename `useTrainerMembers.ts` to `trainerMembersUseHook.ts` or similar to "fix" the prefix. `useTrainerMembers.ts` is the correct, compliant filename.
 
 - **No abbreviations:** Never `Btn`, `Nav`, `Util`. Use `Button`, `Navigation`, `Utility`.
 - **Suffix by type:** `...Card`, `...List`, `...Form`, `...Modal`, `...Sheet`, `...EmptyState`.
-- **Exported name = filename:** `MembersMemberCard.tsx` must export `MembersMemberCard`.
+- **Exported name = filename:** `TrainerMembersMemberCard.tsx` must export `TrainerMembersMemberCard`.
   No default exports with a different name — this prevents AI hallucination.
-- **Props interfaces prefixed:** `export interface MembersMemberCardProps` — never generic `Props`.
+- **Props interfaces prefixed:** `export interface TrainerMembersMemberCardProps` — never generic `Props`.
 
 ### Role Isolation
 
@@ -1426,10 +1434,16 @@ export interface ApiSuccess<T> {
 
 export interface ApiFailure {
   success: false;
-  error: string;
+  error?: string;
+  errorCode?: string;
   message: string;
   statusCode: number;
-  validationErrors?: Record<string, string[]>;
+  validationErrors?: ValidationErrorItem[];
+}
+
+export interface ValidationErrorItem {
+  field: string;
+  message: string;
 }
 
 export interface PaginationMeta {
@@ -2180,7 +2194,7 @@ Generic phrases like "handles X operations" are forbidden.]
 
 - `src/core/network/networkClient.ts` — `networkClient.get/post/patch/delete<T>(endpoint, body?, options?): Promise<ApiResponse<T>>`
 - `src/core/theme/` — `useThemeTokens()` returning typed design tokens
-- `src/core/utils/formatters.ts` — `displayValue(val, fallback?)`, `formatCurrency(amount, currency)`
+- `src/core/utils/formatters.ts` — `displayValue(val, fallback?)`, `formatNumber(value, locale)`, `formatPercent(value, locale)`
 - `src/core/toast/` — `showToast(message, type, dedupKey?)`
 - Host Session Context — `interface ExpectedAuthUser { id: string; role: Role; branchId: string; }`
 
@@ -3674,9 +3688,9 @@ For sensitive screens:
 4. Run CI gates: lint (`eslint-plugin-boundaries`, `consistent-type-imports`), type check, test pyramid, SCA scan, secrets scan, hard-write-boundary diff check.
 5. For auth, payment, storage, or tenant-routing changes: ensure CODEOWNERS human review.
 
-### Sub-Module `_features.md` Files
+### No `_features.md` Inside Internal Category Sub-Folders
 
-The module root MUST contain exactly ONE authoritative `[role_module]_features.md` that covers ALL screens, flows, and sub-features of the module. Creating additional `_features.md` files inside sub-folders is FORBIDDEN — it violates Root Quarantine and fragments the AI repair context. All sub-screen documentation MUST be sections within the single root `_features.md`.
+The autonomous sub-module root MUST contain exactly ONE authoritative `[role]_[submodule]_features.md` that covers ALL screens, flows, and capabilities of that sub-module. Creating additional `_features.md` files inside internal category sub-folders (`components/`, `hooks/`, `api/`, etc.) is FORBIDDEN — it violates Root Quarantine and fragments the AI repair context. All sub-screen documentation MUST be sections within the single sub-module root `_features.md`.
 
 ### Documentation Freshness Metadata Header
 
@@ -3695,29 +3709,29 @@ documentation_status: "current"
 ```
 
 ### Mandatory Sections in `_features.md`:
-Every feature's `_features.md` MUST define these sections with non-generic content:
-1. `## Scope and Non-Scope`
-2. `## Screen Inventory`
-3. `## Navigation Contract`
-4. `## API Contract`
-5. `## Query Key Registry`
-6. `## Mutation Inventory`
+Every sub-module's `_features.md` MUST define these sections with non-generic content:
+1. `## Scope and Non-Scope (Module Purpose, System Context & Dependencies)`
+2. `## Screen Inventory & Component Responsibility Map`
+3. `## Navigation Contract & User Flows` (includes `Logical Integration Points`)
+4. `## API Contract & UI Data Requirements`
+5. `## Query Key Registry & Server State`
+6. `## Mutation Inventory & Lifecycle Operations`
 7. `## Permissions and Role Rules`
-8. `## State Ownership`
-9. `## Offline and Reconnect Behavior`
-10. `## Security and PII Rules`
-11. `## Accessibility Requirements`
-12. `## Background Tasks`
-13. `## Feature Flags`
-14. `## Cache Invalidation`
-15. `## Migration and Rollback`
-16. `## Test Coverage Map`
-17. `## Architecture Exceptions & Decision Log (ADRs)` (documents non-obvious architecture choices and any `// architecture-exception:` comments)
-18. `## Logical Integration Points (Zero Code Imports)` (documents conceptual cross-feature touchpoints with zero code imports)
-19. `## Known Contract Gaps & Bug Log`
-20. `## Module Run, Mock & Test Harness` (isolated test commands, Maestro suite, test user credentials, mock scenario toggles)
-21. `## Module Portability & Host Integration Guide` (4-step host integration instructions)
-22. `## Module Changelog & Revision History` (documents version history and rationale for AI audit trail)
+8. `## State Ownership & Architecture Flow`
+9. `## Offline, Loading, Empty, and Error States`
+10. `## Security and PII Rules (Data Masking & Guards)`
+11. `## Accessibility Requirements (A11y)`
+12. `## Background Tasks & Realtime Events`
+13. `## Feature Flags & Tenant Settings`
+14. `## Cache Invalidation & Consistency`
+15. `## Migration, Rollback & Edge Cases (AI Warnings)`
+16. `## Test Coverage Map & Quality Gates`
+17. `## Architecture Exceptions (ADRs)`
+18. `## Known Contract Gaps & Bug Log`
+19. `## Rule Compliance Checklist (35+ Verification Items)`
+20. `## Standalone Run, Mock & Test Harness`
+21. `## Module Portability & Host Integration Guide`
+22. `## Deliverables & Version History (8/8 Portability Score)`
 
 CI MUST fail when a changed feature source file does not have a corresponding update to its `[feature]_features.md`, unless the change is test-only or a documented no-behavior-change refactor.
 

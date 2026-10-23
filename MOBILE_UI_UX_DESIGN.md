@@ -246,7 +246,7 @@ Every semantic foreground/background pair used for normal UI text MUST meet WCAG
 The theme module MUST be contrast-tested for all Light/Dark semantic pairs.
 CI/design validation MUST fail when an approved text/background pair falls below the required threshold.
 
-Ensure `primary` (`#FACC15` dark / `#EAB308` light) and `destructive` (#DC2626) against `on-primary` (#111111) and `on-destructive` (#FFFFFF) pass this contrast validation before final theme lock.
+Ensure `primary` (`#FACC15` dark / `#EAB308` light) and `destructive` (`#B91C1C`) against `on-primary` (`#111111`) and `on-destructive` (`#FFFFFF`) pass this contrast validation before final theme lock.
 
 The project default is 4.5:1 minimum for all text, including large text, to
 avoid subjective classification errors. WCAG's lower large-text threshold must
