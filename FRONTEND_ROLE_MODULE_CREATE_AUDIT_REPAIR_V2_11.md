@@ -680,32 +680,38 @@ Web border-radius tokens    → tokens.radius.*
 
 After extraction and baseline freeze, create the mobile module following ALL rules from `MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md`. Key requirements:
 
-**Folder Structure (canonical):**
+**Folder Structure (canonical 4-tier Day-1 Sub-Module hierarchy):**
 ```text
-src/features/frontend_{role}/{role}_{module}/
-├── screens/          ← *Screen.tsx files (≤80 lines each)
-├── components/       ← *MainView.tsx + feature components (≤200 lines)
-├── hooks/            ← use{Role}{Module}*.ts (≤150 lines)
-├── api/              ← {role}_{module}.api.ts + query_keys.ts
-├── schemas/          ← {role}_{module}.schema.ts
-├── types/            ← {role}_{module}.types.ts
-├── config/           ← {role}_{module}.url_config.ts
-├── mocks/            ← {role}_{module}.fixtures.ts + handlers.ts (MUTABLE)
-├── state/            ← {role}_{module}.store.ts
-├── tests/            ← integration tests
-├── utils/            ← {role}{Module}FormatCurrency.ts (WET)
-├── _locales/         ← {role}_{module}_en.json + _hi.json
-├── {role}_{module}_features.md
-├── {role}_{module}_forbidden.md
-└── {role}_{module}_theme_contract.md
+src/features/frontend_{role}/{role}_{domain}/
+├── screens/
+│   └── Manager[Domain]Navigator.tsx                 ← Pure domain navigational shell
+├── [role]_[domain]_features.md                      ← Master domain features specification
+├── [role]_[domain]_forbidden.md                     ← Master domain forbidden imports
+├── [role]_[domain]_theme_contract.md                ← Master domain theme contract
+└── {domain}_{capability}/                           ← Autonomous Sub-Module (Terminal Leaf Feature Unit)
+    ├── screens/          ← *Screen.tsx files (≤80 lines each)
+    ├── components/       ← *MainView.tsx + feature components (≤200 lines)
+    ├── hooks/            ← use{Role}{Submodule}*.ts (≤150 lines)
+    ├── api/              ← {role}_{submodule}.api.ts + query_keys.ts
+    ├── schemas/          ← {role}_{submodule}.schema.ts
+    ├── types/            ← {role}_{submodule}.types.ts
+    ├── config/           ← {role}_{submodule}.url_config.ts
+    ├── mocks/            ← {role}_{submodule}.fixtures.ts + handlers.ts (MUTABLE)
+    ├── state/            ← {role}_{submodule}.store.ts
+    ├── tests/            ← integration tests
+    ├── utils/            ← {role}{Submodule}FormatCurrency.ts (WET)
+    ├── _locales/         ← {role}_{submodule}_en.json + _hi.json
+    ├── {role}_{submodule}_features.md (ALL 22 canonical sections)
+    ├── {role}_{submodule}_forbidden.md
+    └── {role}_{submodule}_theme_contract.md
 ```
 
 **Critical mobile-specific requirements extracted from web ZIP:**
-1. API endpoints from web `*_url_config.ts` → mobile `config/{role}_{module}.url_config.ts` (same paths)
-2. TypeScript types from web `*_types/` → mobile `types/{role}_{module}.types.ts` (same fields, RN-compatible)
-3. Zod schemas from web `*_schemas/` → mobile `schemas/{role}_{module}.schema.ts` (same validation)
-4. MSW fixtures from web `*_mocks/` → mobile `mocks/{role}_{module}.fixtures.ts` (MUTABLE in-memory)
-5. Business enums from web `*_constants/` → mobile `types/{role}_{module}.types.ts` (same values)
+1. API endpoints from web `*_url_config.ts` → mobile `config/{role}_{submodule}.url_config.ts` (same paths)
+2. TypeScript types from web `*_types/` → mobile `types/{role}_{submodule}.types.ts` (same fields, RN-compatible)
+3. Zod schemas from web `*_schemas/` → mobile `schemas/{role}_{submodule}.schema.ts` (same validation)
+4. MSW fixtures from web `*_mocks/` → mobile `mocks/{role}_{submodule}.fixtures.ts` (MUTABLE in-memory)
+5. Business enums from web `*_constants/` → mobile `types/{role}_{submodule}.types.ts` (same values)
 
 ---
 
@@ -736,7 +742,7 @@ src/features/frontend_{role}/{role}_{module}/
 VERSIONED ARTIFACT: mobile-{role}-v1.zip (or source-level delivery per Capability-Truth Rule)
 
 Contents Layout:
-├── src/features/frontend_{role}/{role}_{module}/  ← complete mobile module
+├── src/features/frontend_{role}/{role}_{domain}/{domain}_{capability}/  ← complete mobile module
 ├── mobile_e2e/frontend_{role}_e2e/{role}_{module}/
 │   ├── {role}_{module}.yaml                       ← Maestro E2E tests (top-level mirrored; never stored inside src/features/)
 │   └── helpers/
@@ -754,22 +760,19 @@ INTEGRATION_GUIDE.md MUST contain:
     - Mock fixture shapes extracted
     - Any CONTRACT_NOT_FOUND_IN_WEB_ZIP items documented
   Section 2: Mobile Module Placement
-    - Exact path: src/features/frontend_{role}/{role}_{module}/
+    - Exact path: src/features/frontend_{role}/{role}_{domain}/{domain}_{capability}/
     - Navigation wiring instructions
     - Core infrastructure dependencies
   Section 3: npm install command
     - Only packages from approved locked registry
   Section 4: Host Verification Commands
-    - npm run lint, npm run typecheck, npm run test
-    - npx maestro test mobile_e2e/
-  Section 5: DEFERRED_TO_HOST_RUNTIME items
-    - Metro bundler verification
-    - Device/simulator E2E execution
-  Section 6: Host Verification Commands
     - npm run lint
     - npm run typecheck
     - npm run test
     - npx maestro test mobile_e2e/
+  Section 5: DEFERRED_TO_HOST_RUNTIME items
+    - Metro bundler verification
+    - Device/simulator E2E execution
     - All items classified as DEFERRED_TO_HOST_RUNTIME, OUTSIDE_SUPPLIED_SCOPE, or EXTERNAL_PRODUCT_DECISION_BLOCKED documented here
 ```
 
@@ -2346,7 +2349,7 @@ FAIL IF: Raw string comparison without validation, or unhandled undefined case.
 - Are there any hardcoded links pointing to a now-removed standalone route that should use `?view=` instead?
 
 **6. Per-View Isolation**
-- Does each view component live in the module's own `_components/` folder (prefixed correctly)?
+- Does each view component live in the sub-module's own `components/` folder (prefixed correctly, e.g., `components/[Submodule]Views/`)?
 - Does each view component have its own loading/error/empty state?
 - Does any view component import from a SIBLING view component directly (isolation violation)?
 
@@ -5247,7 +5250,7 @@ Verify ALL requirements from the source section, including:
 
 - one primary React component per component file;
 - related declarations may coexist in a cohesive non-component responsibility;
-- role + module-prefixed internal folders (e.g., manager_members_components);
+- canonical standard internal subfolders (components/, hooks/, api/, schemas/, types/, config/, mocks/, state/, tests/, utils/, _locales/) inside each sub-module with role + module-prefixed files (e.g., ManagerMembersCard.tsx);
 - component maximum 300 lines;
 - custom hook maximum 150 lines;
 - utility/formatter maximum 120 lines;
@@ -5832,7 +5835,7 @@ Audit all details of:
    - human approval for AI-generated changes.
 78. en-dash nullable display fallback and `displayValue`.
 79. complex-form unsaved-change guard including browser exit AND client-side navigation.
-80. feature-local currency/number formatter (WET inside `[moduleName]_utils/`), minor-unit integer contract, no raw `.toFixed()`, zero global business formatters (only `src/lib/display_value.ts` for neutral en-dash null fallback).
+80. feature-local currency/number formatter (WET inside `utils/`), minor-unit integer contract, no raw `.toFixed()`, zero global business formatters (only `src/lib/display_value.ts` for neutral en-dash null fallback).
 81. loading-width stability.
 82. toast deduplication, including:
    - stable IDs;
@@ -7427,7 +7430,7 @@ NO UNKNOWN REQUIREMENT
 [ ] Mode C — Platform Translation: Zero next/ imports in mobile output
 [ ] Mode C — Platform Translation: Zero HTML elements (div, span, table, input) in mobile output
 [ ] Mode C — Platform Translation: Zero Tailwind class strings in mobile StyleSheets
-[ ] Mode C — Design Token Translation: Zero Gold colors (#FACC15, yellow-*, amber-*) in mobile output
+[ ] Mode C — Design Token Translation: Luxury Premium Gold primary (tokens.color.primary = #FACC15/#EAB308, onPrimary = #111111) used via useThemeTokens(); zero Indigo/Purple brand primary
 [ ] Mode C — Design Token Translation: All colors from MOBILE_UI_UX_DESIGN.md tokens.color.*
 [ ] Mode C — Design Token Translation: All spacing from tokens.space[N]
 [ ] Mode C — Design Token Translation: All typography from tokens.typography.*
@@ -7453,8 +7456,8 @@ NO UNKNOWN REQUIREMENT
 [ ] Mobile Rule 0A.3 — 1:1 navigation-to-feature-folder mapping; feature-owned Navigator + url_config
 [ ] Mobile Rule 0B — Hard write boundary enforced; no sibling feature modifications
 [ ] Mobile Rule 1 — Screen+MainView pattern; 80-line screen ceiling; Role+Module prefixed files
-[ ] Mobile Rule 1 — Canonical path: src/features/frontend_{role}/{role}_{module}/
-[ ] Mobile Rule 1 — Root Quarantine: only 3 doc files at feature root
+[ ] Mobile Rule 1 — Canonical path: src/features/frontend_{role}/{role}_{domain}/{domain}_{capability}/
+[ ] Mobile Rule 1 — Root Quarantine: only 3 doc files at sub-module root
 [ ] Mobile Rule 1 — Mocks: fixtures.ts + handlers.ts with mutable in-memory state (Rule 7A)
 [ ] Mobile Rule 3 — Zero magic values; all tokens from MOBILE_UI_UX_DESIGN.md
 [ ] Mobile Rule 4 — TanStack Query v5 for server state; isPending not isLoading; onSuccess in useQuery BANNED
@@ -7472,7 +7475,7 @@ NO UNKNOWN REQUIREMENT
 [ ] Mobile Rule 11 — react-native-haptic-feedback (NOT expo-haptics); reduced motion respected
 [ ] Mobile Rule 14 — Only packages from Locked NPM Package Registry; no expo-* packages
 [ ] Mobile Rule 17 — Top-level Maestro E2E in mobile_e2e/frontend_{role}_e2e/{role}_{module}/ (never inside src/features/); unit/integration tests co-located in tests/; no placeholder assertions
-[ ] Mobile Rule 24 — _features.md complete with all 18 sections; non-generic content
+[ ] Mobile Rule 24 — _features.md complete with ALL 22 canonical sections; non-generic content (superseded by 43P-DOCS-01)
 [ ] Mobile Rule 25 — accessibilityLabel/Role/State on all interactive elements; 44pt/48dp targets
 [ ] Mobile Rule 28 — Zero cross-feature imports; formatCurrency is feature-local (Rule 63)
 [ ] Mobile Rule 29 — _forbidden.md present with minimum 5 specific entries
@@ -7561,11 +7564,11 @@ Before final delivery, the AI MUST literally verify:
 [ ] Web Rule 16 — Robust Forms & Field-Level Validation checked
 [ ] Web Rule 17 — Centralized Error Interception checked
 [ ] Web Rule 18 — Enterprise Accessibility (WCAG 2.2 AA) checked
-[ ] Web Rule 19 — Clickable Table Rows with Detail Navigation checked
-[ ] Web Rule 20 — Keyboard-Equivalent Row Navigation checked
-[ ] Web Rule 21 — Searchable Dropdowns for Large Datasets checked
-[ ] Web Rule 22 — AI-Testable UI (Accessible Selectors First, data-testid for Ambiguous Cases) checked
-[ ] Web Rule 23 — Component-Level AI Docstrings (JSDoc) checked
+[ ] Web Rule 19 — Interactive Data Tables (Clickable Rows & Keyboard Navigation) checked
+[ ] Web Rule 20 — Searchable Dropdowns for Large Datasets & Selection Controls checked
+[ ] Web Rule 21 — Real-Time Communication (In-House WebSocket Architecture) checked
+[ ] Web Rule 22 — Tenant Context & Centralized Headers (Multi-Tenancy) checked
+[ ] Web Rule 23 — Password Visibility Toggle checked
 [ ] Web Rule 24 — Date/Time Formatting & UTC Display checked
 [ ] Web Rule 25 — RBAC UI Hiding vs Authoritative Backend Auth checked
 [ ] Web Rule 26 — Skeleton Loading States checked
@@ -10078,7 +10081,7 @@ The AI MUST evaluate every item below against the created mobile module and reco
 
 ## 43P-ARCH — Architecture & Structure
 
-- [ ] **43P-ARCH-01:** Feature folder path is `src/features/frontend_{role}/{role}_{module}/` — `frontend_` prefix present on role container
+- [ ] **43P-ARCH-01:** Feature folder path is `src/features/frontend_{role}/{role}_{domain}/{domain}_{capability}/` — `frontend_` prefix present on role container and Tier 4 leaf sub-module path enforced
 - [ ] **43P-ARCH-02:** All screens in `screens/` are ≤80 lines — thin composition only, zero business logic, zero direct API calls
 - [ ] **43P-ARCH-03:** Every screen renders exactly ONE `[Role][Module][Screen]MainView.tsx` component
 - [ ] **43P-ARCH-04:** All components in `components/` are ≤200 lines
@@ -10088,7 +10091,7 @@ The AI MUST evaluate every item below against the created mobile module and reco
 - [ ] **43P-ARCH-08:** All type files in `types/` are ≤150 lines
 - [ ] **43P-ARCH-09:** All store files in `state/` are ≤180 lines
 - [ ] **43P-ARCH-10:** All utility files in `utils/` are ≤120 lines
-- [ ] **43P-ARCH-11:** Feature root contains ONLY the three documentation files — no loose source files at root
+- [ ] **43P-ARCH-11:** Sub-module root contains ONLY the three documentation files — zero loose source files at sub-module root
 - [ ] **43P-ARCH-12:** Zero cross-feature business imports (Rule 28) — no sibling feature imports anywhere
 - [ ] **43P-ARCH-13:** Every component/hook/file uses Role+Module prefix in filename (e.g. `ManagerMembersMemberCard.tsx`)
 - [ ] **43P-ARCH-14:** No abbreviations in file or component names
@@ -10523,7 +10526,7 @@ During Mode C creation, for EVERY interactive element identified in Extraction S
 >
 > In contrast, every source file INSIDE those subfolders MUST carry the `[Role][Module]` prefix (PascalCase for components/screens, camelCase with `use` for hooks, dot-notation lowercase for types/schemas/api/store/mocks/locales).
 >
-> Feature root is strictly quarantined: it MUST contain ONLY the three documentation files (`{role}_{module}_features.md`, `{role}_{module}_forbidden.md`, `{role}_{module}_theme_contract.md`).
+> Sub-module root is strictly quarantined: it MUST contain ONLY the three documentation files (`{role}_{submodule}_features.md`, `{role}_{submodule}_forbidden.md`, `{role}_{submodule}_theme_contract.md).`
 
 ## PATCH-09 — Dedicated Mutation Hook & Resource-Identified Query Key Factory (Rule 7C & 60)
 
