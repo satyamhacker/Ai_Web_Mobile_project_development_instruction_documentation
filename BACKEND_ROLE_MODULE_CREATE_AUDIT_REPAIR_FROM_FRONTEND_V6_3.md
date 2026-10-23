@@ -111,7 +111,7 @@ Stop only when:
 >      - **Cross-Domain/Cross-Submodule Mutation Side-Effects:** Mutations that trigger side-effects in other domains or sibling sub-modules (e.g., attendance check-in awards reward points or sends a push notification) MUST be decoupled via Domain Events (emitted to Redis Streams / Transactional Outbox pattern). The triggering sub-module never directly calls the secondary sub-module's mutation service.
 >      - **Multi-Table Atomic Transactions:** When an atomic workflow genuinely requires coordinated mutations across multiple database tables, it MUST be orchestrated by an approved Application Workflow Orchestrator service (e.g., Saga/Orchestrator) at an approved boundary, not by direct inter-submodule imports.
 >    - **Autonomous Backend Sub-Module Documentation Trio:** Every single backend sub-module MUST contain its own isolated documentation trio directly at its root:
->      - `[role]-[submodule]-backend-feature.md` (or `_backend-feature.md`): Master specification containing ALL 22 Canonical Sections, including Section 20 (Standalone Run, Mock & Test Harness with seeders), Section 21 (Module Portability & Host Integration Guide), Section 22 (Revision History & 8/8 Portability Score), and the Frozen API Contract.
+>      - `[role]-[submodule]-backend-feature.md` (or `_backend-feature.md`): Master specification containing ALL 22 Canonical Sections, including Section 20 (Standalone Run, Mock & Test Harness with seeders), Section 21 (Module Portability & Host Integration Guide), Section 22 (Revision History & 10/10 Portability Score), and the Frozen API Contract.
 >      - `[role]-[submodule]-backend-forbidden.md` (or `_backend-forbidden.md`): Concrete, sub-module-specific forbidden anti-patterns and boundary invariants.
 >      - `[role]-[submodule]-backend-contract.md` (or `_backend-contract.md`): Frozen public API endpoints, DTO schemas, and emitted domain event schemas.
 >    - **The Backend Sub-Module ZIP Guarantee (Granular AI Repair Unit):** When repairing or auditing a backend sub-feature (e.g., `attendance-history`), the developer zips **ONLY `attendance-history/`** and gives it to any AI. The AI receives a laser-focused context (controllers, services, DTOs, unit tests, and standalone harness for history only), and repairs the API in one shot with 0% risk of breaking sibling sub-modules or the host monolith.
@@ -163,7 +163,7 @@ Every AI agent executing this prompt MUST strictly obey these invariants at all 
 ---
 
 > ⚡ **ARCHITECTURE DOCUMENT IS FINAL AUTHORITY**
-> If ANY rule, example, checklist item, or wording inside this prompt (V6.3) conflicts with the supplied `BACKEND_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md`, **the architecture document wins — always, without exception**. This prompt is an execution guide, not a rule definition source. Record the conflict and follow the architecture document.
+> If ANY rule, example, checklist item, or wording inside this prompt (V6.4) conflicts with the supplied `BACKEND_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md`, **the architecture document wins — always, without exception**. This prompt is an execution guide, not a rule definition source. Record the conflict and follow the architecture document.
 
 ### AUTHORITY MODEL
 
@@ -184,13 +184,11 @@ Every currently defined applicable rule in the supplied normative architecture d
 
 ## FRAMEWORK APPLICABILITY
 
-This V6.4 document applies only to NestJS + TypeScript + TypeORM + PostgreSQL projects governed by the supplied backend architecture document.
-
-Django or other frameworks require their own separately maintained execution prompt. The AI must not adapt NestJS folder, DTO, module, migration, or testing rules to a different framework by inference.
+This V6.4 document is **NestJS-first** (NestJS + TypeScript + TypeORM + PostgreSQL) by default. When the supplied project uses Django + Python, the AI MUST follow the normative framework mappings explicitly defined in Section 47G and `BACKEND_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md`. Other unapproved frameworks require their own separately maintained execution prompt; the AI must not invent ad-hoc rules by unguided inference.
 
 1. System and execution-environment constraints always apply and cannot be overridden by any document.
 2. The supplied `BACKEND_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md` is authoritative for architecture, implementation, security, naming, dependency, testing, and design rules.
-3. This V6.3 prompt is authoritative for audit process, evidence reporting, frontend-contract extraction, delivery structure, and scope-control procedures — unless it directly conflicts with the architecture document.
+3. This V6.4 prompt is authoritative for audit process, evidence reporting, frontend-contract extraction, delivery structure, and scope-control procedures — unless it directly conflicts with the architecture document.
 4. Repository-local conventions apply when they do not conflict with the architecture document or this prompt.
 5. In case of conflict between any two sources, do NOT silently choose one. Record:
    - conflicting texts (exact);
@@ -3408,7 +3406,7 @@ Checkpointing MUST NOT become permission to:
 - skip E2E/Selenium generation;
 - skip documentation.
 
-The final result MUST still satisfy the complete applicable backend V6.3 requirements and normative backend architecture.
+The final result MUST still satisfy the complete applicable backend V6.4 requirements and normative backend architecture.
 
 ## 6.10 Mode A — CREATE
 
@@ -3498,7 +3496,7 @@ Instead, `INTEGRATION_GUIDE.md` serves as the **SINGLE CONSOLIDATED BACKEND DEVE
 |---|---|---|---|---|
 | 1 | Updated or created backend source files | MANDATORY | MANDATORY | Self-contained module files with local documentation trio |
 | 2 | Database migrations and rollback scripts | MANDATORY if schema changes | MANDATORY if schema changes | Co-located inside module migration folder |
-| 3 | Unit, integration, and API E2E tests | MANDATORY | MANDATORY | Automated test suites (`supertest_e2e/`, `e2e/`) |
+| 3 | Unit, integration, and API E2E tests | MANDATORY | MANDATORY | Automated test suites (`{submodule}-tests/`, `backend-e2e/`, `backend-selenium/`) |
 | 4 | UI automation tests (Selenium/Playwright) | MANDATORY | MANDATORY | When frontend flows are testable |
 | 5 | `INTEGRATION_GUIDE.md` | MANDATORY | MANDATORY | **CONSOLIDATED MASTER DEVELOPER GUIDE** (Changelog, Endpoints, Migrations, Wiring, Verification) |
 | 6 | `RE_AUDIT_CHECKLIST_RESULT.md` | MANDATORY | MANDATORY | **FORMAL AUDIT LEDGER** (All 112 items evaluated) |
@@ -6029,7 +6027,7 @@ Verify ALL of the following:
    - **Cross-Domain/Cross-Submodule Mutation Side-Effects:** Mutations that trigger side-effects in other domains or sibling sub-modules MUST be decoupled via Domain Events (emitted to Redis Streams / Transactional Outbox pattern).
    - **Multi-Table Atomic Transactions:** Orchestrated exclusively by an approved Application Workflow Orchestrator service, never direct inter-submodule mutation calls.
 6. **Autonomous Sub-Module Documentation Trio:** Every autonomous sub-module contains:
-   - `[role]-[submodule]-backend-feature.md` (or `_backend-feature.md`) with ALL 22 Canonical Sections (including Section 20 Standalone Harness & Seeders, Section 21 Portability Guide, Section 22 Revision History & 8/8 Portability Score)
+   - `[role]-[submodule]-backend-feature.md` (or `_backend-feature.md`) with ALL 22 Canonical Sections (including Section 20 Standalone Harness & Seeders, Section 21 Portability Guide, Section 22 Revision History & 10/10 Portability Score)
    - `[role]-[submodule]-backend-forbidden.md` (or `_backend-forbidden.md`)
    - `[role]-[submodule]-backend-contract.md` (or `_backend-contract.md`)
 7. **Backend Sub-Module ZIP Guarantee:** Any single sub-module can be zipped independently, provided to an AI agent, and audited/repaired in complete isolation.
@@ -6421,7 +6419,7 @@ Verify EVERY autonomous backend sub-module contains its dedicated **Autonomous S
    - Rule Compliance Checklist (35+ Verification Items)
    - Section 20: Standalone Run, Mock & Test Harness (Seeders, In-Memory DB / SQLite / Testcontainers)
    - Section 21: Module Portability & Host Integration Guide (4-Step host integration)
-   - Section 22: Deliverables & Version History (8/8 Portability Score & Changelog)
+   - Section 22: Deliverables & Version History (10/10 Portability Score & Changelog)
 2. `[role]-[submodule]-backend-forbidden.md` (or `_backend-forbidden.md`) — concrete forbidden anti-patterns (no sibling imports, no parent shared folders).
 3. `[role]-[submodule]-backend-contract.md` (or `_backend-contract.md`) — public frozen endpoints, DTO schemas, and event contracts.
 
@@ -8546,7 +8544,7 @@ Rule 19 is not satisfied merely because `[role]-[module]-backend-feature.md` exi
 [ ] 19. ## Rule Compliance Checklist (35+ Verification Items)
 [ ] 20. ## Standalone Run, Mock & Test Harness (Seeders, SQLite/Testcontainers Harness)
 [ ] 21. ## Module Portability & Host Integration Guide (Drop-in host integration)
-[ ] 22. ## Deliverables & Version History (Sub-Module Self-Audit 8/8 Portability Score)
+[ ] 22. ## Deliverables & Version History (Sub-Module Self-Audit 10/10 Portability Score)
 ```
 
 Missing even one of these 22 sections = `PARTIALLY_COMPLIANT` / Documentation Quality Failure.
@@ -8616,8 +8614,8 @@ Must document exact harness location (`{submodule}-tests/harness/[submodule].har
 #### 21. Module Portability & Host Integration Guide
 Must provide 4-step instructions for dropping the sub-module into a host application, registering in domain aggregator module, running migrations, and verifying environment keys.
 
-#### 22. Deliverables & Version History (8/8 Portability Score)
-Must verify all 8 items of the Sub-Module Self-Audit & ZIP Portability Score:
+#### 22. Deliverables & Version History (10/10 Portability Score)
+Must verify all 10 items of the Sub-Module Self-Audit & ZIP Compliance Gate:
 1. Autonomous Directory Structure (`{submodule}-{artifact}/`)
 2. Zero Cross-Submodule Imports
 3. Standalone Test Harness with Seeders
@@ -8625,7 +8623,9 @@ Must verify all 8 items of the Sub-Module Self-Audit & ZIP Portability Score:
 5. Complete Repository & Query Isolation
 6. Documentation Trio Present & Complete
 7. Frozen API Contract Verified
-8. AI Portability Guarantee
+8. Ambient Core Stubs & Machine-Readable Manifest (`contracts/core-contracts.stub.ts`, `required-core-contracts.json` budget ≤ 7)
+9. Standard 8-State Mock Scenario Catalog (`fixtures/mock-scenarios.ts`)
+10. AI Portability Guarantee
 
 ### Documentation Trio Audit (`_backend-forbidden.md` & `_backend-contract.md`)
 - `[role]-[submodule]-backend-forbidden.md`: Must list concrete sub-module-specific forbidden anti-patterns (no sibling imports, no parent shared folders, no tenant bypass).
@@ -10266,7 +10266,7 @@ Before producing the final verdict, verify:
 [ ] Rule 118 (Immutable Event Log) — Immutable domain events emitted to a broker and stored in append-only event log/timeseries; CQRS analytics
 [ ] Rule 119 (Immutable Ledger) — Immutable ledger rows, `journal_id`, `account_id`, `direction`, positive `amount_minor_units`, balanced debits/credits, reversal journals; NO direct UPDATEs
 [ ] Tests checked for behavioral integrity
-[ ] Rule 19 Documentation Trio verified — every autonomous sub-module contains _backend-feature.md (with ALL 22 canonical sections, Section 20 Standalone Harness & Seeders, Section 21 Portability Guide, Section 22 Revision History & 8/8 Portability Score), _backend-forbidden.md, and _backend-contract.md
+[ ] Rule 19 Documentation Trio verified — every autonomous sub-module contains _backend-feature.md (with ALL 22 canonical sections, Section 20 Standalone Harness & Seeders, Section 21 Portability Guide, Section 22 Revision History & 10/10 Portability Score), _backend-forbidden.md, and _backend-contract.md
 [ ] Shared/outside-scope dependencies classified
 [ ] Runtime availability disclosed
 [ ] Omission sweep completed
@@ -10517,6 +10517,8 @@ DO NOT dump massive output tables directly into the chat. You MUST write your fi
 - Stage 1 Output → `stage-1-frontend-requirements.md`
 - Stage 2 Output → `stage-2-backend-audit.md`
 - Stage 3 Output → `stage-3-final-verdict.md`
+
+*(Note: These stage artifacts are written to the intermediate execution-state directory `/mnt/data/.ai_execution_state/[SAFE_TASK_ID]/` during execution turns to prevent context truncation. In the final delivery ZIP, they are consolidated into `INTEGRATION_GUIDE.md` and `RE_AUDIT_CHECKLIST_RESULT.md` per the No Loose Markdown Clutter Rule in Section 86B.3.8.)*
 
 ## UI AUTOMATION APPLICABILITY RULE
 
@@ -11194,7 +11196,7 @@ HIGHEST DISCOVERED RULE NUMBER: [number / identifier]
 > ⛔ **NO ARBITRARY SCORE PENALTY FOR OFFLINE AUDIT:**
 > When commands, migrations, or tests cannot be executed due to the absence of a live host database or server, the Static Architecture & Code Completeness scorecard MUST evaluate code and architecture completeness statically. Unexecuted runtime verification MUST NOT be used to artificially fail rules or deduct points from static compliance. Rules whose source implementation is complete are scored as PASS, with runtime verification noted as `DEFERRED_TO_HOST_RUNTIME`.
 
-# 86B.6 FINAL V6.3 EXHAUSTIVE CONTRACT-COMPLETENESS REQUIREMENT
+# 86B.6 FINAL V6.4 EXHAUSTIVE CONTRACT-COMPLETENESS REQUIREMENT
 
 A backend MUST NOT be declared “complete” solely because:
 
