@@ -36,7 +36,7 @@
 > ⛔ **AI HALLUCINATION REDUCTION DISCIPLINE (TARGET < 5% HALLUCINATION RATE):**
 > AI coding models hallucinate when context is ambiguous, dependencies are hidden across deep trees, or contracts are assumed rather than explicitly declared. To reduce AI hallucination from the industry baseline (>80% in multi-file projects) to under 5%:
 > 1. The AI MUST NOT invent, guess, or assume API response fields, store actions, Next.js route paths, or UI props. Every contract MUST be verified against Zod schemas, TypeScript types, or `[moduleName]_features.md`.
-> 2. When creating or debugging a module, the AI MUST rely primarily on the module's documentation trio (`[moduleName]_features.md`, `[moduleName]_forbidden.md`, `[moduleName]_theme_contract.md`) and mock fixtures (`[moduleName]_mocks/fixtures/`), treating source code as the LAST resort.
+> 2. When creating or debugging a module, the AI MUST rely primarily on the module's documentation trio (`[role]_[submodule]_features.md`, `[role]_[submodule]_forbidden.md`, `[role]_[submodule]_theme_contract.md`) and mock fixtures (`mocks/fixtures/`), treating source code as the LAST resort.
 > 3. Every file and folder MUST satisfy the **5-Second Comprehension Invariant**—a newly initialized AI context or human developer must understand its exact responsibility, inputs, outputs, and boundaries within 5 seconds without inspecting parent or sibling files.
 
 ## RULE ENFORCEMENT & SEVERITY MODEL
@@ -161,7 +161,7 @@ All entries below are **required** unless explicitly marked as optional. AI agen
 | Real-Time | `socket.io-client` (WebSocket only) | No SSE, no Pusher, no Supabase real-time. See Rule 21. |
 | Icons | `lucide-react` | Size 18px, strokeWidth 2. No mixing icon families. |
 | Charts | `react-apexcharts` | Recharts and Chart.js are **forbidden**. |
-| Date/Time | `date-fns` or `dayjs` | No `moment.js`. See Rule 24. |
+| Date/Time | `date-fns` | 3.x. No `moment.js`, no `dayjs`. See Rule 24 & Approved Registry. |
 | Fonts | `next/font/google` (Inter) | No Google Fonts CDN `@import`. See Rule 56. |
 | Images | `next/image` | Raw `<img>` forbidden except documented exceptions. See Rule 33. |
 | i18n | `next-intl` | Co-located locale files per module. See Rule 18 / Locale Naming. |
@@ -390,7 +390,7 @@ declare module '@/components/ui/*' {
 ### Feature Dependency Budget (Maximum 7 Core Infrastructure Dependencies)
 
 To guarantee portability and prevent spaghetti coupling, every feature module operates under a strict **External Dependency Budget**:
-- A feature module MUST NOT import from more than **7 distinct core application infrastructure files** (e.g., `@/lib/api`, `@/lib/logger`, `@/components/ui/button`, `@/components/ui/dialog`, `@/lib/socket`, `@/lib/display_value`, `@/lib/format_currency`).
+- A feature module MUST NOT import from more than **7 distinct core application infrastructure files** (e.g., `@/lib/api`, `@/lib/logger`, `@/components/ui/button`, `@/components/ui/dialog`, `@/lib/socket`, `@/lib/display_value`, `@/lib/auth`).
 - If a feature module requires more than 7 external infrastructure imports, it indicates that the module is over-coupled or trying to do too many unrelated things. It MUST either:
   1. Internalize helper logic locally (Strict WET), or
   2. Split into distinct sub-feature modules.
@@ -417,16 +417,16 @@ Every feature module must pass two mechanical portability tests before it is app
 #### The Universal 4-Tier Hierarchy:
 
 ```text
-APPLICATION ROOT
-  └── TIER 1: ROLE CONTAINER (e.g., src/app/frontend_manager/)
-        └── TIER 2: FEATURE DOMAIN CONTAINER (e.g., manager_profile/, manager_attendance/, manager_settings/)
+TIER 1: APPLICATION ROOT (src/app/)
+  └── TIER 2: ROLE CONTAINER (e.g., src/app/frontend_manager/)
+        └── TIER 3: FEATURE DOMAIN CONTAINER (e.g., manager_profile/, manager_attendance/, manager_settings/)
               ├── layout.tsx                                    # Pure UI Shell / Sub-Nav Tab Bar (zero business code)
               ├── page.tsx                                      # Default redirect to primary sub-module
               ├── [role]_[domain]_features.md                   # High-level domain architectural map
               ├── [role]_[domain]_forbidden.md                  # High-level domain boundaries
               ├── [role]_[domain]_theme_contract.md             # High-level domain theme contract
               │
-              ├── TIER 3: AUTONOMOUS SUB-MODULE (e.g., attendance_dashboard/ — 100% Autonomous AI Repair & ZIP Unit)
+              ├── TIER 4: AUTONOMOUS SUB-MODULE (e.g., attendance_dashboard/ — 100% Autonomous AI Repair & ZIP Unit)
               │    ├── page.tsx / loading.tsx / error.tsx       # Next.js route entry files
               │    ├── config/[role]_[submodule].url_config.ts  # Centralized route & API endpoints
               │    ├── contracts/host-stubs.d.ts                # Ambient host stubs for standalone compilation
@@ -1212,7 +1212,8 @@ export const ADMIN_MEMBERS_URLS = {
 } as const;
 ```
 
-### `[moduleName]_features.md` Content Specification (MANDATORY — GAP-4 Fix)
+### `[role]_[submodule]_features.md` Content Specification (MANDATORY — GAP-4 Fix)
+*(See Rule 13 for the authoritative, complete 22-canonical-section specification and template required for every autonomous sub-module).*
 This file MUST contain ALL of:
 1. Module Purpose — exact business purpose
 2. Routes — all URL paths with their page components
@@ -1225,12 +1226,14 @@ This file MUST contain ALL of:
 9. Known Forbidden Patterns — cross-reference to _forbidden.md
 Generic boilerplate defeats the AI-portable goal.
 
-### Child Folder Naming Contract
+### Sub-Module & Sub-Folder Naming Contract
 
-Every child folder MUST inherit Role + Module identity.
-- ✅ **GOOD:** `admin_members_table/`, `admin_members_filters/`, `admin_members_profile/`
-- ❌ **BAD:** `table/`, `filters/`, `profile/`, `modal/`
-*Why:* When you ZIP a child folder and give it to an AI, it instantly knows the full context without relying on parent path information.
+Every autonomous child sub-module MUST inherit the domain identity (`{domain}_{capability}/`, e.g., `attendance_dashboard/`, `attendance_history/`, `members_directory/`).
+Inside each autonomous sub-module, canonical standard category subfolder names are used: `components/`, `hooks/`, `api/`, `state/`, `types/`, `schemas/`, `constants/`, `utils/`, `locales/`, `mocks/`, `tests/`, `contracts/`.
+- ✅ **GOOD (Sub-Module Containers):** `members_directory/`, `members_detail/`, `attendance_dashboard/`
+- ❌ **BAD (Lazy / Generic Names):** `table/`, `filters/`, `profile/`, `modal/`, `details/`, `tab1/`, `common/`
+- ✅ **GOOD (Internal Category Folders & Files):** `members_directory/components/AdminMembersDirectoryTable.tsx`, `members_directory/hooks/useAdminMembersDirectory.ts`, `members_directory/constants/AdminMembersDirectoryConstants.ts`
+*Why:* When you ZIP an autonomous sub-module and give it to an AI, it instantly knows the full context without relying on parent path information.
 
 ### No Magic / Ambiguous File Names Rule
 
@@ -1249,11 +1252,11 @@ Generic, uninformative file names degrade AI reasoning speed and create search a
 *Enforcing the 1-Glance Comprehension Rule:* An AI or engineer scanning a directory listing must immediately comprehend the exact purpose of every file without opening it.
 
 3B. **Backend-Ready Centralized Data (Single Source of Truth)**: 
-Find all hardcoded UI data (dropdown options, filter lists, default preset arrays, payment modes, etc.) scattered across the UI components. Extract them into feature-specific constant files alongside their components (e.g., `AdminBillingPaymentModeConstants.ts` inside the `admin_billing_constants/` folder) or a module-level constants file prefixed with the full Role+Module name (e.g., `AdminBillingConstants.ts`) for data used across multiple sub-folders.
+Find all hardcoded UI data (dropdown options, filter lists, default preset arrays, payment modes, etc.) scattered across the UI components. Extract them into feature-specific constant files alongside their components (e.g., `AdminBillingPaymentModeConstants.ts` inside the `constants/` folder) or a module-level constants file prefixed with the full Role+Module name (e.g., `AdminBillingConstants.ts`) for data used across multiple sub-folders.
 *Why?* Centralizing static UI configuration minimizes UI changes when a backend source is introduced; the backend transition must still update the API contract, types, schema, mock layer, and API client as required. Derive your TypeScript types directly from these central arrays where applicable.
 
 ### Constants Organization (No Barrel Files)
-Place all module-wide constants strictly inside the `[moduleName]_constants/` folder. Do not create barrel files or entry points to re-export constants. Import the specific constant file you need directly using absolute imports.
+Place all module-wide constants strictly inside the `constants/` folder. Do not create barrel files or entry points to re-export constants. Import the specific constant file you need directly using absolute imports.
 
 ### Enum Registry Rule
 Business statuses MUST originate from one constants source.
@@ -1395,11 +1398,11 @@ UI Interaction
 A visible control without functional closure MUST be treated as a defect.
 
 7. **Interface & Type Isolation (The Prop Blueprint)**:
-Never define complex `Interfaces` or `Types` directly inside the component files. Extract all TypeScript definitions (Component Props, API Payloads, State Shapes) into a dedicated `[moduleName]_types/` folder.
-- **No Inline String Type Unions:** Never hardcode string type unions or any values as string literals (e.g., `'idle' | 'loading' | 'success' | 'error'`) inline inside interfaces or hook declarations. Always extract these into a named type inside the module's `_constants/` or `_types/` folder.
+Never define complex `Interfaces` or `Types` directly inside the component files. Extract all TypeScript definitions (Component Props, API Payloads, State Shapes) into a dedicated `types/` folder.
+- **No Inline String Type Unions:** Never hardcode string type unions or any values as string literals (e.g., `'idle' | 'loading' | 'success' | 'error'`) inline inside interfaces or hook declarations. Always extract these into a named type inside the module's `constants/` or `types/` folder.
 
 #### SCHEMA ORGANIZATION (NO BARREL FILES)
-Place all schema files strictly inside the `[moduleName]_schemas/` folder. Do not create barrel files or single entry points to re-export them. Import the specific schema you need directly using absolute imports.
+Place all schema files strictly inside the `schemas/` folder. Do not create barrel files or single entry points to re-export them. Import the specific schema you need directly using absolute imports.
 
 Separate schemas where responsibility requires them. Examples:
 - `AdminMembersCreateSchema.ts`
@@ -1429,10 +1432,11 @@ Rules:
 
 Recommended structure:
 ```text
-[moduleName]_types/
+types/
   ManagerMembersApiGenerated.ts
-  [ModuleName]Schema.ts
-  [ModuleName]Types.ts
+  [Role][Submodule]Types.ts
+schemas/
+  [Role][Submodule]Schemas.ts
 ```
 
 8. **Strict Server vs. Client Component Boundaries (Next.js Specific)**: 
@@ -1731,7 +1735,7 @@ Any path not in this allowlist is forbidden by default. Sibling feature modules 
 
 `src/lib/display_value.ts` may export only `displayValue()` for neutral rendering of nullish or empty UI values.
 A global business formatter library is forbidden.
-Currency, dates, phone numbers, tax, invoices, membership lifecycle labels, financial values, and feature-specific status formatting MUST remain feature-local inside `[moduleName]_utils/`.
+Currency, dates, phone numbers, tax, invoices, membership lifecycle labels, financial values, and feature-specific status formatting MUST remain feature-local inside the autonomous sub-module `utils/` folder.
 
 ---
 
@@ -2781,9 +2785,9 @@ Requirements:
 15F. **Core Production Edge-Case Safety Invariants (P0 Directives)**:
 To ensure enterprise reliability, prevent double-submissions, guarantee zero data glitches, and eliminate AI hallucinations during automated execution, every autonomous sub-module MUST enforce the following 8 immutable production safety invariants:
 
-1. **Idempotency Key (`X-Idempotency-Key: UUIDv4`) on All State Mutations:**
+1. **Idempotency Key (`Idempotency-Key: UUIDv4`) on All State Mutations:**
    - Every state-changing HTTP mutation (`POST`, `PUT`, `PATCH`, `DELETE`) initiated by an API client or TanStack Query mutation hook MUST attach a unique client-generated UUIDv4 header:
-     `X-Idempotency-Key: crypto.randomUUID()` (or `uuidv4()`).
+     `Idempotency-Key: crypto.randomUUID()` (or `uuidv4()`). (Backend CORS allows both `Idempotency-Key` and `X-Idempotency-Key`).
    - If a network failure occurs and the client retries, the exact same idempotency key is transmitted. This prevents duplicate financial transactions, double billing charges, or redundant entity creations.
 
 2. **Universal Null-Safe Fallback (`displayValue()` Invariant):**
@@ -2854,7 +2858,7 @@ The backend utilizes a strict Database-per-Tenant architecture. The frontend MUS
 Whenever there is a password input field, you MUST include an eye icon (visibility toggle) to switch between `password` and `text`. Use standard icons from lucide-react.
 
 24. **Date & Time Standardization (Timezone Safety)**:
-UI/form layers may use typed date values appropriate to the component; serialization to UTC ISO 8601 MUST occur at the module API boundary before the request is sent. When displaying, convert UTC strings to local time using `date-fns` or `dayjs`.
+UI/form layers may use typed date values appropriate to the component; serialization to UTC ISO 8601 MUST occur at the module API boundary before the request is sent. When displaying, convert UTC strings to local time using `date-fns` (Rule 24 & Approved Registry).
 
 25. **Role-Based UI Hiding (RBAC) — Frontend Checks are UX Controls Only:**
 
@@ -3360,8 +3364,8 @@ Every function defined inside a module's `[moduleName]_api.ts` file MUST follow 
 
 73. **`import type` Mandate for Type-Only Imports**:
 Whenever importing a TypeScript type, interface, or enum that is used purely for type-checking (not as a runtime value), you MUST use the `import type` syntax. Never use a regular `import` for type-only constructs.
-- ❌ **BAD:** `import { AdminMembersTableProps } from '@/app/frontend_admin/admin_members/admin_members_types/AdminMembersTableProps'`
-- ✅ **GOOD:** `import type { AdminMembersTableProps } from '@/app/frontend_admin/admin_members/admin_members_types/AdminMembersTableProps'`
+- ❌ **BAD:** `import { AdminMembersTableProps } from '@/app/frontend_admin/admin_members/members_directory/types/AdminMembersTableProps'`
+- ✅ **GOOD:** `import type { AdminMembersTableProps } from '@/app/frontend_admin/admin_members/members_directory/types/AdminMembersTableProps'`
 - **Why:** `import type` statements are completely erased at compile time, reducing bundle size, preventing accidental runtime usage of type definitions, and eliminating a major category of circular dependency errors. TypeScript's `verbatimModuleSyntax` compiler option can mechanically enforce this. This requirement exists to guarantee predictable TypeScript module behavior, reduce accidental runtime imports, and prevent circular dependency problems.
 
 74. **Security Scanning in Frontend CI/CD Tooling Gates (Extending Rule 61)**:
@@ -3738,9 +3742,9 @@ HttpResponse.json({
 })
 ```
 
-### Mock Scenarios Registry (`[moduleName].scenarios.ts`)
+### Mock Scenarios Registry (`[role]_[submodule].scenarios.ts`)
 
-Every feature module's mock suite MUST define a canonical scenarios registry at `[moduleName]_mocks/scenarios/[moduleName].scenarios.ts`.
+Every feature module's mock suite MUST define a canonical scenarios registry at `mocks/scenarios/[role]_[submodule].scenarios.ts`.
 This ensures any engineer or AI agent can immediately switch scenarios and verify all UI states deterministically without manual mocking hacks.
 
 Standard mandatory scenario keys:
@@ -3751,35 +3755,35 @@ Standard mandatory scenario keys:
 5. `UNAUTHORIZED_401` / `FORBIDDEN_403`: Session expiry or permission denial to verify redirect / auth toast.
 
 ```typescript
-// Example: manager_members_mocks/scenarios/managerMembers.scenarios.ts
+// Example: members_directory/mocks/scenarios/managerMembersDirectory.scenarios.ts
 export const MANAGER_MEMBERS_SCENARIOS = {
   ACTIVE_RECORDS: {
     status: 200,
-    envelope: { success: true, message: "OK", data: mockMembersList, meta: mockPaginationMeta }
+    envelope: { success: true, message: "OK", data: mockMembersList, meta: mockPaginationMeta, requestId: "req-mock-001" }
   },
   EMPTY_DATA: {
     status: 200,
-    envelope: { success: true, message: "No members found", data: [], meta: { total: 0, page: 1, limit: 10, totalPages: 0, hasNextPage: false, hasPrevPage: false } }
+    envelope: { success: true, message: "No members found", data: [], meta: { total: 0, page: 1, limit: 10, totalPages: 0, hasNextPage: false, hasPrevPage: false }, requestId: "req-mock-002" }
   },
   SERVER_500_ERROR: {
     status: 500,
-    envelope: { success: false, message: "Internal server error occurred", data: null, errorCode: "ERR_INTERNAL_500" }
+    envelope: { success: false, message: "Internal server error occurred", data: null, errorCode: "ERR_INTERNAL_500", statusCode: 500, requestId: "req-mock-500" }
   },
   NETWORK_TIMEOUT: {
     delayMs: 15000,
     status: 504,
-    envelope: { success: false, message: "Gateway timeout", data: null, errorCode: "ERR_TIMEOUT" }
+    envelope: { success: false, message: "Gateway timeout", data: null, errorCode: "ERR_TIMEOUT", statusCode: 504, requestId: "req-mock-504" }
   },
   UNAUTHORIZED_401: {
     status: 401,
-    envelope: { success: false, message: "Session expired", data: null, errorCode: "ERR_UNAUTHORIZED" }
+    envelope: { success: false, message: "Session expired", data: null, errorCode: "ERR_UNAUTHORIZED", statusCode: 401, requestId: "req-mock-401" }
   }
 } as const;
 ```
 
 ### Standalone Module Harness / Bootstrap (`bootstrap.ts` / `[Role][Module]Harness.tsx`)
 
-To guarantee absolute **Feature ZIP Portability**, every module MUST include a self-contained mounting harness located inside `[moduleName]_tests/harness/` (e.g., `ManagerMembersHarness.tsx` or `bootstrap.ts`).
+To guarantee absolute **Feature ZIP Portability**, every module MUST include a self-contained mounting harness located inside `tests/harness/` (e.g., `ManagerMembersHarness.tsx` or `bootstrap.ts`).
 
 The Harness MUST:
 1. Initialize the module's MSW worker with the active scenario;
@@ -3788,13 +3792,13 @@ The Harness MUST:
 
 ### Dataset Scale & Stress Testing Fixtures (10, 100, 500+ Records)
 
-To guarantee that UI components, virtualized tables, and pagination controls perform smoothly under enterprise loads without UI freezing or DOM thrashing, every feature module's `[moduleName]_mocks/fixtures/` MUST provide three deterministic scale tiers:
+To guarantee that UI components, virtualized tables, and pagination controls perform smoothly under enterprise loads without UI freezing or DOM thrashing, every feature module's `mocks/fixtures/` MUST provide three deterministic scale tiers:
 1. **Tier 1 (Small / 10 records):** For baseline rendering and snapshot tests.
 2. **Tier 2 (Standard / 100 records):** Exercises multi-page pagination, table search filters, and sorting.
 3. **Tier 3 (Stress / 500+ records):** Stress-tests virtualization (`@tanstack/react-virtual`), infinite scroll, and browser memory consumption.
 
 ```typescript
-// Example: manager_members_mocks/fixtures/managerMembers.fixtures.ts
+// Example: members_directory/mocks/fixtures/managerMembersDirectory.fixtures.ts
 export const MOCK_MEMBERS_TIER_1_SMALL   = generateMockMembers(10);
 export const MOCK_MEMBERS_TIER_2_MEDIUM  = generateMockMembers(100);
 export const MOCK_MEMBERS_TIER_3_STRESS  = generateMockMembers(500);
@@ -3933,7 +3937,7 @@ Never render completely blank table cells or profile field values when an API re
 - ❌ **BAD:** `<td>{member.trainerName}</td>` — renders nothing if `null`
 - ✅ **GOOD:** `<td>{displayValue(member.trainerName)}</td>` — renders `—` explicitly
 - **Centralize the neutral fallback:** Define a shared zero-business utility `displayValue` in `src/lib/display_value.ts`. `displayValue()` accepts primitive display values required by the UI, including string, number, boolean, null, and undefined, rendering an en-dash (`—`) for nullish/empty values while preserving meaningful zero (`0`) and false values.
-*(Note: `src/lib/display_value.ts` contains zero business logic and qualifies as approved global presentation infrastructure under Rule 63. No global business formatting library may exist. All business-aware formatters—currency, date, phone, tax, invoice, etc.—MUST remain strictly feature-local inside `[moduleName]_utils/` per Rule 80).*
+*(Note: `src/lib/display_value.ts` contains zero business logic and qualifies as approved global presentation infrastructure under Rule 63. No global business formatting library may exist. All business-aware formatters—currency, date, phone, tax, invoice, etc.—MUST remain strictly feature-local inside the autonomous sub-module `utils/` folder per Rule 80).*
 
 79. **Unsaved Changes Guard (Data Loss Prevention)**:
 Any complex form or multi-step wizard MUST implement a "Dirty State Guard" to prevent accidental data loss. Rule 79 supersedes Rule 46 for scope; Rule 46 defines only the browser `beforeunload` mechanism.
@@ -3951,10 +3955,10 @@ Any complex form or multi-step wizard MUST implement a "Dirty State Guard" to pr
 80. **Currency & Number Formatting Standardization**:
 Never manually concatenate currency symbols, format numbers with raw `.toFixed()`, or build locale strings directly inside JSX or component logic. All financial values and large numeric metrics MUST be piped through a centralized formatting utility.
 - **Minor-unit contract:** API monetary values are stored as minor units (paise, cents). Always divide by the appropriate currency subunit divisor (e.g., 100 for INR) before formatting. Never pass a raw API minor-unit value to a display formatter that expects major units — this causes a 100× display error.
-- **Required utilities:** Define `[module]FormatCurrency(amountMinor: number, currencyCode: string, locale: string): string` locally inside the feature module under `[moduleName]_utils/`. **Do NOT create or use a global formatters library.** Each feature module must own its own formatting utility to prevent cross-module coupling. The only permitted global presentation utility is `src/lib/display_value.ts` for zero-business en-dash fallbacks.
+- **Required utilities:** Define `[module]FormatCurrency(amountMinor: number, currencyCode: string, locale: string): string` locally inside the feature module under the autonomous sub-module `utils/` folder. **Do NOT create or use a global formatters library.** Each feature module must own its own formatting utility to prevent cross-module coupling. The only permitted global presentation utility is `src/lib/display_value.ts` for zero-business en-dash fallbacks.
 - **Locale consistency:** The utility must use the `Intl.NumberFormat` API to ensure consistent comma separators, decimal places, and currency symbol placement based on the app's configured locale — never hardcoded.
 - **Decimal precision:** Financial values MUST use the feature-local currency formatter. Metric counts (e.g., total members) must display with comma separators but no decimals.
-- **This rule is the numeric parallel to Rule 24** (which standardizes date/time formatting via `date-fns`/`dayjs`). Just as Rule 24 forbids raw `new Date()` in JSX, this rule forbids raw number concatenation.
+- **This rule is the numeric parallel to Rule 24** (which standardizes date/time formatting via `date-fns`). Just as Rule 24 forbids raw `new Date()` in JSX, this rule forbids raw number concatenation.
 - ❌ **BAD:** `<td>₹{payment.amount.toFixed(2)}</td>` — `payment.amount` is in paise; this displays 100× too large.
 - ✅ **GOOD:** `<td>{adminBillingFormatCurrency(payment.amount, 'INR', locale)}</td>`
 - **ESLint enforcement:** Add a custom ESLint rule or `no-restricted-syntax` pattern to flag direct `.toFixed()` calls and currency symbol string concatenation in `.tsx` files.
@@ -4093,12 +4097,12 @@ scripts/
 
 ### AI Agent Translation Rule
 When writing a new feature module, the AI MUST:
-1. Create `[moduleName]_locales/[moduleName]_en.json` with all English UI strings used in the module.
+1. Create `locales/[role]_[submodule]_en.json` with all English UI strings used in the sub-module.
 2. In the **same commit**, create locale files for all currently active languages defined in the "Currently Active Languages" section, using its own translation capability.
 3. Translations must be **contextually correct** for a Gym Management SaaS.
 
 ```json
-// [moduleName]_locales/[moduleName]_hi.json — AI writes this, context-aware
+// locales/[role]_[submodule]_hi.json — AI writes this, context-aware
 {
   "MEMBERS": {
     "PAGE_TITLE": "सदस्य",
@@ -4127,7 +4131,7 @@ export const ManagerMembersPage = () => {
 ```
 
 ### `scripts/merge-locales.ts` (Build-Time Merge Script)
-Merges all module `[moduleName]_locales/` folders into a single bundle per language. Runs automatically at build time.
+Merges all sub-module `locales/` folders into a single bundle per language. Runs automatically at build time.
 
 ```typescript
 // scripts/merge-locales.ts
@@ -4139,7 +4143,7 @@ import { globSync } from 'glob';
 const OUTPUT_DIR = 'public/locales';
 const merged: Record<string, Record<string, unknown>> = {};
 
-for (const file of globSync('src/app/frontend_*/**/[moduleName]_locales/*.json')) {
+for (const file of globSync('src/app/frontend_*/**/locales/*.json')) {
   const lang = path.basename(file, '.json');         // 'en', 'nl', etc.
   const content = JSON.parse(fs.readFileSync(file, 'utf-8'));
   merged[lang] = { ...merged[lang], ...content };
@@ -4177,14 +4181,14 @@ export const apiFetch = async (url: string, options?: RequestInit) => {
 ```
 
 ### Developer Workflow
-1. AI writes a new feature module and creates `[moduleName]_locales/[moduleName]_en.json`.
-2. AI, in the **same response**, creates all currently active target-language `[moduleName]_locales/[moduleName]_{lang}.json` files.
+1. AI writes a new feature module and creates `locales/[role]_[submodule]_en.json`.
+2. AI, in the **same response**, creates all currently active target-language `locales/[role]_[submodule]_{lang}.json` files.
 3. Run `npm run i18n:merge` (or let CI/build do it automatically).
-4. Commit all `[moduleName]_locales/` files alongside the feature module code.
+4. Commit all `locales/` files alongside the feature module code.
 5. **Never** put locale files in a central `src/messages/` or `src/i18n/` folder.
 
 ### Currently Active Languages
-This is the **authoritative list of languages** currently active in the project. When an AI agent creates any new module, it MUST generate `[moduleName]_locales/` files ONLY for the languages in this active list, unless the task explicitly requires additional locales.
+This is the **authoritative list of languages** currently active in the project. When an AI agent creates any new module, it MUST generate `locales/` files ONLY for the languages in this active list, unless the task explicitly requires additional locales.
 
 | Code | Language | Region | Script | Priority |
 |------|----------|--------|--------|----------|
@@ -4212,7 +4216,7 @@ When a planned language becomes officially active, every affected module MUST ad
 
 > **Indian Script Note (Web):** Indian scripts (Devanagari, Tamil, Telugu, etc.) require specific fonts. Use `next/font` to load Google Fonts such as `Noto Sans Devanagari`, `Noto Sans Tamil`, `Noto Sans Telugu` etc. for each script. Load fonts lazily — only load a script font when that locale is active. Never embed all script fonts at initial page load.
 
-> **AI AGENT NOTE:** Every UI string in JSX MUST use `t('NAMESPACE.KEY')`. When creating a new feature module, you MUST create `[moduleName]_locales/[moduleName]_en.json` AND all currently active target-language files (e.g., `[moduleName]_locales/[moduleName]_hi.json`) in the same response. Use your own translation capability — do NOT call external APIs. Hardcoding English strings in JSX is a critical violation.
+> **AI AGENT NOTE:** Every UI string in JSX MUST use `t('NAMESPACE.KEY')`. When creating a new feature module, you MUST create `locales/[role]_[submodule]_en.json` AND all currently active target-language files (e.g., `locales/[role]_[submodule]_hi.json`) in the same response. Use your own translation capability — do NOT call external APIs. Hardcoding English strings in JSX is a critical violation.
 
 ## Rule 19 — Centralized Feature Flags
 * **The Rule:** Never use environment variables (e.g., `NEXT_PUBLIC_ENABLE_FEATURE`) directly in JSX logic to conditionally render UI elements. 
@@ -4227,7 +4231,7 @@ The backend sends all monetary amounts as **integers in the smallest currency un
 ### Canonical Formatting Utility
 Create ONE shared utility per feature module. All currency display in that module MUST go through this function:
 ```typescript
-// admin_billing_utils/adminBillingFormatCurrency.ts (co-located inside the feature module)
+// utils/adminBillingFormatCurrency.ts (co-located inside the sub-module utils/ folder)
 /**
  * Formats a monetary amount from its smallest unit to a locale-aware display string.
  * @param amount  Integer in smallest unit (e.g., 9999 for ₹99.99)
@@ -4669,14 +4673,14 @@ Every project MUST have a `globals.css` (or equivalent canonical theme styleshee
 > **Every item MUST be verified against actual code with file and line evidence. Record `NON_COMPLIANT` for any failure.**
 
 ### 1. Architecture & Isolation Gate
-- [ ] **AI Portability:** Feature folder alone provides complete context for understanding, mocking, testing, and repairing the feature. — *STOP if sibling business files are required.*
-- [ ] **Zero Cross-Module Business Imports:** Zero imports from sibling feature modules. (Verified by ESLint boundaries). — *STOP if `import ... from '../sibling'` found.*
+- [ ] **AI Portability:** Autonomous sub-module folder alone provides complete context for understanding, mocking, testing, and repairing the feature. — *STOP if sibling business files are required.*
+- [ ] **Zero Cross-Module Business Imports:** Zero imports from sibling feature modules or sibling sub-modules. (Verified by ESLint boundaries). — *STOP if `import ... from '../sibling'` found.*
 - [ ] **No Role-Wide Business Buckets:** No generic `superadmin_components/`, `admin_hooks/`, etc., containing feature business logic. — *STOP if unowned bucket exists.*
-- [ ] **Root Quarantine Compliant:** ONLY routing files (`page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`, `not-found.tsx`, `template.tsx`, `default.tsx`), `[moduleName]_url_config.ts`, and the documentation trio (`[moduleName]_features.md`, `[moduleName]_forbidden.md`, `[moduleName]_theme_contract.md` or `_features.md`, `_forbidden.md`, `_theme_contract.md`) exist at feature root. All other files (.ts, .tsx) are in prefixed subfolders. — *STOP if any other code file is at root.*
-- [ ] **Feature Map Freshness:** `[moduleName]_features.md` contains real endpoints, data requirements table, component tree, permissions, and Module Run, Mock & Test Harness without placeholder text. — *STOP if generic or outdated.*
-- [ ] **Forbidden Patterns Enforced:** `[moduleName]_forbidden.md` present and specific to this module. — *STOP if missing.*
-- [ ] **Theme Contract Verified:** `[moduleName]_theme_contract.md` lists all consumed design tokens. — *STOP if missing.*
-- [ ] **URL Centralization Verified:** `[moduleName]_url_config.ts` present and consumed by all API and navigation call sites. — *STOP if raw URL in JSX/hooks.*
+- [ ] **Root Quarantine Compliant:** Pure Domain Container root (`{role}_{domain}/`) contains ONLY `layout.tsx` (tab bar), `page.tsx` (sub-module redirect), master domain doc trio, and child sub-module directories. Autonomous Sub-Module root (`{domain}_{capability}/`) contains ONLY routing entry files (`page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`, `not-found.tsx`), `config/[role]_[submodule].url_config.ts`, and the sub-module documentation trio (`_features.md`, `_forbidden.md`, `_theme_contract.md`). All executable source code (.ts, .tsx) lives inside canonical category subfolders (`components/`, `hooks/`, `api/`, `state/`, `types/`, `schemas/`, `constants/`, `utils/`, `locales/`, `mocks/`, `tests/`, `contracts/`) with `[Role][Submodule][Name]` prefixing. Zero loose code files at root. — *STOP if any unapproved code file is at root.*
+- [ ] **Feature Map Freshness:** `[role]_[submodule]_features.md` contains all 22 canonical sections, real endpoints, data requirements table, component tree, permissions, and Section 20 Standalone Harness without placeholder text. — *STOP if generic or outdated.*
+- [ ] **Forbidden Patterns Enforced:** `[role]_[submodule]_forbidden.md` present and specific to this sub-module. — *STOP if missing.*
+- [ ] **Theme Contract Verified:** `[role]_[submodule]_theme_contract.md` lists all consumed design tokens. — *STOP if missing.*
+- [ ] **URL Centralization Verified:** `config/[role]_[submodule].url_config.ts` present and consumed by all API and navigation call sites. — *STOP if raw URL in JSX/hooks.*
 
 ### 2. State & Data Contract Gate
 - [ ] **Server State via TanStack Query v5:** Uses `isPending`, namespaced query keys (Rule 8), no deprecated v4 APIs. — *STOP if `isLoading` on mutation.*
@@ -4713,7 +4717,7 @@ Every project MUST have a `globals.css` (or equivalent canonical theme styleshee
 
 ### 7. Localization Gate
 - [ ] **Zero Hardcoded Strings in JSX (Rule 18):** All user-facing text uses `t('KEY')` via `next-intl`. — *STOP if hardcoded English string in JSX.*
-- [ ] **Module-Co-located Locales:** `[moduleName]_locales/[moduleName]_en.json` and all active language files generated inside module. — *STOP if centralized messages folder used.*
+- [ ] **Module-Co-located Locales:** `locales/[role]_[submodule]_en.json` and all active language files generated inside autonomous sub-module `locales/` folder. — *STOP if centralized messages folder used.*
 - [ ] **Locale-Aware Currency & Numbers (Rule 80):** Currency formatted via module-local `[module]FormatCurrency()`. Minor units correctly divided by subunit divisor. — *STOP if raw minor units rendered.*
 - [ ] **Container Translation Expansion:** UI containers accommodate translated text up to 2× English length without truncation or overflow. — *STOP if layout breaks on long text.*
 

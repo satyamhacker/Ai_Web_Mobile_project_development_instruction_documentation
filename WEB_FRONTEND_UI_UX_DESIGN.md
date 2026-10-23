@@ -1095,7 +1095,7 @@ English is typically the shortest language. Designs MUST accommodate translated 
 | Toast messages | Max-width container, word-wrap enabled — backend messages render as-is. |
 
 ### Locale-Aware Formatting
-- **Dates:** Always format via `date-fns` or `dayjs` with locale parameter — never hardcode `DD/MM/YYYY`.
+- **Dates:** Always format via `date-fns` with locale parameter — never hardcode `DD/MM/YYYY` (Rule 24).
 - **Numbers:** Use `Intl.NumberFormat` with the app locale — Indian numbering system for INR (`₹1,23,456.00`).
 - **Currency:** Use `[module]FormatCurrency()` utility per Architecture Rule 80.
 - **Pluralization:** Use `next-intl` plural rules — never hardcode `"1 member"` / `"2 members"` logic in JSX.
@@ -1104,7 +1104,7 @@ English is typically the shortest language. Designs MUST accommodate translated 
 Although RTL is not the current primary requirement, designs MUST NOT use hardcoded `margin-left`, `padding-left`, `text-align: left`, or `float: left` in reusable components. Use logical CSS properties (`margin-inline-start`, `padding-inline-start`) or Tailwind logical variants (`ms-*`, `ps-*`) in shared primitives.
 
 ### Localization File Location
-Per Architecture Rule 18: locale files MUST be co-located inside the feature module at `[moduleName]_locales/[moduleName]_{lang}.json`. Never create a central `src/messages/` directory.
+Per Architecture Rule 18: locale files MUST be co-located inside the autonomous sub-module at `locales/[role]_[submodule]_{lang}.json` (e.g., `src/app/frontend_admin/admin_members/members_directory/locales/admin_members_directory_en.json`). Never create a central `src/messages/` or `src/locales/` directory.
 
 ---
 
@@ -1185,13 +1185,13 @@ Usage pattern:
 The project uses `next-intl` for internationalization.
 
 ### Locale File Location
-Per Architecture Rule 18, locales MUST be co-located inside the feature module, NEVER in a central `src/messages/` or `src/locales/` directory.
+Per Architecture Rule 18, locales MUST be co-located inside the autonomous sub-module at `locales/`, NEVER in a central `src/messages/` or `src/locales/` directory.
 
 ```text
-src/app/(admin)/admin-members/_locales/
-    ├── admin_members_en.json    ← English (default)
-    ├── admin_members_hi.json    ← Hindi (optional)
-    └── [moduleName]_[lang].json ← Pattern for future locales
+src/app/frontend_admin/admin_members/members_directory/locales/
+    ├── admin_members_directory_en.json    ← English (default / source of truth)
+    ├── admin_members_directory_hi.json    ← Hindi (active language)
+    └── [role]_[submodule]_[lang].json     ← Pattern for future locales
 ```
 
 ### Feature Translation Key Naming
