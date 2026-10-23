@@ -107,7 +107,7 @@ Before generating, auditing, or repairing ANY backend role module, verify ALL of
 [ ] Mandatory Ambient Host Stubs & Manifest: Sub-module contains contracts/core-contracts.stub.ts (stubbing core types, tenant context, event publisher, logger) and required-core-contracts.json (declaring external dependency budget <= 7)
 [ ] Standard Mock Scenario Catalog: Sub-module test harness/mocks implement the 8 standard scenarios (ACTIVE, EMPTY, UNAUTHORIZED, FORBIDDEN, NOT_FOUND, VALIDATION_ERROR, SERVER_500, TIMEOUT)
 [ ] Dual-Layer Multi-Tenancy Invariant: Database-per-tenant connection routing + mandatory gymId/branchId query predicate in every repository query
-[ ] Production Safety Guards: X-Idempotency-Key: UUIDv4 header on state mutations, distributed locking for concurrent resources, rate-limiting, and zero raw secrets
+[ ] Production Safety Guards: Idempotency-Key: UUIDv4 header on state mutations (accepts Idempotency-Key or X-Idempotency-Key), distributed locking for concurrent resources, rate-limiting, and zero raw secrets
 ```
 
 **✅ COMPLIANT structure (Universal Day-1 Sub-Module Hierarchy):**
@@ -126,8 +126,9 @@ backend-manager/
         │   ├── dashboard-controllers/                # {submodule}-controllers/
         │   ├── dashboard-services/                   # {submodule}-services/
         │   ├── dashboard-dto/                        # {submodule}-dto/ (Strict WET)
-        │   ├── dashboard-repositories/               # {submodule}-repositories/
-        │   ├── dashboard-entities/                   # {submodule}-entities/
+        │   ├── dashboard-repositories/               # {submodule}-repositories/ (contains ORM entities)
+        │   ├── dashboard-mappers/                    # {submodule}-mappers/ (Rule 89 toDomain/toEntity)
+        │   ├── dashboard-domain/                     # {submodule}-domain/ (Pure domain models)
         │   ├── dashboard-tests/                      # {submodule}-tests/ (unit & integration)
         │   │   ├── harness/                          # Standalone seeder & test harness
         │   │   └── fixtures/                         # Mock scenario catalog (ACTIVE, EMPTY, etc.)
@@ -456,27 +457,34 @@ When fixing a bug in `backend-superadmin/superadmin-modules/superadmin-billing`,
 
 ## QUICK NAMING REFERENCE (AI PRE-CREATION CHECK)
 
-**ROOT MODULE**
-`admin-members/`
+**FEATURE DOMAIN MODULE (Tier 3 — Quarantined Aggregator)**
+`admin-members/` (contains ONLY `admin-members.module.ts`, master docs, and child `{submodule}/` folders)
 
-**SUB-FOLDER**
-`members-services/`
-`members-controllers/`
-`members-dto/`
-`... etc.`
+**AUTONOMOUS SUB-MODULE (Tier 4 — Terminal Leaf AI Repair Unit)**
+`members-directory/` (or `members-registration/`, matching `{domain}-{capability}`)
 
-**FILES**
-`admin-members-registration.service.ts`
-`admin-members-query.controller.ts`
-`admin-members-create.dto.ts`
-`... etc.`
+**SUB-FOLDERS (Inside Autonomous Sub-Module)**
+`directory-services/`
+`directory-controllers/`
+`directory-dto/`
+`directory-repositories/` (contains ORM entities)
+`directory-mappers/`
+`directory-domain/`
+`... etc.` (Pattern: `{submodule}-{artifact}/`)
+
+**FILES (Inside Sub-Folders)**
+`admin-members-directory-command.controller.ts`
+`admin-members-directory-query.controller.ts`
+`admin-members-directory-query.service.ts`
+`admin-members-directory-filter.dto.ts`
+`... etc.` (Pattern: `[role]-[submodule]-[description].[type].ts`)
 
 **RULE:**
-Folders use:
-`{module}-{artifact}`
+Sub-folders use:
+`{submodule}-{artifact}/`
 
 Files use:
-`{role}-{module}-{description}`
+`[role]-[submodule]-[description].[type].ts`
 
 Never invert these rules.
 
@@ -861,20 +869,23 @@ Every feature module sub-folder MUST be named using the module name as prefix fo
 | Adapters | `{module}-adapters/` | `adapters/`, `external/`, `integrations/` |
 
 > **AI AGENT NOTE:** When creating any sub-folder inside a feature module, you MUST consult this table first. Creating a folder not following `{module}-{artifact}/` pattern is an architecture violation and MUST be flagged.
+> Under the Universal Day-1 Sub-Module Architecture (Rule 0A.2 & Rule 0H), `{module}` inside autonomous sub-modules represents the `{submodule}` capability (e.g., `members-directory/` contains `directory-services/`, `directory-controllers/`, etc.), while domain module roots (`admin-members/`) are quarantined pure aggregators.
 
-**Examples (role: admin, module: members):**
+**Examples (role: admin, domain: members, submodule: directory):**
 ```text
 admin-members/
-├── members-services/            ✅ CORRECT
-├── members-controllers/         ✅ CORRECT
-├── members-repositories/        ✅ CORRECT
-├── members-dto/                 ✅ CORRECT
-├── members-mappers/             ✅ CORRECT
-├── members-domain/              ✅ CORRECT
-├── members-types/               ✅ CORRECT
-├── members-constants/           ✅ CORRECT (module-level constants)
-├── members-exceptions/          ✅ CORRECT
-└── members-locales/             ✅ CORRECT
+├── admin-members.module.ts       ✅ Pure Aggregator NestJS Module (Tier 3)
+└── members-directory/            ✅ Autonomous Sub-Module (Tier 4 AI Repair Unit)
+    ├── directory-services/       ✅ CORRECT: {submodule}-{artifact}/
+    ├── directory-controllers/    ✅ CORRECT
+    ├── directory-repositories/   ✅ CORRECT (contains ORM entities)
+    ├── directory-mappers/        ✅ CORRECT (toDomain / toEntity)
+    ├── directory-domain/         ✅ CORRECT (pure domain model)
+    ├── directory-dto/            ✅ CORRECT
+    ├── directory-types/          ✅ CORRECT
+    ├── directory-constants/      ✅ CORRECT (sub-module local event constants)
+    ├── directory-exceptions/     ✅ CORRECT
+    └── directory-tests/          ✅ CORRECT (unit/ & harness/)
 ```
 
 ## 2. Highly Descriptive, AI-Contextual Filenames & Module Prefixing
@@ -1437,6 +1448,17 @@ Never call AdminBillingWalletRepository directly from outside this module.
 Every autonomous backend sub-module MUST implement ALL 22 canonical sections below:
 
 ```markdown
+---
+feature: "[role]_[submodule]"
+owner_role: "[role]"
+module_version: "1.0.0"
+api_contract_source: "[role]-[submodule]-backend-contract.md"
+last_verified_date: "2026-10-23"
+last_verified_commit: "HEAD"
+documentation_status: "COMPLETE"
+portability_score: "10/10"
+---
+
 # [Role] [Sub-Module Name] Backend Feature Map
 
 ## 1. Scope and Non-Scope
@@ -2217,23 +2239,27 @@ Rules:
 
 ### Single Event Registry Enforcement (NON-NEGOTIABLE)
 
-There MUST be exactly **one** `event-registry.constants.ts` file in the entire codebase, located at:
+There MUST be exactly **one** global `event-registry.constants.ts` file in the entire codebase, located at:
 
 ```
 src/core/event-registry.constants.ts
 ```
 
-Creation of any secondary event registry file is **strictly forbidden**, regardless of intent:
+This file serves as the **Host Monolith Event Registry Aggregator** that validates and standardizes all domain event names across all bounded contexts. Creation of any loose, ad-hoc secondary event registry files at the root, in `src/shared/`, or at the parent domain root is **strictly forbidden**:
 
 ❌ **FORBIDDEN — these MUST NOT exist:**
-- `billing-events.constants.ts`
-- `member-events.ts`
-- `admin-event-registry.ts`
-- Any file attempting to define a subset of domain events outside the central registry
+- `src/billing-events.constants.ts`
+- `src/common/member-events.ts`
+- `src/backend-admin/admin-event-registry.ts`
+- `src/backend-manager/manager-modules/manager-attendance/attendance-events.ts` (domain root event file banned)
+- Any loose file attempting to define a secondary global event registry
 
-When a new event is needed, the AI MUST add it to the existing `src/core/event-registry.constants.ts` — never create a new file. If a secondary event registry file is discovered during an audit, it MUST be flagged as an architecture violation and its contents merged into the central registry.
+When a new domain event is created for the host, the AI MUST register it in `src/core/event-registry.constants.ts`. If a secondary loose event registry file is discovered during an audit, it MUST be flagged as an architecture violation and its contents merged into the central registry.
 
-> **AI AGENT NOTE:** Before emitting or consuming any event, verify the event name exists in `src/core/event-registry.constants.ts`. If it does not exist, add it there — never inline the string or create a parallel constants file.
+**Sub-Module Local Event Constants Invariant (Rule 0A.2 Item 7):**
+Under the Universal Day-1 Sub-Module Architecture (Rule 0A.2 Item 7), an autonomous sub-module defines its locally emitted/consumed event string constants within its own `{submodule}-constants/[role]-[submodule].events.ts` file (and in `contracts/core-contracts.stub.ts` for ambient event typing) so that the sub-module can be zipped and compiled (`tsc --noEmit`) and tested completely offline without importing host monolith files. When integrating into the host monolith, the host's `src/core/event-registry.constants.ts` aggregates or imports these sub-module event constants to guarantee system-wide contract integrity.
+
+> **AI AGENT NOTE:** Before emitting or consuming any event at the host level, verify the event name exists in `src/core/event-registry.constants.ts`. Within an isolated autonomous sub-module, define emitted events locally in `{submodule}-constants/` and declare them in `required-core-contracts.json` per Rule 0A.2 Item 7.
 
 ## 51. API Changelog, Deprecation Policy & Consolidated Integration Guide
 * **The Rule:** When an endpoint changes destructively, do not delete it immediately. Return a `Deprecation` header with a sunset date, track it in Section 2 (Endpoint Preservation & DTO Matrix) and Section 1 (Changelog) of the consolidated `INTEGRATION_GUIDE.md` at the root of the delivery ZIP, and maintain it for the deprecation window. Never scatter separate loose changelog or migration markdown files at the root of the delivery package.
@@ -4130,7 +4156,7 @@ In a modular monolith, individual role modules (e.g., `backend-superadmin/`, `ba
 | **Gate 8** | **Standalone Test Harness & Seeder Gate** | Portability | Working seeder (`[submodule].seed.ts`) and standalone harness (`[submodule].harness.ts`) runnable independently on in-memory SQLite / mock DataSource. | Unrunnable Sub-Module |
 | **Gate 9** | **8-State Mock Scenario Catalog Gate** | Quality | Harness fixtures implement the 8 canonical scenarios: `ACTIVE`, `EMPTY`, `UNAUTHORIZED`, `FORBIDDEN`, `NOT_FOUND`, `VALIDATION_ERROR`, `SERVER_500`, `TIMEOUT`. | Untestable Error Paths |
 | **Gate 10** | **Ambient Core Stubs & Manifest Gate** | Portability | Sub-module owns `contracts/core-contracts.stub.ts` and `required-core-contracts.json`. Consumed host platform contracts within hard budget ceiling (≤ 7). | Non-Compilable ZIP |
-| **Gate 11** | **Production Safety Guards Gate** | Safety | `X-Idempotency-Key` (UUIDv4) on non-naturally idempotent mutations; pessimistic locks on concurrent financial/inventory mutations; zero hardcoded secrets. | Race Condition / Loss |
+| **Gate 11** | **Production Safety Guards Gate** | Safety | `Idempotency-Key` (UUIDv4; accepts `Idempotency-Key` or `X-Idempotency-Key`) on non-naturally idempotent mutations; pessimistic locks on concurrent financial/inventory mutations; zero hardcoded secrets. | Race Condition / Loss |
 | **Gate 12** | **Documentation Trio Freshness Gate** | Docs | Contains `_backend-feature.md` (all 22 canonical sections complete), `_backend-forbidden.md`, and `_backend-contract.md`. | Context Hallucination |
 | **Gate 13** | **Local RAG Projection Self-Containment Gate** | AI Tools | Read endpoints support `?format=rag` using sub-module local mapper (`{submodule}-rag.mapper.ts`) with zero global helper dependencies. | LLM Tooling Failure |
 | **Gate 14** | **Automated CI Portability Gate** | Portability | Sub-module folder zipped alone compiles with `tsc --noEmit` and passes local unit test suite with 0 errors without host repository. | Autonomous ZIP Violation |
