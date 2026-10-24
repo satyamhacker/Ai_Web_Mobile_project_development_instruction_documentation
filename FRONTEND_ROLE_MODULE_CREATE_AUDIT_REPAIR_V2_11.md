@@ -86,7 +86,7 @@ When a rule is repeated for convenience:
 > [ ] Step 4: RBG PLAN published + user explicitly approves — not yet started
 > [ ] Step 5: STAGE 3 REPAIRS — execute repair batches in RBG order — not yet started
 > [ ] Step 6: Section 43P Anti-Skipping Checklist clean on repaired code — not yet started
-> [ ] Step 7: FINAL DELIVERY (frontend-{role}-v{N}-fix.zip + INTEGRATION_GUIDE.md + RE_AUDIT_CHECKLIST_RESULT.md + Playwright E2E) — not yet started
+> [ ] Step 7: FINAL DELIVERY (frontend-{role}-v{N}-ALL-RBGS-COMPLETE.zip or intermediate frontend-{role}-v{N}-PARTIAL-rbg{X}.zip + INTEGRATION_GUIDE.md + RE_AUDIT_CHECKLIST_RESULT.md + Playwright E2E) — not yet started
 >
 > ── MODE C (CROSS-PLATFORM MOBILE CREATE) EXECUTION ORDER ────────────────────
 > [ ] Step 1: Read MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md completely — not yet started
@@ -106,12 +106,13 @@ When a rule is repeated for convenience:
 > [ ] Step 6: RBG PLAN published + user explicitly approves — not yet started
 > [ ] Step 7: STAGE 3 REPAIRS — execute repair batches in RBG order — not yet started
 > [ ] Step 8: Section 43P MOBILE RULE CHECKLIST clean on repaired mobile code — not yet started
-> [ ] Step 9: FINAL DELIVERY (mobile-{role}-v{N}-fix.zip + compliance_manifest.json + INTEGRATION_GUIDE.md + RE_AUDIT_CHECKLIST_RESULT.md + Maestro E2E) — not yet started
+> [ ] Step 9: FINAL DELIVERY (mobile-{role}-v{N}-ALL-RBGS-COMPLETE.zip or intermediate mobile-{role}-v{N}-PARTIAL-rbg{X}.zip + compliance_manifest.json + INTEGRATION_GUIDE.md + RE_AUDIT_CHECKLIST_RESULT.md + Maestro E2E) — not yet started
 >
 > MANDATORY DELIVERABLES ACKNOWLEDGED:
-> - Mode A/B Web ZIP: frontend-{role}-v{N}[-fix].zip
-> - Mode C Mobile ZIP: mobile-{role}-v1.zip
-> - Mode D Mobile Fix ZIP: mobile-{role}-v{N}-fix.zip
+> - Mode A Web Create ZIP: frontend-{role}-v1.zip
+> - Mode B Web Repair: frontend-{role}-v{N}-ALL-RBGS-COMPLETE.zip (intermediate: frontend-{role}-v{N}-PARTIAL-rbg{X}.zip)
+> - Mode C Mobile Create ZIP: mobile-{role}-v1.zip
+> - Mode D Mobile Repair: mobile-{role}-v{N}-ALL-RBGS-COMPLETE.zip (intermediate: mobile-{role}-v{N}-PARTIAL-rbg{X}.zip)
 > - compliance_manifest.json (machine-readable compliance manifest for Mobile Modes C/D)
 > - INTEGRATION_GUIDE.md (consolidated master developer guide with Section 1 Changelog inside ZIP)
 > - RE_AUDIT_CHECKLIST_RESULT.md (Section 43P clean result inside ZIP)
@@ -120,6 +121,15 @@ When a rule is repeated for convenience:
 >
 > FIRST ACTION: [State exact first action — e.g., Read supplied design and architecture rules]
 > ```
+>
+> ⛔⛔⛔ **EXECUTIVE CANONICAL DIAMOND PROTOCOLS (UNIVERSAL: WEB & MOBILE)** ⛔⛔⛔
+> The following diamond protocols are active from TURN 1 across ALL MODES (Web Mode A/B & Mobile Mode C/D):
+> 1. **Anti-Deception ZIP Naming:** Intermediate archives MUST be labeled `*-PARTIAL-rbg{X}.zip`. The label `*-ALL-RBGS-COMPLETE.zip` is strictly forbidden unless 100% of RBGs (RBG 1..N) are closed and verified.
+> 2. **Pre-Delivery Cross-Check Gate (Zero-Excuse Law):** Must execute and output the 3 physical verification tables (RBG Closure, Submodule Physical Ledger, Canonical Rules Sweep) before packaging. Post-delivery excuses ("Oh sorry, cross-check nahi kiya") are strictly banned as P0 audit fraud.
+> 3. **1-Click Interactive Button Priority:** Publish RBG Plans and Checkpoints as actionable artifacts (`RequestFeedback: true`) or modals (`ask_question`) so user can approve via 1-click button instead of manual typing.
+> 4. **Interactive Clarification Modal with (Recommended) Default:** All questions/decisions MUST use structured modals/checkboxes with Option 1 marked `(Recommended)`. Zero open-ended technical essay questions.
+> 5. **Live Progress Heartbeat Telemetry in Roman Hinglish:** Output real-time non-blocking progress lines (`✓ [Done]: ... ⚙️ [In Progress]: ...`) in Roman Hinglish (English letters, NO Devanagari) to eliminate the "hang illusion".
+> 6. **Substantive Workload Density:** Calibrate RBGs by workload floor (min 8 findings / 4 files) and safety ceiling (max 25 findings / 18 files) for a balanced ~5–8 min sprint without token blowouts or hallucinations.
 >
 > ⛔ **You MUST NOT open or edit any implementation file before completing Stage 1 (requirement freeze).**
 > ⛔ **You MUST NOT start repairs before the RBG PLAN is published and the user explicitly approves it.**
@@ -4686,6 +4696,23 @@ Do NOT start any repair until the user approves the RBG Plan.
 6. Never apply a fix from RBG 3 while RBG 1 is still in progress.
 7. **INTERMEDIATE CHECKPOINT ZIP NAMING (ANTI-DECEPTION):** If the user requests an intermediate archive or the AI produces a ZIP checkpoint after completing RBG N while subsequent RBGs remain pending, the ZIP filename MUST be explicitly formatted as: `frontend-{role}-v{N}-PARTIAL-rbg{N}.zip` (or `mobile-{role}-v{N}-PARTIAL-rbg{N}.zip`). The AI MUST NOT use the words `complete`, `final`, or `all-done` in the filename or description while any RBG is pending.
 8. **FINAL COMPLETE DELIVERY PREREQUISITE:** The final release ZIP named `frontend-{role}-v{N}-ALL-RBGS-COMPLETE.zip` (or `mobile-{role}-v{N}-ALL-RBGS-COMPLETE.zip`) is permitted ONLY after 100% of RBGs (RBG 1 to RBG N) are completed, zero unresolved actionable findings remain, and Section 45.4A Pre-Delivery Cross-Check Gate is passed 100% clean.
+9. **INTERACTIVE CLARIFICATION & DECISION MODAL PROTOCOL (1-CLICK RECOMMENDED SELECTION):**
+   - Whenever the AI encounters ANY confusion, ambiguity, missing design choice, architectural conflict, or needs a decision/clarification from the user:
+     - The AI **MUST NOT** output a long, open-ended technical essay asking the user to explain or write code.
+     - The AI **MUST** formulate a structured interactive modal / multiple-choice selection (using the `ask_question` tool in IDEs or selectable checkbox/radio options with a single-click confirmation button).
+     - **Mandatory `(Recommended)` Prefix:** Exactly ONE option MUST be listed first and prefixed with `(Recommended)` representing the safest, architecture-compliant default choice.
+     - **Default One-Click Confirmation:** If the user is unsure, they can simply select the default recommended option and click Confirm/Proceed with zero technical burden or manual typing.
+10. **LIVE PROGRESS HEARTBEAT TELEMETRY IN ROMAN HINGLISH (ANTI-HANG ASSURANCE):**
+    - During execution turns touching multiple files, the AI MUST NOT remain completely silent. A prolonged lack of visible response creates the false impression that the AI is frozen, hung, or stuck.
+    - After completing each substantive fix/file within the RBG, the AI MUST emit a concise, real-time telemetry line:
+      - **Language Rule:** Strictly **Roman Hinglish** (English letters, NO Devanagari script).
+      - **Informational Only (Non-blocking):** It does NOT ask for user input or pause execution.
+      - **Format:**
+        ```text
+        ✓ [Done]: `[file_name]` me [brief explanation of fix in Hinglish] complete ho gaya.
+        ⚙️ [In Progress]: Ab `[next_file_name]` me [next fix in Hinglish] start kar raha hoon...
+        ```
+      - This gives the user continuous real-time visibility into what was just fixed and what is currently being worked on, completely eliminating the "hang illusion".
 
 ## RBG CHECKPOINT TEMPLATE
 
@@ -10465,14 +10492,15 @@ They MUST NOT be stored inside src/features/.
 FIRST ACTION: Read MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md completely
 ```
 
-## MODE D — VERSIONING
+## MODE D — VERSIONING & ZIP NAMING (ANTI-DECEPTION)
 
 ```text
-Mode D — First fix of existing mobile v1:   mobile-{role}-v2-fix.zip
-Mode D — Second fix:                         mobile-{role}-v3-fix.zip
+Mode D (Mobile Audit + Repair Deliverable):
+├── Intermediate Checkpoint: mobile-{role}-v{N}-PARTIAL-rbg{X}.zip (when any subsequent RBG is pending)
+└── 100% Complete Release:   mobile-{role}-v{N}-ALL-RBGS-COMPLETE.zip (only when all RBGs done & Section 45.4A clean)
 ```
 
-If no explicit version in input filename → default to `v1-fix`: `mobile-{role}-v1-fix.zip`.
+> ⛔ **STRICT BAN ON PREMATURE "COMPLETE":** The words `complete`, `final`, or `all-done` MUST NEVER appear in any mobile repair ZIP unless 100% of RBGs are completed and Section 45.4A Pre-Delivery Cross-Check Gate is passed 100% clean. Labeling an intermediate mobile repair as `complete` is CRITICAL P0 AUDIT FRAUD.
 
 ## MODE D — AUDIT SCOPE
 
