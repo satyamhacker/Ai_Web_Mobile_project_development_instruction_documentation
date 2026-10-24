@@ -198,7 +198,11 @@ A delivery/blocking status explains the final execution outcome.
 >    - Path alias `@/*` resolves to `src/*`.
 >    - Standard dependencies (Next.js, React, Tailwind v4, TanStack Query v5, Zustand, React Hook Form, Zod, Lucide React) exist in the host project.
 > 3. **PROCEED TO AUDIT & REPAIR IMMEDIATELY:** You MUST audit, repair, and complete 100% of the supplied in-scope source files, components, hooks, stores, schemas, URL configs, mock fixtures, and tests directly. Demanding host application root slices or declaring repairs "BLOCKED" due to absence of root files is a **CRITICAL SCOPE CREEP VIOLATION & AUDIT FAILURE**.
-> 4. **FEATURE MODULE IS THE PRIMARY AI REPAIR UNIT (THE 1-TO-1 SIDEBAR RULE):** This rule applies universally to EVERY role container (e.g., `frontend_admin`, `frontend_manager`, `frontend_superadmin`, `frontend_trainer`, `frontend_member`). Every primary clickable navigation destination in a role's sidebar/navigation shell maps strictly 1-to-1 to an autonomous feature module folder (`src/app/frontend_{role}/{role}_{feature}/`, e.g., `admin_billing/`, `manager_attendance/`, `superadmin_plans/`, `trainer_schedule/`). When a single feature module is supplied for repair or audit, the AI MUST audit and repair ONLY that module in complete isolation. Requesting, touching, or modifying files in sibling feature modules or root folders is STRICTLY FORBIDDEN.
+> 4. **FEATURE MODULE IS THE PRIMARY AI REPAIR UNIT (THE 1-TO-1 SIDEBAR RULE & DOMAIN GROUPING INVARIANT):** This rule applies universally to EVERY role container (e.g., `frontend_admin`, `frontend_manager`, `frontend_superadmin`, `frontend_trainer`, `frontend_member`). Every primary clickable navigation destination in a role's sidebar/navigation shell maps strictly 1-to-1 to an autonomous feature Domain Container (`src/app/frontend_{role}/{role}_{domain}/`, e.g., `manager_crm/`, `manager_attendance/`, `manager_accounting/`, `admin_billing/`, `superadmin_plans/`).
+>    - **Sidebar Anti-Clutter Limit (Max 7–10 Top-Level Items):** Top-level sidebar navigation MUST represent cohesive, high-level Business Domains (e.g. Dashboard, Members, CRM, Attendance, Accounting, Settings). Dumping 20+ flat sub-modules or granular screens into the sidebar is a **CRITICAL ARCHITECTURE & UX DEFECT**. The primary sidebar MUST NOT exceed 10 top-level items per role.
+>    - **Sub-Modules as Secondary Navigation:** Autonomous sub-modules inside a domain (e.g., inside `manager_crm/`: `crm_enquiries/`, `crm_leads/`, `crm_pipeline/`; inside `manager_accounting/`: `accounting_assets/`, `accounting_ledgers/`, `accounting_maintenance/`) MUST be exposed as Secondary Navigation (Top Tab Bar via `layout.tsx` or Collapsible Sidebar Accordion), NEVER as flat top-level sidebar items.
+>    - **Strict Anti-Action Nano-Module Ban:** Creating a separate sub-module or sidebar item for a CRUD action (e.g. `crm_enquiry_add/`, `crm_enquiry_edit/`, `accounting_asset_maintenance_add/`) is an immediate **P0 ARCHITECTURE FAILURE**. All creation forms, edit drawers, detail slide-outs, and wizard steps MUST live strictly INSIDE their parent sub-module (`components/` as modals/drawers or child route `create/page.tsx`).
+>    - When a single feature module or sub-module is supplied for repair or audit, the AI MUST audit and repair ONLY that module in complete isolation. Requesting, touching, or modifying files in sibling feature modules or root folders is STRICTLY FORBIDDEN.
 > 5. **UNIVERSAL DAY-1 SUB-MODULE ARCHITECTURE & GRANULAR AI REPAIR UNIT:**
 >    - Every feature module folder (`src/app/frontend_{role}/{role}_{feature}/` or `src/features/frontend_{role}/{role}_{feature}/`) is a **Pure Domain Container** containing ONLY a navigation shell (`layout.tsx` or `Navigator.tsx`), a default redirect (`page.tsx`), and one or more autonomous Sub-Modules (`{sub_module}/`).
 >    - **Zero Root Code In Domain Folder:** Creating loose `components/`, `hooks/`, `api/`, `mocks/`, or `utils/` directly at the feature root level is a **CRITICAL ARCHITECTURE VIOLATION**. 100% of executable source code, mocks, and tests MUST live inside `{sub_module}/`.
@@ -1780,10 +1784,88 @@ Produce this table for every candidate feature or consolidated route:
 
 ### Core Tenets of the 1:1 Navigation-to-Folder Law:
 
-1. **Strict 1-to-1 Primary Navigation Mapping (Universal):**
-   - Every top-level clickable item defined in a role's sidebar/navigation configuration (e.g., in Manager: Dashboard, Inquiries, Members, Attendance, Plans, Finance, HR, Schedule, PT; in Admin: Gyms, Billing, Staff, Settings; in Superadmin: Tenants, Subscriptions, Platform Analytics; in Trainer: Schedule, Clients, Workouts) MUST have an exact corresponding dedicated feature domain container directly inside `src/app/frontend_{role}/` (e.g., `src/app/frontend_{role}/{role}_{feature}/`).
+1. **Strict 1-to-1 Primary Navigation Mapping & Sidebar Domain Grouping Principle (Universal):**
+   - **Domain Container as Sidebar Group:** Every top-level clickable item defined in a role's sidebar/navigation configuration (e.g., in Manager: Dashboard, Members, CRM, Attendance, Accounting, Settings; in Admin: Gyms, Billing, Staff, Settings; in Superadmin: Tenants, Subscriptions, Platform Analytics; in Trainer: Schedule, Clients, Workouts) MUST have an exact corresponding dedicated feature Domain Container directly inside `src/app/frontend_{role}/` (e.g., `src/app/frontend_{role}/{role}_{domain}/`).
+   - **Sidebar Anti-Clutter Limit (Max 7–10 Top-Level Items):** Top-level sidebar navigation MUST represent cohesive, high-level Business Domains. Dumping 20+ flat sub-modules or granular screens into the sidebar is a **CRITICAL UX & ARCHITECTURE VIOLATION**. The primary sidebar MUST NOT exceed 10 top-level items per role.
+   - **Sub-Modules as Secondary Navigation:** Autonomous sub-modules inside a domain (e.g., inside `manager_crm/`: `crm_enquiries/`, `crm_leads/`, `crm_pipeline/`; inside `manager_accounting/`: `accounting_assets/`, `accounting_ledgers/`, `accounting_maintenance/`) MUST be exposed as Secondary Navigation:
+     - **Option A (Canonical — Top Tab Bar):** Rendered by the Domain Container's `layout.tsx` across the top of the content area (`[ Enquiries ] [ Leads ] [ Follow-ups ]`), matching the modern Linear/Stripe design standard.
+     - **Option B (Collapsible Sidebar Accordion):** An expandable submenu under the parent sidebar item (e.g., `🎯 CRM [▼]` expands to reveal `↳ Enquiries`, `↳ Leads`, `↳ Follow-ups`).
+   - **STRICT PROHIBITION ON ACTION NANO-MODULES (THE ANTI-ACTION BAN):**
+     - Creating a sub-module or sidebar item for a single action, form, or modal (e.g. `crm_enquiry_add/`, `crm_enquiry_edit/`, `accounting_asset_maintenance_add/`, `member_add/`) is an immediate **P0 ARCHITECTURE FAILURE (NANO-MODULE VIOLATION)**.
+     - Creation forms, edit drawers, detail slide-outs, and wizard steps MUST live strictly INSIDE their parent sub-module (`components/` as modals/drawers or child route `create/page.tsx`), NEVER as independent sub-modules or sidebar links.
    - **NO MEGA-MODULE MERGING:** Merging separate sidebar destinations (e.g., combining `manager_finance` and `manager_expenses`, or `admin_billing` and `admin_plans`) into a single folder is STRICTLY PROHIBITED.
    - **NO ROOT-LEVEL FRACTURING:** A single sidebar destination MUST NOT spawn arbitrary multiple top-level folders for its internal tabs or workflows. All internal tabs, secondary workflows, and sub-pages belonging to that sidebar destination MUST be encapsulated as child sub-modules inside that domain container.
+
+### Deterministic 3-Question AI Domain Grouping Decision Tree
+
+Before writing ANY code or creating ANY folder, the AI MUST run this 3-question filter for every screen or feature requirement:
+
+```text
+Q1: Is this a core high-level Business Domain (e.g., CRM, Accounting, Members, Attendance)?
+    ├── YES ──> Create Tier 3 Domain Container: src/app/frontend_{role}/{role}_{domain}/
+    │           (Mounts in primary sidebar; contains layout.tsx tab shell + page.tsx redirect)
+    └── NO  ──> Proceed to Q2
+
+Q2: Is this a distinct operational capability with its own entity lifecycle, data table, and filters (5–20 files)?
+    ├── YES ──> Create Tier 4 Autonomous Sub-Module: {domain}_{capability}/ inside {role}_{domain}/
+    │           (Exposed as secondary tab or accordion item; e.g., crm_enquiries/, accounting_assets/)
+    └── NO  ──> Proceed to Q3
+
+Q3: Is this a single action, form, modal, detail drawer, or sub-step (e.g., "Add Enquiry", "Edit Asset")?
+    └── YES ──> Place inside parent sub-module: components/ (e.g., ManagerCrmEnquiryCreateModal.tsx)
+                or child route: create/page.tsx.
+                ⛔ STRICTLY FORBIDDEN to create a separate sub-module or top-level sidebar item!
+```
+
+### CANONICAL ERP DOMAIN TAXONOMY & ANTI-HALLUCINATION GROUPING INVARIANT (NON-NEGOTIABLE)
+
+To prevent AI agents from arbitrarily inventing nonsensical parent groups (e.g. creating `manager_operations/` or merging `CRM` and `Members`), all grouping MUST adhere strictly to Domain-Driven Design (DDD) Bounded Contexts and the Canonical Domain Taxonomy below.
+
+#### 1. The Bounded Context Affinity Rule (Zero Cross-Domain Smuggling):
+Two capabilities may ONLY reside in the same Tier 3 Domain Container if they share:
+1. **The exact same primary Aggregate Root & Entity Lifecycle** (e.g., all submodules in `manager_crm` operate on Leads/Prospects/Inquiries; all submodules in `manager_members` operate on Active Enrolled Members).
+2. **The same business domain boundary.**
+- ❌ **CROSS-DOMAIN SMUGGLING IS STRICTLY FORBIDDEN:**
+  - An AI MUST NOT put active member subscription management inside `CRM` (Members is post-sale; CRM is pre-sale).
+  - An AI MUST NOT put financial invoices or payment gateways inside `Attendance` or `Members` (Invoices belong to `Billing` / `Accounting`).
+  - An AI MUST NOT merge `Staff` and `Accounting` merely because staff gets paid (Staff manages shifts/profiles; Accounting manages financial ledger disbursements).
+
+#### 2. The Anti-Junk-Drawer / Anti-Mega-Bucket Law:
+AI agents are **ABSOLUTELY PROHIBITED** from creating generic, ambiguous, or dumping-ground domain names. 
+The following domain names are **PERMANENTLY BANNED**:
+- ❌ `*_operations/`
+- ❌ `*_management/`
+- ❌ `*_general/`
+- ❌ `*_miscellaneous/` or `*_misc/`
+- ❌ `*_tools/` or `*_actions/`
+- ❌ `*_hub/` or `*_portal/` or `*_workspace/`
+- ❌ `*_services/` or `*_data/`
+- ❌ Hyphenated mergers: `*_crm_and_members/`, `*_finance_and_expenses/`
+
+Creating ANY domain with a banned name is an immediate **P0 ARCHITECTURE FAILURE & MERGE BLOCKER**. Every domain container MUST be a specific business noun from the Canonical Domain Taxonomy below.
+
+#### 3. Canonical ERP Domain Taxonomy (Extensible Baseline Matrix):
+The domain containers below represent the canonical baseline for Smart Gym 360. 
+- **NO RIGID FIXED COUNT:** Roles are NOT locked to a rigid number of items (neither 5 nor any fixed count).
+- **Anti-Clutter Ceiling:** Roles should maintain a focused set of top-level domains (typically **6 to 10 items**).
+- **Extensibility:** New legitimate business domains (e.g., `manager_pos`, `manager_nutrition`, `manager_marketing`) MAY be introduced as long as they represent independent Aggregate Roots and avoid banned junk-drawer names.
+
+| Role Container | Approved Baseline Domain Containers (Typically 6–10) | Permitted Autonomous Sub-Modules (`{domain}_{capability}`) |
+|---|---|---|
+| **`frontend_manager`** | 1. `manager_dashboard`<br>2. `manager_members`<br>3. `manager_crm`<br>4. `manager_attendance`<br>5. `manager_accounting`<br>6. `manager_inventory`<br>7. `manager_staff`<br>8. `manager_settings` | • `crm` → `crm_enquiries`, `crm_leads`, `crm_pipeline`<br>• `members` → `members_directory`, `members_plans`, `members_detail`<br>• `attendance` → `attendance_dashboard`, `attendance_history`, `attendance_biometrics`<br>• `accounting` → `accounting_assets`, `accounting_ledgers`, `accounting_maintenance`<br>• `inventory` → `inventory_equipment`, `inventory_supplements`, `inventory_lockers`<br>• `staff` → `staff_directory`, `staff_roster`, `staff_payroll` |
+| **`frontend_superadmin`** | 1. `superadmin_dashboard`<br>2. `superadmin_tenants`<br>3. `superadmin_plans`<br>4. `superadmin_billing`<br>5. `superadmin_analytics`<br>6. `superadmin_audit`<br>7. `superadmin_settings` | • `tenants` → `tenants_directory`, `tenants_onboarding`, `tenants_branches`<br>• `plans` → `plans_tiers`, `plans_features`, `plans_pricing`<br>• `billing` → `billing_invoices`, `billing_payouts`, `billing_gateways`<br>• `audit` → `audit_logs`, `audit_security`, `audit_compliance` |
+| **`frontend_admin`** | 1. `admin_dashboard`<br>2. `admin_gyms`<br>3. `admin_billing`<br>4. `admin_staff`<br>5. `admin_reports`<br>6. `admin_settings` | • Standard enterprise branch and administrative capabilities |
+| **`frontend_trainer`** | 1. `trainer_dashboard`<br>2. `trainer_schedule`<br>3. `trainer_clients`<br>4. `trainer_workouts`<br>5. `trainer_earnings`<br>6. `trainer_settings` | • Personal trainer schedule, member workout logs, and PT commission logs |
+| **`frontend_member`** | 1. `member_dashboard`<br>2. `member_membership`<br>3. `member_attendance`<br>4. `member_bookings`<br>5. `member_payments`<br>6. `member_profile` | • Gym member portal views, QR check-in, class bookings, invoices |
+
+#### 4. The Aggregate Root Boundary Test (Dispute Resolution):
+If an AI agent is uncertain which domain owns a feature (e.g. "Trainer Payouts: does it belong in Staff or Accounting?"), apply the **Aggregate Root Mutation Test**:
+- *"Which core business entity's authoritative state is being created or modified?"*
+  - If the operation creates an accounting transaction, tax entry, or ledger disbursement → It belongs to **`accounting`**.
+  - If the operation updates trainer employee profiles, hourly rates, or roster status → It belongs to **`staff`**.
+  - Cross-references are resolved strictly via read-only API calls across gateway endpoints, NEVER by combining domain folders!
+
+---
 
 2. **Universal Day-1 Sub-Module Architecture & Domain Root Quarantine:**
    - Every feature module folder (`src/app/frontend_{role}/{role}_{domain}/` or `src/features/frontend_{role}/{role}_{domain}/`) is a **Pure Domain Container** containing ONLY:

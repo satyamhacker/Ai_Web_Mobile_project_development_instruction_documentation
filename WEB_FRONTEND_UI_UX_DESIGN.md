@@ -411,30 +411,96 @@ To remove ambiguity for AI generation, Tailwind classes MUST map to these underl
 Every authenticated page uses this shell. Auth pages (`login`, `signup`, `forgot-password`, `reset-password`) do NOT use this shell.
 
 ```
-┌──────────────────────────────────────────────────────────────────┐
-│  TOP HEADER (height: var(--layout-header-height), position: fixed, top: 0, full-width)  │
-│  [☰ Collapse] [📚 Smart Gym 360 Logo]  ··· [🏢 Branch Name ▼] [🔔 Bell (badge count)] [👤 Avatar + Name ▼]  │
-├────────────────┬─────────────────────────────────────────────────┤
-│  SIDEBAR       │  MAIN CONTENT AREA                              │
-│  width: var(--layout-sidebar-width) │  margin-left: var(--layout-sidebar-width) │
-│  (collapsible  │  padding: var(--layout-content-padding)         │
-│   to var(--layout-sidebar-width-collapsed), │  margin-top: var(--layout-header-height) (below header) │
-│   icon-only    │                                                 │
-│   mode on      │  [Breadcrumb: Dashboard > Students > Profile]  │
-│   toggle)      │  [Page Title (H1) + subtitle]                  │
-│                │  [Action Bar: filters left + CTA buttons right] │
-│  position:     │  [Page Content: table / form / grid / charts]  │
-│  fixed, left:0 │                                                 │
-│  bg: --bg-sidebar                                               │
-│  border-right: │  *Note: Sidebar nav items scroll independently  │
-│  1px --border  │  (overflow-y-auto), header/toggle stay pinned.* │
-└────────────────┴─────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│  TOP HEADER (height: var(--layout-header-height), position: fixed, top: 0, full-width) │
+│  [☰ Collapse] [⚡ Smart Gym 360 Logo]  ··· [🏢 Downtown Branch ▼] [🔔 (3)] [👤 John (Manager) ▼] │
+├────────────────┬───────────────────────────────────────────────────────────────────────┤
+│  SIDEBAR       │  MAIN CONTENT AREA                                                    │
+│  width: 240px  │  margin-left: var(--layout-sidebar-width)                             │
+│  (collapsible  │  padding: var(--layout-content-padding)                               │
+│   to 60px      │  margin-top: var(--layout-header-height)                              │
+│   icon-only)   │                                                                       │
+│                │  [Breadcrumb: CRM > Enquiries]                                        │
+│  position:     │  [Page Title: Enquiries Management (H1) + Subtitle]                   │
+│  fixed, left:0 │                                                                       │
+│  bg:           │  ┌─────────────────────────────────────────────────────────────────┐ │
+│  --bg-sidebar  │  │ SUB-NAV TAB BAR: [📌 Enquiries (Active)]  [🎯 Leads]  [📈 Pipeline]│ │
+│                │  └─────────────────────────────────────────────────────────────────┘ │
+│  border-right: │  [Action Bar: 🔍 Search / Date Filter ─── [+] New Enquiry Button]      │
+│  1px --border  │  [Page Content: Data Table / Cards / Form / Modals]                   │
+│                │                                                                       │
+│  *Independent  │  *Main content scrolls vertically (overflow-y-auto).                  │
+│   y-scroll*    │   Header and Sidebar remain pinned to view boundaries.*               │
+└────────────────┴───────────────────────────────────────────────────────────────────────┘
 ```
 
-### Sidebar Nav Groups & Items (in order)
-Navigation structure is role-owned/application-owned configuration. Global design defines how navigation looks; it does not define which business pages exist.
+### 3a. Canonical Domain Navigation Architecture (Anti-Clutter Ceiling: Typically 6–10 Domains)
+Primary sidebar navigation MUST represent cohesive, high-level Business Domains (Tier 3 Domain Containers). 
+- **NO RIGID HARDCODING:** The sidebar is **NOT** locked to a fixed count (like "only 5 items"). 
+- **Anti-Clutter Ceiling:** To maintain elite SaaS ergonomics and avoid cognitive overload, the sidebar should contain a healthy, focused set of top-level domains (typically **6 to 10 items**).
+- **Extensibility:** New genuine business domains (e.g., `manager_pos`, `manager_nutrition`, `manager_marketing`) CAN be added whenever new business requirements emerge, provided they satisfy the Bounded Context Affinity rule and avoid generic junk-drawer names.
+- **Sub-Module Flexibility:** Inside each domain, there is no restriction on the number of autonomous sub-modules (mounted via secondary tabs or accordion).
 
-Each nav item has: [Icon] Label · Active state = Gold left border + `--surface-hover` background + subtle gold glow (`box-shadow: 0 0 15px var(--surface-hover)`)
+#### Canonical Baseline Domain Matrix by Role (Illustrative & Extensible):
+1. **Manager Role (`frontend_manager`):**
+   - 📊 **Dashboard** (`/manager/dashboard`) — KPIs, Branch Snapshot, Quick Actions
+   - 👥 **Members** (`/manager/members`) — Directory, Subscriptions, Renewals
+   - 🎯 **CRM** (`/manager/crm`) — Enquiries, Leads, Sales Pipeline
+   - ⏱️ **Attendance** (`/manager/attendance`) — Daily Logs, Biometrics, History
+   - 💰 **Accounting** (`/manager/accounting`) — Assets, Ledgers, Maintenance
+   - 📦 **Inventory** (`/manager/inventory`) — Equipment, Supplements, Lockers
+   - 👔 **Staff** (`/manager/staff`) — Trainers, Roster, Payroll Summary
+   - ⚙️ **Settings** (`/manager/settings`) — Branch Profile, Operating Hours, Tax/GST
+
+2. **Superadmin Role (`frontend_superadmin`):**
+   - 📊 **Dashboard** (`/superadmin/dashboard`) — Platform MRR, System Health
+   - 🏢 **Tenants** (`/superadmin/tenants`) — Gym Chains, Branch Onboarding
+   - 💳 **Plans** (`/superadmin/plans`) — SaaS Tiers, Feature Modules, Pricing
+   - 💵 **Billing** (`/superadmin/billing`) — Tenant Invoices, Payouts, Gateways
+   - 📈 **Analytics** (`/superadmin/analytics`) — Global Revenue, Churn, Retention
+   - 🛡️ **Audit Logs** (`/superadmin/audit`) — Security Trails, Admin Activity
+   - ⚙️ **Settings** (`/superadmin/settings`) — Platform Gateways, Master Admins
+
+---
+
+### 3b. Sub-Navigation Hierarchy: Two Approved Patterns
+
+When a user selects a Domain Container from the sidebar (e.g. `CRM`), its autonomous sub-modules (`crm_enquiries`, `crm_leads`, `crm_pipeline`) MUST be accessed via one of these two approved patterns:
+
+#### Pattern A: The Canonical Top Tab Bar (Recommended Linear / Stripe Standard)
+- **Mount Point:** Rendered by the domain container's `layout.tsx` across the top of the main content area, directly below the page title.
+- **Visual Design:**
+  - Container: `flex items-center gap-2 border-b border-border pb-px mb-6`
+  - Inactive Tab: `text-secondary hover:text-primary font-medium text-sm px-3 py-2 transition-colors`
+  - Active Tab: `text-primary font-semibold text-sm px-3 py-2 border-b-2 border-primary relative`
+  - Badge Count: Pill with `bg-primary-subtle text-primary text-[11px] font-semibold px-2 py-0.5 rounded-full ml-1.5`
+- **Benefit:** Keeps the sidebar ultra-clean while giving the user a persistent secondary workspace tab bar.
+
+#### Pattern B: The Collapsible Sidebar Accordion
+- **Mount Point:** Directly inside the sidebar beneath the parent domain item.
+- **Visual Design:**
+  - Parent Item: Shows a right-aligned chevron icon (`ChevronDown` from lucide-react, 14px) that rotates 180° when expanded (`motion-safe:transition-transform motion-safe:duration-fast`).
+  - Sub-Item Container: `pl-9 pr-3 py-1 flex flex-col gap-1 border-l border-border/40 ml-5 my-1`
+  - Sub-Item Link: `text-secondary hover:text-primary text-xs py-1.5 px-2 rounded-md hover:bg-surface-hover/50 flex items-center gap-2`
+  - Active Sub-Item: `text-primary font-medium bg-surface-hover border-l-2 border-primary`
+
+---
+
+### 3c. Sidebar Visual Token Contract & States
+
+To maintain the luxury premium aesthetic, sidebar elements adhere to these exact token bindings:
+
+| Element State | Background | Left Border | Text Color | Icon Color | Visual Glow |
+|---|---|---|---|---|---|
+| **Default / Inactive** | `transparent` | `none` | `--text-secondary` (`#A1A1AA`) | `--text-secondary` (`#A1A1AA`) | `none` |
+| **Hover** | `rgba(255,255,255,0.03)` | `none` | `--text-primary` (`#FFFFFF`) | `--text-primary` (`#FFFFFF`) | `none` |
+| **Active / Selected** | `--surface-hover` (`rgba(250,204,21,0.08)`) | `3px solid var(--primary)` (`#FACC15`) | `--text-primary` (`#FFFFFF`) (Weight: 600) | `--primary` (`#FACC15`) | `box-shadow: 0 0 15px var(--surface-hover)` |
+
+#### Collapsed Icon-Only Mode (`60px` Width):
+- Toggled via the header hamburger `[☰ Collapse]` control.
+- Text labels, badges, and chevrons are cleanly hidden (`opacity-0 pointer-events-none`).
+- 18px Lucide icons center-aligned (`mx-auto`).
+- **Hover Popover Tooltip:** Hovering over any icon in collapsed mode triggers an elevated popover (`bg-popover border border-border shadow-popover z-30`) positioned immediately to the right of the sidebar, displaying the domain title and clickable sub-module links.
 
 ---
 

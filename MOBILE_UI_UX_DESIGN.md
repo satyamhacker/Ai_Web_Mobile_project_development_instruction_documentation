@@ -472,6 +472,131 @@ Rules:
 Use named `icon-*` size tokens. Introduce a new token when a supported icon library or specific platform convention strictly requires a new standard size.
 **Note:** Icon visual size and interactive hit area are separate concepts. No arbitrary icon sizes without justification. Touch targets remain governed by the 44 iOS pt / 48 Android dp rule.
 
+---
+
+## 5C. Mobile Navigation Shell Architecture & Navigation Token Contract (Bottom Tabs, Drawer, Segmented Tabs, and Action Bottom Sheets)
+
+Every authenticated mobile screen renders within a platform-native navigation hierarchy. Primary navigation maps 1-to-1 to Tier 3 Domain Containers (`manager_crm`, `manager_attendance`, `manager_accounting`), secondary navigation accesses Tier 4 Autonomous Sub-Modules (`crm_enquiries`, `crm_leads`), and actions/forms are presented via `@gorhom/bottom-sheet` panels.
+
+```text
+┌────────────────────────────────────────────────────────────────────────┐
+│  STATUS BAR (Style: light-content in Dark Mode / dark-content in Light)│
+├────────────────────────────────────────────────────────────────────────┤
+│  TOP HEADER (height: 56pt, SafeAreaView top)                           │
+│  [☰ Drawer]   [CRM: Enquiries]                     [🔔 (3)] [👤 Profile]│
+├────────────────────────────────────────────────────────────────────────┤
+│  SUB-MODULE SEGMENTED TOP BAR (height: 44pt — Pattern A)               │
+│  ┌──────────────────────────────────────────────────────────────────┐  │
+│  │ [📌 Enquiries (Active)]    [🎯 Leads]    [📈 Pipeline]            │  │
+│  └──────────────────────────────────────────────────────────────────┘  │
+├────────────────────────────────────────────────────────────────────────┤
+│  MAIN SCREEN AREA (Virtualized List: FlashList / FlatList)             │
+│                                                                        │
+│  [🔍 Search Enquiries input field ────────────────────────────────────]│
+│                                                                        │
+│  ┌──────────────────────────────────────────────────────────────────┐  │
+│  │  CARD 1: Rahul Sharma — Gold Annual Plan (Trial)                 │  │
+│  │  Status: [New] · Source: Instagram · Date: Today 10:30 AM        │  │
+│  └──────────────────────────────────────────────────────────────────┘  │
+│  ┌──────────────────────────────────────────────────────────────────┐  │
+│  │  CARD 2: Priya Patel — Personal Training Inquiry                 │  │
+│  │  Status: [Follow-up] · Source: Walk-in · Date: Yesterday         │  │
+│  └──────────────────────────────────────────────────────────────────┘  │
+│                                                                        │
+│                                                ┌─────────────────────┐ │
+│                                                │ [+] FAB: Add Enquiry│ │
+│                                                │ (56x56pt, Gold Fill)│ │
+│                                                └─────────────────────┘ │
+├────────────────────────────────────────────────────────────────────────┤
+│  BOTTOM TAB BAR (height: 60pt + safeArea.bottom)                       │
+│  [📊 Dashboard]   [👥 Members]   [🎯 CRM (Active)]   [⏱️ Attendance] [⋯] │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+### 5C.1 Canonical Mobile Domain Navigation Architecture (Anti-Clutter Ceiling: Typically 6–10 Domains)
+
+Primary mobile navigation destinations (Bottom Tab Bar items and Role Drawer items) MUST represent cohesive, high-level Business Domains (Tier 3 Domain Containers):
+- **NO RIGID FIXED COUNT:** Roles are **NOT** locked to a rigid count (like "only 5 items").
+- **Anti-Clutter Ceiling:** On mobile devices, the physical Bottom Tab Bar comfortably accommodates **4 to 5 core domains** (the 5th tab can serve as a "More / Menu" hub or the top header provides a drawer toggle `[☰]`), while the total domain portfolio for any role maintains a focused ceiling of **6 to 10 domains**.
+- **Extensibility:** New genuine business domains (e.g., `manager_pos`, `manager_nutrition`, `manager_marketing`) CAN be added whenever new business requirements emerge, provided they satisfy the Bounded Context Affinity rule and avoid generic junk-drawer names.
+- **Sub-Module Granularity:** Inside each domain, there is no restriction on the number of autonomous sub-modules (mounted via secondary segmented tabs or stack screens).
+
+#### Canonical Baseline Domain Matrix by Role (Mobile Native & Extensible):
+1. **Manager Role (`frontend_manager`):**
+   - 📊 **Dashboard** (`manager_dashboard`) — KPIs, Branch Snapshot, Quick Actions
+   - 👥 **Members** (`manager_members`) — Directory, Subscriptions, Renewals
+   - 🎯 **CRM** (`manager_crm`) — Enquiries, Leads, Sales Pipeline
+   - ⏱️ **Attendance** (`manager_attendance`) — Daily Logs, Biometrics, History
+   - 💰 **Accounting** (`manager_accounting`) — Assets, Ledgers, Maintenance
+   - 📦 **Inventory** (`manager_inventory`) — Equipment, Supplements, Lockers
+   - 👔 **Staff** (`manager_staff`) — Trainers, Roster, Payroll Summary
+   - ⚙️ **Settings** (`manager_settings`) — Branch Profile, Operating Hours, Tax/GST
+
+2. **Superadmin Role (`frontend_superadmin`):**
+   - 📊 **Dashboard** (`superadmin_dashboard`) — Platform MRR, System Health
+   - 🏢 **Tenants** (`superadmin_tenants`) — Gym Chains, Branch Onboarding
+   - 💳 **Plans** (`superadmin_plans`) — SaaS Tiers, Feature Modules, Pricing
+   - 💵 **Billing** (`superadmin_billing`) — Tenant Invoices, Payouts, Gateways
+   - 📈 **Analytics** (`superadmin_analytics`) — Global Revenue, Churn, Retention
+   - 🛡️ **Audit Logs** (`superadmin_audit`) — Security Trails, Admin Activity
+   - ⚙️ **Settings** (`superadmin_settings`) — Platform Gateways, Master Admins
+
+---
+
+### 5C.2 Sub-Navigation Hierarchy: Two Approved Mobile Patterns
+
+When a user taps a Domain Container from the Bottom Tab or Drawer (e.g. `CRM`), its autonomous sub-modules (`crm_enquiries`, `crm_leads`, `crm_pipeline`) MUST be accessed via one of these two approved patterns:
+
+#### Pattern A: The Native Top Segmented Bar / Material Top Tabs (Canonical)
+- **Mount Point:** Rendered by `Manager[Domain]Navigator.tsx` across the top of the screen directly beneath the safe-area header.
+- **Visual Design:**
+  - Container: `height: 44pt`, `backgroundColor: tokens.color.background`, `flexDirection: 'row'`, `paddingHorizontal: tokens.spacing.md`, `borderBottomWidth: 1`, `borderBottomColor: tokens.color.border`.
+  - Active Segment: Pill background `tokens.color.primary` (`#FACC15`), label text `tokens.color.onPrimary` (`#111111`, font-weight: 600, font-size: 13pt), active slide spring animation (`spring-medium`).
+  - Inactive Segment: Transparent background, label text `tokens.color.muted` (`#A1A1AA`), font-weight: 500.
+  - Badge Count: Pill indicator with `backgroundColor: tokens.color.primarySubtle`, text `tokens.color.primaryText`, font-size: 11pt, bold.
+- **Benefit:** Keeps the mobile bottom tabs focused while providing a swipeable, instant secondary workspace for the active business domain.
+
+#### Pattern B: Domain Hub & Stack Screen Drilldown
+- **Mount Point:** The domain navigator starts with `Manager[Domain]IndexScreen.tsx`.
+- **Visual Design:**
+  - Screen displays high-level operational metric cards and navigable list items leading to sub-modules via `navigation.navigate('SubmoduleScreen')`.
+  - Cards use `backgroundColor: tokens.color.card`, `borderRadius: tokens.radius.lg`, with right chevron `lucide-react-native` (`ChevronRight`, 18pt, `tokens.color.muted`).
+  - Tapping any card executes a native stack push animation (`duration-slow`).
+
+---
+
+### 5C.3 Action Presentation Layer (The Anti-Action Ban & Bottom Sheet Contract)
+
+> ⛔ **STRICT BAN ON ACTION NANO-MODULES:**
+> Forms, creation workflows, edit sheets, and filter modals MUST NEVER be made into sub-modules or primary navigation items (e.g., `crm_enquiry_add/`, `member_add/` are STRICTLY FORBIDDEN).
+> They MUST live inside the owning sub-module's `components/` folder as `@gorhom/bottom-sheet` panels or child stack screens.
+
+#### Canonical Action Bottom Sheet Specification (`@gorhom/bottom-sheet`):
+- **Snap Points:** `['50%', '90%']` for creation/edit forms; `['40%']` for quick confirmation or filter sheets.
+- **Surface Token:** `backgroundColor: tokens.color.card` (`#111111` dark / `#FFFFFF` light), `borderTopLeftRadius: tokens.radius.xl`, `borderTopRightRadius: tokens.radius.xl`.
+- **Handle Indicator:** Centered pill, `width: 36`, `height: 4`, `borderRadius: 2`, `backgroundColor: tokens.color.border`.
+- **Backdrop:** `tokens.color.overlay` (`rgba(0,0,0,0.7)`), tap outside dismisses sheet unless uncommitted dirty form state exists.
+- **Header:** Title in `heading-sm` (bold, `tokens.color.foreground`), right close icon button `lucide-react-native` (`X`, 20pt, `tokens.color.muted`, hitSlop: 12).
+- **Primary CTA:** Full-width button, `backgroundColor: tokens.color.primary`, text `tokens.color.onPrimary` (`#111111`, bold), height: 48pt (WCAG touch-target compliant).
+
+---
+
+### 5C.4 Mobile Navigation Visual Token Contract & States
+
+To maintain the Luxury Premium Gold aesthetic across all mobile screens, navigation elements adhere to these exact token bindings:
+
+| Navigation Element | State | Background Token | Border / Accent | Label / Text Token | Icon Token | Touch Feedback |
+|---|---|---|---|---|---|---|
+| **Bottom Tab Item** | Default / Inactive | `transparent` | `none` | `tokens.color.muted` (`#A1A1AA`) | `tokens.color.muted` (`#A1A1AA`) | `press-scale: 0.96` |
+| **Bottom Tab Item** | Active / Selected | `transparent` | Top accent dot / pill in `tokens.color.primary` | `tokens.color.primary` (`#FACC15`) | `tokens.color.primary` (`#FACC15`) | Light Haptic Impact |
+| **Drawer Nav Item** | Default / Inactive | `transparent` | `none` | `tokens.color.muted` (`#A1A1AA`) | `tokens.color.muted` (`#A1A1AA`) | `opacity: 0.7` |
+| **Drawer Nav Item** | Active / Selected | `tokens.color.primarySubtle` | 3px left border `tokens.color.primary` | `tokens.color.foreground` (Weight: 600) | `tokens.color.primary` (`#FACC15`) | Light Haptic Impact |
+| **Top Tab Segment** | Default / Inactive | `transparent` | `none` | `tokens.color.muted` (`#A1A1AA`) | `tokens.color.muted` | `press-scale: 0.96` |
+| **Top Tab Segment** | Active / Selected | `tokens.color.primary` (`#FACC15`) | `border-radius: tokens.radius.full` | `tokens.color.onPrimary` (`#111111`, Bold) | `tokens.color.onPrimary` | Spring slide animation |
+| **Floating Action Button** | Default | `tokens.color.primary` (`#FACC15`) | `shadow-xl` | — | `tokens.color.onPrimary` (`#111111`) | `press-scale: 0.92` + Light Haptic |
+
+---
+
 ## 6. Touch Targets
 `min-touch-target = 44` (iOS pt) / `48` (Android dp) — every tappable element
 must meet this via minimum height/width or padding.

@@ -451,10 +451,152 @@ If a required mobile behavior is not defined by these mobile documents or the su
 
 To guarantee that any AI agent or mobile developer can repair, test, or expand a mobile feature without app-wide regression, the mobile architecture enforces strict 1-to-1 isomorphism between primary navigation destinations and filesystem feature modules:
 
-1. **The 1:1 Navigation Law (Bottom Tabs / Drawer Items):**
-   - Every primary destination present in ANY mobile role's primary navigation MUST map strictly 1-to-1 to an autonomous, self-contained feature folder directly under the role container: `src/features/frontend_{role}/{role}_{feature}/` (e.g., `src/features/frontend_manager/manager_members/`).
-   - Merging distinct primary navigation tabs into a single mega-module (e.g., combining Attendance and Members, or Schedule and Workouts) is STRICTLY PROHIBITED.
-   - Creating disjoint root-level folders for sub-screens or detail flows belonging to a navigation tab is STRICTLY PROHIBITED.
+1. **The 1:1 Navigation Law & Mobile Domain Grouping Principle (Bottom Tabs / Drawer Items):**
+   - **Domain Container as Primary Navigation Destination:** Every primary destination present in ANY mobile role's primary navigation (Bottom Tab Bar or Role Drawer: e.g., in Manager: Dashboard, Members, CRM, Attendance, Accounting, Inventory, Staff, Settings; in Admin: Dashboard, Gyms, Billing, Staff, Reports, Settings; in Superadmin: Dashboard, Tenants, Plans, Billing, Analytics, Audit, Settings; in Trainer: Dashboard, Schedule, Clients, Workouts, Earnings, Settings; in Member: Dashboard, Membership, Attendance, Bookings, Payments, Profile) MUST map strictly 1-to-1 to an autonomous Tier 3 Domain Container directly under that role container: `src/features/frontend_{role}/{role}_{domain}/` (e.g., `src/features/frontend_manager/manager_crm/`).
+   - **Mobile Anti-Clutter Limit (Typically 6–10 Business Domains per Role):** Top-level primary navigation MUST represent cohesive, high-level Business Domains. Flat-dumping 20+ granular screens or sub-modules into navigation or bottom tabs is a **CRITICAL UX & ARCHITECTURE VIOLATION**. On mobile devices, bottom tabs hold 4–5 core domains with remaining primary domains accessible via the Role Drawer or a "More" domain hub, with total top-level domains for a role capped at a focused **6 to 10 domains**.
+   - **Sub-Modules as Secondary Navigation:** Autonomous sub-modules inside a domain container (e.g., inside `manager_crm/`: `crm_enquiries/`, `crm_leads/`, `crm_pipeline/`; inside `manager_accounting/`: `accounting_assets/`, `accounting_ledgers/`, `accounting_maintenance/`) MUST be accessed via Secondary Navigation:
+     - **Pattern A (Mobile Secondary Top Tab / Segmented Bar):** Rendered by `Manager[Domain]Navigator.tsx` across the top of the screen (`[ Enquiries ] [ Leads ] [ Pipeline ]`) using `@react-navigation/material-top-tabs` or custom segmented bar.
+     - **Pattern B (Domain Hub / Stack Screen Navigation):** The domain navigator mounts stack screens where the domain index screen presents operational cards or list links to sub-modules.
+   - **STRICT PROHIBITION ON ACTION NANO-MODULES (THE ANTI-ACTION BAN):**
+     - Creating a sub-module or navigation tab for a single action, form, or modal (e.g. `crm_enquiry_add/`, `crm_enquiry_edit/`, `accounting_asset_maintenance_add/`, `member_add/`) is an immediate **P0 ARCHITECTURE FAILURE (NANO-MODULE VIOLATION)**.
+     - Creation forms, edit sheets, detail screens, and wizard steps MUST live strictly INSIDE their parent sub-module (`components/` as `@gorhom/bottom-sheet` panels or child stack screens), NEVER as independent sub-modules or primary navigation items.
+   - **Grouping multiple distinct primary navigation destinations into a single mega-folder (e.g., merging `manager_finance` and `manager_expenses`, or `admin_billing` and `admin_plans`) is STRICTLY FORBIDDEN.**
+   - **Creating ad-hoc top-level folders outside the owning feature for sub-views or detail pages is STRICTLY FORBIDDEN.** All sub-screens and secondary workflows must be owned by that feature module.
+
+### Deterministic 3-Question AI Domain Grouping Decision Tree (Mobile Native)
+
+Before writing ANY code or creating ANY folder in mobile, the AI MUST run this 3-question filter for every screen or feature requirement:
+
+```text
+Q1: Is this a core high-level Business Domain (e.g., CRM, Accounting, Members, Attendance)?
+    ├── YES ──> Create Tier 3 Domain Container: src/features/frontend_{role}/{role}_{domain}/
+    │           (Mounts in primary Bottom Tab / Drawer; contains screens/Manager[Domain]Navigator.tsx)
+    └── NO  ──> Proceed to Q2
+
+Q2: Is this a distinct operational capability with its own entity lifecycle, list/card views, and filters (5–20 files)?
+    ├── YES ──> Create Tier 4 Autonomous Sub-Module: {domain}_{capability}/ inside {role}_{domain}/
+    │           (Exposed as secondary top-tab or domain stack screen; e.g., crm_enquiries/, accounting_assets/)
+    └── NO  ──> Proceed to Q3
+
+Q3: Is this a single action, form, bottom sheet, modal, detail view, or sub-step (e.g., "Add Enquiry", "Edit Asset")?
+    └── YES ──> Place inside parent sub-module: components/ (e.g., ManagerCrmEnquiryCreateSheet.tsx using @gorhom/bottom-sheet)
+                or child stack screen inside sub-module screens/.
+                ⛔ STRICTLY FORBIDDEN to create a separate sub-module or primary navigation item!
+```
+
+### Mobile Sub-View & Action Routing Decision Matrix
+
+Use React Navigation route parameters (`route.params: { mode, filter, status }`) ONLY for state that modifies the view of the SAME resource:
+- Filter criteria, date range selections, search queries
+- Segmented mode toggles (e.g. list view vs calendar view of the same records)
+- Tab selection when it does not represent an independent resource lifecycle
+
+Use nested Stack screens or `@gorhom/bottom-sheet` inside the SAME sub-module for:
+- Entity detail screens (e.g. `ManagerMembersDetailScreen.tsx`)
+- Create / add / edit sheets and screens (e.g. `ManagerCrmEnquiryCreateSheet.tsx`)
+- Multi-step onboarding or checkout wizards
+- Workflows requiring distinct permission checks or independent navigation headers
+- Deep-linkable resource targets
+
+Allowed hierarchical structure following Universal Day-1 Sub-Module Architecture (Illustrated with CRM & Accounting for Mobile):
+```text
+src/features/frontend_manager/
+├── manager_crm/                                       ← PRIMARY NAV DESTINATION: "CRM" (Tier 3 Domain Container)
+│   ├── screens/
+│   │   └── ManagerCrmNavigator.tsx                    ← Pure Nav Shell mounting secondary tabs: [Enquiries | Leads | Pipeline]
+│   ├── manager_crm_features.md                        ← Master domain specification
+│   ├── manager_crm_forbidden.md                       ← Master domain forbidden rules
+│   ├── manager_crm_theme_contract.md                  ← Master domain theme tokens
+│   │
+│   ├── crm_enquiries/                                 ← Autonomous Sub-Module 1 (AI Repair Unit)
+│   │   ├── screens/
+│   │   │   ├── ManagerCrmEnquiriesScreen.tsx          ← Thin orchestrator (< 80 lines)
+│   │   │   └── ManagerCrmEnquiriesMainView.tsx
+│   │   ├── components/
+│   │   │   ├── ManagerCrmEnquiriesCardList.tsx
+│   │   │   ├── ManagerCrmEnquiriesFilterSheet.tsx
+│   │   │   └── ManagerCrmEnquiryCreateSheet.tsx       ← "Add Enquiry" lives HERE as Bottom Sheet! NOT a submodule!
+│   │   ├── hooks/                                     ← useManagerCrmEnquiriesList.ts
+│   │   ├── api/                                       ← manager_crm_enquiries.api.ts
+│   │   ├── state/                                     ← useManagerCrmEnquiriesStore.ts
+│   │   ├── types/ & schemas/
+│   │   ├── mocks/                                     ← Mutable MSW handlers & fixtures
+│   │   ├── tests/
+│   │   ├── config/manager_crm_enquiries.url_config.ts
+│   │   ├── _locales/manager_crm_enquiries_en.json
+│   │   ├── manager_crm_enquiries_features.md          ← ALL 22 Canonical Sections
+│   │   ├── manager_crm_enquiries_forbidden.md
+│   │   └── manager_crm_enquiries_theme_contract.md
+│   │
+│   ├── crm_leads/                                     ← Autonomous Sub-Module 2 (Secondary Tab)
+│   └── crm_pipeline/                                  ← Autonomous Sub-Module 3 (Secondary Tab)
+│
+└── manager_accounting/                                ← PRIMARY NAV DESTINATION: "Accounting" (Tier 3 Domain Container)
+    ├── screens/
+    │   └── ManagerAccountingNavigator.tsx             ← Pure Nav Shell mounting secondary tabs: [Assets | Maintenance | Ledgers]
+    ├── manager_accounting_features.md
+    │
+    ├── accounting_assets/                             ← Autonomous Sub-Module 1 (Secondary Tab)
+    │   ├── screens/
+    │   │   └── ManagerAccountingAssetsScreen.tsx
+    │   ├── components/
+    │   │   ├── ManagerAccountingAssetsCardList.tsx
+    │   │   └── ManagerAccountingAssetCreateSheet.tsx  ← "Add Asset" lives HERE!
+    │   └── ...
+    │
+    ├── accounting_maintenance/                        ← Autonomous Sub-Module 2 (Secondary Tab)
+    └── accounting_ledgers/                            ← Autonomous Sub-Module 3 (Secondary Tab)
+```
+
+**Rule:** One primary navigation destination = one feature domain container (Tier 3). All business implementation code MUST live inside autonomous child sub-modules (`{domain}_{capability}/`). Internal actions and forms MUST live inside sub-module `components/` (using `@gorhom/bottom-sheet` or nested stack screens).
+
+### CANONICAL ERP DOMAIN TAXONOMY & ANTI-HALLUCINATION GROUPING INVARIANT (NON-NEGOTIABLE)
+
+To prevent AI agents from arbitrarily inventing nonsensical parent groups (e.g. creating `manager_operations/` or merging `CRM` and `Members`), all mobile domain grouping MUST adhere strictly to Domain-Driven Design (DDD) Bounded Contexts and the Canonical Domain Taxonomy below.
+
+#### 1. The Bounded Context Affinity Rule (Zero Cross-Domain Smuggling):
+Two capabilities may ONLY reside in the same Tier 3 Domain Container if they share:
+1. **The exact same primary Aggregate Root & Entity Lifecycle** (e.g., all submodules in `manager_crm` operate on Leads/Prospects/Inquiries; all submodules in `manager_members` operate on Active Enrolled Members).
+2. **The same business domain boundary.**
+- ❌ **CROSS-DOMAIN SMUGGLING IS STRICTLY FORBIDDEN:**
+  - An AI MUST NOT put active member subscription management inside `CRM` (Members is post-sale; CRM is pre-sale).
+  - An AI MUST NOT put financial invoices or payment gateways inside `Attendance` or `Members` (Invoices belong to `Billing` / `Accounting`).
+  - An AI MUST NOT merge `Staff` and `Accounting` merely because staff gets paid (Staff manages shifts/profiles; Accounting manages financial ledger disbursements).
+
+#### 2. The Anti-Junk-Drawer / Anti-Mega-Bucket Law:
+AI agents are **ABSOLUTELY PROHIBITED** from creating generic, ambiguous, or dumping-ground domain names. 
+The following domain names are **PERMANENTLY BANNED**:
+- ❌ `*_operations/`
+- ❌ `*_management/`
+- ❌ `*_general/`
+- ❌ `*_miscellaneous/` or `*_misc/`
+- ❌ `*_tools/` or `*_actions/`
+- ❌ `*_hub/` or `*_portal/` or `*_workspace/`
+- ❌ `*_services/` or `*_data/`
+- ❌ Hyphenated mergers: `*_crm_and_members/`, `*_finance_and_expenses/`
+
+Creating ANY domain with a banned name is an immediate **P0 ARCHITECTURE FAILURE & MERGE BLOCKER**. Every domain container MUST be a specific business noun from the Canonical Domain Taxonomy below.
+
+#### 3. Canonical ERP Domain Taxonomy (Extensible Baseline Matrix):
+The domain containers below represent the canonical baseline for Smart Gym 360 Mobile. 
+- **NO RIGID FIXED COUNT:** Roles are NOT locked to a rigid number of items (neither 5 nor any fixed count).
+- **Anti-Clutter Ceiling:** Roles should maintain a focused set of top-level domains (typically **6 to 10 items**).
+- **Extensibility:** New legitimate business domains (e.g., `manager_pos`, `manager_nutrition`, `manager_marketing`) MAY be introduced as long as they represent independent Aggregate Roots and avoid banned junk-drawer names.
+
+| Role Container | Approved Baseline Domain Containers (Typically 6–10) | Permitted Autonomous Sub-Modules (`{domain}_{capability}`) |
+|---|---|---|
+| **`frontend_manager`** | 1. `manager_dashboard`<br>2. `manager_members`<br>3. `manager_crm`<br>4. `manager_attendance`<br>5. `manager_accounting`<br>6. `manager_inventory`<br>7. `manager_staff`<br>8. `manager_settings` | • `crm` → `crm_enquiries`, `crm_leads`, `crm_pipeline`<br>• `members` → `members_directory`, `members_plans`, `members_detail`<br>• `attendance` → `attendance_dashboard`, `attendance_history`, `attendance_biometrics`<br>• `accounting` → `accounting_assets`, `accounting_ledgers`, `accounting_maintenance`<br>• `inventory` → `inventory_equipment`, `inventory_supplements`, `inventory_lockers`<br>• `staff` → `staff_directory`, `staff_roster`, `staff_payroll` |
+| **`frontend_superadmin`** | 1. `superadmin_dashboard`<br>2. `superadmin_tenants`<br>3. `superadmin_plans`<br>4. `superadmin_billing`<br>5. `superadmin_analytics`<br>6. `superadmin_audit`<br>7. `superadmin_settings` | • `tenants` → `tenants_directory`, `tenants_onboarding`, `tenants_branches`<br>• `plans` → `plans_tiers`, `plans_features`, `plans_pricing`<br>• `billing` → `billing_invoices`, `billing_payouts`, `billing_gateways`<br>• `audit` → `audit_logs`, `audit_security`, `audit_compliance` |
+| **`frontend_admin`** | 1. `admin_dashboard`<br>2. `admin_gyms`<br>3. `admin_billing`<br>4. `admin_staff`<br>5. `admin_reports`<br>6. `admin_settings` | • Standard enterprise branch and administrative capabilities |
+| **`frontend_trainer`** | 1. `trainer_dashboard`<br>2. `trainer_schedule`<br>3. `trainer_clients`<br>4. `trainer_workouts`<br>5. `trainer_earnings`<br>6. `trainer_settings` | • Personal trainer schedule, member workout logs, and PT commission logs |
+| **`frontend_member`** | 1. `member_dashboard`<br>2. `member_membership`<br>3. `member_attendance`<br>4. `member_bookings`<br>5. `member_payments`<br>6. `member_profile` | • Gym member portal views, QR check-in, class bookings, payment receipts |
+
+#### 4. The Aggregate Root Boundary Test (Dispute Resolution):
+If an AI agent is uncertain which domain owns a feature (e.g. "Trainer Payouts: does it belong in Staff or Accounting?"), apply the **Aggregate Root Mutation Test**:
+- *"Which core business entity's authoritative state is being created or modified?"*
+  - If the operation creates an accounting transaction, tax entry, or ledger disbursement → It belongs to **`accounting`**.
+  - If the operation updates trainer employee profiles, hourly rates, or roster status → It belongs to **`staff`**.
+  - Cross-references are resolved strictly via read-only API calls across gateway endpoints, NEVER by combining domain folders!
 
 2. **100% Domain Self-Containment Inside the Feature Folder:**
    - When a user taps a navigation tab (e.g. Attendance ➔ `AttendanceScreen`, Schedule ➔ `ScheduleScreen`), **100% of the UI, state, and logic for that capability MUST reside INSIDE that single folder**:
