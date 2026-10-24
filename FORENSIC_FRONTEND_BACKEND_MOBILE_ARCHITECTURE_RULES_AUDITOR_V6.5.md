@@ -81,7 +81,10 @@ rather than creating a parallel hardcoded rule copy.
 > ⛔⛔⛔ **AI MANDATORY BOOT SEQUENCE — EXECUTE BEFORE ANYTHING ELSE** ⛔⛔⛔
 >
 > **COMPLIANCE FAILURE HANDLING — FORENSIC AUDIT MODE:**
-> A forensic-process violation triggers a mandatory stop only for the affected audit path.
+> A forensic-process violation triggers a mandatory stop only for the affected audit path or file.
+> Non-dependent compliant audit paths MUST continue without interruption.
+> Missing runtime/host capability (dev server, live database, test runner, browser automation) is NEVER an architectural violation and MUST NOT cause execution to pause or stall (mark as `DEFERRED_TO_HOST_RUNTIME`).
+> Previously verified and unaffected findings remain valid and must not be discarded.
 >
 > The auditor MUST:
 > 1. Record the violated forensic rule;
@@ -92,7 +95,19 @@ rather than creating a parallel hardcoded rule copy.
 >
 > The auditor MUST NOT silently continue after a forensic-process violation.
 >
-> Before producing ANY analysis, findings, or audit content, you MUST output ALL of the following in your VERY FIRST response:
+> The normative architecture documents are the **absolute authoritative standard only for explicitly defined behavior**. Any undefined, unprovided, or ambiguous behavior remains `CONTRACT_MISSING` and MUST NOT be inferred, assumed, or guessed.
+>
+> ⛔ **DETERMINISTIC CONFIDENCE TAXONOMY & EVIDENCE STANDARD:**
+> Every implementation decision, contract assertion, and audit claim MUST be classified into one of:
+> - `VERIFIED`: Proven by supplied source file path, exact line reference, verified API contract, schema, or explicit architecture rule.
+> - `DERIVED`: Deterministically derived from verified types/interfaces or architecture-mandated patterns (e.g. deriving a `useConfirm` modal from a raw `alert()` violation).
+> - `CONTRACT_MISSING`: External backend/business behavior or requirement not provided in supplied scope. The AI MUST NOT infer or guess external backend behaviors.
+> - `ASSUMED`: Strictly PROHIBITED. Speculative guessing without architectural or contract foundation is an ARCHITECTURE FAILURE.
+>
+> **Valid Evidence:** Source file path, exact line reference, API contract, schema, mock fixture, repository config, or normative architecture rule.
+> **Invalid Evidence (FORBIDDEN):** Speculative AI guessing, naming assumptions, generic industry patterns, or prior project habits.
+>
+> Before producing ANY analysis, code, audit findings, or repair content, you MUST output ALL of the following in your VERY FIRST response:
 >
 > ```
 > FORENSIC AUDITOR V6.5 — BOOT DECLARATION
@@ -221,6 +236,17 @@ Every AI agent executing this prompt MUST strictly obey these invariants at all 
    - **Submodule Documentation Trio & Run Harness:** Every single sub-module MUST have its own isolated documentation trio (`[role]_[submodule]_features.md` with Section 20 Standalone Run/Mock Harness, `_forbidden.md`, `_theme_contract.md`).
    - **Meaningful Domain-Prefixed Submodule Naming (`{domain}_{capability}`):** 5-Second Comprehension Invariant; ban on lazy names (`tab1/`, `main/`, `default/`, `home/`).
    - **The Sub-Module ZIP Guarantee:** Verify that any single sub-module can be independently extracted, zipped, and audited with 0% dependency on sibling sub-modules or the host app.
+10. **AUDIT COMPLETENESS & ANTI-LAZY COMPLETION AUDIT (ZERO EXCUSES FOR INCOMPLETE CODE):**
+    When auditing repaired code or deliverables:
+    - If a Repair AI leaves a native `window.alert()`, `Alert.alert()`, unhandled modal, un-wired form, or missing Zod validation claiming `CONTRACT_MISSING`, the Auditor MUST flag that as an **IMMEDIATE P0 AUDIT FRAUD & INCOMPLETE REPAIR FAILURE**. `CONTRACT_MISSING` applies ONLY to external unprovided backend endpoints or 3rd-party webhook secrets, NEVER to UI states, modals, or forms!
+11. **ANTI-DESTRUCTION & FEATURE PRESERVATION AUDIT (ZERO FEATURE EVICTION):**
+    - The Auditor MUST inspect the diff against the original source: if the Repair AI deleted, removed, or commented out existing half-built features, buttons, tabs, or business flows instead of completing them, the Auditor MUST fail the audit with **CRITICAL P0 DESTRUCTIVE MALPRACTICE**.
+12. **DEPENDENCY PRECEDENCE AUDIT:**
+    - The Auditor MUST recognize dependencies present in the existing repository `package.json` / lockfile as `LEGACY_REPOSITORY_APPROVED`. The Auditor MUST NOT flag existing repo dependencies as unapproved violations just because they are not listed in a prompt reference table.
+13. **WET VS DRY CLASSIFICATION AUDIT:**
+    - Auditor verifies: Business-aware logic = WET (feature-local). Pure stateless deterministic primitives (pure math, regex, date primitives) = DRY (centralized in `src/core/utils/` or `src/lib/`).
+14. **4-POINT PRE-DELIVERY SELF-AUDIT VERIFICATION:**
+    - Auditor verifies that the Repair AI ran and documented: `CONTRADICTION_CHECK`, `AUTHORITY_CHECK`, `MISSING_CONTRACT_CHECK`, and `HALLUCINATION_CHECK`.
 
 ---
 
