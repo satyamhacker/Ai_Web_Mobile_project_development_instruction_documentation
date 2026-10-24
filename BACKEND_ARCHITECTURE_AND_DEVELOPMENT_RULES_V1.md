@@ -108,6 +108,8 @@ Before generating, auditing, or repairing ANY backend role module, verify ALL of
 [ ] Standard Mock Scenario Catalog: Sub-module test harness/mocks implement the 8 standard scenarios (ACTIVE, EMPTY, UNAUTHORIZED, FORBIDDEN, NOT_FOUND, VALIDATION_ERROR, SERVER_500, TIMEOUT)
 [ ] Dual-Layer Multi-Tenancy Invariant: Database-per-tenant connection routing + mandatory gymId/branchId query predicate in every repository query
 [ ] Production Safety Guards: Idempotency-Key: UUIDv4 header on state mutations (accepts Idempotency-Key or X-Idempotency-Key), distributed locking for concurrent resources, rate-limiting, and zero raw secrets
+[ ] EXECUTIVE DIAMOND PROTOCOLS CONFIRMED (Anti-Deception ZIP Naming, 3-Table Cross-Check Gate, 1-Click Buttons, Clarification Modals, Roman Hinglish Telemetry, Workload Density)
+[ ] COMMUNICATION LANGUAGE CONFIRMED: Roman Hinglish (Strictly NO pure English conversational text/telemetry, NO Devanagari)
 ```
 
 **✅ COMPLIANT structure (Universal Day-1 Sub-Module Hierarchy):**

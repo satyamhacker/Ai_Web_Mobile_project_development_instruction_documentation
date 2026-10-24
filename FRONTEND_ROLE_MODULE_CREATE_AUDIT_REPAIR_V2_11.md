@@ -119,6 +119,22 @@ When a rule is repeated for convenience:
 > - **Web mode (A/B):** `playwright_E2E/` test suite (inside ZIP)
 > - **Mobile mode (C/D):** `mobile_e2e/` Maestro YAML test suite (top-level mirrored; never stored inside src/features/)
 >
+> ── EXECUTIVE DIAMOND PROTOCOLS CONFIRMATION (ALL 6 MANDATORY) ─────────────
+> [ ] 1. Anti-Deception ZIP Naming: Intermediate *-PARTIAL-rbg{X}.zip vs Complete *-ALL-RBGS-COMPLETE.zip acknowledged
+> [ ] 2. Pre-Delivery Cross-Check Gate: 3 physical verification tables before packaging acknowledged
+> [ ] 3. 1-Click Interactive Button Priority: RequestFeedback: true / ask_question modals acknowledged
+> [ ] 4. Interactive Clarification Modal: (Recommended) default option on decisions acknowledged
+> [ ] 5. Live Progress Heartbeat: Roman Hinglish telemetry lines (✓ [Done]: ... ⚙️ [In Progress]: ...) acknowledged
+> [ ] 6. Substantive Workload Density: min 8 / max 25 findings per RBG sprint acknowledged
+>
+> ── CORE ARCHITECTURAL INVARIANTS CONFIRMATION ───────────────────────────────
+> [ ] Zero Cross-Module Business Imports: No sibling imports, no generic role buckets acknowledged
+> [ ] State Integrity: TanStack Query v5 isPending mandatory (isLoading forbidden), module Zustand store acknowledged
+> [ ] Defensive UX: React Hook Form v7 + Zod v3 co-located, 400 validation error mapping, useUnsavedChangesGuard acknowledged
+> [ ] Design & A11y: Luxury Gold theme (#FACC15 / #EAB308, onPrimary #111111), zero hardcoded colors, WCAG touch targets acknowledged
+> [ ] Multi-Tenancy & Safety: gymId/branchId from auth token never body, Idempotency-Key UUIDv4, en-dash displayValue acknowledged
+> [ ] Section 43P Anti-Skipping Checklist: ALL 84+ web architecture rules / 68 mobile rules MANDATORY — zero skipping, zero sampling acknowledged
+>
 > COMMUNICATION LANGUAGE ACKNOWLEDGED: Roman Hinglish (Strictly NO pure English conversational text/telemetry, NO Devanagari)
 >
 > FIRST ACTION: [State exact first action — e.g., Read supplied design and architecture rules]

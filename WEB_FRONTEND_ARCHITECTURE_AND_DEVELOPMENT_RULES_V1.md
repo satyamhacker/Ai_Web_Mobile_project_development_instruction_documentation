@@ -50,6 +50,8 @@ When a rule is repeated for convenience:
 > [ ] Canonical module folder structure confirmed (src/app/frontend_{role}/{role}_{module}/)
 > [ ] ROOT QUARANTINE verified — only permitted files in feature root
 > [ ] FRONTEND DELIVERY FREEZE GATE & DEFINITION OF DONE loaded into context
+> [ ] EXECUTIVE DIAMOND PROTOCOLS CONFIRMED (Anti-Deception ZIP Naming, 3-Table Cross-Check Gate, 1-Click Buttons, Clarification Modals, Roman Hinglish Telemetry, Workload Density)
+> [ ] COMMUNICATION LANGUAGE CONFIRMED: Roman Hinglish (Strictly NO pure English conversational text/telemetry, NO Devanagari)
 > ```
 > **Failure to confirm the above = verification incomplete. Do not proceed until baseline is verified.**
 >

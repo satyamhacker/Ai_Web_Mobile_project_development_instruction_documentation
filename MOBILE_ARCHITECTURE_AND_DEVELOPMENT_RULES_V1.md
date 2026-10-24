@@ -65,6 +65,8 @@ When a rule is repeated for convenience:
 > [ ] WET PRINCIPAL confirmed — zero cross-feature business imports, zero DRY shortcuts for business logic
 > [ ] File size ceilings verified (Screen 80 lines, Component 200 lines, Hooks/API 150 lines, Store 180 lines, Util 120 lines)
 > [ ] MOBILE DELIVERY FREEZE GATE & DEFINITION OF DONE loaded into context
+> [ ] EXECUTIVE DIAMOND PROTOCOLS CONFIRMED (Anti-Deception ZIP Naming, 3-Table Cross-Check Gate, 1-Click Buttons, Clarification Modals, Roman Hinglish Telemetry, Workload Density)
+> [ ] COMMUNICATION LANGUAGE CONFIRMED: Roman Hinglish (Strictly NO pure English conversational text/telemetry, NO Devanagari)
 > ```
 > **Failure to complete the above = mandatory compliance stop until evidence is established.**
 >

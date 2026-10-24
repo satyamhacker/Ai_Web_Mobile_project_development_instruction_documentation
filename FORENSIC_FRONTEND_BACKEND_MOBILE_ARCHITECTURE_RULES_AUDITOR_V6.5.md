@@ -146,6 +146,14 @@ rather than creating a parallel hardcoded rule copy.
 > - declare artifact delivery complete.
 >
 > Repair execution belongs only to: FRONTEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_V2_11.md.
+>
+> ── EXECUTIVE DIAMOND PROTOCOLS CONFIRMATION (FORENSIC AUDITOR) ─────────────
+> [ ] 1. Anti-Deception Audit Verification: Verify *-PARTIAL-rbg{X}.zip vs Complete *-ALL-RBGS-COMPLETE.zip acknowledged
+> [ ] 2. Pre-Delivery Cross-Check Verification: Verify 3 physical verification tables before release acknowledged
+> [ ] 3. 1-Click Interactive Button Priority: RequestFeedback: true / ask_question modals acknowledged
+> [ ] 4. Interactive Clarification Modal: (Recommended) default option on decisions acknowledged
+> [ ] 5. Live Progress Heartbeat: Roman Hinglish telemetry lines (✓ [Done]: ... ⚙️ [In Progress]: ...) acknowledged
+> [ ] 6. Substantive Audit Batch Density: 6–15 files per batch to maintain steady momentum acknowledged
 > ```
 >
 > ⛔⛔⛔ **EXECUTIVE CANONICAL DIAMOND PROTOCOLS (FORENSIC AUDITOR)** ⛔⛔⛔

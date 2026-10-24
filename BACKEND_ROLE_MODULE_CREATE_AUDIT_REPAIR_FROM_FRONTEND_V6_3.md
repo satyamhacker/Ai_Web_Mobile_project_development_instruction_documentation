@@ -41,6 +41,22 @@
 > FRONTEND WRITE PROHIBITION ACKNOWLEDGED: YES
 > (I WILL NOT create, edit, rename, or delete any frontend file under any circumstance)
 >
+> ── EXECUTIVE DIAMOND PROTOCOLS CONFIRMATION (ALL 6 MANDATORY) ─────────────
+> [ ] 1. Anti-Deception ZIP Naming: Intermediate backend-{role}-v{N}-PARTIAL-rbg{X}.zip vs Complete backend-{role}-v{N}-ALL-RBGS-COMPLETE.zip acknowledged
+> [ ] 2. Pre-Delivery Cross-Check Gate: 3 physical verification tables before packaging acknowledged
+> [ ] 3. 1-Click Interactive Button Priority: RequestFeedback: true / ask_question modals acknowledged
+> [ ] 4. Interactive Clarification Modal: (Recommended) default option on decisions acknowledged
+> [ ] 5. Live Progress Heartbeat: Roman Hinglish telemetry lines (✓ [Done]: ... ⚙️ [In Progress]: ...) acknowledged
+> [ ] 6. Substantive Workload Density: min 8 / max 25 findings per RBG sprint acknowledged
+>
+> ── CORE ARCHITECTURAL INVARIANTS CONFIRMATION ───────────────────────────────
+> [ ] Dual-Layer Multi-Tenancy: DB routing + mandatory gymId/branchId predicate in every repo query, gymId from auth token never body acknowledged
+> [ ] Production Safety: Idempotency-Key UUIDv4 on state mutations, distributed locking for concurrency, rate limiting acknowledged
+> [ ] Sub-Module Isolation: Autonomous sub-modules with {submodule}-{artifact}/ naming, zero business code in domain root acknowledged
+> [ ] Response Envelope: Standard discriminated union ApiResponse<T> = ApiSuccess<T> | ApiFailure with requestId acknowledged
+> [ ] Testing & Automation: Unit, integration, and API E2E test suites with standard mock scenario catalog acknowledged
+> [ ] Full 112-Item Anti-Skipping Checklist (Section 84): ALL 112 rules (Rule 1 to Rule 112) MANDATORY — zero skipping, zero sampling acknowledged
+>
 > COMMUNICATION LANGUAGE ACKNOWLEDGED: Roman Hinglish (Strictly NO pure English conversational text/telemetry, NO Devanagari)
 >
 > FIRST ACTION: [PROJECT STACK GATE / Read Stage 1 requirements / etc. — state exactly]
