@@ -3683,7 +3683,9 @@ Or reply "Adjust" to change the grouping.
 
 > ⛔ **HARD STOP: Do NOT execute a single fix until the user approves the RBG Plan.**
 >
-> 💬 **FLEXIBLE AFFIRMATION PROTOCOL:** Any affirmative user response (e.g., "Begin RBG 1", "Approved", "continue", "proceed", "start", "go ahead", "aage badho", "karo", "haan", "ok", "yes", "next") constitutes full valid approval. The AI MUST NOT halt, argue, or demand an exact phrase.
+> 🖱️ **1-CLICK INTERACTIVE BUTTON & EXECUTABLE ARTIFACT PROTOCOL (ZERO-MANUAL-TYPING):**
+> 1. **Interactive Artifact / Action Button First:** When publishing the RBG Plan or an RBG Checkpoint in an IDE or agentic environment that supports interactive artifacts (e.g. Antigravity IDE, Claude, Cursor), the AI MUST publish it as an actionable plan artifact (e.g., `backend_rbg_plan.md` with `RequestFeedback: true`) or invoke the interactive modal selection tool (`ask_question`) offering `(Recommended) Proceed with RBG [N]`. This provides the user with a single clickable **"Proceed"** / **"Begin RBG [N]"** button directly in the UI so the user does NOT have to manually type.
+> 2. **Flexible Text Affirmation Fallback:** For plain chat or CLI environments without UI buttons, any affirmative response (e.g., "Begin RBG 1", "Approved", "continue", "proceed", "start", "go ahead", "aage badho", "karo", "haan", "ok", "yes", "next") constitutes full valid approval. The AI MUST NOT halt, argue, or demand an exact phrase.
 
 Do NOT start any repair until the user approves the RBG Plan.
 
@@ -3693,7 +3695,7 @@ Do NOT start any repair until the user approves the RBG Plan.
 1. **PRIOR RBG DEPENDENCY PRE-CHECK (MANDATORY for RBG N where N > 1):** Before executing any fix in RBG N, verify that every artifact from previous RBGs that the current RBG depends on is actually in place. If a prior RBG fix is missing or incomplete → repair it BEFORE starting the current RBG and record as `PRIOR_RBG_FIX_INCOMPLETE`. This is a targeted dependency check only — not a full re-audit of all previous RBGs.
 2. Execute ALL findings from the current RBG before moving to the next RBG.
 3. After completing each RBG, checkpoint and display the RBG Completion Dashboard.
-4. **MANDATORY APPROVAL GATE AFTER EACH RBG:** Do NOT start the next RBG until the user gives affirmative confirmation (e.g. "continue", "next", "Begin RBG N+1", "aage badho", "karo", "go ahead"). Multi-batch auto-chaining without human pause is strictly prohibited — pausing after each RBG keeps the AI laser-focused on a bounded scope, preserves context integrity, and prevents compounding multi-file errors.
+4. **MANDATORY APPROVAL GATE AFTER EACH RBG:** Do NOT start the next RBG until the user gives affirmative confirmation (via 1-click UI button or reply "continue", "next", "Begin RBG N+1", "aage badho", "karo", "go ahead"). Multi-batch auto-chaining without human pause is strictly prohibited — pausing after each RBG keeps the AI laser-focused on a bounded scope, preserves context integrity, and prevents compounding multi-file errors.
 5. Within an RBG, apply fixes in dependency order:
    - Migrations/entities first → repositories → services → controllers/DTOs → tests → docs.
 6. Never apply a fix from RBG 3 while RBG 1 is still in progress.
@@ -3729,9 +3731,9 @@ After completing each RBG, display:
 ║   Unit Tests:  [PASS / FAIL / NOT_EXECUTED]                  ║
 ║   Migrations:  [VERIFIED / NOT_EXECUTED]                     ║
 ╠══════════════════════════════════════════════════════════════╣
-║ ACTION REQUIRED:                                             ║
-║ Reply "continue" to proceed to RBG [N+1].                    ║
-║ OR reply "Begin RBG [N+1]" to start the next group.          ║
+║ ACTION REQUIRED (1-CLICK BUTTON OR CHAT):                    ║
+║ 👉 Click [Proceed with RBG N+1] button in UI / artifact      ║
+║ OR reply "continue" / "Begin RBG [N+1]" to proceed.          ║
 ╚══════════════════════════════════════════════════════════════╝
 
 ```
