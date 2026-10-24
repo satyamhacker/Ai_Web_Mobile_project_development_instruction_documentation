@@ -115,6 +115,8 @@ rather than creating a parallel hardcoded rule copy.
 >
 > INPUT INTEGRITY STATUS:          [VERIFIED / PARTIAL / BLOCKED]
 >
+> COMMUNICATION LANGUAGE ACKNOWLEDGED: Roman Hinglish (Strictly NO pure English conversational text/telemetry, NO Devanagari)
+>
 > FIRST ACTION:      Phase 1 Combined Discovery Scan (Section 13A)
 > SECOND ACTION:     Publish Audit Chunk Map (Section 13A Step 3)
 > MOBILE FORENSIC AUDIT DETECTION:
@@ -152,7 +154,7 @@ rather than creating a parallel hardcoded rule copy.
 > 2. **Pre-Delivery Cross-Check Verification:** Verify that the Repair AI has documented and printed the 3 physical verification tables (RBG Closure Ledger, Autonomous Submodule Physical Ledger, Canonical Rules Sweep) with zero discrepancies.
 > 3. **1-Click Interactive Button Priority:** Publish Audit Plans, Chunk Maps, and Checkpoints as actionable artifacts (`RequestFeedback: true`) or interactive modals (`ask_question`) so user can approve next batches via 1-click button instead of manual typing.
 > 4. **Interactive Clarification Modal with (Recommended) Default:** All questions/decisions MUST use structured modals/checkboxes with Option 1 marked `(Recommended)`. Zero open-ended technical essay questions.
-> 5. **Live Progress Heartbeat Telemetry in Roman Hinglish:** Output real-time non-blocking progress lines (`✓ [Done]: ... ⚙️ [In Progress]: ...`) in Roman Hinglish (English letters, NO Devanagari) to eliminate the "hang illusion" during multi-batch forensic scans.
+> 5. **Live Progress Heartbeat Telemetry in Roman Hinglish (STRICT ZERO-ENGLISH BAN):** Output real-time non-blocking progress lines (`✓ [Done]: ... ⚙️ [In Progress]: ...`) strictly in Roman Hinglish (English letters, NO Devanagari). PURE ENGLISH CHAT/TELEMETRY IS STRICTLY BANNED AS A FORMAT VIOLATION. (Example: `✓ [Done]: Chunk 1 ke 8 source files audit ho chuke hain. ⚙️ [In Progress]: Abhi Chunk 2 ke API contract audit start kar raha hoon.`). Code identifiers, file paths, and syntax remain in English.
 > 6. **Substantive Audit Batch Density:** Calibrate batch scans by balanced file groups (e.g., 6–15 files per batch) to maintain steady momentum and prevent context loss.
 >
 > ⛔ **You MUST NOT output any audit finding, rule check, or code analysis before completing this boot declaration.**

@@ -119,6 +119,8 @@ When a rule is repeated for convenience:
 > - **Web mode (A/B):** `playwright_E2E/` test suite (inside ZIP)
 > - **Mobile mode (C/D):** `mobile_e2e/` Maestro YAML test suite (top-level mirrored; never stored inside src/features/)
 >
+> COMMUNICATION LANGUAGE ACKNOWLEDGED: Roman Hinglish (Strictly NO pure English conversational text/telemetry, NO Devanagari)
+>
 > FIRST ACTION: [State exact first action — e.g., Read supplied design and architecture rules]
 > ```
 >
@@ -128,7 +130,7 @@ When a rule is repeated for convenience:
 > 2. **Pre-Delivery Cross-Check Gate (Zero-Excuse Law):** Must execute and output the 3 physical verification tables (RBG Closure, Submodule Physical Ledger, Canonical Rules Sweep) before packaging. Post-delivery excuses ("Oh sorry, cross-check nahi kiya") are strictly banned as P0 audit fraud.
 > 3. **1-Click Interactive Button Priority:** Publish RBG Plans and Checkpoints as actionable artifacts (`RequestFeedback: true`) or modals (`ask_question`) so user can approve via 1-click button instead of manual typing.
 > 4. **Interactive Clarification Modal with (Recommended) Default:** All questions/decisions MUST use structured modals/checkboxes with Option 1 marked `(Recommended)`. Zero open-ended technical essay questions.
-> 5. **Live Progress Heartbeat Telemetry in Roman Hinglish:** Output real-time non-blocking progress lines (`✓ [Done]: ... ⚙️ [In Progress]: ...`) in Roman Hinglish (English letters, NO Devanagari) to eliminate the "hang illusion".
+> 5. **Live Progress Heartbeat Telemetry in Roman Hinglish (STRICT ZERO-ENGLISH BAN):** Output real-time non-blocking progress lines (`✓ [Done]: ... ⚙️ [In Progress]: ...`) strictly in Roman Hinglish (English letters, NO Devanagari). PURE ENGLISH CHAT/TELEMETRY IS STRICTLY BANNED AS A FORMAT VIOLATION. (Example: `✓ [Done]: Architecture rules verify ho chuke hain. ⚙️ [In Progress]: Abhi sub-module isolation check kar raha hoon.`). Code identifiers, file paths, and syntax remain in English.
 > 6. **Substantive Workload Density:** Calibrate RBGs by workload floor (min 8 findings / 4 files) and safety ceiling (max 25 findings / 18 files) for a balanced ~5–8 min sprint without token blowouts or hallucinations.
 >
 > ⛔ **You MUST NOT open or edit any implementation file before completing Stage 1 (requirement freeze).**
@@ -4705,12 +4707,17 @@ Do NOT start any repair until the user approves the RBG Plan.
 10. **LIVE PROGRESS HEARTBEAT TELEMETRY IN ROMAN HINGLISH (ANTI-HANG ASSURANCE):**
     - During execution turns touching multiple files, the AI MUST NOT remain completely silent. A prolonged lack of visible response creates the false impression that the AI is frozen, hung, or stuck.
     - After completing each substantive fix/file within the RBG, the AI MUST emit a concise, real-time telemetry line:
-      - **Language Rule:** Strictly **Roman Hinglish** (English letters, NO Devanagari script).
+      - **Language Rule (ZERO-ENGLISH BAN):** Strictly **Roman Hinglish** (English letters, NO Devanagari script). Pure English conversational updates, explanations, or telemetry are strictly FORBIDDEN and treated as a FORMAT VIOLATION.
       - **Informational Only (Non-blocking):** It does NOT ask for user input or pause execution.
-      - **Format:**
+      - **Format & Concrete Examples:**
         ```text
-        ✓ [Done]: `[file_name]` me [brief explanation of fix in Hinglish] complete ho gaya.
-        ⚙️ [In Progress]: Ab `[next_file_name]` me [next fix in Hinglish] start kar raha hoon...
+        BAD (Strictly Forbidden):
+        ✓ [Done]: I’ve now completed the architecture specification through its delivery-freeze.
+        ⚙️ [In Progress]: I’m completing the design-system workflow before freezing Stage 1.
+
+        GOOD (Mandatory):
+        ✓ [Done]: `[file_name]` me [brief fix in Hinglish - e.g. "TanStack Query v5 isPending aur query keys migrate"] ho gaya hai.
+        ⚙️ [In Progress]: Ab `[next_file_name]` me [next fix in Hinglish - e.g. "Zod schema aur 400 validation error mapping"] start kar raha hoon...
         ```
       - This gives the user continuous real-time visibility into what was just fixed and what is currently being worked on, completely eliminating the "hang illusion".
 
