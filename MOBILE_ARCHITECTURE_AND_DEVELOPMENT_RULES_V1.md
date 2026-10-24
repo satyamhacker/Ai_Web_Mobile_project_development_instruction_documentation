@@ -29,8 +29,10 @@ When a rule is repeated for convenience:
 > ⛔⛔⛔ **AI AGENT — MANDATORY ENFORCEMENT & INTEGRITY DIRECTIVE — READ FIRST** ⛔⛔⛔
 >
 > **COMPLIANCE FAILURE HANDLING (EVIDENCE-BASED REPAIR):**
-> A compliance violation triggers a mandatory stop only for the affected work path.
+> A compliance violation triggers a mandatory stop only for the affected workstream or file.
 > The violation must be recorded, repaired, and rechecked before continuation.
+> Non-dependent compliant workstreams MUST continue without interruption.
+> Missing runtime/host capability is NEVER an architectural violation and MUST NOT cause execution to pause or stall (mark as `DEFERRED_TO_HOST_RUNTIME`).
 > Previously verified and unaffected work remains valid and must not be discarded.
 >
 > On detecting a violation of any rule in this document, the AI MUST:
@@ -41,7 +43,35 @@ When a rule is repeated for convenience:
 > 5. Mark the final status as compliant ONLY after file-level evidence is established.
 > The AI MUST NOT silently continue after detecting a violation, and MUST NOT claim compliance without verifiable file evidence.
 >
-> This document is the **absolute normative authority** for all React Native mobile code in this project. Every rule is MANDATORY unless the rule itself defines a named `NOT_APPLICABLE` condition with explicit evidence. The following words in this document carry their STRICTEST possible meaning:
+> This document is the **absolute normative authority for all mobile architectural, design system, and code repair behavior**.
+>
+> ⛔ **ARCHITECTURAL & UI COMPLETENESS MANDATE (MUST REPAIR & COMPLETE):**
+> When mobile source code has incomplete forms, missing Zod validation schemas, missing modals, raw alerts (`Alert.alert`, `window.alert`), missing loading skeletons, missing empty states, unstyled buttons, or unhandled UI flows:
+> - The AI **MUST ACTIVELY REPAIR, IMPLEMENT, AND COMPLETE THEM** using the Mobile Design System (`MOBILE_UI_UX_DESIGN.md`) and Architecture Rules.
+> - Inappropriate alerts (`Alert.alert()`, single-click deletes) MUST be replaced with the mandated luxury `useConfirm()` dialogs or bottom sheets.
+> - Forms MUST be fully wired with React Hook Form v7 + Zod v3 schemas and backend 400 validation error mapping.
+> - UI modals, empty states, error boundaries, and loading skeletons MUST be fully authored and completed.
+>
+> ⛔ **ANTI-DESTRUCTION & PARTIAL FEATURE COMPLETION LAW (ZERO FEATURE EVICTION):**
+> When mobile source code contains partially implemented, half-built, or incomplete features (e.g., an unfinished filter drawer, an unwired export button, a half-implemented modal, a partially authored API hook, or an incomplete multi-step form flow):
+> - **ZERO FEATURE EVICTION (DO NOT DELETE):** The AI **MUST NOT** delete, remove, comment out, or strip away existing features, UI elements, buttons, form fields, modals, or business flows simply because they are half-built, incomplete, or currently causing type/test errors. Deleting half-built features to get a "clean audit pass" is strictly prohibited as DESTRUCTIVE MALPRACTICE.
+> - **MANDATORY ADDITIVE COMPLETION (ADD & CORRECT):** The AI **MUST actively COMPLETE the missing half**: add missing types, wire up API queries/mutations, implement missing Zod schemas, author missing loading/empty/error states, connect handlers, and correct all syntax or architectural violations until the feature is 100% functional and architecture-compliant.
+>
+> ⛔ **STRICT BOUNDARY OF `CONTRACT_MISSING` (EXTERNAL DOMAIN SPECS ONLY):**
+> `CONTRACT_MISSING` applies STRICTLY to **external business contracts that cannot be known from the code or architecture** (e.g., an unprovided external 3rd-party webhook secret, an unprovided backend API endpoint URL that has no specification, or an unknown financial tax formula).
+> `CONTRACT_MISSING` **MUST NEVER BE USED AS AN EXCUSE** to leave source code incomplete, leave crude `Alert.alert()` calls in place, skip form validation, or fail to build proper UI dialogs/modals!
+>
+> ⛔ **DETERMINISTIC CONFIDENCE TAXONOMY & EVIDENCE STANDARD:**
+> Every implementation decision, contract assertion, and audit claim MUST be classified into one of:
+> - `VERIFIED`: Proven by supplied source file path, exact line reference, verified API contract, schema, or explicit architecture rule.
+> - `DERIVED`: Deterministically derived from verified types/interfaces or architecture-mandated patterns (e.g. deriving a `useConfirm` modal from a raw `Alert.alert` violation).
+> - `CONTRACT_MISSING`: External backend/business behavior or requirement not provided in supplied scope. The AI MUST NOT infer or guess external backend behaviors.
+> - `ASSUMED`: Strictly PROHIBITED. Speculative guessing without architectural or contract foundation is an ARCHITECTURE FAILURE.
+>
+> **Valid Evidence:** Source file path, exact line reference, API contract, schema, mock fixture, repository config, or normative architecture rule.
+> **Invalid Evidence (FORBIDDEN):** Speculative AI guessing, naming assumptions, generic industry patterns, or prior project habits.
+>
+> The following words in this document carry their STRICTEST possible meaning:
 >
 > | Word | Meaning |
 > |------|---------|
@@ -109,8 +139,11 @@ Before generating, auditing, or repairing ANY mobile feature module, verify ALL 
 | **Centralized URL Config** | `config/[role]_[submodule].url_config.ts` MUST exist inside each sub-module and define all routes and API endpoints as `as const`. | Missing URL config = HARDCODED ROUTE RISK. In repair: generate centralized URL config in RBG 1. |
 | **Query Key Registry** | `api/[role]_[submodule].query_keys.ts` or `config/[role]_[submodule].query_keys.ts` MUST exist and namespace all TanStack Query keys with resource identity. | Missing query key factory = CACHE INCONSISTENCY RISK. In repair: create query key registry in RBG 1. |
 | **Zero Cross-Feature Imports** | A feature MUST NOT import business components, hooks, or state from sibling features. | Sibling import = VIOLATION OF RULE 28 (WET PRINCIPAL). In repair: duplicate the required business artifact locally inside the owning feature module (Strict WET Principal) in RBG 1. Moving business logic to `src/core/` is STRICTLY FORBIDDEN. |
-| **No Barrel Files** | NO `index.ts` or re-export facades. All imports must be direct absolute paths (`@/...`). | Barrel file = CIRCULAR DEPENDENCY RISK. In repair: remove barrel files and update imports in RBG 1. |
+| **No Barrel Files** | Runtime business code barrel files (`index.ts`, `*Export.ts`, re-export facades) are strictly prohibited across all feature sub-modules. All imports must be direct paths (`@/...`). (Ambient type definitions like `host-stubs.d.ts` are declarations, not runtime business barrels). | Barrel file = CIRCULAR DEPENDENCY RISK. In repair: remove barrel files and update imports in RBG 1. |
 
+> ⛔ **ANTI-INVENTION LAW FOR SUB-MODULE DOCUMENTATION TRIO (22 CANONICAL SECTIONS):**
+> Generated documentation (`[role]_[submodule]_features.md`, `_forbidden.md`, `_theme_contract.md`) MUST describe ONLY verified source code, supplied API contracts, or verified fixtures. For any unverified, unprovided, or missing business requirement, the AI MUST explicitly mark that section as `CONTRACT_MISSING` or `DEFERRED_TO_HOST_SPECIFICATION`. Hallucinating or inventing imaginary API endpoints, mock schemas, or role permissions to make documentation look "complete" is strictly prohibited as P0 Audit Fraud.
+>
 > ⛔ **Skipping this gate invalidates all downstream compliance results.**
 
 ---
@@ -195,18 +228,19 @@ A `_features.md` justification alone does NOT authorize a dependency.
 > ⛔ **FORBIDDEN packages (common AI hallucination traps):**
 > `expo-font`, `expo-status-bar`, `expo-haptics`, `expo-permissions`, `expo-date-picker`, `@expo/vector-icons`, `react-native-vector-icons` (use `lucide-react-native` instead), `react-native-elements`, `native-base`
 
-### Package Version Authority
+### Package Version Authority & Dependency Precedence Hierarchy
 
-The repository lockfile and `package.json` are the only authority for installed
-package versions.
+When determining package validity and versions, the AI MUST apply this strict authority order:
+1. **Existing Repository `package.json` & Lockfile (Highest Authority):** If the supplied repository already contains and actively uses a dependency not listed in the locked reference registry table, the existing repository `package.json` takes precedence. The AI classifies it as `LEGACY_REPOSITORY_APPROVED` and MUST NOT flag it as an unauthorized violation.
+2. **Locked Architecture Dependency Registry:** Authoritative for all new feature additions, scaffolding, or clean-slate modules.
+3. **AI Speculative Package Hallucination:** STRICTLY PROHIBITED. The AI MUST NOT invent, guess, or install unapproved packages.
 
 AI MUST:
 - use only APIs compatible with the installed version;
 - never assume the newest package API;
 - never upgrade, downgrade, or add dependencies unless explicitly approved;
 - update lockfile only when an approved dependency change is part of the task;
-- document the reason and compatibility impact in the feature `_features.md`
-  when an approved dependency is added or changed.
+- document the reason and compatibility impact in the feature `_features.md` when an approved dependency is added or changed.
 
 ### Native Project Boundary
 
@@ -272,8 +306,14 @@ and feature UI remain WET and feature-local.
 
 **Decision Invariants:**
 - If the code contains ANY reference to a business entity, status, label, or domain type → it is `BUSINESS_AWARE` → it MUST be duplicated per feature. Sharing is a CRITICAL ISOLATION VIOLATION.
-- `formatCurrency` is ALWAYS `DOMAIN_UTILITY` — it MUST be feature-local (`[feature]/utils/[module]FormatCurrency.ts`), never in `src/core/`.
-- When in doubt, DUPLICATE. Over-isolation is always compliant; sharing business logic is NEVER permitted.
+- **When in doubt, CLASSIFY:**
+  * **Business-aware logic** (domain workflows, statuses, permissions, entity transforms) → **DUPLICATE / Feature-Local (WET)**.
+  * **Pure stateless deterministic helpers** (pure math, regex validators, string clamps, date format primitives) → **CENTRALIZED in `src/core/utils/` (DRY)**.
+  * **Unclassified artifacts** → Record `ARCHITECTURE_REVIEW_REQUIRED` before duplicating or sharing.
+- **Currency & Formatting Distinction:**
+  * Generic number formatting primitives (`formatNumber`, `displayValue`) = **Centralized** in `src/core/utils/`.
+  * Business-aware currency presentation (`[module]FormatCurrency.ts` with minor-unit divisors, currency metadata, and domain fallback labels) = **Feature-Local (WET)**.
+- Over-isolation is always compliant; sharing business logic is NEVER permitted.
 
 ### WET vs DRY Governance Boundary
 
@@ -4714,6 +4754,13 @@ Every feature's `_features.md` MUST include this Edge Case Matrix:
 | Design System Semantic Tokens | Zero raw hex/rgb colors or raw dp sizes; 100% semantic theme token hooks | Grep `#`, `rgb(`, raw sizes | PASS |
 | TanStack Query & Cache Invalidation | Query keys in `query_keys.ts`; screens not calling `useMutation` directly; `invalidateQueries` in `onSuccess` | File inspection | PASS |
 | Standalone Run Harness | Section 20 Standalone Harness with mock seeders in every submodule | Harness test verification | PASS |
+
+#### 4-Point Self-Audit Gate (Mandatory Before Packaging)
+Before generating any release ZIP archive, the AI MUST execute and attest to this final 4-point verification loop:
+1. `CONTRADICTION_CHECK`: Zero conflicting rules, zero conflicting naming taxonomies, zero legacy `-fix.zip` references.
+2. `AUTHORITY_CHECK`: Precedence order strictly observed; existing repository package.json honored; zero invented requirements.
+3. `MISSING_CONTRACT_CHECK`: Every unprovided behavior explicitly marked `CONTRACT_MISSING`; zero AI speculative guessing.
+4. `HALLUCINATION_CHECK`: Every file path, component name, and line reference cited exists physically in the delivered archive.
 
 ## Rule 68 — App Upgrade, Migration, and Backward Compatibility
 

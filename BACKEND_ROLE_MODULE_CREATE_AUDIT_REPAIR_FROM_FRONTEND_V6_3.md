@@ -11,6 +11,39 @@
 >
 > The AI MUST report only capabilities that are actually available in the current execution environment. It MUST NOT claim file-write, command, test, database, archive, or runtime access unless such access is truly available.
 >
+> **COMPLIANCE FAILURE HANDLING (EVIDENCE-BASED REPAIR):**
+> A compliance violation triggers a mandatory stop only for the affected workstream or file.
+> Non-dependent compliant workstreams MUST continue without interruption.
+> Missing runtime/host capability (dev server, live database, test runner, Selenium browser) is NEVER an architectural violation and MUST NOT cause execution to pause or stall (mark as `DEFERRED_TO_HOST_RUNTIME`).
+>
+> This document and backend architecture rules are the **absolute authoritative standard for all backend architectural, API contract, and code repair behavior**.
+>
+> ⛔ **ARCHITECTURAL & CODE COMPLETENESS MANDATE (MUST REPAIR & COMPLETE):**
+> When backend source code has incomplete DTO validation, missing class-validators, missing multi-tenancy query filters (`gymId`), raw unhandled error throws, missing idempotency checks, missing database migrations, or missing test suites:
+> - The AI **MUST ACTIVELY REPAIR, IMPLEMENT, AND COMPLETE THEM** using the Backend Architecture Rules (`BACKEND_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md`).
+> - Raw errors (`throw new Error`) MUST be replaced with standardized `ApiResponse<T>` error envelopes.
+> - DTOs MUST be fully decorated with `class-validator` rules.
+> - Database repositories MUST be completed with dual-layer multi-tenancy predicates.
+>
+> ⛔ **ANTI-DESTRUCTION & PARTIAL FEATURE COMPLETION LAW (ZERO FEATURE EVICTION):**
+> When backend source code contains partially implemented, half-built, or incomplete features (e.g., an unfinished controller endpoint, an uncompleted service method, a half-authored repository query, or an incomplete transaction block):
+> - **ZERO FEATURE EVICTION (DO NOT DELETE):** The AI **MUST NOT** delete, remove, comment out, or strip away existing endpoints, service methods, entities, or business flows simply because they are half-built, incomplete, or currently failing tests/build. Deleting half-built backend features to get a "clean audit pass" is strictly prohibited as DESTRUCTIVE MALPRACTICE.
+> - **MANDATORY ADDITIVE COMPLETION (ADD & CORRECT):** The AI **MUST actively COMPLETE the missing half**: add missing DTOs, implement missing service business logic, write database repository queries, author unit/integration tests, and correct all architectural violations until the feature is 100% functional and architecture-compliant.
+>
+> ⛔ **STRICT BOUNDARY OF `CONTRACT_MISSING` (EXTERNAL UNKNOWN SPECS ONLY):**
+> `CONTRACT_MISSING` applies STRICTLY to **external business contracts that cannot be known from the code or architecture** (e.g., an unprovided external 3rd-party webhook secret, unprovided payment gateway API keys, or an unknown financial commission percentage).
+> `CONTRACT_MISSING` **MUST NEVER BE USED AS AN EXCUSE** to leave source code incomplete, skip DTO validations, leave raw exceptions unhandled, or fail to build proper services/repositories!
+>
+> ⛔ **DETERMINISTIC CONFIDENCE TAXONOMY & EVIDENCE STANDARD:**
+> Every implementation decision, contract assertion, and audit claim MUST be classified into one of:
+> - `VERIFIED`: Proven by supplied source file path, exact line reference, verified API contract, schema, or explicit architecture rule.
+> - `DERIVED`: Deterministically derived from verified types/interfaces or architecture-mandated patterns (e.g. deriving a DTO validation pipe from a raw payload).
+> - `CONTRACT_MISSING`: External third-party behavior or requirement not provided in supplied scope. The AI MUST NOT infer or guess external third-party behaviors.
+> - `ASSUMED`: Strictly PROHIBITED. Speculative guessing without architectural or contract foundation is an ARCHITECTURE FAILURE.
+>
+> **Valid Evidence:** Source file path, exact line reference, API contract, schema, mock fixture, repository config, or normative architecture rule.
+> **Invalid Evidence (FORBIDDEN):** Speculative AI guessing, naming assumptions, generic industry patterns, or prior project habits.
+>
 > When starting an execution task, output the following declaration:
 >
 > ```
@@ -3908,6 +3941,13 @@ Add to the existing `progress.json` structure:
 | Two-Phase Migrations | Every migration exports `up()` and `down()`; down() reverts up() | Migration code scan | PASS |
 | Canonical Response Envelope | Discriminated union ApiResponse<T>; data null on error | Interceptor & controller scan | PASS |
 | Standalone Run Harness | Section 20 Standalone Harness with seeders in every submodule | Harness test verification | PASS |
+
+### 4-Point Self-Audit Gate (Mandatory Before Packaging)
+Before generating any release ZIP archive, the AI MUST execute and attest to this final 4-point verification loop:
+1. `CONTRADICTION_CHECK`: Zero conflicting rules, zero conflicting naming taxonomies, zero legacy `-fix.zip` references.
+2. `AUTHORITY_CHECK`: Precedence order strictly observed; existing repository package.json honored; zero invented requirements.
+3. `MISSING_CONTRACT_CHECK`: Every unprovided behavior explicitly marked `CONTRACT_MISSING`; zero AI speculative guessing.
+4. `HALLUCINATION_CHECK`: Every file path, component name, and line reference cited exists physically in the delivered archive.
 
 
 ```text

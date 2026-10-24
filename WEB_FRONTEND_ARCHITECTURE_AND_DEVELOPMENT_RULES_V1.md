@@ -28,7 +28,41 @@ When a rule is repeated for convenience:
 >
 > **ARCHITECTURAL COMPLIANCE IS MANDATORY. FOLLOW THE SEVERITY MODEL AND CANONICAL REPAIR PROTOCOL.**
 >
-> This document is the **absolute normative authority** for all web frontend code in this project. Every rule is MANDATORY unless the rule itself defines a named `NOT_APPLICABLE` condition with explicit evidence. The following words in this document carry their STRICTEST possible meaning:
+> **COMPLIANCE FAILURE HANDLING (EVIDENCE-BASED REPAIR):**
+> A compliance violation triggers a mandatory stop only for the affected workstream or file.
+> Non-dependent compliant workstreams MUST continue without interruption.
+> Missing runtime/host capability (dev server, live API, test runner, browser automation) is NEVER an architectural violation and MUST NOT cause execution to pause or stall (mark as `DEFERRED_TO_HOST_RUNTIME`).
+> Previously verified and unaffected work remains valid and must not be discarded.
+>
+> This document is the **absolute normative authority for all web frontend architectural, design system, and code repair behavior**.
+>
+> ⛔ **ARCHITECTURAL & UI COMPLETENESS MANDATE (MUST REPAIR & COMPLETE):**
+> When web frontend source code has incomplete forms, missing Zod validation schemas, missing modals, raw browser alerts (`window.alert`, `window.confirm`), missing loading skeletons, missing empty states, unstyled buttons, or unhandled UI flows:
+> - The AI **MUST ACTIVELY REPAIR, IMPLEMENT, AND COMPLETE THEM** using the Web Design System (`WEB_FRONTEND_UI_UX_DESIGN.md`) and Architecture Rules.
+> - Inappropriate alerts (`window.alert()`, `window.confirm()`, single-click deletes) MUST be replaced with the mandated luxury `useConfirm()` dialogs.
+> - Forms MUST be fully wired with React Hook Form v7 + Zod v3 schemas and backend 400 validation error mapping.
+> - UI modals, empty states, error boundaries, and loading skeletons MUST be fully authored and completed.
+>
+> ⛔ **ANTI-DESTRUCTION & PARTIAL FEATURE COMPLETION LAW (ZERO FEATURE EVICTION):**
+> When web frontend source code contains partially implemented, half-built, or incomplete features (e.g., an unfinished filter drawer, an unwired export button, a half-implemented modal, a partially authored API hook, or an incomplete multi-step form flow):
+> - **ZERO FEATURE EVICTION (DO NOT DELETE):** The AI **MUST NOT** delete, remove, comment out, or strip away existing features, UI elements, buttons, form fields, modals, or business flows simply because they are half-built, incomplete, or currently causing type/test errors. Deleting half-built features to get a "clean audit pass" is strictly prohibited as DESTRUCTIVE MALPRACTICE.
+> - **MANDATORY ADDITIVE COMPLETION (ADD & CORRECT):** The AI **MUST actively COMPLETE the missing half**: add missing types, wire up API queries/mutations, implement missing Zod schemas, author missing loading/empty/error states, connect handlers, and correct all syntax or architectural violations until the feature is 100% functional and architecture-compliant.
+>
+> ⛔ **STRICT BOUNDARY OF `CONTRACT_MISSING` (EXTERNAL DOMAIN SPECS ONLY):**
+> `CONTRACT_MISSING` applies STRICTLY to **external business contracts that cannot be known from the code or architecture** (e.g., an unprovided external 3rd-party webhook secret, an unprovided backend API endpoint URL that has no specification, or an unknown financial tax formula).
+> `CONTRACT_MISSING` **MUST NEVER BE USED AS AN EXCUSE** to leave source code incomplete, leave crude `window.alert()` calls in place, skip form validation, or fail to build proper UI dialogs/modals!
+>
+> ⛔ **DETERMINISTIC CONFIDENCE TAXONOMY & EVIDENCE STANDARD:**
+> Every implementation decision, contract assertion, and audit claim MUST be classified into one of:
+> - `VERIFIED`: Proven by supplied source file path, exact line reference, verified API contract, schema, or explicit architecture rule.
+> - `DERIVED`: Deterministically derived from verified types/interfaces or architecture-mandated patterns (e.g. deriving a `useConfirm` modal from a raw `window.alert` violation).
+> - `CONTRACT_MISSING`: External backend/business behavior or requirement not provided in supplied scope. The AI MUST NOT infer or guess external backend behaviors.
+> - `ASSUMED`: Strictly PROHIBITED. Speculative guessing without architectural or contract foundation is an ARCHITECTURE FAILURE.
+>
+> **Valid Evidence:** Source file path, exact line reference, API contract, schema, mock fixture, repository config, or normative architecture rule.
+> **Invalid Evidence (FORBIDDEN):** Speculative AI guessing, naming assumptions, generic industry patterns, or prior project habits.
+>
+> The following words in this document carry their STRICTEST possible meaning:
 >
 > | Word | Meaning |
 > |------|---------|
