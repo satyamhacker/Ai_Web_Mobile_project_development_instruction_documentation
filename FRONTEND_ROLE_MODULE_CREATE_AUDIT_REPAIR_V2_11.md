@@ -4598,21 +4598,26 @@ After the full audit is complete and all findings are recorded in the Master Fin
 
 A Repair Batch Group is a set of 3–4 audit batches whose findings are repaired together in one controlled execution turn.
 
-## RBG SIZING RULE
+## RBG SIZING & WORKLOAD DENSITY (SUBSTANTIVE SPRINT CALIBRATION)
 
-```text
-IF total audit batches ≤ 6
-  → Group into RBGs of 3 batches each
+An RBG MUST represent a meaningful, substantive cluster of repair work calibrated by **Finding Weight, File Complexity, and Functional Cohesion**:
+- **The Anti-Micro-RBG Law (No Trivial-Fragment Babysitting):** Creating an RBG with only 2–4 trivial fixes that finishes in under 2 minutes is STRICTLY PROHIBITED. Light audit batches with few findings MUST be consolidated into a cohesive sprint so the user does not have to constantly babysit the screen and click approval buttons.
+- **The Token-Safety & Anti-Hallucination Ceiling (No Bloated Monoliths):** An RBG MUST NOT be bloated with 30+ files or 35+ findings. Overloading causes context memory saturation, output token truncation, git diff collisions, and hallucinations.
+- **Natural Cadence (Indicative Benchmark):** The workload targets below naturally yield a balanced sprint (~5 to 8 minutes of steady autonomous execution under typical conditions), giving the user uninterrupted time for other tasks while keeping execution strictly bounded and deterministic. *(Note: AI does not measure wall-clock timers; calibrate strictly by the finding and file metrics below).*
 
-IF total audit batches 7–12
-  → Group into RBGs of 3–4 batches each
+### 1. Deterministic Workload Calibration Matrix
 
-IF total audit batches > 12
-  → Group into RBGs of 4 batches each
+| RBG Category / Severity | Target Findings per RBG | Target Batches | Scope & Complexity Profile | Token & Safety Ceiling |
+|---|---|---|---|---|
+| **P0 Architectural & Structural** (Rule 0A/1 hierarchy, root quarantine, sibling isolation, auth/tenants) | **6–12 substantive findings / files** | 3–4 batches | Deep architectural refactoring, file moves, schema restructuring | Max 14 files |
+| **P1 Core Functional & State** (Forms, tables, TanStack Query, mutation flows, Zod validation) | **10–18 findings** | 3–5 batches | State management, queries, mutation hooks, form handlers | Max 18 files / 20 findings |
+| **P2 Design System, Tests & Docs** (Semantic tokens, Documentation Trio 22 sections, MSW mocks, unit tests) | **12–22 findings** | 4–6 batches | Design token replacement, mock scenarios, documentation trio | Max 22 findings |
+| **P3 Formatting & Minor Conventions** (Code comments, minor naming, formatting) | Bundle with P2 or bundle **15–25 findings** | 4–6 batches | Non-breaking cosmetic, comment, and convention fixes | Max 25 findings |
 
-MAXIMUM ABSOLUTE CEILING: No single RBG may contain findings from more than 4 audit batches.
-MINIMUM: No single RBG may contain fewer than 2 audit batches unless it is the final RBG.
-```
+### 2. Deterministic Sizing Invariants
+1. **Minimum Workload Floor (Anti-Micro-Fragmentation):** An RBG MUST contain at least **8 findings** (or at least 4 substantive files), unless the total remaining uncompleted findings in the entire project are fewer than that. Light audit batches with only 1–2 minor findings MUST be consolidated together into a single RBG.
+2. **Maximum Safety Ceiling (Anti-Hallucination Firewall):** No single RBG may contain more than **25 findings** or touch more than **18 files** in one execution turn. This guarantees the model operates well within safe context memory and eliminates output token truncation.
+3. **Dependency Cohesion First:** Always respect dependency order. If fixing an architectural finding requires touching related state or contracts, keep them in the same RBG rather than splitting them artificially.
 
 ## RBG PRIORITY ORDER
 
