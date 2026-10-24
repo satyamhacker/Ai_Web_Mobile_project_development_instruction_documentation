@@ -434,10 +434,10 @@ Every authenticated page uses this shell. Auth pages (`login`, `signup`, `forgot
 └────────────────┴───────────────────────────────────────────────────────────────────────┘
 ```
 
-### 3a. Canonical Domain Navigation Architecture (Anti-Clutter Ceiling: Typically 6–10 Domains)
+### 3a. Canonical Domain Navigation Architecture (Zero Flat Submodule Dumping — No Arbitrary Count Locks)
 Primary sidebar navigation MUST represent cohesive, high-level Business Domains (Tier 3 Domain Containers). 
-- **NO RIGID HARDCODING:** The sidebar is **NOT** locked to a fixed count (like "only 5 items"). 
-- **Anti-Clutter Ceiling:** To maintain elite SaaS ergonomics and avoid cognitive overload, the sidebar should contain a healthy, focused set of top-level domains (typically **6 to 10 items**).
+- **NO RIGID FIXED COUNT OR ARTIFICIAL CEILINGS:** The sidebar is **NOT** locked to any arbitrary or fixed count (neither 5, nor 6–10, nor any fixed number). A role contains as few or as many domains as its genuine business aggregate roots require.
+- **Hierarchical Domain Structure:** The requirement is strictly that the primary sidebar represents high-level Business Domains, while all granular operational sub-modules are accessed via Secondary Navigation (Top Tab Bar or Collapsible Accordion).
 - **Extensibility:** New genuine business domains (e.g., `manager_pos`, `manager_nutrition`, `manager_marketing`) CAN be added whenever new business requirements emerge, provided they satisfy the Bounded Context Affinity rule and avoid generic junk-drawer names.
 - **Sub-Module Flexibility:** Inside each domain, there is no restriction on the number of autonomous sub-modules (mounted via secondary tabs or accordion).
 

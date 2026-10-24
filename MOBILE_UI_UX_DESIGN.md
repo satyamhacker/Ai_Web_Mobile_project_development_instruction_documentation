@@ -513,11 +513,11 @@ Every authenticated mobile screen renders within a platform-native navigation hi
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
-### 5C.1 Canonical Mobile Domain Navigation Architecture (Anti-Clutter Ceiling: Typically 6–10 Domains)
+### 5C.1 Canonical Mobile Domain Navigation Architecture (Zero Flat Submodule Dumping — No Arbitrary Count Locks)
 
 Primary mobile navigation destinations (Bottom Tab Bar items and Role Drawer items) MUST represent cohesive, high-level Business Domains (Tier 3 Domain Containers):
-- **NO RIGID FIXED COUNT:** Roles are **NOT** locked to a rigid count (like "only 5 items").
-- **Anti-Clutter Ceiling:** On mobile devices, the physical Bottom Tab Bar comfortably accommodates **4 to 5 core domains** (the 5th tab can serve as a "More / Menu" hub or the top header provides a drawer toggle `[☰]`), while the total domain portfolio for any role maintains a focused ceiling of **6 to 10 domains**.
+- **NO RIGID FIXED COUNT OR ARTIFICIAL CEILINGS:** Roles are **NOT** locked to any rigid count (neither 5, nor 6–10, nor any fixed count). A role contains as few or as many business domains as its authentic business aggregate roots require.
+- **Physical Layout Distribution:** On mobile devices, the physical Bottom Tab Bar comfortably accommodates core primary domains (with additional domains accessible via the Role Drawer or a "More" domain hub), while all granular sub-modules reside inside domains and are accessed via Secondary Navigation.
 - **Extensibility:** New genuine business domains (e.g., `manager_pos`, `manager_nutrition`, `manager_marketing`) CAN be added whenever new business requirements emerge, provided they satisfy the Bounded Context Affinity rule and avoid generic junk-drawer names.
 - **Sub-Module Granularity:** Inside each domain, there is no restriction on the number of autonomous sub-modules (mounted via secondary segmented tabs or stack screens).
 

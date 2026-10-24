@@ -1846,11 +1846,11 @@ Creating ANY domain with a banned name is an immediate **P0 ARCHITECTURE FAILURE
 
 #### 3. Canonical ERP Domain Taxonomy (Extensible Baseline Matrix):
 The domain containers below represent the canonical baseline for Smart Gym 360. 
-- **NO RIGID FIXED COUNT:** Roles are NOT locked to a rigid number of items (neither 5 nor any fixed count).
-- **Anti-Clutter Ceiling:** Roles should maintain a focused set of top-level domains (typically **6 to 10 items**).
+- **NO RIGID FIXED COUNT OR ARTIFICIAL CEILING:** Roles are NOT locked to any rigid number of domains (neither 5, nor 6–10, nor any fixed count). A role may contain as few or as many business domains as its authentic business aggregate roots require.
+- **Pure Hierarchical Invariant:** The architecture requires that top-level navigation represents cohesive **High-Level Business Domains (Tier 3 Domain Containers)**, while granular operational capabilities live inside domains as autonomous sub-modules. The violation is flat-dumping submodules/actions, NOT the number of domains.
 - **Extensibility:** New legitimate business domains (e.g., `manager_pos`, `manager_nutrition`, `manager_marketing`) MAY be introduced as long as they represent independent Aggregate Roots and avoid banned junk-drawer names.
 
-| Role Container | Approved Baseline Domain Containers (Typically 6–10) | Permitted Autonomous Sub-Modules (`{domain}_{capability}`) |
+| Role Container | Approved Baseline Domain Containers (Canonical Reference) | Permitted Autonomous Sub-Modules (`{domain}_{capability}`) |
 |---|---|---|
 | **`frontend_manager`** | 1. `manager_dashboard`<br>2. `manager_members`<br>3. `manager_crm`<br>4. `manager_attendance`<br>5. `manager_accounting`<br>6. `manager_inventory`<br>7. `manager_staff`<br>8. `manager_settings` | • `crm` → `crm_enquiries`, `crm_leads`, `crm_pipeline`<br>• `members` → `members_directory`, `members_plans`, `members_detail`<br>• `attendance` → `attendance_dashboard`, `attendance_history`, `attendance_biometrics`<br>• `accounting` → `accounting_assets`, `accounting_ledgers`, `accounting_maintenance`<br>• `inventory` → `inventory_equipment`, `inventory_supplements`, `inventory_lockers`<br>• `staff` → `staff_directory`, `staff_roster`, `staff_payroll` |
 | **`frontend_superadmin`** | 1. `superadmin_dashboard`<br>2. `superadmin_tenants`<br>3. `superadmin_plans`<br>4. `superadmin_billing`<br>5. `superadmin_analytics`<br>6. `superadmin_audit`<br>7. `superadmin_settings` | • `tenants` → `tenants_directory`, `tenants_onboarding`, `tenants_branches`<br>• `plans` → `plans_tiers`, `plans_features`, `plans_pricing`<br>• `billing` → `billing_invoices`, `billing_payouts`, `billing_gateways`<br>• `audit` → `audit_logs`, `audit_security`, `audit_compliance` |
