@@ -4347,9 +4347,12 @@ Or reply "Adjust" to change the grouping.
 
 > ⛔ **HARD STOP: Do NOT execute a single fix until the user approves the RBG Plan.**
 >
-> 🖱️ **1-CLICK INTERACTIVE BUTTON & EXECUTABLE ARTIFACT PROTOCOL (ZERO-MANUAL-TYPING):**
-> 1. **Interactive Artifact / Action Button First:** When publishing the RBG Plan or an RBG Checkpoint in an IDE or agentic environment that supports interactive artifacts (e.g. Antigravity IDE, Claude, Cursor), the AI MUST publish it as an actionable plan artifact (e.g., `mobile_rbg_plan.md` with `RequestFeedback: true`) or invoke the interactive modal selection tool (`ask_question`) offering `(Recommended) Proceed with RBG [N]`. This provides the user with a single clickable **"Proceed"** / **"Begin RBG [N]"** button directly in the UI so the user does NOT have to manually type.
-> 2. **Flexible Text Affirmation Fallback:** For plain chat or CLI environments without UI buttons, any affirmative response (e.g., "Begin RBG 1", "Approved", "continue", "proceed", "start", "go ahead", "aage badho", "karo", "haan", "ok", "yes", "next") constitutes full valid approval. The AI MUST NOT halt, argue, or demand an exact phrase.
+> 🖱️ **1-CLICK INTERACTIVE BUTTON & EXECUTABLE ARTIFACT PROTOCOL (ZERO-MANUAL-TYPING ACROSS ALL CHECKPOINTS):**
+> The AI MUST provide a 1-click interactive action button (via actionable artifact `RequestFeedback: true` or `ask_question` tool) at EVERY pause/checkpoint across the entire lifecycle:
+> 1. **Checkpoint 1 — STAGE 1 FREEZE TRANSITION:** After freezing the requirements baseline, render a 1-click button: `[👉 Proceed to Stage 2: Deep Audit]`. (In chat telemetry, explain clearly in Roman Hinglish: *"Stage 1 (Baseline Freeze) complete ho gaya hai. Abhi koi repair nahi hui hai kyunki pehle Stage 2 mein Full Audit chalega aur saare mobile bugs dhoonde jayenge. Audit ke baad RBG Plan aayega jisme [Approve RBG 1] button milega."*).
+> 2. **Checkpoint 2 — RBG PLAN APPROVAL:** After Stage 2 Audit completes and findings are grouped into RBGs, render a 1-click button: `[👉 Approve RBG 1 & Start Repairs]`.
+> 3. **Checkpoint 3 — RBG CHECKPOINTS:** After completing each RBG sprint, render a 1-click button: `[👉 Proceed with RBG N+1]`.
+> 4. **Flexible Text Affirmation Fallback:** For plain chat or CLI environments without UI buttons, any affirmative response (e.g., "Begin RBG 1", "Approved", "continue", "proceed", "start", "go ahead", "aage badho", "karo", "haan", "ok", "yes", "next") constitutes full valid approval. The AI MUST NOT halt, argue, or demand an exact phrase.
 
 #### RBG EXECUTION RULES
 
