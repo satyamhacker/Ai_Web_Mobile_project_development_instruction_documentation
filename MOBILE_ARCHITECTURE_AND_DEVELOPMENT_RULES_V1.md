@@ -75,6 +75,15 @@ When a rule is repeated for convenience:
 > AI hallucination is never eliminated by wishful thinking; it is driven down from 80% to <5% strictly through immutable verified contracts, explicit Zod validation schemas, deterministic testIDs, exact typed API response envelopes, and strict forbidden boundaries. When an AI lacks verified contract evidence, guessing is strictly FORBIDDEN — mark as `CONTRACT_MISSING` or `BLOCKED_BY_SUPPLIED_CONTRACT`.
 > ⛔ **THE 5-SECOND COMPREHENSION INVARIANT:**
 > A new engineer or AI agent MUST understand the exact responsibility, dependencies, and boundary of any file or folder within 5 seconds of opening it. If understanding requires tracing spaghetti dependencies, inspecting sibling business folders, or decoding ambiguous abbreviations, the architectural isolation has FAILED.
+>
+> ⛔⛔⛔ **EXECUTIVE CANONICAL DIAMOND PROTOCOLS (MOBILE ARCHITECTURE)** ⛔⛔⛔
+> The following diamond protocols are active from TURN 1 across ALL Mobile workflows:
+> 1. **Anti-Deception ZIP Naming:** Intermediate archives MUST be labeled `mobile-{role}-v{N}-PARTIAL-rbg{X}.zip`. The label `mobile-{role}-v{N}-ALL-RBGS-COMPLETE.zip` is strictly forbidden unless 100% of RBGs (RBG 1..N) are closed and verified.
+> 2. **Pre-Delivery Cross-Check Gate (Zero-Excuse Law):** Must execute and output the 3 physical verification tables (Section 67G) before packaging. Post-delivery excuses ("Oh sorry, cross-check nahi kiya") are strictly banned as P0 audit fraud.
+> 3. **1-Click Interactive Button Priority:** Publish RBG Plans and Checkpoints as actionable artifacts (`RequestFeedback: true`) or modals (`ask_question`) so user can approve via 1-click button instead of manual typing.
+> 4. **Interactive Clarification Modal with (Recommended) Default:** All questions/decisions MUST use structured modals/checkboxes with Option 1 marked `(Recommended)`. Zero open-ended technical essay questions.
+> 5. **Live Progress Heartbeat Telemetry in Roman Hinglish:** Output real-time non-blocking progress lines (`✓ [Done]: ... ⚙️ [In Progress]: ...`) in Roman Hinglish (English letters, NO Devanagari) to eliminate the "hang illusion".
+> 6. **Substantive Workload Density:** Calibrate RBGs by workload floor (min 8 findings / 4 files) and safety ceiling (max 25 findings / 18 files) for a balanced ~5–8 min sprint without token blowouts or hallucinations.
 
 ## CRITICAL MOBILE STRUCTURE GATE (NON-NEGOTIABLE)
 
@@ -4224,28 +4233,33 @@ After the full audit is complete and all findings are recorded, the AI MUST grou
 
 A Repair Batch Group is a set of 3–4 audit batches whose findings are repaired together in one controlled execution turn.
 
-#### RBG SIZING RULE
+#### RBG SIZING & WORKLOAD DENSITY (SUBSTANTIVE SPRINT CALIBRATION)
 
-```text
-IF total audit batches ≤ 6
-  → Group into RBGs of 3 batches each
+An RBG MUST represent a meaningful, substantive cluster of repair work calibrated by **Finding Weight, File Complexity, and Functional Cohesion**:
+- **The Anti-Micro-RBG Law (No Trivial-Fragment Babysitting):** Creating an RBG with only 2–4 trivial fixes that finishes in under 2 minutes is STRICTLY PROHIBITED. Light audit batches with few findings MUST be consolidated into a cohesive sprint so the user does not have to constantly babysit the screen and click approval buttons.
+- **The Token-Safety & Anti-Hallucination Ceiling (No Bloated Monoliths):** An RBG MUST NOT be bloated with 30+ files or 35+ findings. Overloading causes context memory saturation, output token truncation, git diff collisions, and hallucinations.
+- **Natural Cadence (Indicative Benchmark):** The workload targets below naturally yield a balanced sprint (~5 to 8 minutes of steady autonomous execution under typical conditions), giving the user uninterrupted time for other tasks while keeping execution strictly bounded and deterministic. *(Note: AI does not measure wall-clock timers; calibrate strictly by the finding and file metrics below).*
 
-IF total audit batches 7–12
-  → Group into RBGs of 3–4 batches each
+##### 1. Deterministic Workload Calibration Matrix
 
-IF total audit batches > 12
-  → Group into RBGs of 4 batches each
+| RBG Category / Severity | Target Findings per RBG | Target Batches | Scope & Complexity Profile | Token & Safety Ceiling |
+|---|---|---|---|---|
+| **P0 Architectural & Structural** (Rule 0A/0A.3 1:1 primary nav, root quarantine, sibling isolation, Keychain auth) | **6–12 substantive findings / files** | 3–4 batches | Deep architectural refactoring, screen thinness extraction, navigation shell isolation | Max 14 files |
+| **P1 Core Functional & State** (Forms, React Navigation, TanStack Query, mutation flows, Zod validation) | **10–18 findings** | 3–5 batches | State management, queries, mutation hooks, form handlers | Max 18 files / 20 findings |
+| **P2 Design System, Tests & Docs** (Semantic tokens, Documentation Trio 22 sections, MSW mocks, Maestro YAML tests) | **12–22 findings** | 4–6 batches | Design token replacement, mock scenarios, documentation trio | Max 22 findings |
+| **P3 Formatting & Minor Conventions** (Code comments, minor naming, formatting) | Bundle with P2 or bundle **15–25 findings** | 4–6 batches | Non-breaking cosmetic, comment, and convention fixes | Max 25 findings |
 
-MAXIMUM ABSOLUTE CEILING: No single RBG may contain findings from more than 4 audit batches.
-MINIMUM: No single RBG may contain fewer than 2 audit batches unless it is the final RBG.
-```
+##### 2. Deterministic Sizing Invariants
+1. **Minimum Workload Floor (Anti-Micro-Fragmentation):** An RBG MUST contain at least **8 findings** (or at least 4 substantive files), unless the total remaining uncompleted findings in the entire project are fewer than that. Light audit batches with only 1–2 minor findings MUST be consolidated together into a single RBG.
+2. **Maximum Safety Ceiling (Anti-Hallucination Firewall):** No single RBG may contain more than **25 findings** or touch more than **18 files** in one execution turn. This guarantees the model operates well within safe context memory and eliminates output token truncation.
+3. **Dependency Cohesion First:** Always respect dependency order. If fixing an architectural finding requires touching related state or contracts, keep them in the same RBG rather than splitting them artificially.
 
 #### RBG PRIORITY ORDER
 
 RBGs MUST be ordered by repair dependency, not by batch number:
 
 ```text
-RBG 1 — P0 Critical fixes (architecture blockers, broken flows, security, Rule 0B violations)
+RBG 1 — P0 Critical fixes (architecture blockers, broken flows, security, Rule 0B violations, hardware Keychain tokens)
 RBG 2 — P1 High fixes (state/API, forms, navigation, functional closure)
 RBG 3 — P2 Medium fixes (design tokens, loading/error states, tests, Rule 24 docs)
 RBG 4 — P3 Low fixes (naming, comments, tooling)
@@ -4289,18 +4303,39 @@ Reply "Begin RBG 1" to start controlled repair execution (Interactive Mode).
 Or reply "Adjust" to change the grouping.
 ```
 
-**Approval Policy:**
-- **Interactive Repair Mode:** Do NOT start any repair until the user approves the RBG Plan.
-- **Autonomous / Single-Shot Mode (Mode D / Headless CI / Batch Runner):** When invoked in autonomous execution mode or headless pipeline, the RBG Plan is pre-authorized. The AI automatically publishes the RBG Plan and immediately begins executing RBG 1 through RBG N in strict dependency order without blocking on user input.
+> ⛔ **HARD STOP: Do NOT execute a single fix until the user approves the RBG Plan.**
+>
+> 🖱️ **1-CLICK INTERACTIVE BUTTON & EXECUTABLE ARTIFACT PROTOCOL (ZERO-MANUAL-TYPING):**
+> 1. **Interactive Artifact / Action Button First:** When publishing the RBG Plan or an RBG Checkpoint in an IDE or agentic environment that supports interactive artifacts (e.g. Antigravity IDE, Claude, Cursor), the AI MUST publish it as an actionable plan artifact (e.g., `mobile_rbg_plan.md` with `RequestFeedback: true`) or invoke the interactive modal selection tool (`ask_question`) offering `(Recommended) Proceed with RBG [N]`. This provides the user with a single clickable **"Proceed"** / **"Begin RBG [N]"** button directly in the UI so the user does NOT have to manually type.
+> 2. **Flexible Text Affirmation Fallback:** For plain chat or CLI environments without UI buttons, any affirmative response (e.g., "Begin RBG 1", "Approved", "continue", "proceed", "start", "go ahead", "aage badho", "karo", "haan", "ok", "yes", "next") constitutes full valid approval. The AI MUST NOT halt, argue, or demand an exact phrase.
 
 #### RBG EXECUTION RULES
 
 1. **PRIOR RBG DEPENDENCY PRE-CHECK (MANDATORY for RBG N where N > 1):** Before executing any fix in RBG N, verify that every artifact from previous RBGs that the current RBG depends on is actually in place. If a prior RBG fix is missing or incomplete → repair it BEFORE starting the current RBG and record as `PRIOR_RBG_FIX_INCOMPLETE`. This is a targeted dependency check only — not a full re-audit of all previous RBGs.
 2. Execute ALL findings from the current RBG before moving to the next RBG.
 3. After completing each RBG, checkpoint and display the RBG Completion Dashboard.
-4. **Interactive vs Autonomous Progression:** In interactive mode, pause and await user "continue" or "Begin RBG N+1" before proceeding. In autonomous / single-shot mode (Mode D), automatically progress to the next RBG upon successful checkpoint validation.
+4. **Interactive Progression:** Do NOT start the next RBG until the user gives affirmative confirmation (via 1-click UI button or reply "continue", "next", "Begin RBG N+1", "aage badho", "karo", "go ahead").
 5. Within an RBG, apply fixes in dependency order (architecture → state → UI → tests → docs).
 6. Never apply a fix from RBG 3 while RBG 1 is still in progress.
+7. **INTERMEDIATE CHECKPOINT ZIP NAMING (ANTI-DECEPTION):** If the user requests an intermediate archive or the AI produces a ZIP checkpoint after completing RBG N while subsequent RBGs remain pending, the ZIP filename MUST be explicitly formatted as: `mobile-{role}-v{N}-PARTIAL-rbg{N}.zip`. The AI MUST NOT use the words `complete`, `final`, or `all-done` in the filename or description while any RBG is pending.
+8. **FINAL COMPLETE DELIVERY PREREQUISITE:** The final release ZIP named `mobile-{role}-v{N}-ALL-RBGS-COMPLETE.zip` is permitted ONLY after 100% of RBGs (RBG 1 to RBG N) are completed, zero unresolved actionable findings remain, and Section 67G Pre-Delivery Cross-Check Gate is passed 100% clean.
+9. **INTERACTIVE CLARIFICATION & DECISION MODAL PROTOCOL (1-CLICK RECOMMENDED SELECTION):**
+   - Whenever the AI encounters ANY confusion, ambiguity, missing design choice, architectural conflict, or needs a decision/clarification from the user:
+     - The AI **MUST NOT** output a long, open-ended technical essay asking the user to explain or write code.
+     - The AI **MUST** formulate a structured interactive modal / multiple-choice selection (using the `ask_question` tool in IDEs or selectable checkbox/radio options with a single-click confirmation button).
+     - **Mandatory `(Recommended)` Prefix:** Exactly ONE option MUST be listed first and prefixed with `(Recommended)` representing the safest, architecture-compliant default choice.
+     - **Default One-Click Confirmation:** If the user is unsure, they can simply select the default recommended option and click Confirm/Proceed with zero technical burden or manual typing.
+10. **LIVE PROGRESS HEARTBEAT TELEMETRY IN ROMAN HINGLISH (ANTI-HANG ASSURANCE):**
+    - During execution turns touching multiple files, the AI MUST NOT remain completely silent. A prolonged lack of visible response creates the false impression that the AI is frozen, hung, or stuck.
+    - After completing each substantive fix/file within the RBG, the AI MUST emit a concise, real-time telemetry line:
+      - **Language Rule:** Strictly **Roman Hinglish** (English letters, NO Devanagari script).
+      - **Informational Only (Non-blocking):** It does NOT ask for user input or pause execution.
+      - **Format:**
+        ```text
+        ✓ [Done]: `[file_name]` me [brief explanation of fix in Hinglish] complete ho gaya.
+        ⚙️ [In Progress]: Ab `[next_file_name]` me [next fix in Hinglish] start kar raha hoon...
+        ```
+      - This gives the user continuous real-time visibility into what was just fixed and what is currently being worked on, completely eliminating the "hang illusion".
 
 #### RBG CHECKPOINT TEMPLATE
 
@@ -4320,14 +4355,18 @@ After completing each RBG, display:
 ║   RBG [N+1]: Batches [A, B, C] — [N] findings               ║
 ║   RBG [N+2]: Batches [D, E, F] — [N] findings               ║
 ╠══════════════════════════════════════════════════════════════╣
+║ INTERMEDIATE ARCHIVE (IF PACKAGED):                          ║
+║   mobile-{role}-v{N}-PARTIAL-rbg[N].zip                      ║
+║   ⚠️ STATUS: PARTIAL FIX ONLY — RBG [N+1] PENDING            ║
+╠══════════════════════════════════════════════════════════════╣
 ║ VERIFICATION STATUS:                                         ║
 ║   TypeScript:  [PASS / FAIL / NOT_EXECUTED]                  ║
 ║   Lint:        [PASS / FAIL / NOT_EXECUTED]                  ║
 ║   Tests:       [PASS / FAIL / NOT_EXECUTED]                  ║
 ╠══════════════════════════════════════════════════════════════╣
-║ ACTION REQUIRED:                                             ║
-║ Reply "continue" to proceed to RBG [N+1].                    ║
-║ OR reply "Begin RBG [N+1]" to start the next group.          ║
+║ ACTION REQUIRED (1-CLICK BUTTON OR CHAT):                    ║
+║ 👉 Click [Proceed with RBG N+1] button in UI / artifact      ║
+║ OR reply "continue" / "Begin RBG [N+1]" to proceed.          ║
 ╚══════════════════════════════════════════════════════════════╝
 ```
 
@@ -4636,6 +4675,39 @@ Every feature's `_features.md` MUST include this Edge Case Matrix:
 | **Security** | PII masking in lists, clipboard restrictions, no credentials in logs/breadcrumbs, session expiration |
 | **Platform** | Android hardware back, iOS swipe back, notch/safe-area insets, app background/resume |
 
+### 67G — MANDATORY PRE-DELIVERY CROSS-CHECK VERIFICATION GATE (ZERO-EXCUSE AUDIT RECONCILIATION)
+
+> ⛔ **HARD STOP — PRE-DELIVERY MECHANICAL CROSS-CHECK GATE (NON-NEGOTIABLE)**
+> Before generating, offering, or delivering ANY 100% COMPLETE release ZIP (e.g., `mobile-{role}-v{N}-ALL-RBGS-COMPLETE.zip` or `mobile-{role}-v1.zip`), the AI MUST execute a mechanical, multi-point cross-check across the ACTUAL mobile filesystem and print the following **THREE VERIFICATION TABLES**.
+>
+> ⚠️ **THE ZERO-EXCUSE INVARIANT:** Outputting a mobile ZIP and subsequently stating: *"Oh sorry, maine cross-check nahi kiya and all"* or *"ye rule follow karna bhool gaya"* is classified as a **FATAL P0 WORKFLOW VIOLATION & AUDIT FRAUD**. Delivering a ZIP without physically verifying all submodules and all rules invalidates the entire deliverable.
+
+#### Table 1: Mobile RBG Execution & Finding Closure Reconciliation
+| RBG | Batches Covered | Total Findings | Fixed in Source | Skipped by User | Remaining Unfixed | Status |
+|---|---|---|---|---|---|---|
+| RBG 1 | [Batches] | [N] | [N] | [N] | 0 | COMPLETED |
+| RBG 2 | [Batches] | [N] | [N] | [N] | 0 | COMPLETED |
+| RBG N | [Batches] | [N] | [N] | [N] | 0 | COMPLETED |
+*(Rule: If Remaining Unfixed > 0 for ANY RBG, the deliverable is PARTIAL and MUST be named `mobile-{role}-v{N}-PARTIAL-rbg{X}.zip`. It is STRICTLY FORBIDDEN to label it COMPLETE).*
+
+#### Table 2: Submodule-by-Submodule Physical Audit Ledger (Zero Sampling)
+*(Every single authored mobile submodule in the role MUST be listed individually with filesystem proof):*
+| Submodule Path | Artifact Folders Verified | Doc Trio (22 Canonical Sections) | Screen Thinness (≤ 80 Lines) | Sibling Isolation (Zero Cross-Imports) | Anti-Lazy Scan (Zero TODO/Ellipsis) | Submodule Status |
+|---|---|---|---|---|---|---|
+| `{submodule-1}` | PASS (`screens/`, `components/`, `hooks/`, `api/`, `mocks/`) | PASS (`_features.md`, `_forbidden.md`, `_theme_contract.md`) | PASS (All screens ≤ 80 lines) | PASS (Zero cross-submodule imports) | PASS (Zero `// TODO`, zero `// ... rest unchanged`) | 100% VERIFIED |
+| `{submodule-2}` | PASS | PASS | PASS | PASS | PASS | 100% VERIFIED |
+
+#### Table 3: Mobile Canonical Rules Sweep Table
+| Rule Domain | Canonical Requirement | Verification Method | Result |
+|---|---|---|---|
+| 1:1 Primary Nav Mapping | Primary Bottom Tabs / Drawer map 1:1 to Tier 3 Domain Containers (`src/features/frontend_{role}/{role}_{domain}/`) | Physical directory tree | PASS |
+| Zero Flat Submodule Dumping | No granular screens or submodules dumped into primary navigation | Navigation config inspection | PASS |
+| Anti-Action Nano-Module Ban | No `*_add` or `*_create` submodules; action sheets in `components/` via `@gorhom/bottom-sheet` | File/folder scan | PASS |
+| Hardware Secure Storage | Auth tokens, refresh tokens, biometric keys stored in Keychain / Keystore; zero in AsyncStorage | Code grep `AsyncStorage` | PASS |
+| Design System Semantic Tokens | Zero raw hex/rgb colors or raw dp sizes; 100% semantic theme token hooks | Grep `#`, `rgb(`, raw sizes | PASS |
+| TanStack Query & Cache Invalidation | Query keys in `query_keys.ts`; screens not calling `useMutation` directly; `invalidateQueries` in `onSuccess` | File inspection | PASS |
+| Standalone Run Harness | Section 20 Standalone Harness with mock seeders in every submodule | Harness test verification | PASS |
+
 ## Rule 68 — App Upgrade, Migration, and Backward Compatibility
 
 ### Mobile Build and Release Baseline
@@ -4677,7 +4749,7 @@ Requirements:
 is unavailable, the AI MUST report SOURCE_COMPLETE_ARTIFACT_PENDING_HOST_PACKAGING
 and MUST NOT claim that a ZIP was generated.
 > When all fixable source-level code within the supplied mobile scope is complete, the AI MUST deliver the final output per the Artifact Delivery Resolution Rule:
-> - If repository write access and archive-generation capability are available: create the required versioned ZIP artifact (`mobile-{role}-v{N}-fix.zip` or `mobile-{role}-v1.zip`) and report its exact file name and contents.
+> - If repository write access and archive-generation capability are available: create the required versioned ZIP artifact (`mobile-{role}-v{N}-ALL-RBGS-COMPLETE.zip` for complete repair, `mobile-{role}-v{N}-PARTIAL-rbg{X}.zip` for intermediate checkpoint, or `mobile-{role}-v1.zip` for first creation) and report its exact file name and contents.
 > - If repository write access or archive-generation capability is unavailable: do NOT claim that a ZIP was created; provide the complete source-level repair or generated file content within the interface; report status as `SOURCE_COMPLETE_ARTIFACT_PENDING_HOST_PACKAGING`; list the exact required archive name and artifact layout.
 > Missing host packaging capability MUST NOT downgrade valid source-level completion.
 > Host-dependent verification steps (`DEFERRED_TO_HOST_RUNTIME`), host infrastructure files (`OUTSIDE_SUPPLIED_SCOPE`), and external product decisions (`EXTERNAL_PRODUCT_DECISION_BLOCKED`) MUST be documented in `RE_AUDIT_CHECKLIST_RESULT.md` and `INTEGRATION_GUIDE.md`, but MUST NEVER trigger `BLOCKED_DELIVERY` or prevent source-level delivery.

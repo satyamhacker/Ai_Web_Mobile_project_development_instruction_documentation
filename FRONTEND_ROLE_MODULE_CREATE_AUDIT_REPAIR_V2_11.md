@@ -284,7 +284,7 @@ Every AI agent executing this prompt MUST strictly obey these invariants at all 
 > 4. RBG PLAN published + user explicitly approves → ONLY THEN execute any fix
 > 5. PRIOR RBG DEPENDENCY PRE-CHECK passed → ONLY THEN start next RBG
 > 6. Section 43P Anti-Skipping Checklist clean on repaired code → ONLY THEN package ZIP
-> 7. `INTEGRATION_GUIDE.md` + `RE_AUDIT_CHECKLIST_RESULT.md` + `playwright_E2E/` inside ZIP → ONLY THEN deliver `frontend-{role}-v{N}-fix.zip`
+> 7. `INTEGRATION_GUIDE.md` + `RE_AUDIT_CHECKLIST_RESULT.md` + `playwright_E2E/` inside ZIP → ONLY THEN deliver `frontend-{role}-v{N}-ALL-RBGS-COMPLETE.zip` (or intermediate `frontend-{role}-v{N}-PARTIAL-rbg{X}.zip`)
 >
 > **MODE C (CROSS-PLATFORM MOBILE CREATE):**
 > 1. Read MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md completely → ONLY THEN proceed
@@ -311,9 +311,9 @@ This document has exactly four operating modes. Any statement that this prompt h
 | Mode | Purpose | Source Scope | Test System | Delivery Artifacts |
 |---|---|---|---|---|
 | **A** | Web Create | Web feature specification | Playwright | `frontend-{role}-v1.zip` + `playwright_E2E/` |
-| **B** | Web Audit + Repair | Existing web module ZIP | Playwright | `frontend-{role}-v{N}-fix.zip` + `playwright_E2E/` |
+| **B** | Web Audit + Repair | Existing web module ZIP | Playwright | `frontend-{role}-v{N}-ALL-RBGS-COMPLETE.zip` (intermediate: `frontend-{role}-v{N}-PARTIAL-rbg{X}.zip`) + `playwright_E2E/` |
 | **C** | Mobile Create from Web Specification | Web ZIP as specification only | Maestro | `mobile-{role}-v1.zip` + `mobile_e2e/` (top-level mirrored Maestro suite; never inside `src/features/`) |
-| **D** | Mobile Audit + Repair | Existing React Native module ZIP | Maestro | `mobile-{role}-v{N}-fix.zip` + `mobile_e2e/` (top-level mirrored Maestro suite; never inside `src/features/`) |
+| **D** | Mobile Audit + Repair | Existing React Native module ZIP | Maestro | `mobile-{role}-v{N}-ALL-RBGS-COMPLETE.zip` (intermediate: `mobile-{role}-v{N}-PARTIAL-rbg{X}.zip`) + `mobile_e2e/` (top-level mirrored Maestro suite; never inside `src/features/`) |
 
 ## Canonical Mobile Maestro E2E Location
 
@@ -848,7 +848,7 @@ If web ZIP evidence for an endpoint, request field, response field, permission, 
 10. Deliver source-level completion result and artifact status truthfully per the Capability-Truth Delivery Rule.
 
 ### Mode D Delivery Name
-`mobile-{role}-v{N}-fix.zip`
+`mobile-{role}-v{N}-ALL-RBGS-COMPLETE.zip` (intermediate: `mobile-{role}-v{N}-PARTIAL-rbg{X}.zip`)
 
 ---
 
@@ -865,7 +865,7 @@ If web ZIP evidence for an endpoint, request field, response field, permission, 
 2. Identify every gap, missing file, UI issue, broken API contract, and missing architectural/design rule.
 3. Fix ALL found issues directly in code — no half-fixes, no skipping.
 4. Double-verify after repair by re-running the checklist.
-5. Deliver a **versioned fix ZIP**: `frontend-{role}-v{N}-fix.zip`
+5. Deliver a **versioned delivery ZIP**: `frontend-{role}-v{N}-ALL-RBGS-COMPLETE.zip` (or intermediate `frontend-{role}-v{N}-PARTIAL-rbg{X}.zip`)
 6. Include `INTEGRATION_GUIDE.md` inside the ZIP.
 
 ---
@@ -1455,7 +1455,7 @@ A high PASS count does NOT override unresolved CRITICAL findings.
 ⛔ **SEPARATION OF PRODUCTION READINESS VERDICT FROM REPAIR ZIP DELIVERY:**
 - The Production Readiness verdict and Compliance statement accurately report whether unresolved external `SOURCE_CONFLICT`s or deferred host runtime checks exist.
 - However, reporting an unresolved `SOURCE_CONFLICT` or `DEFERRED_TO_HOST_RUNTIME` item **MUST NEVER BLOCK THE PACKAGING OR DELIVERY OF THE REPAIRED SOURCE ZIP**.
-- Once all fixable source-level code in the module is repaired, the AI MUST package and deliver the versioned repair ZIP (e.g., `frontend-{role}-v1-fix.zip`), with any unresolved external conflicts clearly documented in `RE_AUDIT_CHECKLIST_RESULT.md` and `INTEGRATION_GUIDE.md`. The AI is strictly forbidden from withholding the ZIP.
+- Once all fixable source-level code in the module is repaired, the AI MUST package and deliver the versioned repair ZIP (e.g., `frontend-{role}-v1-ALL-RBGS-COMPLETE.zip` or intermediate `frontend-{role}-v1-PARTIAL-rbg{X}.zip`), with any unresolved external conflicts clearly documented in `RE_AUDIT_CHECKLIST_RESULT.md` and `INTEGRATION_GUIDE.md`. The AI is strictly forbidden from withholding the ZIP.
 
 ---
 
@@ -9964,7 +9964,7 @@ A checkpoint is NOT a product delivery.
 ## 45.2 Creation & Repair Release Delivery Mandate (Non-Negotiable)
 
 - **Mode A — Creation Delivery:** When all creation work units are complete and Section 43P checklist is clean, packaging and delivering `frontend-{role}-v1.zip` is **MANDATORY**.
-- **Mode B — Source Fix Completion vs Live Runtime:** When 100% of fixable `SOURCE_LEVEL_FIX` findings within the supplied scope have been repaired, packaging and delivering the versioned ZIP (`frontend-{role}-v1-fix.zip` or `frontend-{role}-v{N}-fix.zip`) is **MANDATORY**.
+- **Mode B — Source Fix Completion vs Live Runtime:** When 100% of fixable `SOURCE_LEVEL_FIX` findings within the supplied scope have been repaired, packaging and delivering the versioned ZIP (`frontend-{role}-v{N}-ALL-RBGS-COMPLETE.zip` or intermediate `frontend-{role}-v{N}-PARTIAL-rbg{X}.zip`) is **MANDATORY**.
 - **Mode C — Mobile Creation Delivery:** When all 5 extraction sections are complete, all mobile module files are created, and Section 43P MODE C + MOBILE RULE checklists are clean, packaging and delivering `mobile-{role}-v1.zip` is **MANDATORY**. Metro bundler unavailability and device/simulator unavailability are NOT blockers — mark as `DEFERRED_TO_HOST_RUNTIME` and deliver the ZIP.
 - **External Blockers & Runtime Deferrals:** If items remain deferred to host runtime (`DEFERRED_TO_HOST_RUNTIME`) or require external human product decisions (`EXTERNAL_PRODUCT_DECISION_BLOCKED` / `SOURCE_CONFLICT`), they are documented inside `RE_AUDIT_CHECKLIST_RESULT.md` and `INTEGRATION_GUIDE.md`. The archive is delivered as a **REPAIR RELEASE (SOURCE-VERIFIED)**.
 - **ZERO-WITHHOLDING INVARIANT:** The AI MUST NOT refuse to deliver the ZIP, withhold the archive, or declare delivery blocked due to deferred runtime verification, external document conflicts, or absence of host files. "PARTIAL DELIVERY = FORBIDDEN" strictly means do not deliver fragmented/split archives; it NEVER means withholding the complete repaired source ZIP!
@@ -10477,10 +10477,10 @@ EXECUTION ORDER — MODE D (ALL STEPS MANDATORY):
 [ ] Step 5: RBG PLAN published + user explicitly approves
 [ ] Step 6: STAGE 3 REPAIRS — execute repair batches in RBG order (Rule 67B)
 [ ] Step 7: Section 43P MOBILE RULE CHECKLIST clean on repaired code
-[ ] Step 8: FINAL DELIVERY — mobile-{role}-v{N}-fix.zip + INTEGRATION_GUIDE.md + RE_AUDIT_CHECKLIST_RESULT.md + Maestro E2E
+[ ] Step 8: FINAL DELIVERY — mobile-{role}-v{N}-ALL-RBGS-COMPLETE.zip (or intermediate mobile-{role}-v{N}-PARTIAL-rbg{X}.zip) + INTEGRATION_GUIDE.md + RE_AUDIT_CHECKLIST_RESULT.md + Maestro E2E
 
 MANDATORY DELIVERABLES:
-- mobile-{role}-v{N}-fix.zip (repaired React Native feature module)
+- mobile-{role}-v{N}-ALL-RBGS-COMPLETE.zip (or intermediate mobile-{role}-v{N}-PARTIAL-rbg{X}.zip) (repaired React Native feature module)
 - INTEGRATION_GUIDE.md (changelog + navigation wiring + npm install + host verification)
 - RE_AUDIT_CHECKLIST_RESULT.md (Section 43P MOBILE RULE CHECKLIST result)
 Mobile Maestro E2E tests MUST live only at:
@@ -10838,7 +10838,7 @@ The Boot Declaration execution order block now includes Mode D:
 [ ] Step 5: RBG PLAN published + user explicitly approves — not yet started
 [ ] Step 6: STAGE 3 REPAIRS — execute repair batches in RBG order (Rule 67B) — not yet started
 [ ] Step 7: Section 43P MOBILE RULE CHECKLIST clean on repaired code — not yet started
-[ ] Step 8: FINAL DELIVERY (mobile-{role}-v{N}-fix.zip + INTEGRATION_GUIDE.md + RE_AUDIT_CHECKLIST_RESULT.md + Maestro E2E) — not yet started
+[ ] Step 8: FINAL DELIVERY (mobile-{role}-v{N}-ALL-RBGS-COMPLETE.zip or intermediate mobile-{role}-v{N}-PARTIAL-rbg{X}.zip + INTEGRATION_GUIDE.md + RE_AUDIT_CHECKLIST_RESULT.md + Maestro E2E) — not yet started
 ```
 
 ---

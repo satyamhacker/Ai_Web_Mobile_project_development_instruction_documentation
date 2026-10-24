@@ -62,6 +62,15 @@ When a rule is repeated for convenience:
 > 1. The AI MUST NOT invent, guess, or assume API response fields, store actions, Next.js route paths, or UI props. Every contract MUST be verified against Zod schemas, TypeScript types, or `[moduleName]_features.md`.
 > 2. When creating or debugging a module, the AI MUST rely primarily on the module's documentation trio (`[role]_[submodule]_features.md`, `[role]_[submodule]_forbidden.md`, `[role]_[submodule]_theme_contract.md`) and mock fixtures (`mocks/fixtures/`), treating source code as the LAST resort.
 > 3. Every file and folder MUST satisfy the **5-Second Comprehension Invariant**—a newly initialized AI context or human developer must understand its exact responsibility, inputs, outputs, and boundaries within 5 seconds without inspecting parent or sibling files.
+>
+> ⛔⛔⛔ **EXECUTIVE CANONICAL DIAMOND PROTOCOLS (WEB FRONTEND ARCHITECTURE) ⛔⛔⛔**
+> The following diamond protocols are active from TURN 1 across ALL Web Frontend workflows:
+> 1. **Anti-Deception ZIP Naming:** Intermediate archives MUST be labeled `frontend-{role}-v{N}-PARTIAL-rbg{X}.zip`. The label `frontend-{role}-v{N}-ALL-RBGS-COMPLETE.zip` is strictly forbidden unless 100% of RBGs (RBG 1..N) are closed and verified.
+> 2. **Pre-Delivery Cross-Check Gate (Zero-Excuse Law):** Must execute and output the 3 physical verification tables (RBG Closure Ledger, Autonomous Submodule Physical File Ledger, and Canonical Rules Verification Sweep) before packaging. Post-delivery excuses ("Oh sorry, cross-check nahi kiya") are strictly banned as P0 audit fraud.
+> 3. **1-Click Interactive Button Priority:** Publish RBG Plans and Checkpoints as actionable artifacts (`RequestFeedback: true`) or modals (`ask_question`) so user can approve via 1-click button instead of manual typing.
+> 4. **Interactive Clarification Modal with (Recommended) Default:** All questions/decisions MUST use structured modals/checkboxes with Option 1 marked `(Recommended)`. Zero open-ended technical essay questions.
+> 5. **Live Progress Heartbeat Telemetry in Roman Hinglish:** Output real-time non-blocking progress lines (`✓ [Done]: ... ⚙️ [In Progress]: ...`) in Roman Hinglish (English letters, NO Devanagari) to eliminate the "hang illusion".
+> 6. **Substantive Workload Density:** Calibrate RBGs by workload floor (min 8 findings / 4 files) and safety ceiling (max 25 findings / 18 files) for a balanced ~5–8 min sprint without token blowouts or hallucinations.
 
 ## RULE ENFORCEMENT & SEVERITY MODEL
 
@@ -4811,8 +4820,11 @@ Every project MUST have a `globals.css` (or equivalent canonical theme styleshee
 > ⛔ **HARD STOP — ALL 14 SOURCE-LEVEL GATES BELOW MUST BE REPAIRED WITH PROOF.**
 > **Failing or skipping ANY single source-level gate = REPAIR immediately.**
 >
-> ⛔ **DELIVERY MANDATE (NEVER WITHHOLD THE REPAIR ZIP):**
-> When all fixable source-level code within the supplied module scope is complete, the AI **MUST ALWAYS PACKAGE AND DELIVER THE ZIP**.
+> ⛔ **DELIVERY MANDATE & ANTI-DECEPTION NAMING (NEVER WITHHOLD THE REPAIR ZIP):**
+> When all fixable source-level code within the supplied module scope is complete, the AI **MUST ALWAYS PACKAGE AND DELIVER THE ZIP** using strict Anti-Deception naming:
+> - Mode A First Creation: `frontend-{role}-v1.zip`
+> - Mode B Intermediate Checkpoint: `frontend-{role}-v{N}-PARTIAL-rbg{X}.zip` (when any subsequent RBG is pending)
+> - Mode B 100% Complete Delivery: `frontend-{role}-v{N}-ALL-RBGS-COMPLETE.zip` (ONLY when 100% of RBGs are closed and Pre-Delivery Cross-Check Gate is passed 100% clean).
 > Host-dependent verification steps (`DEFERRED_TO_HOST_RUNTIME`), host infrastructure files (`OUTSIDE_SUPPLIED_SCOPE`), and external product decisions (`EXTERNAL_PRODUCT_DECISION_BLOCKED`) MUST be documented in `RE_AUDIT_CHECKLIST_RESULT.md` and `INTEGRATION_GUIDE.md`, but MUST NEVER trigger `BLOCKED_DELIVERY` or prevent packaging/delivering the repaired ZIP.
 
 | Gate # | Gate Description | Verification Directive | Consequence of Failure |

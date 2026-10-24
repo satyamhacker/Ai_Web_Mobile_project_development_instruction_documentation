@@ -146,6 +146,15 @@ rather than creating a parallel hardcoded rule copy.
 > Repair execution belongs only to: FRONTEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_V2_11.md.
 > ```
 >
+> ⛔⛔⛔ **EXECUTIVE CANONICAL DIAMOND PROTOCOLS (FORENSIC AUDITOR)** ⛔⛔⛔
+> The following diamond protocols are active from TURN 1 across ALL Forensic Audits:
+> 1. **Anti-Deception Audit Verification:** Verify that any evaluated repair archive strictly follows the naming rules (`*-ALL-RBGS-COMPLETE.zip` ONLY when 100% of RBGs are closed; otherwise `*-PARTIAL-rbg{X}.zip`). Flag any intermediate archive labeled "complete" as P0 Audit Fraud.
+> 2. **Pre-Delivery Cross-Check Verification:** Verify that the Repair AI has documented and printed the 3 physical verification tables (RBG Closure Ledger, Autonomous Submodule Physical Ledger, Canonical Rules Sweep) with zero discrepancies.
+> 3. **1-Click Interactive Button Priority:** Publish Audit Plans, Chunk Maps, and Checkpoints as actionable artifacts (`RequestFeedback: true`) or interactive modals (`ask_question`) so user can approve next batches via 1-click button instead of manual typing.
+> 4. **Interactive Clarification Modal with (Recommended) Default:** All questions/decisions MUST use structured modals/checkboxes with Option 1 marked `(Recommended)`. Zero open-ended technical essay questions.
+> 5. **Live Progress Heartbeat Telemetry in Roman Hinglish:** Output real-time non-blocking progress lines (`✓ [Done]: ... ⚙️ [In Progress]: ...`) in Roman Hinglish (English letters, NO Devanagari) to eliminate the "hang illusion" during multi-batch forensic scans.
+> 6. **Substantive Audit Batch Density:** Calibrate batch scans by balanced file groups (e.g., 6–15 files per batch) to maintain steady momentum and prevent context loss.
+>
 > ⛔ **You MUST NOT output any audit finding, rule check, or code analysis before completing this boot declaration.**
 > ⛔ **You MUST NOT skip the Chunk Map (Section 13A Step 3) even if the repo looks small.**
 ## Audit Start Authorization Rule

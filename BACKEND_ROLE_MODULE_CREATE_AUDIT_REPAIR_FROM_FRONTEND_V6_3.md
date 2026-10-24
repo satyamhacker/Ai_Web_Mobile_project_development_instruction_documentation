@@ -405,12 +405,12 @@ The AI MAY inspect every file inside the supplied backend scope, but MUST NOT in
    If the issue cannot be correctly resolved through backend-only changes and genuinely requires a frontend change, follow the FRONTEND_CHANGE_REQUIRED workflow defined in Section 2A.
 
 5. Double-verify after repair: re-run the full audit against the repaired code.
-6. Deliver a **versioned fix ZIP**: `backend-{role}-v{N}-fix.zip` (e.g., `backend-superadmin-v2-fix.zip`)
+6. Deliver a **versioned delivery ZIP**: `backend-{role}-v{N}-ALL-RBGS-COMPLETE.zip` (or intermediate `backend-{role}-v{N}-PARTIAL-rbg{X}.zip`)
 7. Include `INTEGRATION_GUIDE.md` inside the ZIP.
 
    **DETERMINISTIC VERSION ASSIGNMENT (ZERO-STALL RULE):**
-   - If explicit version `vN` is identified, increment to `v(N+1)-fix` (e.g. `backend-superadmin-v2-fix.zip`).
-   - If no explicit version number is present in the input filename, deterministically default to `v1-fix`: `backend-{role}-v1-fix.zip`.
+   - If explicit version `vN` is identified, increment to `v(N+1)`: `backend-{role}-v(N+1)-ALL-RBGS-COMPLETE.zip` (intermediate: `backend-{role}-v(N+1)-PARTIAL-rbg{X}.zip`).
+   - If no explicit version number is present in the input filename, deterministically default to `v1`: `backend-{role}-v1-ALL-RBGS-COMPLETE.zip` (intermediate: `backend-{role}-v1-PARTIAL-rbg{X}.zip`).
    - The AI MUST NEVER halt, stall, or refuse to package/deliver the ZIP due to absence of an input version tag. Packaging and delivering the repaired ZIP is MANDATORY.
 
 
@@ -440,17 +440,16 @@ The AI MAY inspect every file inside the supplied backend scope, but MUST NOT in
 ## VERSIONING RULES
 
 ```text
-First creation:          backend-{role}-v1.zip
-First fix after v1:      backend-{role}-v2-fix.zip
-Second fix after v2:     backend-{role}-v3-fix.zip
-... and so on
+Mode A First creation:                     backend-{role}-v1.zip
+Mode B Intermediate RBG Checkpoint ZIP:   backend-{role}-v{N}-PARTIAL-rbg{X}.zip  (e.g., backend-superadmin-v2-PARTIAL-rbg1.zip)
+Mode B 100% COMPLETE Final Delivery ZIP:   backend-{role}-v{N}-ALL-RBGS-COMPLETE.zip (e.g., backend-superadmin-v2-ALL-RBGS-COMPLETE.zip)
 ```
 
 ### VERSION NUMBER RULE
 
 For MODE A: use `v1` unless the supplied repository contains an explicit release/version registry requiring a different starting value.
 
-For MODE B: derive `{N}` from the highest existing `backend-{role}-v{N}-fix` archive or release record supplied in scope, then increment by 1.
+For MODE B: derive `{N}` from the highest existing `backend-{role}-v{N}` archive or release record supplied in scope, then increment by 1.
 
 If no prior version evidence exists in the supplied inputs:
 - do NOT assign `v2` as a default — `v2` implicitly claims a prior `v1` release which may not exist;
@@ -470,7 +469,7 @@ Delivery artifacts belong at the archive root, not inside the feature-module sou
 Example:
 
 ```text
-backend-admin-v2-fix.zip
+backend-admin-v2-ALL-RBGS-COMPLETE.zip (or intermediate: backend-admin-v2-PARTIAL-rbg1.zip)
 ├── INTEGRATION_GUIDE.md
 ├── RE_AUDIT_CHECKLIST_RESULT.md
 ├── FRONTEND_CHANGE_REQUIRED.md              # only when applicable
@@ -650,7 +649,7 @@ The frontend is read-only evidence for backend requirement discovery.
 
 > **MODE DECISION RULE:**
 > - **Frontend ZIP given + NO backend ZIP given** → **MODE A (CREATE)** — AI builds the backend from scratch and delivers `backend-{role}-v1.zip`.
-> - **Frontend ZIP given + Backend ZIP given** → **MODE B (AUDIT+REPAIR)** — AI audits the existing backend, fixes all actionable backend issues within the supplied writable scope, documents any genuinely required frontend changes, and delivers `backend-{role}-v{N}-fix.zip`.
+> - **Frontend ZIP given + Backend ZIP given** → **MODE B (AUDIT+REPAIR)** — AI audits the existing backend, fixes all actionable backend issues within the supplied writable scope, documents any genuinely required frontend changes, and delivers `backend-{role}-v{N}-ALL-RBGS-COMPLETE.zip` (or intermediate `backend-{role}-v{N}-PARTIAL-rbg{X}.zip`).
 >
 > **The frontend ZIP is ALWAYS required in both modes** — it is the source from which backend requirements are discovered.
 
@@ -3603,7 +3602,7 @@ After repairs:
 3. verify frontend-derived requirements;
 4. generate API E2E and UI automation deliverables (MANDATORY — see API E2E AND UI AUTOMATION DELIVERABLE RULE in Section 6.10);
 5. generate final documentation;
-6. only then package `backend-{role}-v{N}-fix.zip` — see PACKAGE DELIVERY RULE in Section 6.10.
+6. only then package `backend-{role}-v{N}-ALL-RBGS-COMPLETE.zip` (or intermediate `backend-{role}-v{N}-PARTIAL-rbg{X}.zip`) — see PACKAGE DELIVERY RULE in Section 6.10.
 
 When archive creation is unavailable for MODE B, provide the complete intended package manifest, all generated file contents or patches, and a clear statement that the archive was NOT produced in the current environment.
 
@@ -10928,7 +10927,7 @@ The AI MUST immediately answer with a clear, concise **Progress Snapshot** based
 
 ## 86B.3.2 Repair Release Delivery Mandate (Non-Negotiable)
 
-- **Source Fix Completion vs Live Runtime:** When 100% of fixable `SOURCE_LEVEL_FIX` findings within the supplied scope have been repaired, packaging and delivering the versioned ZIP (`backend-{role}-v1-fix.zip` or `backend-{role}-v{N}-fix.zip`) is **MANDATORY**.
+- **Source Fix Completion vs Live Runtime:** When 100% of fixable `SOURCE_LEVEL_FIX` findings within the supplied scope have been repaired, packaging and delivering the versioned ZIP (`backend-{role}-v{N}-ALL-RBGS-COMPLETE.zip` or intermediate `backend-{role}-v{N}-PARTIAL-rbg{X}.zip`) is **MANDATORY**.
 - **External Blockers & Runtime Deferrals:** If items remain deferred to host runtime (`DEFERRED_TO_HOST_RUNTIME`) or require external human product decisions (`EXTERNAL_PRODUCT_DECISION_BLOCKED`), they are documented inside `RE_AUDIT_CHECKLIST_RESULT.md` and `INTEGRATION_GUIDE.md`. The archive is delivered as a **REPAIR RELEASE (SOURCE-VERIFIED)**.
 - **ZERO-WITHHOLDING INVARIANT:** The AI MUST NOT refuse to deliver the ZIP, withhold the archive, or declare delivery blocked due to deferred runtime verification, external document conflicts, or absence of host files. "DO NOT deliver partial ZIPs" strictly means do not deliver fragmented/split archives; it NEVER means withholding the complete repaired source ZIP!
 
@@ -11040,11 +11039,11 @@ Only after all final verification passes:
 Mode A:
 backend-{role}-v1.zip
 
-Mode B first repair:
-backend-{role}-v2-fix.zip
+Mode B intermediate checkpoint:
+backend-{role}-v{N}-PARTIAL-rbg{X}.zip
 
-Mode B second repair:
-backend-{role}-v3-fix.zip
+Mode B 100% complete repair:
+backend-{role}-v{N}-ALL-RBGS-COMPLETE.zip
 ```
 
 The ZIP MUST contain the required final artifacts already mandated by this prompt:
