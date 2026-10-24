@@ -7623,6 +7623,11 @@ Detect:
 
 ## RULE 77 — DEPENDENCY-ADDITION GUARDRAIL
 
+> ⛔ **DEPENDENCY PRECEDENCE HIERARCHY:**
+> 1. **Existing Repository `package.json` / `requirements.txt` (Highest Authority):** Packages already present and actively used in the supplied codebase are classified as `LEGACY_REPOSITORY_APPROVED`. The AI MUST NOT flag them as unauthorized violations.
+> 2. **Locked Architecture Registry (Rule 0G-A):** Authoritative for all new feature additions, scaffolding, or clean-slate modules.
+> 3. **AI Speculative Package Hallucination:** STRICTLY PROHIBITED.
+
 For new packages verify:
 
 - necessity;

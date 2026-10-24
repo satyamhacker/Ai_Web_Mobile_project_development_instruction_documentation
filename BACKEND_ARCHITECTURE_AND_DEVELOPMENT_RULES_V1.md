@@ -84,6 +84,15 @@ The AI MUST NOT silently continue after detecting a violation.
 > ```
 > **Failure to complete the above = the affected item MUST NOT be marked COMPLIANT.**
 > The AI must record the missing evidence and continue only where safe and within scope.
+>
+> ⛔⛔⛔ **EXECUTIVE CANONICAL DIAMOND PROTOCOLS (BACKEND ARCHITECTURE)** ⛔⛔⛔
+> The following diamond protocols are active from TURN 1 across ALL execution modes:
+> 1. **Anti-Deception ZIP Naming:** Intermediate archives MUST be labeled `backend-{role}-v{N}-PARTIAL-rbg{X}.zip`. The label `backend-{role}-v{N}-ALL-RBGS-COMPLETE.zip` is strictly forbidden unless 100% of RBGs (RBG 1..N) are closed and verified.
+> 2. **Pre-Delivery Cross-Check Gate (Zero-Excuse Law):** Must execute and output the 3 physical verification tables (RBG Closure Ledger, Autonomous Submodule Physical Ledger, Canonical Rules Sweep) before packaging. Post-delivery excuses ("Oh sorry, cross-check nahi kiya") are strictly banned as P0 audit fraud.
+> 3. **1-Click Interactive Button Priority:** Publish RBG Plans and Checkpoints as actionable artifacts (`RequestFeedback: true`) or modals (`ask_question`) so user can approve via 1-click button instead of manual typing across all checkpoints (Stage 1 Freeze, RBG Plan, and RBG sprints).
+> 4. **Interactive Clarification Modal with (Recommended) Default:** All questions/decisions MUST use structured modals/checkboxes with Option 1 marked `(Recommended)`. Zero open-ended technical essay questions.
+> 5. **Live Progress Heartbeat Telemetry in Roman Hinglish (STRICT ZERO-ENGLISH BAN):** Output real-time non-blocking progress lines (`✓ [Done]: ... ⚙️ [In Progress]: ...`) strictly in Roman Hinglish (English letters, NO Devanagari). PURE ENGLISH CHAT/TELEMETRY IS STRICTLY BANNED AS A FORMAT VIOLATION. Code identifiers, file paths, and syntax remain in English.
+> 6. **Substantive Workload Density:** Calibrate RBGs by workload floor (min 8 findings / 4 files) and safety ceiling (max 25 findings / 18 files) for a balanced ~5–8 min sprint without token blowouts or hallucinations.
 
 ## The Core Philosophy
 This document outlines the strict architectural rules for building the backend using the approved project framework, primarily **NestJS (TypeScript)** or **Django (Python)**, while preserving the same isolation and architectural principles. The primary goal is **Extreme Isolation**.
@@ -2576,7 +2585,13 @@ Instead, the AI MUST follow this controlled exception process:
 > **An AI agent MUST NOT add any new dependency without explicit human approval.**
 > **Consequence of violation:** A new dependency may conflict with the approved package registry (Rule 0G-A), introduce a known CVE (Rule 90 Gate 2), or duplicate an already-approved library — all of which block the CI/CD pipeline and require a full revert.
 
-* **The Rule:** Before proposing any new library, the AI MUST:
+* **The Rule & Dependency Precedence Hierarchy:**
+  When determining package validity, the AI MUST apply this strict authority order:
+  1. **Existing Repository `package.json` / `requirements.txt` (Highest Authority):** If the supplied repository already contains and actively uses a dependency not listed in the locked reference registry table, the existing repository manifest takes precedence. The AI classifies it as `LEGACY_REPOSITORY_APPROVED` and MUST NOT flag it as an unauthorized violation or refuse to audit/repair.
+  2. **Locked Architecture Dependency Registry (Rule 0G-A):** Authoritative for all new feature additions, scaffolding, or clean-slate modules.
+  3. **AI Speculative Package Hallucination:** STRICTLY PROHIBITED. The AI MUST NOT invent, guess, or install unapproved packages.
+
+  Before proposing any new library, the AI MUST:
   1. Check `package.json` or `requirements.txt` to verify the package is not already present.
   2. Check Rule 0G-A (Approved Backend NPM Package Registry) to verify the package is approved.
   3. If not in the approved registry: STOP. Record `DEPENDENCY_NOT_APPROVED`. Do NOT add it. Propose it to the human owner for explicit approval before proceeding.
