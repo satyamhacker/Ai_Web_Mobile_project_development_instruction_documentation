@@ -4989,6 +4989,19 @@ The auditor handoff MUST provide unambiguous instructions to the downstream Repa
    - For issues classified as `HOST_RUNTIME_BLOCKED_VERIFICATION`, the Repair AI MUST write the complete source-side implementation, and attach an explicit `DEFERRED_TO_HOST_RUNTIME` block detailing the exact shell commands the human developer MUST run.
 3. **DO NOT MISUSE PRODUCT BLOCKED CATEGORY:**
    - Host/runtime execution limitations MUST NEVER be placed under `EXTERNAL_PRODUCT_DECISION_BLOCKED`.
+4. **STRICT REPAIR DELIVERABLE & ZIP NAMING PROTOCOL (ANTI-DECEPTION LAW):**
+   - **Intermediate Checkpoint Archives:** When emitting a ZIP archive while subsequent RBGs or repair batches remain pending, the Repair AI MUST label the ZIP with the explicit `-PARTIAL-rbg{X}.zip` suffix (e.g. `frontend-{role}-v{N}-PARTIAL-rbg{X}.zip` or `backend-{role}-v{N}-PARTIAL-rbg{X}.zip`).
+   - **Strict Ban on Premature "COMPLETE" / "FINAL":** Using words like `COMPLETE`, `FINAL`, `ALL-DONE`, or `FIX-COMPLETE` in any ZIP filename, summary, or release note when ANY RBG or source-level fix is still pending is STRICTLY FORBIDDEN. It constitutes audit fraud and is classified as `FINDING: FRAUDULENT_PREMATURE_COMPLETION_CLAIM` (Severity: CRITICAL / P0).
+   - **100% Complete Release Archive:** A ZIP may ONLY be named `frontend-{role}-v{N}-ALL-RBGS-COMPLETE.zip` (or `backend-{role}-v{N}-ALL-RBGS-COMPLETE.zip` / `mobile-{role}-v{N}-ALL-RBGS-COMPLETE.zip`) when:
+     - 100% of RBGs (RBG 1 through RBG N) are executed and closed;
+     - 100% of submodules pass the Pre-Delivery Cross-Check Ledger;
+     - Zero pending or unverified source-level defects remain.
+5. **MANDATORY PRE-DELIVERY CROSS-CHECK VERIFICATION GATE (ZERO-EXCUSE AUDIT RECONCILIATION):**
+   - The Repair AI MUST NOT deliver any ZIP archive without first executing and printing the 3-table mechanical verification ledger:
+     - **Table 1: RBG Execution & Closure Ledger:** RBG index, status (`CLOSED` vs `PENDING`), remaining scope.
+     - **Table 2: Submodule-by-Submodule Physical Audit Ledger:** Target path, files inspected, zero loose root files, doc trio verified, test harness present.
+     - **Table 3: Canonical Architecture Rules Sweep:** Rule ID, verification status, physical evidence (file:line citation).
+   - **The Zero-Excuse Law:** Any post-delivery excuse (e.g. *"Oh sorry, maine cross-check nahi kiya"*, *"I forgot to verify rule X"*) is declared a fatal P0 process violation. The audit verification ledger MUST be completed BEFORE packaging the ZIP, never after being questioned by the user.
 
 > **⚠️ WEAK-EVIDENCE REPAIR PROHIBITION:**
 > If the audit status is `NOT_VERIFIED`, `LOW` confidence, or `EVIDENCE_CONFLICT`, you are PROHIBITED from inventing repair instructions. Write `INSUFFICIENT EVIDENCE FOR REPAIR`.
@@ -6007,6 +6020,8 @@ The audit is complete only when ALL of the following are true:
 [ ] Tests checked for behavioral integrity
 [ ] Mocks/fixtures checked
 [ ] Documentation checked (Documentation Trio for all frontend & backend autonomous sub-modules with 22 canonical sections + code docs)
+[ ] Repair Deliverable & ZIP Naming Protocol checked (intermediate archives MUST use *-PARTIAL-rbg{X}.zip; 'COMPLETE' strictly forbidden unless 100% of RBGs closed)
+[ ] Pre-Delivery Cross-Check Ledger verified (presence and physical accuracy of 3-table mechanical verification ledger before completion claims; zero post-delivery excuses tolerated)
 [ ] Previous audit reconciled when supplied
 [ ] Evidence provenance checked
 [ ] Static/runtime evidence separated

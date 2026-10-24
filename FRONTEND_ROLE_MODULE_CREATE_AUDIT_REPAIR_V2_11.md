@@ -860,23 +860,31 @@ If web ZIP evidence for an endpoint, request field, response field, permission, 
 
 ---
 
-## VERSIONING RULES
+## VERSIONING & ZIP NAMING TAXONOMY (ANTI-DECEPTION RULES)
 
 ```text
-Mode A — First creation (web):    frontend-{role}-v1.zip
-Mode A — First fix after v1:      frontend-{role}-v2-fix.zip
-Mode B — First fix after v1:      frontend-{role}-v2-fix.zip
-Mode C — First mobile creation:   mobile-{role}-v1.zip
-Mode C — First fix after v1:      mobile-{role}-v2-fix.zip
+Mode A — First creation (web):         frontend-{role}-v1.zip
+Mode C — First mobile creation:        mobile-{role}-v1.zip
+
+Mode B / Mode D (AUDIT + REPAIR):
+├── Intermediate RBG Checkpoint ZIP:   frontend-{role}-v{N}-PARTIAL-rbg{X}.zip  (e.g., frontend-manager-v2-PARTIAL-rbg1.zip)
+│                                      mobile-{role}-v{N}-PARTIAL-rbg{X}.zip    (e.g., mobile-manager-v2-PARTIAL-rbg1.zip)
+└── 100% COMPLETE Final Delivery ZIP:  frontend-{role}-v{N}-ALL-RBGS-COMPLETE.zip
+                                       mobile-{role}-v{N}-ALL-RBGS-COMPLETE.zip
 ```
+
+> ⛔ **STRICT PROHIBITION ON PREMATURE "COMPLETE" / "FINAL" LABELS (CRITICAL P0 ANTI-DECEPTION INVARIANT):**
+> 1. **Zero Premature "Complete" Claims:** The words `complete`, `final`, or `all-done` MUST NEVER appear in any ZIP filename, title, or delivery message unless **100% of planned RBGs (RBG 1 through RBG N)** are genuinely completed on the filesystem, 100% of fixable finding IDs are closed or explicitly user-overridden, and the Pre-Delivery Cross-Check Gate has passed 100% clean.
+> 2. **State-Reflective Naming for Intermediate Deliveries:** If a ZIP is produced or provided while ANY RBG is still pending (e.g., after completing RBG 1, while RBG 2 and RBG 3 are remaining), the ZIP **MUST BE EXPLICITLY NAMED** `frontend-{role}-v{N}-PARTIAL-rbg{X}.zip` (or `mobile-{role}-v{N}-PARTIAL-rbg{X}.zip`).
+> 3. **Audit Fraud Classification:** Delivering an intermediate or partial repair archive labeled as `complete` or allowing the user to mistakenly assume an incomplete fix is all-done is classified as **CRITICAL P0 AUDIT FRAUD & DISQUALIFICATION**.
 
 ### DETERMINISTIC VERSION ASSIGNMENT (ZERO-STALL RULE)
 
 In MODE B, determine the existing version from the supplied artifact name, project metadata, changelog, release manifest, or explicit version evidence:
 
-1. **If explicit version vN is identified:** Increment it to `v(N+1)-fix` (e.g. `frontend-trainer-v1.zip` → `frontend-trainer-v2-fix.zip`).
+1. **If explicit version vN is identified:** Increment it to `v(N+1)-fix` (e.g. `frontend-trainer-v1.zip` → `frontend-trainer-v2-ALL-RBGS-COMPLETE.zip` or intermediate `frontend-trainer-v2-PARTIAL-rbg1.zip`).
 2. **If no explicit version number is present in input filename:**
-   - Deterministically default to `v1-fix`: `frontend-{role}-v1-fix.zip`.
+   - Deterministically default to `v1-fix`: `frontend-{role}-v1-ALL-RBGS-COMPLETE.zip` (or `frontend-{role}-v1-PARTIAL-rbg{X}.zip` during intermediate steps).
    - Record `VERSION: v1-fix (Default assigned for initial repair release)` inside `INTEGRATION_GUIDE.md` (Section 1 Changelog).
 3. **ARTIFACT DELIVERY RESOLUTION RULE (ZERO-STALL):**
 The AI MUST complete all source-level work that is within its granted scope.
@@ -886,10 +894,11 @@ Missing host packaging capability MUST NOT downgrade valid source-level completi
 
 **MODE C VERSION ASSIGNMENT (ZERO-STALL):**
 - First mobile creation: always `mobile-{role}-v1.zip`. No version detection needed — it is always v1.
-- First fix after v1: `mobile-{role}-v2-fix.zip`.
+- First fix after v1: `mobile-{role}-v2-ALL-RBGS-COMPLETE.zip` (or `mobile-{role}-v2-PARTIAL-rbg{X}.zip` during intermediate steps).
 - The AI MUST NEVER stall on version naming for Mode C. It is always v1 for first creation.
 
 The AI MUST try so hard in its first pass that the user never needs to come back for a second fix. Treat every delivery as if it is the last chance to get it right.
+
 
 ---
 
@@ -4668,6 +4677,8 @@ Do NOT start any repair until the user approves the RBG Plan.
 4. Do NOT start the next RBG until the user gives affirmative confirmation (e.g. "continue", "next", "Begin RBG N+1", "aage badho", "karo", "go ahead").
 5. Within an RBG, apply fixes in dependency order (architecture → state → UI → tests → docs).
 6. Never apply a fix from RBG 3 while RBG 1 is still in progress.
+7. **INTERMEDIATE CHECKPOINT ZIP NAMING (ANTI-DECEPTION):** If the user requests an intermediate archive or the AI produces a ZIP checkpoint after completing RBG N while subsequent RBGs remain pending, the ZIP filename MUST be explicitly formatted as: `frontend-{role}-v{N}-PARTIAL-rbg{N}.zip` (or `mobile-{role}-v{N}-PARTIAL-rbg{N}.zip`). The AI MUST NOT use the words `complete`, `final`, or `all-done` in the filename or description while any RBG is pending.
+8. **FINAL COMPLETE DELIVERY PREREQUISITE:** The final release ZIP named `frontend-{role}-v{N}-ALL-RBGS-COMPLETE.zip` (or `mobile-{role}-v{N}-ALL-RBGS-COMPLETE.zip`) is permitted ONLY after 100% of RBGs (RBG 1 to RBG N) are completed, zero unresolved actionable findings remain, and Section 45.4A Pre-Delivery Cross-Check Gate is passed 100% clean.
 
 ## RBG CHECKPOINT TEMPLATE
 
@@ -4687,6 +4698,10 @@ After completing each RBG, display:
 ║   RBG [N+1]: Batches [A, B, C] — [N] findings               ║
 ║   RBG [N+2]: Batches [D, E, F] — [N] findings               ║
 ╠══════════════════════════════════════════════════════════════╣
+║ INTERMEDIATE ARCHIVE (IF PACKAGED):                          ║
+║   frontend-{role}-v{N}-PARTIAL-rbg[N].zip                     ║
+║   ⚠️ STATUS: PARTIAL FIX ONLY — RBG [N+1] PENDING            ║
+╠══════════════════════════════════════════════════════════════╣
 ║ VERIFICATION STATUS:                                         ║
 ║   TypeScript:  [PASS / FAIL / NOT_EXECUTED]                  ║
 ║   Lint:        [PASS / FAIL / NOT_EXECUTED]                  ║
@@ -4694,6 +4709,7 @@ After completing each RBG, display:
 ╠══════════════════════════════════════════════════════════════╣
 ║ ACTION REQUIRED:                                             ║
 ║ Reply "continue" to proceed to RBG [N+1].                    ║
+
 ║ OR reply "Begin RBG [N+1]" to start the next group.          ║
 ╚══════════════════════════════════════════════════════════════╝
 ```
@@ -9977,6 +9993,39 @@ final_reaudit_complete = true
 
 ONLY after every required verification work unit and the final checklist consolidation are complete.
 
+## 45.4A MANDATORY PRE-DELIVERY CROSS-CHECK VERIFICATION GATE (ZERO-EXCUSE AUDIT RECONCILIATION)
+
+> ⛔ **HARD STOP — PRE-DELIVERY MECHANICAL CROSS-CHECK GATE (NON-NEGOTIABLE)**
+> Before generating, offering, or delivering ANY 100% COMPLETE release ZIP (e.g., `frontend-{role}-v{N}-ALL-RBGS-COMPLETE.zip` or `mobile-{role}-v{N}-ALL-RBGS-COMPLETE.zip`), the AI MUST execute a mechanical, multi-point cross-check across the ACTUAL filesystem and print the following **THREE VERIFICATION TABLES**.
+>
+> ⚠️ **THE ZERO-EXCUSE INVARIANT:** Outputting a ZIP and subsequently stating: *"Oh sorry, maine cross-check nahi kiya and all"* or *"ye rule follow karna bhool gaya"* is classified as a **FATAL P0 WORKFLOW VIOLATION & AUDIT FRAUD**. Delivering a ZIP without physically verifying all submodules and all rules invalidates the entire deliverable.
+
+### Table 1: RBG Execution & Finding Closure Reconciliation
+| RBG | Batches Covered | Total Findings | Fixed in Source | Skipped by User | Remaining Unfixed | Status |
+|---|---|---|---|---|---|---|
+| RBG 1 | [Batches] | [N] | [N] | [N] | 0 | COMPLETED |
+| RBG 2 | [Batches] | [N] | [N] | [N] | 0 | COMPLETED |
+| RBG N | [Batches] | [N] | [N] | [N] | 0 | COMPLETED |
+*(Rule: If Remaining Unfixed > 0 for ANY RBG, the deliverable is PARTIAL and MUST be named `-PARTIAL-rbg{X}.zip`. It is STRICTLY FORBIDDEN to label it COMPLETE).*
+
+### Table 2: Submodule-by-Submodule Physical Audit Ledger
+*(Every single authored submodule in the role MUST be listed individually with filesystem proof — Zero Sampling permitted):*
+| Submodule Path | Artifact Folders Verified | Doc Trio (22 Canonical Sections) | Unit Tests + Mock Catalog (8 Scenarios) | Sibling Isolation (Zero Cross-Imports) | Anti-Lazy Scan (Zero TODO/Ellipsis) | Submodule Status |
+|---|---|---|---|---|---|---|
+| `{submodule-1}` | PASS (`components/`, `hooks/`, `api/`, `mocks/`) | PASS (`_features.md`, `_forbidden.md`, `_theme_contract.md`) | PASS (`mock-scenarios.ts` 8 states) | PASS (Zero cross-submodule imports) | PASS (Zero `// TODO`, zero `// ... rest unchanged`) | 100% VERIFIED |
+| `{submodule-2}` | PASS | PASS | PASS | PASS | PASS | 100% VERIFIED |
+
+### Table 3: Canonical Rules Sweep Table
+| Rule Domain | Canonical Requirement | Verification Method | Result |
+|---|---|---|---|
+| 4-Tier Hierarchy | Domain Container (Tier 3) ➔ Autonomous Submodule (Tier 4) | Physical directory tree | PASS |
+| Zero Flat Submodule Dumping | No granular submodules dumped directly under role container | Directory inspection | PASS |
+| Anti-Action Nano-Module Ban | No `*_add`, `*_edit`, `*_create` submodules or primary navigation links | File/folder scan | PASS |
+| Banned Generic Junk Drawers | No `*_operations`, `*_management`, `*_general`, `*_misc`, etc. | Directory scan | PASS |
+| Design System Token Compliance | Zero raw hex/rgb colors; 100% semantic theme token hooks | Grep `#`, `rgb(`, `hsl(` | PASS |
+| Strict Schema Validation | 100% forms & API responses validated with strict Zod | File inspection | PASS |
+| Standalone Run Harness | Section 20 Standalone Harness with mock seeders in every submodule | Harness test verification | PASS |
+
 ## 45.5 Final Packaging
 
 Before packaging:
@@ -9990,15 +10039,21 @@ Before packaging:
 Only then package:
 
 ```text
-Mode A:
+Mode A (Web Create):
 frontend-{role}-v1.zip
 
-Mode B:
-frontend-{role}-v{N}-fix.zip
+Mode B (Web Audit + Repair):
+├── Intermediate Checkpoint: frontend-{role}-v{N}-PARTIAL-rbg{X}.zip  (when any RBG is pending)
+└── 100% Complete Release:   frontend-{role}-v{N}-ALL-RBGS-COMPLETE.zip (only when all RBGs done & Section 45.4A clean)
 
-Mode C:
+Mode C (Mobile Create):
 mobile-{role}-v1.zip
+
+Mode D (Mobile Audit + Repair):
+├── Intermediate Checkpoint: mobile-{role}-v{N}-PARTIAL-rbg{X}.zip    (when any RBG is pending)
+└── 100% Complete Release:   mobile-{role}-v{N}-ALL-RBGS-COMPLETE.zip   (only when all RBGs done & Section 45.4A clean)
 ```
+
 
 The ZIP MUST contain:
 

@@ -3483,9 +3483,23 @@ DEFERRED_TO_HOST_RUNTIME
 
 Never state a test "passes" unless it was actually executed and produced a passing result in the current session.
 
-### PACKAGE DELIVERY RULE
+### PACKAGE DELIVERY RULE & ZIP NAMING TAXONOMY (ANTI-DECEPTION PROTOCOL)
 
-When archive creation and file delivery are available in the current environment, package the final deliverables as: `backend-{role}-v1.zip`.
+```text
+Mode A (CREATE):
+└── backend-{role}-v1.zip
+
+Mode B (AUDIT + REPAIR):
+├── Intermediate Checkpoint: backend-{role}-v{N}-PARTIAL-rbg{X}.zip  (when subsequent RBGs are still pending)
+└── 100% Complete Release:   backend-{role}-v{N}-ALL-RBGS-COMPLETE.zip (ONLY when ALL RBGs 1..N are done & Section 6.12A clean)
+```
+
+> ⛔ **STRICT PROHIBITION ON PREMATURE "COMPLETE" / "FINAL" LABELS (CRITICAL P0 ANTI-DECEPTION INVARIANT):**
+> 1. **Zero Premature "Complete" Claims:** The words `complete`, `final`, or `all-done` MUST NEVER appear in any ZIP filename, title, or delivery message unless **100% of planned RBGs (RBG 1 through RBG N)** are genuinely completed on the filesystem, 100% of fixable finding IDs are closed or explicitly user-overridden, and the Pre-Delivery Cross-Check Gate (Section 6.12A) has passed 100% clean.
+> 2. **State-Reflective Naming for Intermediate Deliveries:** If a ZIP is produced or provided while ANY RBG is still pending (e.g., after completing RBG 1, while RBG 2 and RBG 3 are remaining), the ZIP **MUST BE EXPLICITLY NAMED** `backend-{role}-v{N}-PARTIAL-rbg{X}.zip`.
+> 3. **Audit Fraud Classification:** Delivering an intermediate or partial repair archive labeled as `complete` or allowing the user to mistakenly assume an incomplete fix is all-done is classified as **CRITICAL P0 AUDIT FRAUD & DISQUALIFICATION**.
+
+When archive creation and file delivery are available in the current environment, package deliverables using the exact state-reflective naming above.
 
 When archive creation is unavailable, provide:
 - the complete intended package manifest (all files and their paths);
@@ -3493,6 +3507,7 @@ When archive creation is unavailable, provide:
 - a clear explicit statement that the archive itself was NOT produced in the current environment.
 
 Never claim a ZIP was created, attached, or validated unless that actually occurred.
+
 
 ### FINAL DELIVERABLE MANIFEST
 
@@ -3683,6 +3698,8 @@ Do NOT start any repair until the user approves the RBG Plan.
    - Migrations/entities first → repositories → services → controllers/DTOs → tests → docs.
 6. Never apply a fix from RBG 3 while RBG 1 is still in progress.
 7. Security/auth/tenant fixes MUST always be in RBG 1 regardless of which audit batch found them.
+8. **INTERMEDIATE CHECKPOINT ZIP NAMING (ANTI-DECEPTION):** If the user requests an intermediate archive or the AI produces a ZIP checkpoint after completing RBG N while subsequent RBGs remain pending, the ZIP filename MUST be explicitly formatted as: `backend-{role}-v{N}-PARTIAL-rbg{N}.zip`. The AI MUST NOT use the words `complete`, `final`, or `all-done` in the filename or description while any RBG is pending.
+9. **FINAL COMPLETE DELIVERY PREREQUISITE:** The final release ZIP named `backend-{role}-v{N}-ALL-RBGS-COMPLETE.zip` is permitted ONLY after 100% of RBGs (RBG 1 to RBG N) are completed, zero unresolved actionable findings remain, and Section 6.12A Pre-Delivery Cross-Check Gate is passed 100% clean.
 
 ## RBG CHECKPOINT TEMPLATE
 
@@ -3702,6 +3719,10 @@ After completing each RBG, display:
 ║   RBG [N+1]: Batches [A, B, C] — [N] findings               ║
 ║   RBG [N+2]: Batches [D, E, F] — [N] findings               ║
 ╠══════════════════════════════════════════════════════════════╣
+║ INTERMEDIATE ARCHIVE (IF PACKAGED):                          ║
+║   backend-{role}-v{N}-PARTIAL-rbg[N].zip                     ║
+║   ⚠️ STATUS: PARTIAL FIX ONLY — RBG [N+1] PENDING            ║
+╠══════════════════════════════════════════════════════════════╣
 ║ VERIFICATION STATUS:                                         ║
 ║   TypeScript:  [PASS / FAIL / NOT_EXECUTED]                  ║
 ║   Lint:        [PASS / FAIL / NOT_EXECUTED]                  ║
@@ -3712,6 +3733,7 @@ After completing each RBG, display:
 ║ Reply "continue" to proceed to RBG [N+1].                    ║
 ║ OR reply "Begin RBG [N+1]" to start the next group.          ║
 ╚══════════════════════════════════════════════════════════════╝
+
 ```
 
 ## RBG ANTI-RANDOM-FIX RULE (NON-NEGOTIABLE)
@@ -3794,7 +3816,44 @@ Add to the existing `progress.json` structure:
 > - [ ] `INTEGRATION_GUIDE.md` generated and included in ZIP (consolidating changelog, endpoint preservation matrix, schema migrations, and host verification)
 > - [ ] Self-contained backend source module files and automated test suites included in ZIP
 > - [ ] ZERO loose markdown files clutter rule confirmed (no separate `stage-*.md` or loose changelogs at ZIP root)
-> **Delivering a ZIP missing any mandatory artifact = incomplete delivery. Add the missing artifact before delivering.**
+> - [ ] Section 6.12A Pre-Delivery Mechanical Cross-Check Ledger printed and 100% verified clean
+> **Delivering a ZIP missing any mandatory artifact or without printing the Section 6.12A Cross-Check Ledger = incomplete delivery. Complete the ledger before delivering.**
+
+## 6.12A MANDATORY PRE-DELIVERY CROSS-CHECK VERIFICATION GATE (ZERO-EXCUSE AUDIT RECONCILIATION)
+
+> ⛔ **HARD STOP — PRE-DELIVERY MECHANICAL CROSS-CHECK GATE (NON-NEGOTIABLE)**
+> Before generating, offering, or delivering ANY 100% COMPLETE release ZIP (`backend-{role}-v{N}-ALL-RBGS-COMPLETE.zip`), the AI MUST execute a mechanical, multi-point cross-check across the ACTUAL filesystem and print the following **THREE VERIFICATION TABLES**.
+>
+> ⚠️ **THE ZERO-EXCUSE INVARIANT:** Outputting a ZIP and subsequently stating: *"Oh sorry, maine cross-check nahi kiya and all"* or *"ye rule follow karna bhool gaya"* is classified as a **FATAL P0 WORKFLOW VIOLATION & AUDIT FRAUD**. Delivering a ZIP without physically verifying all submodules and all rules invalidates the entire deliverable.
+
+### Table 1: RBG Execution & Finding Closure Reconciliation
+| RBG | Batches Covered | Total Findings | Fixed in Source | Skipped by User | Remaining Unfixed | Status |
+|---|---|---|---|---|---|---|
+| RBG 1 | [Batches] | [N] | [N] | [N] | 0 | COMPLETED |
+| RBG 2 | [Batches] | [N] | [N] | [N] | 0 | COMPLETED |
+| RBG N | [Batches] | [N] | [N] | [N] | 0 | COMPLETED |
+*(Rule: If Remaining Unfixed > 0 for ANY RBG, the deliverable is PARTIAL and MUST be named `backend-{role}-v{N}-PARTIAL-rbg{X}.zip`. It is STRICTLY FORBIDDEN to label it COMPLETE).*
+
+### Table 2: Submodule-by-Submodule Physical Audit Ledger
+*(Every single authored backend submodule in the role MUST be listed individually with filesystem proof — Zero Sampling permitted):*
+| Submodule Path | Artifact Folders Verified | Doc Trio (22 Canonical Sections) | Unit Tests + Harness Mock Catalog (8 Scenarios) | Sibling Isolation (Zero Cross-Imports / Strict WET) | Anti-Lazy Scan (Zero TODO/Ellipsis) | Submodule Status |
+|---|---|---|---|---|---|---|
+| `{submodule-1}` | PASS (`controllers/`, `services/`, `dto/`, `repositories/`) | PASS (`-backend-feature.md`, `-backend-forbidden.md`, `-backend-contract.md`) | PASS (`mock-scenarios.ts` 8 states) | PASS (Zero sibling imports) | PASS (Zero `// TODO`, zero `// ... rest unchanged`) | 100% VERIFIED |
+| `{submodule-2}` | PASS | PASS | PASS | PASS | PASS | 100% VERIFIED |
+
+### Table 3: Canonical Architecture Rules Sweep Table
+| Rule Domain | Canonical Requirement | Verification Method | Result |
+|---|---|---|---|
+| 4-Tier Hierarchy | Domain Container (Tier 3) ➔ Autonomous Submodule (Tier 4) | Physical directory tree | PASS |
+| Zero Flat Submodule Dumping | No granular submodules dumped directly under `{role}-modules/` | Directory inspection | PASS |
+| Anti-Action Nano-Module Ban | No `*-add`, `*-edit`, `*-create` submodules; actions live in entity submodule | File/folder scan | PASS |
+| Banned Generic Junk Drawers | No `*-operations`, `*-management`, `*-general`, `*-misc`, etc. | Directory scan | PASS |
+| Strict DTO Validation | Class-validator with whitelist & forbidNonWhitelisted | File inspection | PASS |
+| Database-per-Tenant Isolation | TenantContext resolved via JWT; queries filter by tenant | File inspection | PASS |
+| Two-Phase Migrations | Every migration exports `up()` and `down()`; down() reverts up() | Migration code scan | PASS |
+| Canonical Response Envelope | Discriminated union ApiResponse<T>; data null on error | Interceptor & controller scan | PASS |
+| Standalone Run Harness | Section 20 Standalone Harness with seeders in every submodule | Harness test verification | PASS |
+
 
 ```text
 ALL WORK UNITS COMPLETE
