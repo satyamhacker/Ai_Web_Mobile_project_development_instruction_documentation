@@ -132,6 +132,20 @@ Stop only when:
 >        - Mega-Submodule Banned: Cramming 3+ distinct sub-domain entity lifecycles into one sub-module (> 25 files) is FORBIDDEN; split into sibling sub-modules under `{role}-{domain}/`.
 >      - **Gate 4 (Standalone Testability & Mockability):** Can this sub-module run isolated unit/integration tests with its own seeders and harness? If YES → **Autonomous Sub-Module**.
 >      - **Gate 5 (DI & Sibling Isolation Boundary):** Sibling sub-modules NEVER import each other's NestJS `@Module`, `@Injectable()` services, or repositories. Cross-domain side-effects use Domain Events (Transactional Outbox).
+>    - **Zero Flat Submodule Dumping Law (Tier 3 Domain Containers vs Tier 4 Submodules):**
+>      - Granular backend sub-modules (`crm-enquiries/`, `crm-leads/`, `accounting-assets/`, `accounting-asset-maintenance/`) MUST NEVER be dumped directly under `{role}-modules/` (e.g., dumping `backend-superadmin/superadmin-modules/accounting-assets/` directly under the role root is a critical architecture failure).
+>      - Every backend sub-module MUST be enclosed within its parent Tier 3 Domain Module (`backend-{role}/{role}-modules/{role}-{domain}/{submodule}/`, e.g., `backend-superadmin/superadmin-modules/superadmin-accounting/accounting-assets/`).
+>      - Tier 3 Domain Modules mirror Frontend Tier 3 Domain Containers 1-to-1, preserving strict domain bounded contexts and modular monolith boundaries.
+>    - **Strict Anti-Action Nano-Module Ban:**
+>      - Creating a backend sub-module or module for a single CRUD action, form, or UI interaction (e.g., `crm-enquiry-add/`, `crm-enquiry-create/`, `member-create/`, `asset-maintenance-add/`) is a **CRITICAL P0 ARCHITECTURE VIOLATION**.
+>      - In the backend, actions are NOT sub-modules. They are simply controller routes (`POST /api/v1/...`), controller methods (`createEnquiry`), service methods (`create`), and DTOs (`CreateEnquiryDto`) living directly inside the parent entity's autonomous sub-module (`crm-enquiries/`).
+>    - **Canonical ERP Domain Taxonomy & Anti-Junk-Drawer Law:**
+>      - Backend domain modules MUST align to standard cohesive business bounded contexts (e.g., CRM, Accounting, Attendance, Inventory, HR, Members, Billing, Subscriptions, Platform, Gyms, Reports).
+>      - **Permanently Banned Generic Junk-Drawer Names:** Never invent vague catch-all domain modules such as `*-operations/`, `*-management/`, `*-general/`, `*-misc/`, `*-tools/`, `*-actions/`, `*-hub/`, `*-portal/`, `*-services/`, `*-data/`, or hybrid merged domains like `crm-accounting/`.
+>      - **Aggregate Root Mutation Test for Bounded Context Affinity:** When resolving domain boundary disputes (e.g., where does subscription invoice payment belong?), the Aggregate Root that mutates the primary transactional record dictates the domain module. Invoices belong to Billing/Accounting; Member profiles belong to Members; Attendance check-ins belong to Attendance. Cross-domain entity smuggling is strictly forbidden.
+>    - **Zero Domain Count Lock (No Rigid Hardcoding):**
+>      - The number of domain containers per role is determined purely by the business domain bounded contexts of that role. There is **NO hardcoded number or artificial ceiling** (neither 5, nor 6–10, nor any fixed count). NEVER force-merge or artificially split domains to satisfy an arbitrary numeric range!
+
 
 
 ---
@@ -6779,12 +6793,21 @@ Also verify:
 
 Verify:
 
-- backend domain grouping;
-- frontend feature/module semantic name is preserved;
-- backend feature folder mirrors frontend semantic name;
-- route naming mirrors domain grouping;
-- no silent semantic rename such as `auth` → `identity`;
-- casing may change only where framework convention requires it.
+- **1-to-1 Domain Grouping Isomorphism:** Backend folder hierarchy mirrors frontend 4-tier domain hierarchy (`backend-{role}/{role}-modules/{role}-{domain}/{submodule}/`).
+- **Zero Flat Submodule Dumping Law:** Granular sub-modules (`crm-enquiries/`, `accounting-assets/`) MUST NEVER be dumped directly under `{role}-modules/`. Every sub-module MUST live inside its respective parent Tier 3 Domain Module (`backend-{role}/{role}-modules/{role}-{domain}/{submodule}/`).
+  - *Violation Finding:* If sub-modules are dumped flatly into `{role}-modules/` without their parent domain container → emit `FINDING: BACKEND_FLAT_SUBMODULE_POLLUTION`.
+- **Strict Anti-Action Nano-Module Ban:** Sub-modules named after single CRUD actions or forms (`*-add`, `*-edit`, `*-create`, `*-delete`) are STRICTLY FORBIDDEN. All actions belong inside the parent entity's autonomous sub-module as controller endpoints, service methods, and DTOs.
+  - *Violation Finding:* If any action nano-module exists → emit `FINDING: BACKEND_ACTION_NANO_MODULE_VIOLATION`.
+- **Canonical ERP Domain Taxonomy & Anti-Junk-Drawer Law:** Domain modules must represent standard business bounded contexts (CRM, Accounting, Attendance, Inventory, HR, Members, Billing, Subscriptions, Platform, Gyms, Reports).
+  - *Permanently Banned Generic Junk-Drawer Names:* `*-operations/`, `*-management/`, `*-general/`, `*-misc/`, `*-tools/`, `*-actions/`, `*-hub/`, `*-portal/`, `*-services/`, `*-data/`, or hybrid merged domains like `crm-accounting/`.
+  - *Violation Finding:* If a domain module uses a banned generic or merged name → emit `FINDING: BANNED_JUNK_DRAWER_DOMAIN_VIOLATION`.
+- **Bounded Context Affinity & Aggregate Root Mutation Test:** Domain ownership is governed by which Aggregate Root mutates the primary transactional database record. Invoices belong to Billing/Accounting; Member profiles belong to Members; Attendance check-ins belong to Attendance. Cross-domain entity smuggling is strictly forbidden.
+  - *Violation Finding:* If an entity/API is placed in the wrong domain context → emit `FINDING: BOUNDED_CONTEXT_AFFINITY_VIOLATION`.
+- **Zero Domain Count Lock (No Rigid Hardcoding):** The number of domain containers per role is determined purely by the business domain bounded contexts of that role. There is **NO hardcoded number or artificial ceiling** (neither 5, nor 6–10, nor any fixed count). The AI MUST NOT force-merge or artificially split domains to satisfy an arbitrary numeric range.
+- **Frontend Semantic Name Preservation:** Frontend feature/module semantic name is preserved; backend feature folder mirrors frontend semantic name in kebab-case.
+- **Route Naming Mirrors Domain Grouping:** Canonical route namespace follows `/api/v1/{role}/{domain}/{submodule}/...` for role-scoped endpoints.
+- **No Silent Rename:** No silent semantic renames (e.g., `auth` → `identity`). Casing changes only per framework conventions.
+
 
 ---
 
@@ -10240,6 +10263,9 @@ Before producing the final verdict, verify:
 [ ] Migrations checked
 [ ] N+1 checked
 [ ] Every dynamically discovered backend architecture rule checked
+[ ] Rule 38 (Hierarchical Domain Grouping & Zero Flat Submodule Dumping) — All sub-modules enclosed in parent Tier 3 Domain Module; zero flat dumping under {role}-modules/
+[ ] Anti-Action Nano-Module Ban — No sub-modules created for single CRUD actions (*-add, *-edit, *-create); all actions live inside parent entity sub-module
+[ ] Anti-Junk-Drawer Law & Bounded Context Affinity — No banned generic junk drawers (*-operations, *-management, *-general); Aggregate Root mutation ownership respected; zero domain count lock confirmed (no rigid numeric ceilings)
 [ ] Rules added after prior Universal prompt versions included
 [ ] Latest extended architecture checks completed
 [ ] Rule 78 (Forbidden Patterns File) — `-forbidden.md` present, specific, rule-cited, and consequence-explained (not generic)

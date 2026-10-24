@@ -430,6 +430,24 @@ To prevent architectural drift and eliminate monolithic backend sprawl, the back
 >    - Every backend submodule folder MUST follow the exact semantic formula: `{submodule}` where `{submodule}` matches `{domain}-{capability}` (e.g., `attendance-dashboard/`, `attendance-history/`, `profile-overview/`, `billing-invoices/`).
 >    - **The 5-Second Comprehension Invariant:** Anyone inspecting ONLY the submodule folder name MUST instantly know within 5 seconds its parent domain and exact business capability/API intent.
 >    - **Strictly Banned Lazy/Ambiguous Names:** Never use generic or lazy names such as `tab1/`, `main/`, `default/`, `api/`, `details/` (must be `members-detail`), `common/`, `shared/`, `temp/`, or `misc/`. Lazy names are treated as **Critical Naming Violations**.
+>
+> 11. **Zero Flat Submodule Dumping Law (Tier 3 Domain Containers vs Tier 4 Submodules):**
+>    - Granular backend sub-modules (`crm-enquiries/`, `crm-leads/`, `accounting-assets/`, `accounting-asset-maintenance/`) MUST NEVER be dumped directly under `{role}-modules/` (e.g., dumping `backend-superadmin/superadmin-modules/accounting-assets/` directly under the role root is a critical architecture failure).
+>    - Every backend sub-module MUST be enclosed within its parent Tier 3 Domain Module (`backend-{role}/{role}-modules/{role}-{domain}/{submodule}/`, e.g., `backend-superadmin/superadmin-modules/superadmin-accounting/accounting-assets/`).
+>    - Tier 3 Domain Modules mirror Frontend Tier 3 Domain Containers 1-to-1, preserving strict domain bounded contexts and modular monolith boundaries.
+>
+> 12. **Strict Anti-Action Nano-Module Ban:**
+>    - Creating a backend sub-module or module for a single CRUD action, form, or UI interaction (e.g., `crm-enquiry-add/`, `crm-enquiry-create/`, `member-create/`, `asset-maintenance-add/`) is a **CRITICAL P0 ARCHITECTURE VIOLATION**.
+>    - In the backend, actions are NOT sub-modules. They are simply controller routes (`POST /api/v1/...`), controller methods (`createEnquiry`), service methods (`create`), and DTOs (`CreateEnquiryDto`) living directly inside the parent entity's autonomous sub-module (`crm-enquiries/`).
+>
+> 13. **Canonical ERP Domain Taxonomy & Anti-Junk-Drawer Law:**
+>    - Backend domain modules MUST align to standard cohesive business bounded contexts (e.g., CRM, Accounting, Attendance, Inventory, HR, Members, Billing, Subscriptions, Platform, Gyms, Reports).
+>    - **Permanently Banned Generic Junk-Drawer Names:** Never invent vague catch-all domain modules such as `*-operations/`, `*-management/`, `*-general/`, `*-misc/`, `*-tools/`, `*-actions/`, `*-hub/`, `*-portal/`, `*-services/`, `*-data/`, or hybrid merged domains like `crm-accounting/`.
+>    - **Aggregate Root Mutation Test for Bounded Context Affinity:** When resolving domain boundary disputes (e.g., where does subscription invoice payment belong?), the Aggregate Root that mutates the primary transactional record dictates the domain module. Invoices belong to Billing/Accounting; Member profiles belong to Members; Attendance check-ins belong to Attendance. Cross-domain entity smuggling is strictly forbidden.
+>
+> 14. **Zero Domain Count Lock (No Rigid Hardcoding):**
+>    - The number of domain containers per role is determined purely by the business domain bounded contexts of that role. There is **NO hardcoded number or artificial ceiling** (neither 5, nor 6–10, nor any fixed count). NEVER force-merge or artificially split domains to satisfy an arbitrary numeric range!
+
 
 ### Cross-Feature Workflow Exception
 
@@ -2091,7 +2109,16 @@ Before marking any migration PASS, ALL of the following MUST be verified with ev
 * **Frontend-First Naming Lock:** Since this project follows a frontend-first workflow (UI built with mock data before backend), the frontend feature folder names are the canonical source of truth. When backend development begins, the backend AI/developer MUST reuse the EXACT same folder/module name as the frontend, but translated to kebab-case. Renaming a feature's core semantic meaning during backend development is strictly forbidden.
 * **Casing Translation Rule (CRITICAL):** The semantic name stays identical across frontend/backend; ONLY the casing style changes per language/framework convention. The frontend uses `snake_case` and the backend uses `kebab-case` for folders (e.g., frontend `admin_billing`, backend `backend-admin/admin-modules/admin-billing`). This enforces a hard visual boundary between stacks through the mandatory `backend-` namespace prefix (Rule 0D) and the strict casing difference.
 * **API Route Grouping & Mirroring:** The API endpoint URLs must strictly mirror this domain grouping (e.g., `/api/v1/superadmin/stats`, `/api/v1/admin/members`). *(Naming Rule: The semantic module name stays identical to the frontend module name — the backend physical namespace only adds the mandatory role prefix. Example: frontend `manager_billing/` → backend folder `manager-billing/`, files `manager-billing-*.ts`, route `/api/v1/manager/billing/...`.)* The **canonical route namespace** is `/api/v1/{role}/{module}/...` for role-scoped routes (e.g., `/api/v1/manager/billing/invoices`) and `/api/v1/{module}/...` for genuinely public/shared endpoints (e.g., `/api/v1/auth/login`). Avoid mixing these two forms within the same module. Furthermore, page-to-endpoint naming must mirror exactly: if the frontend `/auth/` module calls an API, the route MUST be `/api/v1/auth/...`, not `/api/v1/session/...`. This ensures the debugging flow from UI page -> Frontend Folder -> Backend Folder -> Backend Route is 100% identically named (modulo dashes/underscores).
-* **1:1 Mirror Mapping:** The backend folder structure (AND the `e2e/` test folder structure) MUST strictly mirror the frontend route structure. If the frontend `frontend_superadmin` domain has 5 feature folders (e.g., `superadmin_broadcasts`, `superadmin_coupons`, `superadmin_affiliates`), the backend `backend-superadmin` domain MUST have exactly 5 matching modules.
+* **1:1 Mirror Mapping:** The backend folder structure (AND the `e2e/` test folder structure) MUST strictly mirror the frontend 4-tier domain hierarchy:
+  - Frontend Role Container (`frontend_{role}`) ➔ Backend Role Container (`backend-{role}/`)
+  - Frontend Tier 3 Domain Container (`{role}_{domain}`) ➔ Backend Tier 3 Feature Domain Module (`{role}-modules/{role}-{domain}/`)
+  - Frontend Tier 4 Autonomous Submodule (`{submodule}`) ➔ Backend Tier 4 Autonomous Sub-Module (`{submodule}/`)
+* **Zero Flat Submodule Dumping Law:** Granular sub-modules (e.g., `crm-enquiries`, `crm-leads`, `accounting-assets`, `accounting-invoices`) MUST NEVER be dumped flatly directly under `{role}-modules/`. They MUST be nested inside their owning Tier 3 Feature Domain Module (e.g., `backend-superadmin/superadmin-modules/superadmin-accounting/accounting-assets/`). Flat dumping of sub-modules into the role module root is a **P0 Architecture Violation**.
+* **Strict Anti-Action Nano-Module Ban:** Creating a backend module or sub-module for a single CRUD action or form (e.g., `crm-enquiry-add/`, `member-create/`, `asset-maintenance-add/`) is a **CRITICAL P0 ARCHITECTURE VIOLATION**. Actions are NOT modules; they are endpoints, controller methods, service methods, and DTOs within the parent entity's autonomous sub-module (`crm-enquiries/`).
+* **Canonical ERP Domain Taxonomy & Anti-Junk-Drawer Law:** Backend domain modules MUST align to standard cohesive business bounded contexts (CRM, Accounting, Attendance, Inventory, HR, Members, Billing, Subscriptions, Platform, Gyms, Reports).
+  - **Permanently Banned Generic Junk-Drawer Names:** Never create vague catch-all domain modules such as `*-operations/`, `*-management/`, `*-general/`, `*-misc/`, `*-tools/`, `*-actions/`, `*-hub/`, `*-portal/`, `*-services/`, `*-data/`, or hybrid merged domains like `crm-accounting/`.
+  - **Aggregate Root Mutation Test for Bounded Context Affinity:** Domain ownership disputes are resolved by which Aggregate Root owns and mutates the transactional record. Invoices belong to Billing/Accounting; Member profiles belong to Members; Attendance check-ins belong to Attendance. Cross-domain entity smuggling is strictly forbidden.
+* **Zero Domain Count Lock (No Rigid Hardcoding):** The number of domain containers per role is determined purely by the business domain bounded contexts of that role. There is **NO hardcoded number or artificial ceiling** (neither 5, nor 6–10, nor any fixed count). NEVER force-merge or artificially split domains to satisfy an arbitrary numeric range!
 
 #### Top-Level Role Structure (MANDATORY — See also Rule 2)
 
@@ -2103,28 +2130,53 @@ backend-{role}/
 └── {role}-modules/
 ```
 
-Feature modules MUST always be children of `{role}-modules/`. Direct placement of any feature module under `backend-{role}/` is forbidden.
+Feature domain modules MUST always be children of `{role}-modules/`. Direct placement of any feature domain module or sub-module under `backend-{role}/` is forbidden.
 
-❌ **FORBIDDEN:**
+❌ **FORBIDDEN (Flat Dumping / Missing Role Modules / Action Nano-Modules):**
 ```text
 backend-manager/
 ├── manager-core/
-├── manager-members/    <-- VIOLATION
-├── manager-billing/    <-- VIOLATION
-└── manager-attendance/ <-- VIOLATION
+├── manager-members/             <-- VIOLATION (Missing manager-modules/ parent)
+├── member-add/                  <-- VIOLATION (Action nano-module)
+└── crm-enquiry-add/             <-- VIOLATION (Action nano-module)
+
+backend-superadmin/
+└── superadmin-modules/
+    ├── accounting-assets/       <-- VIOLATION (Flat submodule dump; missing superadmin-accounting/)
+    ├── accounting-invoices/     <-- VIOLATION (Flat submodule dump; missing superadmin-accounting/)
+    └── superadmin-operations/   <-- VIOLATION (Banned junk-drawer domain)
 ```
 
-✅ **REQUIRED:**
+✅ **REQUIRED (Strict 4-Tier Hierarchical Domain Grouping):**
 ```text
-backend-manager/
-├── manager-core/
-└── manager-modules/
-    ├── manager-members/
-    ├── manager-billing/
-    └── manager-attendance/
+backend-superadmin/
+├── superadmin-core/
+└── superadmin-modules/
+    ├── superadmin-accounting/                           <-- Tier 3 Feature Domain Module Container
+    │   ├── superadmin-accounting.module.ts              <-- Domain Aggregator Module
+    │   ├── superadmin-accounting-backend-feature.md
+    │   ├── superadmin-accounting-backend-forbidden.md
+    │   ├── superadmin-accounting-dependencies.md
+    │   ├── accounting-assets/                           <-- Tier 4 Autonomous Sub-Module
+    │   │   ├── assets-controllers/
+    │   │   ├── assets-services/
+    │   │   ├── assets-dto/
+    │   │   ├── assets-repositories/
+    │   │   └── accounting-assets.module.ts
+    │   └── accounting-invoices/                         <-- Tier 4 Autonomous Sub-Module
+    │       ├── invoices-controllers/
+    │       ├── invoices-services/
+    │       ├── invoices-dto/
+    │       ├── invoices-repositories/
+    │       └── accounting-invoices.module.ts
+    └── superadmin-crm/                                  <-- Tier 3 Feature Domain Module Container
+        ├── superadmin-crm.module.ts
+        ├── crm-enquiries/                               <-- Tier 4 Autonomous Sub-Module (Add is an endpoint here!)
+        └── crm-leads/                                   <-- Tier 4 Autonomous Sub-Module
 ```
 
 * **Why:** This creates a perfect 1:1 mapped architecture. If a bug occurs in the "Coupons" feature, you provide the AI with exactly two things: `frontend/.../frontend_superadmin/superadmin_coupons/` and `backend/.../backend-superadmin/superadmin-modules/superadmin-coupons/`. The AI gets the complete vertical slice (Frontend UI + Backend Logic) for that specific feature without seeing the rest of the application. This guarantees zero hallucination, massive token savings, and perfect separation of concerns.
+
 
 
 
