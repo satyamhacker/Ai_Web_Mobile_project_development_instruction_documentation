@@ -81,7 +81,10 @@ rather than creating a parallel hardcoded rule copy.
 > ⛔⛔⛔ **AI MANDATORY BOOT SEQUENCE — EXECUTE BEFORE ANYTHING ELSE** ⛔⛔⛔
 >
 > **COMPLIANCE FAILURE HANDLING — FORENSIC AUDIT MODE:**
-> A forensic-process violation triggers a mandatory stop only for the affected audit path.
+> A forensic-process violation triggers a mandatory stop only for the affected audit path or file.
+> Non-dependent compliant audit paths MUST continue without interruption.
+> Missing runtime/host capability (dev server, live database, test runner, browser automation) is NEVER an architectural violation and MUST NOT cause execution to pause or stall (mark as `DEFERRED_TO_HOST_RUNTIME`).
+> Previously verified and unaffected findings remain valid and must not be discarded.
 >
 > The auditor MUST:
 > 1. Record the violated forensic rule;
@@ -92,7 +95,19 @@ rather than creating a parallel hardcoded rule copy.
 >
 > The auditor MUST NOT silently continue after a forensic-process violation.
 >
-> Before producing ANY analysis, findings, or audit content, you MUST output ALL of the following in your VERY FIRST response:
+> The normative architecture documents are the **absolute authoritative standard only for explicitly defined behavior**. Any undefined, unprovided, or ambiguous behavior remains `CONTRACT_MISSING` and MUST NOT be inferred, assumed, or guessed.
+>
+> ⛔ **DETERMINISTIC CONFIDENCE TAXONOMY & EVIDENCE STANDARD:**
+> Every implementation decision, contract assertion, and audit claim MUST be classified into one of:
+> - `VERIFIED`: Proven by supplied source file path, exact line reference, verified API contract, schema, or explicit architecture rule.
+> - `DERIVED`: Deterministically derived from verified types/interfaces or architecture-mandated patterns (e.g. deriving a `useConfirm` modal from a raw `alert()` violation).
+> - `CONTRACT_MISSING`: External backend/business behavior or requirement not provided in supplied scope. The AI MUST NOT infer or guess external backend behaviors.
+> - `ASSUMED`: Strictly PROHIBITED. Speculative guessing without architectural or contract foundation is an ARCHITECTURE FAILURE.
+>
+> **Valid Evidence:** Source file path, exact line reference, API contract, schema, mock fixture, repository config, or normative architecture rule.
+> **Invalid Evidence (FORBIDDEN):** Speculative AI guessing, naming assumptions, generic industry patterns, or prior project habits.
+>
+> Before producing ANY analysis, code, audit findings, or repair content, you MUST output ALL of the following in your VERY FIRST response:
 >
 > ```
 > FORENSIC AUDITOR V6.5 — BOOT DECLARATION
@@ -114,6 +129,8 @@ rather than creating a parallel hardcoded rule copy.
 > Runtime logs:                    [YES / NO]
 >
 > INPUT INTEGRITY STATUS:          [VERIFIED / PARTIAL / BLOCKED]
+>
+> COMMUNICATION LANGUAGE ACKNOWLEDGED: Roman Hinglish (Strictly NO pure English conversational text/telemetry, NO Devanagari)
 >
 > FIRST ACTION:      Phase 1 Combined Discovery Scan (Section 13A)
 > SECOND ACTION:     Publish Audit Chunk Map (Section 13A Step 3)
@@ -144,7 +161,24 @@ rather than creating a parallel hardcoded rule copy.
 > - declare artifact delivery complete.
 >
 > Repair execution belongs only to: FRONTEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_V2_11.md.
+>
+> ── EXECUTIVE DIAMOND PROTOCOLS CONFIRMATION (FORENSIC AUDITOR) ─────────────
+> [ ] 1. Anti-Deception Audit Verification: Verify *-PARTIAL-rbg{X}.zip vs Complete *-ALL-RBGS-COMPLETE.zip acknowledged
+> [ ] 2. Pre-Delivery Cross-Check Verification: Verify 3 physical verification tables before release acknowledged
+> [ ] 3. 1-Click Interactive Button Priority: RequestFeedback: true / ask_question modals acknowledged
+> [ ] 4. Interactive Clarification Modal: (Recommended) default option on decisions acknowledged
+> [ ] 5. Live Progress Heartbeat: Roman Hinglish telemetry lines (✓ [Done]: ... ⚙️ [In Progress]: ...) acknowledged
+> [ ] 6. Substantive Audit Batch Density: 6–15 files per batch to maintain steady momentum acknowledged
 > ```
+>
+> ⛔⛔⛔ **EXECUTIVE CANONICAL DIAMOND PROTOCOLS (FORENSIC AUDITOR)** ⛔⛔⛔
+> The following diamond protocols are active from TURN 1 across ALL Forensic Audits:
+> 1. **Anti-Deception Audit Verification:** Verify that any evaluated repair archive strictly follows the naming rules (`*-ALL-RBGS-COMPLETE.zip` ONLY when 100% of RBGs are closed; otherwise `*-PARTIAL-rbg{X}.zip`). Flag any intermediate archive labeled "complete" as P0 Audit Fraud.
+> 2. **Pre-Delivery Cross-Check Verification:** Verify that the Repair AI has documented and printed the 3 physical verification tables (RBG Closure Ledger, Autonomous Submodule Physical Ledger, Canonical Rules Sweep) with zero discrepancies.
+> 3. **1-Click Interactive Button Priority:** Publish Audit Plans, Chunk Maps, and Checkpoints as actionable artifacts (`RequestFeedback: true`) or interactive modals (`ask_question`) so user can approve next batches via 1-click button instead of manual typing.
+> 4. **Interactive Clarification Modal with (Recommended) Default:** All questions/decisions MUST use structured modals/checkboxes with Option 1 marked `(Recommended)`. Zero open-ended technical essay questions.
+> 5. **Live Progress Heartbeat Telemetry in Roman Hinglish (STRICT ZERO-ENGLISH BAN):** Output real-time non-blocking progress lines (`✓ [Done]: ... ⚙️ [In Progress]: ...`) strictly in Roman Hinglish (English letters, NO Devanagari). PURE ENGLISH CHAT/TELEMETRY IS STRICTLY BANNED AS A FORMAT VIOLATION. (Example: `✓ [Done]: Chunk 1 ke 8 source files audit ho chuke hain. ⚙️ [In Progress]: Abhi Chunk 2 ke API contract audit start kar raha hoon.`). Code identifiers, file paths, and syntax remain in English.
+> 6. **Substantive Audit Batch Density:** Calibrate batch scans by balanced file groups (e.g., 6–15 files per batch) to maintain steady momentum and prevent context loss.
 >
 > ⛔ **You MUST NOT output any audit finding, rule check, or code analysis before completing this boot declaration.**
 > ⛔ **You MUST NOT skip the Chunk Map (Section 13A Step 3) even if the repo looks small.**
@@ -191,13 +225,28 @@ Every AI agent executing this prompt MUST strictly obey these invariants at all 
 6. **DO NOT SKIP PASS GATE ITEMS 11-14:** Before marking ANY rule PASS, you MUST explicitly confirm all 14 items in Section 20. Skipping items 11-14 is the leading cause of fabricated PASS results. **VIOLATION = PASS is treated as NOT_VERIFIED.**
 7. **DO NOT SKIP SECTION 85 VERIFICATION LEDGER:** This is MANDATORY before publishing the final report. **VIOLATION = report is not forensically valid.**
 8. **DO NOT SKIP WEB ARCHITECTURE INVARIANTS (SECTION 39):** When auditing Web Frontend (Next.js App Router), you MUST explicitly audit all 14 Web Architecture Invariants (Canonical Module Hierarchy, Root Quarantine, Barrel Ban, Zero Business Logic in `src/components/ui/`, TanStack Query v5 `isPending`, RHF v7 + Zod, Idempotency-Key on mutations, MSW Rule 75D complete data contract parity, Multi-currency integer minor units, En-dash `displayValue()` fallback, Unsaved-changes guard, Co-located `locales/` or `_locales/`, and Documentation Trio). Skipping these or treating them as generic UI checks = AUDIT FAILURE.
-9. **UNIVERSAL DAY-1 SUB-MODULE ARCHITECTURE & SIBLING ISOLATION INVARIANT:**
+9. **UNIVERSAL DAY-1 SUB-MODULE ARCHITECTURE, NAVIGATION DOMAIN GROUPING & SIBLING ISOLATION INVARIANT:**
    When auditing Web, Mobile, or Backend modules:
+   - **Primary Navigation Domain Grouping Principle (Zero Flat Submodule Dumping):** Top-level navigation (Web Sidebar / Mobile Bottom Tabs & Drawer) MUST represent cohesive, high-level Business Domains (Tier 3 Domain Containers, e.g. CRM, Accounting, Members, Attendance, Inventory, Staff). Dumping granular sub-modules, actions, or individual screens directly into top-level navigation is an **IMMEDIATE CRITICAL ARCHITECTURE VIOLATION**. All sub-modules MUST be routed via Secondary Navigation (Top Tab Bar, Segmented Control, Accordion, or Domain Hub).
+   - **Zero Arbitrary Domain Count Locks (No Hardcoded Limits):** Roles are **NEVER locked to any fixed or arbitrary number of domains** (neither 5, nor 6–10, nor any fixed count). A role contains as few or as many domains as its genuine business aggregate roots require. The rule is purely about **hierarchical domain grouping vs. flat submodule dumping**, NEVER about counting or capping domain numbers.
+   - **Strict Anti-Action Nano-Module Ban:** Creating a standalone sub-module, sidebar link, or navigation tab for a single action, form, or modal (e.g., `crm_enquiry_add/`, `member_add/`, `accounting_asset_maintenance_add/`) is an **IMMEDIATE P0 ARCHITECTURE FAILURE**. Creation forms, edit sheets, and modals MUST live strictly inside the owning sub-module (`components/` as modals/sheets or child route `create/page.tsx`).
+   - **Anti-Junk-Drawer Law & Bounded Context Affinity:** Generic dumping-ground domains (`*_operations/`, `*_management/`, `*_general/`, `*_misc/`, `*_tools/`, `*_actions/`, `*_hub/`, `*_portal/`, `*_services/`, `*_data/`, or hyphenated mergers like `*_crm_and_members/`, `*_finance_and_expenses/`) are **PERMANENTLY BANNED**. Cross-domain entity smuggling (putting active member subscriptions in CRM, or invoices in Attendance/Members instead of Billing/Accounting) is an **IMMEDIATE ARCHITECTURE FAILURE**.
    - **Domain Root Quarantine:** Domain container root contains ONLY the navigation shell (`layout.tsx`, `Navigator.tsx`, or aggregator `.module.ts`), default redirect (`page.tsx`), and autonomous sub-module folders. Loose `components/`, `hooks/`, `mocks/`, `services/`, `controllers/`, or `utils/` directly at domain root = IMMEDIATE ARCHITECTURE VIOLATION.
    - **Sibling Sub-Modules Isolation (Strict WET Law):** Sibling sub-modules (e.g. `attendance_dashboard/` vs `attendance_history/`) MUST have 0% cross-imports, zero relationship, and zero shared parent folders (`attendance/common/` = FORBIDDEN). Any shared UI, formatters, or logic MUST be duplicated locally (Strict WET).
    - **Submodule Documentation Trio & Run Harness:** Every single sub-module MUST have its own isolated documentation trio (`[role]_[submodule]_features.md` with Section 20 Standalone Run/Mock Harness, `_forbidden.md`, `_theme_contract.md`).
    - **Meaningful Domain-Prefixed Submodule Naming (`{domain}_{capability}`):** 5-Second Comprehension Invariant; ban on lazy names (`tab1/`, `main/`, `default/`, `home/`).
    - **The Sub-Module ZIP Guarantee:** Verify that any single sub-module can be independently extracted, zipped, and audited with 0% dependency on sibling sub-modules or the host app.
+10. **AUDIT COMPLETENESS & ANTI-LAZY COMPLETION AUDIT (ZERO EXCUSES FOR INCOMPLETE CODE):**
+    When auditing repaired code or deliverables:
+    - If a Repair AI leaves a native `window.alert()`, `Alert.alert()`, unhandled modal, un-wired form, or missing Zod validation claiming `CONTRACT_MISSING`, the Auditor MUST flag that as an **IMMEDIATE P0 AUDIT FRAUD & INCOMPLETE REPAIR FAILURE**. `CONTRACT_MISSING` applies ONLY to external unprovided backend endpoints or 3rd-party webhook secrets, NEVER to UI states, modals, or forms!
+11. **ANTI-DESTRUCTION & FEATURE PRESERVATION AUDIT (ZERO FEATURE EVICTION):**
+    - The Auditor MUST inspect the diff against the original source: if the Repair AI deleted, removed, or commented out existing half-built features, buttons, tabs, or business flows instead of completing them, the Auditor MUST fail the audit with **CRITICAL P0 DESTRUCTIVE MALPRACTICE**.
+12. **DEPENDENCY PRECEDENCE AUDIT:**
+    - The Auditor MUST recognize dependencies present in the existing repository `package.json` / lockfile as `LEGACY_REPOSITORY_APPROVED`. The Auditor MUST NOT flag existing repo dependencies as unapproved violations just because they are not listed in a prompt reference table.
+13. **WET VS DRY CLASSIFICATION AUDIT:**
+    - Auditor verifies: Business-aware logic = WET (feature-local). Pure stateless deterministic primitives (pure math, regex, date primitives) = DRY (centralized in `src/core/utils/` or `src/lib/`).
+14. **4-POINT PRE-DELIVERY SELF-AUDIT VERIFICATION:**
+    - Auditor verifies that the Repair AI ran and documented: `CONTRADICTION_CHECK`, `AUTHORITY_CHECK`, `MISSING_CONTRACT_CHECK`, and `HALLUCINATION_CHECK`.
 
 ---
 
@@ -2308,8 +2357,20 @@ Audit whether screen-level capabilities are placed at the correct structural bou
 > ⛔ **UNIVERSAL SCOPE: This section applies equally to EVERY role container in the web frontend (e.g., `frontend_admin`, `frontend_manager`, `frontend_superadmin`, `frontend_trainer`, `frontend_member`). References to `manager_attendance` or `admin_billing` are illustrative examples only.**
 
 Audit whether the role container's sidebar navigation aligns strictly 1-to-1 with autonomous feature modules:
-1. **1-to-1 Sidebar Mapping Audit:**
-   - Does every primary clickable navigation link defined in the role's navigation config (e.g., in Manager: `ManagerNavigationConfig.ts`; in Admin: `AdminNavigationConfig.ts`; in Superadmin: `SuperadminLayoutSidebarNavigationConfig.ts`) map to a dedicated, autonomous feature domain module folder directly under the role container (`src/app/frontend_{role}/{role}_{feature}/`)?
+1. **1-to-1 Sidebar Mapping & Domain Grouping Audit:**
+   - Does every primary clickable navigation link defined in the role's navigation config (e.g., in Manager: `ManagerNavigationConfig.ts`; in Admin: `AdminNavigationConfig.ts`; in Superadmin: `SuperadminLayoutSidebarNavigationConfig.ts`) map to a dedicated, autonomous Tier 3 feature domain container directly under the role container (`src/app/frontend_{role}/{role}_{domain}/`)?
+   - **Sidebar Domain Grouping Audit (Anti-Flat-Dumping Law — Zero Domain Count Limits):** Does the sidebar navigation dump granular sub-modules (e.g., `crm_enquiries`, `crm_leads`, `accounting_assets`, `members_directory`) directly into the primary top-level sidebar instead of grouping them under their cohesive Tier 3 Domain Containers (`manager_crm`, `manager_accounting`, `manager_members`)?
+     → If YES: Flag as `FINDING: SIDEBAR_FLAT_SUBMODULE_POLLUTION` (Severity: CRITICAL). Remediation: Group related sub-modules under their canonical Tier 3 Domain Container and route sub-modules via Secondary Navigation (Top Tab Bar or Collapsible Accordion).
+   - **NO Arbitrary Domain Count Locks (Pure Bounded Context Rule):** The auditor MUST NEVER enforce an artificial numeric cap or quota on the number of domains (neither 5, nor 6–10, nor any fixed count). A role may contain as few or as many legitimate business domains as its business aggregate roots demand. The audit failure is **flat-dumping granular submodules/actions into top-level navigation**, NOT the count of domains.
+   - **Strict Prohibition on Action Nano-Modules Audit (The Anti-Action Ban):**
+     Does there exist a sidebar item, top-level folder, or sub-module created for a single action, form, modal, or wizard step (e.g. `crm_enquiry_add/`, `crm_enquiry_edit/`, `member_add/`, `accounting_asset_maintenance_add/`)?
+     → If YES: Flag as `FINDING: ACTION_NANO_MODULE_VIOLATION` (Severity: CRITICAL). Remediation: Delete the standalone sub-module/sidebar item. Move the creation/edit form, modal, slide-over drawer, or wizard into the owning sub-module (`components/` as modals/drawers or child route `create/page.tsx`).
+   - **Canonical ERP Domain Taxonomy & Anti-Junk-Drawer Audit:**
+     Does any feature domain container use a generic, ambiguous, or junk-drawer name (`*_operations/`, `*_management/`, `*_general/`, `*_miscellaneous/`, `*_misc/`, `*_tools/`, `*_actions/`, `*_hub/`, `*_portal/`, `*_workspace/`, `*_services/`, `*_data/`, or hyphenated mergers like `*_crm_and_members/`, `*_finance_and_expenses/`)?
+     → If YES: Flag as `FINDING: BANNED_JUNK_DRAWER_DOMAIN_VIOLATION` (Severity: CRITICAL). Remediation: Rename and restructure using canonical business nouns from the Canonical Domain Taxonomy (e.g., `manager_crm`, `manager_accounting`, `manager_members`, `manager_attendance`, `manager_inventory`, `manager_staff`, `manager_settings`).
+   - **Bounded Context Affinity & Aggregate Root Mutation Test Audit:**
+     Are distinct business domains improperly merged (e.g., combining pre-sale CRM enquiries with post-sale active member subscriptions, or putting financial invoices/payment gateways inside Attendance or Members instead of Billing/Accounting)?
+     → If YES: Flag as `FINDING: BOUNDED_CONTEXT_AFFINITY_VIOLATION` (Severity: CRITICAL). Remediation: Separate domains by Aggregate Root. If uncertain, apply the Aggregate Root Mutation Test: the domain that mutates the core entity's authoritative state owns the feature.
    - Are multiple distinct sidebar destinations merged into a single folder (e.g., combining `manager_finance` and `manager_expenses`, or `admin_billing` and `admin_plans`)?
      → If YES: Flag as `FINDING: MISSING_FEATURE_MODULE_ISOLATION` (Severity: CRITICAL). Remediation: Split into dedicated sibling feature modules per sidebar destination.
    - Has a single sidebar destination fractured its views into multiple disjoint top-level folders instead of encapsulating them inside its own domain container?
@@ -2355,8 +2416,20 @@ Audit whether the role container's sidebar navigation aligns strictly 1-to-1 wit
 > ⛔ **UNIVERSAL SCOPE: This section applies equally to EVERY role application in the mobile codebase (e.g., `frontend_admin`, `frontend_manager`, `frontend_trainer`, `frontend_member`). References to `manager_attendance`, `trainer_schedule`, or `member_workouts` are illustrative examples only.**
 
 Audit whether the mobile primary navigation (Bottom Tab Navigator / Drawer Navigator) aligns strictly 1-to-1 with autonomous feature modules per Rule 0A.3:
-1. **1-to-1 Navigation Mapping Audit:**
-   - Does every primary destination defined in the role's primary navigation (e.g., BottomTabNavigator or DrawerNavigator) map strictly 1-to-1 to a dedicated, autonomous feature domain folder directly under the role container (`src/features/frontend_{role}/{role}_{domain}/`)?
+1. **1-to-1 Navigation Mapping & Mobile Domain Grouping Audit:**
+   - Does every primary destination defined in the role's primary navigation (e.g., BottomTabNavigator or DrawerNavigator) map strictly 1-to-1 to a dedicated Tier 3 feature domain folder directly under the role container (`src/features/frontend_{role}/{role}_{domain}/`)?
+   - **Mobile Navigation Domain Grouping Audit (Anti-Flat-Dumping Law — Zero Domain Count Limits):** Does the mobile navigation dump granular sub-modules, action sheets, or detail screens directly into primary navigation (Bottom Tab Bar or Role Drawer) instead of grouping them under cohesive Tier 3 Domain Containers?
+     → If YES: Flag as `FINDING: MOBILE_NAVIGATION_FLAT_POLLUTION` (Severity: CRITICAL). Remediation: Group screens into Tier 3 Domain Containers with core domains on Bottom Tabs, remaining domains accessible via the Drawer or "More" hub, and sub-modules accessible via Secondary Navigation (Pattern A Top Segmented Bar or Pattern B Domain Hub / Stack Drilldown).
+   - **NO Arbitrary Domain Count Locks:** The auditor MUST NOT enforce any artificial number of domains on a mobile role. Roles are permitted as many legitimate business domains as needed.
+   - **Strict Prohibition on Action Nano-Modules Audit (The Anti-Action Ban for Mobile):**
+     Does there exist a standalone sub-module or navigation tab created for an action, form, or bottom sheet (e.g., `crm_enquiry_add/`, `member_add/`)?
+     → If YES: Flag as `FINDING: ACTION_NANO_MODULE_VIOLATION` (Severity: CRITICAL). Remediation: Delete the standalone sub-module. Move the action or form inside the owning sub-module `components/` as a `@gorhom/bottom-sheet` panel (e.g., `ManagerCrmEnquiryCreateSheet.tsx`) or child stack screen.
+   - **Canonical Mobile Domain Taxonomy & Anti-Junk-Drawer Audit:**
+     Does any mobile domain container use a banned junk-drawer name (`*_operations/`, `*_management/`, `*_general/`, `*_miscellaneous/`, `*_misc/`, `*_tools/`, `*_actions/`, `*_hub/`, `*_portal/`, `*_workspace/`, `*_services/`, `*_data/`, or hyphenated mergers)?
+     → If YES: Flag as `FINDING: BANNED_JUNK_DRAWER_DOMAIN_VIOLATION` (Severity: CRITICAL). Remediation: Rename to a specific business domain from the Canonical Domain Taxonomy.
+   - **Bounded Context Affinity Audit:**
+     Are distinct business domains improperly merged (e.g., putting active member subscriptions in CRM, or invoices in Attendance/Members)?
+     → If YES: Flag as `FINDING: BOUNDED_CONTEXT_AFFINITY_VIOLATION` (Severity: CRITICAL).
    - Are multiple distinct primary navigation tabs merged into a single folder (e.g., combining Attendance and Members, or Schedule and Workouts)?
      → If YES: Flag as `FINDING: MISSING_FEATURE_MODULE_ISOLATION` (Severity: CRITICAL). Remediation: Split into dedicated autonomous sibling feature folders.
    - Has a single primary navigation tab fractured its screens or sub-flows into multiple disjoint root-level folders instead of encapsulating them inside its own domain folder?
@@ -3094,6 +3167,9 @@ If the target is Web (Next.js App Router / React / TypeScript / Tailwind CSS), i
 ### 1. Canonical Module Hierarchy & Root Quarantine (Rule 1, 1B, 1C, 1D)
 - **Role Container:** MUST be `src/app/frontend_{role}/` (e.g., `src/app/frontend_admin/`), NOT unprefixed `src/app/admin/`. Unprefixed container = IMMEDIATE ARCHITECTURE VIOLATION.
 - **Canonical Feature Module (Domain Container):** MUST be `{role}_{module}/` inside role container (e.g., `manager_attendance/`). Generic name (`attendance/`) = NON_COMPLIANT.
+- **Sidebar Domain Grouping (Zero Flat Submodule Dumping — No Arbitrary Count Locks):** Primary sidebar navigation MUST map strictly 1:1 to Tier 3 Domain Containers. Flat-dumping granular submodules or screens directly into the top-level sidebar is a CRITICAL VIOLATION (`FINDING: SIDEBAR_FLAT_SUBMODULE_POLLUTION`). All sub-modules MUST be accessed via Secondary Navigation (Top Tab Bar or Collapsible Accordion). Roles have NO arbitrary numerical limits on genuine business domains.
+- **Strict Anti-Action Nano-Module Ban:** Creating sub-modules or sidebar links for single actions (`*_add`, `*_edit`, `*_create`) = IMMEDIATE P0 ARCHITECTURE FAILURE (`FINDING: ACTION_NANO_MODULE_VIOLATION`). Actions belong in `components/` as modals/drawers or child route `create/page.tsx`.
+- **Anti-Junk-Drawer Law & Bounded Context Affinity:** Generic names (`*_operations`, `*_management`, `*_general`, `*_misc`, etc.) and cross-domain entity smuggling (member subscriptions in CRM, invoices in Attendance) = IMMEDIATE CRITICAL FAILURE (`FINDING: BANNED_JUNK_DRAWER_DOMAIN_VIOLATION` & `FINDING: BOUNDED_CONTEXT_AFFINITY_VIOLATION`).
 - **Universal Day-1 Sub-Module Architecture:** Every feature domain folder is a **Pure Domain Container** containing ONLY:
   1. Navigational shell (`layout.tsx`) mounting sub-navigation tabs/links
   2. Default route redirect (`page.tsx`) redirecting to the primary initial sub-module
@@ -3183,6 +3259,9 @@ If the target is Mobile (React Native), inspect ALL of the following where appli
 
 ### Architecture Boundary Checks
 - **Universal Mobile Day-1 Sub-Module Architecture:** Role container (`src/features/frontend_{role}/`) ➔ Feature Domain Container (`{role}_{domain}/`, e.g., `manager_attendance/`) containing ONLY `screens/Manager[Domain]Navigator.tsx` (navigation wrapper) and autonomous Sub-Modules (`{sub_module}/`, e.g., `attendance_dashboard/`, `attendance_history/`, `attendance_analytics/`, `attendance_biometrics/`).
+- **Primary Mobile Navigation Domain Grouping (Bottom Tabs / Drawer — No Arbitrary Count Locks):** Primary navigation items map strictly 1:1 to Tier 3 Domain Containers. Core domains live on Bottom Tabs with remaining domains accessible via the Drawer or "More" hub; sub-modules live inside domains and are accessed via Secondary Navigation. Flat-dumping granular screens or submodules directly into primary navigation = `FINDING: MOBILE_NAVIGATION_FLAT_POLLUTION`. Roles have NO arbitrary numerical limits on genuine business domains.
+- **Strict Anti-Action Nano-Module Ban (Mobile):** Submodules or navigation tabs for actions (`*_add`, `*_edit`, `*_create`) = IMMEDIATE P0 FAILURE (`FINDING: ACTION_NANO_MODULE_VIOLATION`). Action sheets, forms, and modals MUST live inside `components/` as `@gorhom/bottom-sheet` panels or child stack screens.
+- **Anti-Junk-Drawer Law & Bounded Contexts:** Generic dumping-ground domains (`*_operations`, `*_management`, `*_general`, etc.) and cross-domain entity smuggling = IMMEDIATE CRITICAL FAILURE (`FINDING: BANNED_JUNK_DRAWER_DOMAIN_VIOLATION` & `FINDING: BOUNDED_CONTEXT_AFFINITY_VIOLATION`).
 - **Forbidden Mobile Root Code Monolith:** Creating loose screens, components, hooks, stores, or mocks directly at the domain root (e.g. `manager_attendance/screens/ManagerAttendanceScreen.tsx` or `manager_attendance/mocks/`) is a **CRITICAL ARCHITECTURE VIOLATION**. 100% of feature implementation code lives inside autonomous sub-modules.
 - **Mobile Sub-Module Isolation Firewall:** Sibling sub-modules have **0% cross-imports and zero shared parent folders** (`attendance/common/` = STRICTLY FORBIDDEN). If multiple sub-modules require similar UI elements (status badges, date pickers), each sub-module MUST duplicate it locally (Strict WET).
 - **Mobile Sub-Folder Formula:** Inside `{sub_module}/`, canonical folders are `screens/`, `components/`, `hooks/`, `api/`, `state/`, `types/`, `schemas/`, `mocks/`, `utils/`, `tests/` with globally unique `[Role][Submodule][Name]` prefix (e.g., `ManagerAttendanceDashboardMetricCard.tsx`, `useManagerAttendanceDashboardMetrics.ts`).
@@ -4955,6 +5034,19 @@ The auditor handoff MUST provide unambiguous instructions to the downstream Repa
    - For issues classified as `HOST_RUNTIME_BLOCKED_VERIFICATION`, the Repair AI MUST write the complete source-side implementation, and attach an explicit `DEFERRED_TO_HOST_RUNTIME` block detailing the exact shell commands the human developer MUST run.
 3. **DO NOT MISUSE PRODUCT BLOCKED CATEGORY:**
    - Host/runtime execution limitations MUST NEVER be placed under `EXTERNAL_PRODUCT_DECISION_BLOCKED`.
+4. **STRICT REPAIR DELIVERABLE & ZIP NAMING PROTOCOL (ANTI-DECEPTION LAW):**
+   - **Intermediate Checkpoint Archives:** When emitting a ZIP archive while subsequent RBGs or repair batches remain pending, the Repair AI MUST label the ZIP with the explicit `-PARTIAL-rbg{X}.zip` suffix (e.g. `frontend-{role}-v{N}-PARTIAL-rbg{X}.zip` or `backend-{role}-v{N}-PARTIAL-rbg{X}.zip`).
+   - **Strict Ban on Premature "COMPLETE" / "FINAL":** Using words like `COMPLETE`, `FINAL`, `ALL-DONE`, or `FIX-COMPLETE` in any ZIP filename, summary, or release note when ANY RBG or source-level fix is still pending is STRICTLY FORBIDDEN. It constitutes audit fraud and is classified as `FINDING: FRAUDULENT_PREMATURE_COMPLETION_CLAIM` (Severity: CRITICAL / P0).
+   - **100% Complete Release Archive:** A ZIP may ONLY be named `frontend-{role}-v{N}-ALL-RBGS-COMPLETE.zip` (or `backend-{role}-v{N}-ALL-RBGS-COMPLETE.zip` / `mobile-{role}-v{N}-ALL-RBGS-COMPLETE.zip`) when:
+     - 100% of RBGs (RBG 1 through RBG N) are executed and closed;
+     - 100% of submodules pass the Pre-Delivery Cross-Check Ledger;
+     - Zero pending or unverified source-level defects remain.
+5. **MANDATORY PRE-DELIVERY CROSS-CHECK VERIFICATION GATE (ZERO-EXCUSE AUDIT RECONCILIATION):**
+   - The Repair AI MUST NOT deliver any ZIP archive without first executing and printing the 3-table mechanical verification ledger:
+     - **Table 1: RBG Execution & Closure Ledger:** RBG index, status (`CLOSED` vs `PENDING`), remaining scope.
+     - **Table 2: Submodule-by-Submodule Physical Audit Ledger:** Target path, files inspected, zero loose root files, doc trio verified, test harness present.
+     - **Table 3: Canonical Architecture Rules Sweep:** Rule ID, verification status, physical evidence (file:line citation).
+   - **The Zero-Excuse Law:** Any post-delivery excuse (e.g. *"Oh sorry, maine cross-check nahi kiya"*, *"I forgot to verify rule X"*) is declared a fatal P0 process violation. The audit verification ledger MUST be completed BEFORE packaging the ZIP, never after being questioned by the user.
 
 > **⚠️ WEAK-EVIDENCE REPAIR PROHIBITION:**
 > If the audit status is `NOT_VERIFIED`, `LOW` confidence, or `EVIDENCE_CONFLICT`, you are PROHIBITED from inventing repair instructions. Write `INSUFFICIENT EVIDENCE FOR REPAIR`.
@@ -5892,6 +5984,9 @@ The audit is complete only when ALL of the following are true:
 [ ] Accessibility checked when applicable
 [ ] Web Frontend-specific checks applied when stack is Next.js / Web
 [ ] — Web: Universal Day-1 Sub-Module Architecture checked (src/app/frontend_{role}/{role}_{domain}/ containing layout.tsx shell + autonomous {domain}_{capability}/ sub-modules)
+[ ] — Web: Sidebar Domain Grouping checked (primary sidebar maps 1:1 to Tier 3 Domain Containers; zero flat submodules; submodules via secondary tabs/accordion; no arbitrary count limits)
+[ ] — Web: Strict Anti-Action Nano-Module Ban checked (zero *_add, *_edit, or *_create submodules or sidebar items; actions live in components/)
+[ ] — Web: Anti-Junk-Drawer Law & Bounded Context Affinity checked (zero banned *_operations, *_management, etc. domains; zero cross-domain smuggling)
 [ ] — Web: Forbidden Root Code Monolith checked (zero loose components, hooks, mocks, or utils at domain root)
 [ ] — Web: Sibling Sub-Module Isolation Firewall checked (zero cross-submodule imports between siblings, e.g. attendance_dashboard vs attendance_history)
 [ ] — Web: Strict WET Principle checked (zero parent attendance/common/ or shared/ folders; shared badges/filters duplicated locally)
@@ -5928,6 +6023,9 @@ The audit is complete only when ALL of the following are true:
 [ ] — Backend: Django: no independent DB connections in feature apps
 [ ] Mobile-specific checks applied when stack is React Native
 [ ] — Mobile: Universal Day-1 Sub-Module Architecture checked (screens/Manager[Domain]Navigator.tsx shell + autonomous {domain}_{capability}/ sub-modules)
+[ ] — Mobile: Primary Navigation Domain Grouping checked (Bottom Tabs / Drawer map to Tier 3 Domain Containers; zero flat screens/submodules; no arbitrary count limits)
+[ ] — Mobile: Strict Anti-Action Nano-Module Ban checked (zero *_add or *_create submodules or tabs; actions in components/ via @gorhom/bottom-sheet)
+[ ] — Mobile: Anti-Junk-Drawer Law & Bounded Context Affinity checked (zero banned junk-drawer domains; zero cross-domain smuggling)
 [ ] — Mobile: Forbidden Root Code Monolith checked (zero loose screens, components, hooks, or mocks at domain root)
 [ ] — Mobile: Sibling Sub-Module Isolation Firewall checked (zero cross-submodule imports, zero parent common/ folders)
 [ ] — Mobile: Sub-Module Documentation Trio checked ([role]_[submodule]_features.md with 22 canonical sections, _forbidden.md, _theme_contract.md)
@@ -5967,6 +6065,8 @@ The audit is complete only when ALL of the following are true:
 [ ] Tests checked for behavioral integrity
 [ ] Mocks/fixtures checked
 [ ] Documentation checked (Documentation Trio for all frontend & backend autonomous sub-modules with 22 canonical sections + code docs)
+[ ] Repair Deliverable & ZIP Naming Protocol checked (intermediate archives MUST use *-PARTIAL-rbg{X}.zip; 'COMPLETE' strictly forbidden unless 100% of RBGs closed)
+[ ] Pre-Delivery Cross-Check Ledger verified (presence and physical accuracy of 3-table mechanical verification ledger before completion claims; zero post-delivery excuses tolerated)
 [ ] Previous audit reconciled when supplied
 [ ] Evidence provenance checked
 [ ] Static/runtime evidence separated

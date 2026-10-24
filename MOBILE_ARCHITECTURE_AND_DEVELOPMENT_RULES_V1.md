@@ -29,8 +29,10 @@ When a rule is repeated for convenience:
 > ⛔⛔⛔ **AI AGENT — MANDATORY ENFORCEMENT & INTEGRITY DIRECTIVE — READ FIRST** ⛔⛔⛔
 >
 > **COMPLIANCE FAILURE HANDLING (EVIDENCE-BASED REPAIR):**
-> A compliance violation triggers a mandatory stop only for the affected work path.
+> A compliance violation triggers a mandatory stop only for the affected workstream or file.
 > The violation must be recorded, repaired, and rechecked before continuation.
+> Non-dependent compliant workstreams MUST continue without interruption.
+> Missing runtime/host capability is NEVER an architectural violation and MUST NOT cause execution to pause or stall (mark as `DEFERRED_TO_HOST_RUNTIME`).
 > Previously verified and unaffected work remains valid and must not be discarded.
 >
 > On detecting a violation of any rule in this document, the AI MUST:
@@ -41,7 +43,35 @@ When a rule is repeated for convenience:
 > 5. Mark the final status as compliant ONLY after file-level evidence is established.
 > The AI MUST NOT silently continue after detecting a violation, and MUST NOT claim compliance without verifiable file evidence.
 >
-> This document is the **absolute normative authority** for all React Native mobile code in this project. Every rule is MANDATORY unless the rule itself defines a named `NOT_APPLICABLE` condition with explicit evidence. The following words in this document carry their STRICTEST possible meaning:
+> This document is the **absolute normative authority for all mobile architectural, design system, and code repair behavior**.
+>
+> ⛔ **ARCHITECTURAL & UI COMPLETENESS MANDATE (MUST REPAIR & COMPLETE):**
+> When mobile source code has incomplete forms, missing Zod validation schemas, missing modals, raw alerts (`Alert.alert`, `window.alert`), missing loading skeletons, missing empty states, unstyled buttons, or unhandled UI flows:
+> - The AI **MUST ACTIVELY REPAIR, IMPLEMENT, AND COMPLETE THEM** using the Mobile Design System (`MOBILE_UI_UX_DESIGN.md`) and Architecture Rules.
+> - Inappropriate alerts (`Alert.alert()`, single-click deletes) MUST be replaced with the mandated luxury `useConfirm()` dialogs or bottom sheets.
+> - Forms MUST be fully wired with React Hook Form v7 + Zod v3 schemas and backend 400 validation error mapping.
+> - UI modals, empty states, error boundaries, and loading skeletons MUST be fully authored and completed.
+>
+> ⛔ **ANTI-DESTRUCTION & PARTIAL FEATURE COMPLETION LAW (ZERO FEATURE EVICTION):**
+> When mobile source code contains partially implemented, half-built, or incomplete features (e.g., an unfinished filter drawer, an unwired export button, a half-implemented modal, a partially authored API hook, or an incomplete multi-step form flow):
+> - **ZERO FEATURE EVICTION (DO NOT DELETE):** The AI **MUST NOT** delete, remove, comment out, or strip away existing features, UI elements, buttons, form fields, modals, or business flows simply because they are half-built, incomplete, or currently causing type/test errors. Deleting half-built features to get a "clean audit pass" is strictly prohibited as DESTRUCTIVE MALPRACTICE.
+> - **MANDATORY ADDITIVE COMPLETION (ADD & CORRECT):** The AI **MUST actively COMPLETE the missing half**: add missing types, wire up API queries/mutations, implement missing Zod schemas, author missing loading/empty/error states, connect handlers, and correct all syntax or architectural violations until the feature is 100% functional and architecture-compliant.
+>
+> ⛔ **STRICT BOUNDARY OF `CONTRACT_MISSING` (EXTERNAL DOMAIN SPECS ONLY):**
+> `CONTRACT_MISSING` applies STRICTLY to **external business contracts that cannot be known from the code or architecture** (e.g., an unprovided external 3rd-party webhook secret, an unprovided backend API endpoint URL that has no specification, or an unknown financial tax formula).
+> `CONTRACT_MISSING` **MUST NEVER BE USED AS AN EXCUSE** to leave source code incomplete, leave crude `Alert.alert()` calls in place, skip form validation, or fail to build proper UI dialogs/modals!
+>
+> ⛔ **DETERMINISTIC CONFIDENCE TAXONOMY & EVIDENCE STANDARD:**
+> Every implementation decision, contract assertion, and audit claim MUST be classified into one of:
+> - `VERIFIED`: Proven by supplied source file path, exact line reference, verified API contract, schema, or explicit architecture rule.
+> - `DERIVED`: Deterministically derived from verified types/interfaces or architecture-mandated patterns (e.g. deriving a `useConfirm` modal from a raw `Alert.alert` violation).
+> - `CONTRACT_MISSING`: External backend/business behavior or requirement not provided in supplied scope. The AI MUST NOT infer or guess external backend behaviors.
+> - `ASSUMED`: Strictly PROHIBITED. Speculative guessing without architectural or contract foundation is an ARCHITECTURE FAILURE.
+>
+> **Valid Evidence:** Source file path, exact line reference, API contract, schema, mock fixture, repository config, or normative architecture rule.
+> **Invalid Evidence (FORBIDDEN):** Speculative AI guessing, naming assumptions, generic industry patterns, or prior project habits.
+>
+> The following words in this document carry their STRICTEST possible meaning:
 >
 > | Word | Meaning |
 > |------|---------|
@@ -65,6 +95,8 @@ When a rule is repeated for convenience:
 > [ ] WET PRINCIPAL confirmed — zero cross-feature business imports, zero DRY shortcuts for business logic
 > [ ] File size ceilings verified (Screen 80 lines, Component 200 lines, Hooks/API 150 lines, Store 180 lines, Util 120 lines)
 > [ ] MOBILE DELIVERY FREEZE GATE & DEFINITION OF DONE loaded into context
+> [ ] EXECUTIVE DIAMOND PROTOCOLS CONFIRMED (Anti-Deception ZIP Naming, 3-Table Cross-Check Gate, 1-Click Buttons, Clarification Modals, Roman Hinglish Telemetry, Workload Density)
+> [ ] COMMUNICATION LANGUAGE CONFIRMED: Roman Hinglish (Strictly NO pure English conversational text/telemetry, NO Devanagari)
 > ```
 > **Failure to complete the above = mandatory compliance stop until evidence is established.**
 >
@@ -75,6 +107,15 @@ When a rule is repeated for convenience:
 > AI hallucination is never eliminated by wishful thinking; it is driven down from 80% to <5% strictly through immutable verified contracts, explicit Zod validation schemas, deterministic testIDs, exact typed API response envelopes, and strict forbidden boundaries. When an AI lacks verified contract evidence, guessing is strictly FORBIDDEN — mark as `CONTRACT_MISSING` or `BLOCKED_BY_SUPPLIED_CONTRACT`.
 > ⛔ **THE 5-SECOND COMPREHENSION INVARIANT:**
 > A new engineer or AI agent MUST understand the exact responsibility, dependencies, and boundary of any file or folder within 5 seconds of opening it. If understanding requires tracing spaghetti dependencies, inspecting sibling business folders, or decoding ambiguous abbreviations, the architectural isolation has FAILED.
+>
+> ⛔⛔⛔ **EXECUTIVE CANONICAL DIAMOND PROTOCOLS (MOBILE ARCHITECTURE)** ⛔⛔⛔
+> The following diamond protocols are active from TURN 1 across ALL Mobile workflows:
+> 1. **Anti-Deception ZIP Naming:** Intermediate archives MUST be labeled `mobile-{role}-v{N}-PARTIAL-rbg{X}.zip`. The label `mobile-{role}-v{N}-ALL-RBGS-COMPLETE.zip` is strictly forbidden unless 100% of RBGs (RBG 1..N) are closed and verified.
+> 2. **Pre-Delivery Cross-Check Gate (Zero-Excuse Law):** Must execute and output the 3 physical verification tables (Section 67G) before packaging. Post-delivery excuses ("Oh sorry, cross-check nahi kiya") are strictly banned as P0 audit fraud.
+> 3. **1-Click Interactive Button Priority:** Publish RBG Plans and Checkpoints as actionable artifacts (`RequestFeedback: true`) or modals (`ask_question`) so user can approve via 1-click button instead of manual typing.
+> 4. **Interactive Clarification Modal with (Recommended) Default:** All questions/decisions MUST use structured modals/checkboxes with Option 1 marked `(Recommended)`. Zero open-ended technical essay questions.
+> 5. **Live Progress Heartbeat Telemetry in Roman Hinglish (STRICT ZERO-ENGLISH BAN):** Output real-time non-blocking progress lines (`✓ [Done]: ... ⚙️ [In Progress]: ...`) strictly in Roman Hinglish (English letters, NO Devanagari). PURE ENGLISH CHAT/TELEMETRY IS STRICTLY BANNED AS A FORMAT VIOLATION. (Example: `✓ [Done]: Mobile screen touch targets aur hook-form Zod mapping complete ho gaya. ⚙️ [In Progress]: Abhi Maestro E2E test suite verify kar raha hoon.`). Code identifiers, file paths, and syntax remain in English.
+> 6. **Substantive Workload Density:** Calibrate RBGs by workload floor (min 8 findings / 4 files) and safety ceiling (max 25 findings / 18 files) for a balanced ~5–8 min sprint without token blowouts or hallucinations.
 
 ## CRITICAL MOBILE STRUCTURE GATE (NON-NEGOTIABLE)
 
@@ -98,8 +139,11 @@ Before generating, auditing, or repairing ANY mobile feature module, verify ALL 
 | **Centralized URL Config** | `config/[role]_[submodule].url_config.ts` MUST exist inside each sub-module and define all routes and API endpoints as `as const`. | Missing URL config = HARDCODED ROUTE RISK. In repair: generate centralized URL config in RBG 1. |
 | **Query Key Registry** | `api/[role]_[submodule].query_keys.ts` or `config/[role]_[submodule].query_keys.ts` MUST exist and namespace all TanStack Query keys with resource identity. | Missing query key factory = CACHE INCONSISTENCY RISK. In repair: create query key registry in RBG 1. |
 | **Zero Cross-Feature Imports** | A feature MUST NOT import business components, hooks, or state from sibling features. | Sibling import = VIOLATION OF RULE 28 (WET PRINCIPAL). In repair: duplicate the required business artifact locally inside the owning feature module (Strict WET Principal) in RBG 1. Moving business logic to `src/core/` is STRICTLY FORBIDDEN. |
-| **No Barrel Files** | NO `index.ts` or re-export facades. All imports must be direct absolute paths (`@/...`). | Barrel file = CIRCULAR DEPENDENCY RISK. In repair: remove barrel files and update imports in RBG 1. |
+| **No Barrel Files** | Runtime business code barrel files (`index.ts`, `*Export.ts`, re-export facades) are strictly prohibited across all feature sub-modules. All imports must be direct paths (`@/...`). (Ambient type definitions like `host-stubs.d.ts` are declarations, not runtime business barrels). | Barrel file = CIRCULAR DEPENDENCY RISK. In repair: remove barrel files and update imports in RBG 1. |
 
+> ⛔ **ANTI-INVENTION LAW FOR SUB-MODULE DOCUMENTATION TRIO (22 CANONICAL SECTIONS):**
+> Generated documentation (`[role]_[submodule]_features.md`, `_forbidden.md`, `_theme_contract.md`) MUST describe ONLY verified source code, supplied API contracts, or verified fixtures. For any unverified, unprovided, or missing business requirement, the AI MUST explicitly mark that section as `CONTRACT_MISSING` or `DEFERRED_TO_HOST_SPECIFICATION`. Hallucinating or inventing imaginary API endpoints, mock schemas, or role permissions to make documentation look "complete" is strictly prohibited as P0 Audit Fraud.
+>
 > ⛔ **Skipping this gate invalidates all downstream compliance results.**
 
 ---
@@ -184,18 +228,19 @@ A `_features.md` justification alone does NOT authorize a dependency.
 > ⛔ **FORBIDDEN packages (common AI hallucination traps):**
 > `expo-font`, `expo-status-bar`, `expo-haptics`, `expo-permissions`, `expo-date-picker`, `@expo/vector-icons`, `react-native-vector-icons` (use `lucide-react-native` instead), `react-native-elements`, `native-base`
 
-### Package Version Authority
+### Package Version Authority & Dependency Precedence Hierarchy
 
-The repository lockfile and `package.json` are the only authority for installed
-package versions.
+When determining package validity and versions, the AI MUST apply this strict authority order:
+1. **Existing Repository `package.json` & Lockfile (Highest Authority):** If the supplied repository already contains and actively uses a dependency not listed in the locked reference registry table, the existing repository `package.json` takes precedence. The AI classifies it as `LEGACY_REPOSITORY_APPROVED` and MUST NOT flag it as an unauthorized violation.
+2. **Locked Architecture Dependency Registry:** Authoritative for all new feature additions, scaffolding, or clean-slate modules.
+3. **AI Speculative Package Hallucination:** STRICTLY PROHIBITED. The AI MUST NOT invent, guess, or install unapproved packages.
 
 AI MUST:
 - use only APIs compatible with the installed version;
 - never assume the newest package API;
 - never upgrade, downgrade, or add dependencies unless explicitly approved;
 - update lockfile only when an approved dependency change is part of the task;
-- document the reason and compatibility impact in the feature `_features.md`
-  when an approved dependency is added or changed.
+- document the reason and compatibility impact in the feature `_features.md` when an approved dependency is added or changed.
 
 ### Native Project Boundary
 
@@ -261,8 +306,14 @@ and feature UI remain WET and feature-local.
 
 **Decision Invariants:**
 - If the code contains ANY reference to a business entity, status, label, or domain type → it is `BUSINESS_AWARE` → it MUST be duplicated per feature. Sharing is a CRITICAL ISOLATION VIOLATION.
-- `formatCurrency` is ALWAYS `DOMAIN_UTILITY` — it MUST be feature-local (`[feature]/utils/[module]FormatCurrency.ts`), never in `src/core/`.
-- When in doubt, DUPLICATE. Over-isolation is always compliant; sharing business logic is NEVER permitted.
+- **When in doubt, CLASSIFY:**
+  * **Business-aware logic** (domain workflows, statuses, permissions, entity transforms) → **DUPLICATE / Feature-Local (WET)**.
+  * **Pure stateless deterministic helpers** (pure math, regex validators, string clamps, date format primitives) → **CENTRALIZED in `src/core/utils/` (DRY)**.
+  * **Unclassified artifacts** → Record `ARCHITECTURE_REVIEW_REQUIRED` before duplicating or sharing.
+- **Currency & Formatting Distinction:**
+  * Generic number formatting primitives (`formatNumber`, `displayValue`) = **Centralized** in `src/core/utils/`.
+  * Business-aware currency presentation (`[module]FormatCurrency.ts` with minor-unit divisors, currency metadata, and domain fallback labels) = **Feature-Local (WET)**.
+- Over-isolation is always compliant; sharing business logic is NEVER permitted.
 
 ### WET vs DRY Governance Boundary
 
@@ -451,10 +502,152 @@ If a required mobile behavior is not defined by these mobile documents or the su
 
 To guarantee that any AI agent or mobile developer can repair, test, or expand a mobile feature without app-wide regression, the mobile architecture enforces strict 1-to-1 isomorphism between primary navigation destinations and filesystem feature modules:
 
-1. **The 1:1 Navigation Law (Bottom Tabs / Drawer Items):**
-   - Every primary destination present in ANY mobile role's primary navigation MUST map strictly 1-to-1 to an autonomous, self-contained feature folder directly under the role container: `src/features/frontend_{role}/{role}_{feature}/` (e.g., `src/features/frontend_manager/manager_members/`).
-   - Merging distinct primary navigation tabs into a single mega-module (e.g., combining Attendance and Members, or Schedule and Workouts) is STRICTLY PROHIBITED.
-   - Creating disjoint root-level folders for sub-screens or detail flows belonging to a navigation tab is STRICTLY PROHIBITED.
+1. **The 1:1 Navigation Law & Mobile Domain Grouping Principle (Bottom Tabs / Drawer Items):**
+   - **Domain Container as Primary Navigation Destination:** Every primary destination present in ANY mobile role's primary navigation (Bottom Tab Bar or Role Drawer: e.g., in Manager: Dashboard, Members, CRM, Attendance, Accounting, Inventory, Staff, Settings; in Admin: Dashboard, Gyms, Billing, Staff, Reports, Settings; in Superadmin: Dashboard, Tenants, Plans, Billing, Analytics, Audit, Settings; in Trainer: Dashboard, Schedule, Clients, Workouts, Earnings, Settings; in Member: Dashboard, Membership, Attendance, Bookings, Payments, Profile) MUST map strictly 1-to-1 to an autonomous Tier 3 Domain Container directly under that role container: `src/features/frontend_{role}/{role}_{domain}/` (e.g., `src/features/frontend_manager/manager_crm/`).
+   - **Mobile Domain Grouping Principle (Zero Flat Submodule Dumping — NO Numeric Lock):** Top-level primary navigation MUST represent cohesive, high-level Business Domains (Tier 3 Domain Containers). Flat-dumping granular screens, sub-modules, or actions directly into primary navigation or bottom tabs is a **CRITICAL UX & ARCHITECTURE VIOLATION**. On mobile devices, bottom tabs hold primary core domains with remaining domains accessible via the Role Drawer or a "More" domain hub. The domain count is NOT locked to any artificial number — roles may have as few or as many domains as their authentic business aggregate roots demand.
+   - **Sub-Modules as Secondary Navigation:** Autonomous sub-modules inside a domain container (e.g., inside `manager_crm/`: `crm_enquiries/`, `crm_leads/`, `crm_pipeline/`; inside `manager_accounting/`: `accounting_assets/`, `accounting_ledgers/`, `accounting_maintenance/`) MUST be accessed via Secondary Navigation:
+     - **Pattern A (Mobile Secondary Top Tab / Segmented Bar):** Rendered by `Manager[Domain]Navigator.tsx` across the top of the screen (`[ Enquiries ] [ Leads ] [ Pipeline ]`) using `@react-navigation/material-top-tabs` or custom segmented bar.
+     - **Pattern B (Domain Hub / Stack Screen Navigation):** The domain navigator mounts stack screens where the domain index screen presents operational cards or list links to sub-modules.
+   - **STRICT PROHIBITION ON ACTION NANO-MODULES (THE ANTI-ACTION BAN):**
+     - Creating a sub-module or navigation tab for a single action, form, or modal (e.g. `crm_enquiry_add/`, `crm_enquiry_edit/`, `accounting_asset_maintenance_add/`, `member_add/`) is an immediate **P0 ARCHITECTURE FAILURE (NANO-MODULE VIOLATION)**.
+     - Creation forms, edit sheets, detail screens, and wizard steps MUST live strictly INSIDE their parent sub-module (`components/` as `@gorhom/bottom-sheet` panels or child stack screens), NEVER as independent sub-modules or primary navigation items.
+   - **Grouping multiple distinct primary navigation destinations into a single mega-folder (e.g., merging `manager_finance` and `manager_expenses`, or `admin_billing` and `admin_plans`) is STRICTLY FORBIDDEN.**
+   - **Creating ad-hoc top-level folders outside the owning feature for sub-views or detail pages is STRICTLY FORBIDDEN.** All sub-screens and secondary workflows must be owned by that feature module.
+
+### Deterministic 3-Question AI Domain Grouping Decision Tree (Mobile Native)
+
+Before writing ANY code or creating ANY folder in mobile, the AI MUST run this 3-question filter for every screen or feature requirement:
+
+```text
+Q1: Is this a core high-level Business Domain (e.g., CRM, Accounting, Members, Attendance)?
+    ├── YES ──> Create Tier 3 Domain Container: src/features/frontend_{role}/{role}_{domain}/
+    │           (Mounts in primary Bottom Tab / Drawer; contains screens/Manager[Domain]Navigator.tsx)
+    └── NO  ──> Proceed to Q2
+
+Q2: Is this a distinct operational capability with its own entity lifecycle, list/card views, and filters (5–20 files)?
+    ├── YES ──> Create Tier 4 Autonomous Sub-Module: {domain}_{capability}/ inside {role}_{domain}/
+    │           (Exposed as secondary top-tab or domain stack screen; e.g., crm_enquiries/, accounting_assets/)
+    └── NO  ──> Proceed to Q3
+
+Q3: Is this a single action, form, bottom sheet, modal, detail view, or sub-step (e.g., "Add Enquiry", "Edit Asset")?
+    └── YES ──> Place inside parent sub-module: components/ (e.g., ManagerCrmEnquiryCreateSheet.tsx using @gorhom/bottom-sheet)
+                or child stack screen inside sub-module screens/.
+                ⛔ STRICTLY FORBIDDEN to create a separate sub-module or primary navigation item!
+```
+
+### Mobile Sub-View & Action Routing Decision Matrix
+
+Use React Navigation route parameters (`route.params: { mode, filter, status }`) ONLY for state that modifies the view of the SAME resource:
+- Filter criteria, date range selections, search queries
+- Segmented mode toggles (e.g. list view vs calendar view of the same records)
+- Tab selection when it does not represent an independent resource lifecycle
+
+Use nested Stack screens or `@gorhom/bottom-sheet` inside the SAME sub-module for:
+- Entity detail screens (e.g. `ManagerMembersDetailScreen.tsx`)
+- Create / add / edit sheets and screens (e.g. `ManagerCrmEnquiryCreateSheet.tsx`)
+- Multi-step onboarding or checkout wizards
+- Workflows requiring distinct permission checks or independent navigation headers
+- Deep-linkable resource targets
+
+Allowed hierarchical structure following Universal Day-1 Sub-Module Architecture (Illustrated with CRM & Accounting for Mobile):
+```text
+src/features/frontend_manager/
+├── manager_crm/                                       ← PRIMARY NAV DESTINATION: "CRM" (Tier 3 Domain Container)
+│   ├── screens/
+│   │   └── ManagerCrmNavigator.tsx                    ← Pure Nav Shell mounting secondary tabs: [Enquiries | Leads | Pipeline]
+│   ├── manager_crm_features.md                        ← Master domain specification
+│   ├── manager_crm_forbidden.md                       ← Master domain forbidden rules
+│   ├── manager_crm_theme_contract.md                  ← Master domain theme tokens
+│   │
+│   ├── crm_enquiries/                                 ← Autonomous Sub-Module 1 (AI Repair Unit)
+│   │   ├── screens/
+│   │   │   ├── ManagerCrmEnquiriesScreen.tsx          ← Thin orchestrator (< 80 lines)
+│   │   │   └── ManagerCrmEnquiriesMainView.tsx
+│   │   ├── components/
+│   │   │   ├── ManagerCrmEnquiriesCardList.tsx
+│   │   │   ├── ManagerCrmEnquiriesFilterSheet.tsx
+│   │   │   └── ManagerCrmEnquiryCreateSheet.tsx       ← "Add Enquiry" lives HERE as Bottom Sheet! NOT a submodule!
+│   │   ├── hooks/                                     ← useManagerCrmEnquiriesList.ts
+│   │   ├── api/                                       ← manager_crm_enquiries.api.ts
+│   │   ├── state/                                     ← useManagerCrmEnquiriesStore.ts
+│   │   ├── types/ & schemas/
+│   │   ├── mocks/                                     ← Mutable MSW handlers & fixtures
+│   │   ├── tests/
+│   │   ├── config/manager_crm_enquiries.url_config.ts
+│   │   ├── _locales/manager_crm_enquiries_en.json
+│   │   ├── manager_crm_enquiries_features.md          ← ALL 22 Canonical Sections
+│   │   ├── manager_crm_enquiries_forbidden.md
+│   │   └── manager_crm_enquiries_theme_contract.md
+│   │
+│   ├── crm_leads/                                     ← Autonomous Sub-Module 2 (Secondary Tab)
+│   └── crm_pipeline/                                  ← Autonomous Sub-Module 3 (Secondary Tab)
+│
+└── manager_accounting/                                ← PRIMARY NAV DESTINATION: "Accounting" (Tier 3 Domain Container)
+    ├── screens/
+    │   └── ManagerAccountingNavigator.tsx             ← Pure Nav Shell mounting secondary tabs: [Assets | Maintenance | Ledgers]
+    ├── manager_accounting_features.md
+    │
+    ├── accounting_assets/                             ← Autonomous Sub-Module 1 (Secondary Tab)
+    │   ├── screens/
+    │   │   └── ManagerAccountingAssetsScreen.tsx
+    │   ├── components/
+    │   │   ├── ManagerAccountingAssetsCardList.tsx
+    │   │   └── ManagerAccountingAssetCreateSheet.tsx  ← "Add Asset" lives HERE!
+    │   └── ...
+    │
+    ├── accounting_maintenance/                        ← Autonomous Sub-Module 2 (Secondary Tab)
+    └── accounting_ledgers/                            ← Autonomous Sub-Module 3 (Secondary Tab)
+```
+
+**Rule:** One primary navigation destination = one feature domain container (Tier 3). All business implementation code MUST live inside autonomous child sub-modules (`{domain}_{capability}/`). Internal actions and forms MUST live inside sub-module `components/` (using `@gorhom/bottom-sheet` or nested stack screens).
+
+### CANONICAL ERP DOMAIN TAXONOMY & ANTI-HALLUCINATION GROUPING INVARIANT (NON-NEGOTIABLE)
+
+To prevent AI agents from arbitrarily inventing nonsensical parent groups (e.g. creating `manager_operations/` or merging `CRM` and `Members`), all mobile domain grouping MUST adhere strictly to Domain-Driven Design (DDD) Bounded Contexts and the Canonical Domain Taxonomy below.
+
+#### 1. The Bounded Context Affinity Rule (Zero Cross-Domain Smuggling):
+Two capabilities may ONLY reside in the same Tier 3 Domain Container if they share:
+1. **The exact same primary Aggregate Root & Entity Lifecycle** (e.g., all submodules in `manager_crm` operate on Leads/Prospects/Inquiries; all submodules in `manager_members` operate on Active Enrolled Members).
+2. **The same business domain boundary.**
+- ❌ **CROSS-DOMAIN SMUGGLING IS STRICTLY FORBIDDEN:**
+  - An AI MUST NOT put active member subscription management inside `CRM` (Members is post-sale; CRM is pre-sale).
+  - An AI MUST NOT put financial invoices or payment gateways inside `Attendance` or `Members` (Invoices belong to `Billing` / `Accounting`).
+  - An AI MUST NOT merge `Staff` and `Accounting` merely because staff gets paid (Staff manages shifts/profiles; Accounting manages financial ledger disbursements).
+
+#### 2. The Anti-Junk-Drawer / Anti-Mega-Bucket Law:
+AI agents are **ABSOLUTELY PROHIBITED** from creating generic, ambiguous, or dumping-ground domain names. 
+The following domain names are **PERMANENTLY BANNED**:
+- ❌ `*_operations/`
+- ❌ `*_management/`
+- ❌ `*_general/`
+- ❌ `*_miscellaneous/` or `*_misc/`
+- ❌ `*_tools/` or `*_actions/`
+- ❌ `*_hub/` or `*_portal/` or `*_workspace/`
+- ❌ `*_services/` or `*_data/`
+- ❌ Hyphenated mergers: `*_crm_and_members/`, `*_finance_and_expenses/`
+
+Creating ANY domain with a banned name is an immediate **P0 ARCHITECTURE FAILURE & MERGE BLOCKER**. Every domain container MUST be a specific business noun from the Canonical Domain Taxonomy below.
+
+#### 3. Canonical ERP Domain Taxonomy (Extensible Baseline Matrix):
+The domain containers below represent the canonical baseline for Smart Gym 360 Mobile. 
+- **NO RIGID FIXED COUNT OR ARTIFICIAL CEILING:** Roles are NOT locked to any rigid number of domains (neither 5, nor 6–10, nor any fixed count). A role may contain as few or as many business domains as its authentic business aggregate roots require.
+- **Pure Hierarchical Invariant:** The architecture requires that top-level primary navigation represents cohesive **High-Level Business Domains (Tier 3 Domain Containers)**, while granular operational capabilities live inside domains as autonomous sub-modules. The violation is flat-dumping submodules/actions, NOT the number of domains.
+- **Extensibility:** New legitimate business domains (e.g., `manager_pos`, `manager_nutrition`, `manager_marketing`) MAY be introduced as long as they represent independent Aggregate Roots and avoid banned junk-drawer names.
+
+| Role Container | Approved Baseline Domain Containers (Canonical Reference) | Permitted Autonomous Sub-Modules (`{domain}_{capability}`) |
+|---|---|---|
+| **`frontend_manager`** | 1. `manager_dashboard`<br>2. `manager_members`<br>3. `manager_crm`<br>4. `manager_attendance`<br>5. `manager_accounting`<br>6. `manager_inventory`<br>7. `manager_staff`<br>8. `manager_settings` | • `crm` → `crm_enquiries`, `crm_leads`, `crm_pipeline`<br>• `members` → `members_directory`, `members_plans`, `members_detail`<br>• `attendance` → `attendance_dashboard`, `attendance_history`, `attendance_biometrics`<br>• `accounting` → `accounting_assets`, `accounting_ledgers`, `accounting_maintenance`<br>• `inventory` → `inventory_equipment`, `inventory_supplements`, `inventory_lockers`<br>• `staff` → `staff_directory`, `staff_roster`, `staff_payroll` |
+| **`frontend_superadmin`** | 1. `superadmin_dashboard`<br>2. `superadmin_tenants`<br>3. `superadmin_plans`<br>4. `superadmin_billing`<br>5. `superadmin_analytics`<br>6. `superadmin_audit`<br>7. `superadmin_settings` | • `tenants` → `tenants_directory`, `tenants_onboarding`, `tenants_branches`<br>• `plans` → `plans_tiers`, `plans_features`, `plans_pricing`<br>• `billing` → `billing_invoices`, `billing_payouts`, `billing_gateways`<br>• `audit` → `audit_logs`, `audit_security`, `audit_compliance` |
+| **`frontend_admin`** | 1. `admin_dashboard`<br>2. `admin_gyms`<br>3. `admin_billing`<br>4. `admin_staff`<br>5. `admin_reports`<br>6. `admin_settings` | • Standard enterprise branch and administrative capabilities |
+| **`frontend_trainer`** | 1. `trainer_dashboard`<br>2. `trainer_schedule`<br>3. `trainer_clients`<br>4. `trainer_workouts`<br>5. `trainer_earnings`<br>6. `trainer_settings` | • Personal trainer schedule, member workout logs, and PT commission logs |
+| **`frontend_member`** | 1. `member_dashboard`<br>2. `member_membership`<br>3. `member_attendance`<br>4. `member_bookings`<br>5. `member_payments`<br>6. `member_profile` | • Gym member portal views, QR check-in, class bookings, payment receipts |
+
+#### 4. The Aggregate Root Boundary Test (Dispute Resolution):
+If an AI agent is uncertain which domain owns a feature (e.g. "Trainer Payouts: does it belong in Staff or Accounting?"), apply the **Aggregate Root Mutation Test**:
+- *"Which core business entity's authoritative state is being created or modified?"*
+  - If the operation creates an accounting transaction, tax entry, or ledger disbursement → It belongs to **`accounting`**.
+  - If the operation updates trainer employee profiles, hourly rates, or roster status → It belongs to **`staff`**.
+  - Cross-references are resolved strictly via read-only API calls across gateway endpoints, NEVER by combining domain folders!
 
 2. **100% Domain Self-Containment Inside the Feature Folder:**
    - When a user taps a navigation tab (e.g. Attendance ➔ `AttendanceScreen`, Schedule ➔ `ScheduleScreen`), **100% of the UI, state, and logic for that capability MUST reside INSIDE that single folder**:
@@ -4082,28 +4275,33 @@ After the full audit is complete and all findings are recorded, the AI MUST grou
 
 A Repair Batch Group is a set of 3–4 audit batches whose findings are repaired together in one controlled execution turn.
 
-#### RBG SIZING RULE
+#### RBG SIZING & WORKLOAD DENSITY (SUBSTANTIVE SPRINT CALIBRATION)
 
-```text
-IF total audit batches ≤ 6
-  → Group into RBGs of 3 batches each
+An RBG MUST represent a meaningful, substantive cluster of repair work calibrated by **Finding Weight, File Complexity, and Functional Cohesion**:
+- **The Anti-Micro-RBG Law (No Trivial-Fragment Babysitting):** Creating an RBG with only 2–4 trivial fixes that finishes in under 2 minutes is STRICTLY PROHIBITED. Light audit batches with few findings MUST be consolidated into a cohesive sprint so the user does not have to constantly babysit the screen and click approval buttons.
+- **The Token-Safety & Anti-Hallucination Ceiling (No Bloated Monoliths):** An RBG MUST NOT be bloated with 30+ files or 35+ findings. Overloading causes context memory saturation, output token truncation, git diff collisions, and hallucinations.
+- **Natural Cadence (Indicative Benchmark):** The workload targets below naturally yield a balanced sprint (~5 to 8 minutes of steady autonomous execution under typical conditions), giving the user uninterrupted time for other tasks while keeping execution strictly bounded and deterministic. *(Note: AI does not measure wall-clock timers; calibrate strictly by the finding and file metrics below).*
 
-IF total audit batches 7–12
-  → Group into RBGs of 3–4 batches each
+##### 1. Deterministic Workload Calibration Matrix
 
-IF total audit batches > 12
-  → Group into RBGs of 4 batches each
+| RBG Category / Severity | Target Findings per RBG | Target Batches | Scope & Complexity Profile | Token & Safety Ceiling |
+|---|---|---|---|---|
+| **P0 Architectural & Structural** (Rule 0A/0A.3 1:1 primary nav, root quarantine, sibling isolation, Keychain auth) | **6–12 substantive findings / files** | 3–4 batches | Deep architectural refactoring, screen thinness extraction, navigation shell isolation | Max 14 files |
+| **P1 Core Functional & State** (Forms, React Navigation, TanStack Query, mutation flows, Zod validation) | **10–18 findings** | 3–5 batches | State management, queries, mutation hooks, form handlers | Max 18 files / 20 findings |
+| **P2 Design System, Tests & Docs** (Semantic tokens, Documentation Trio 22 sections, MSW mocks, Maestro YAML tests) | **12–22 findings** | 4–6 batches | Design token replacement, mock scenarios, documentation trio | Max 22 findings |
+| **P3 Formatting & Minor Conventions** (Code comments, minor naming, formatting) | Bundle with P2 or bundle **15–25 findings** | 4–6 batches | Non-breaking cosmetic, comment, and convention fixes | Max 25 findings |
 
-MAXIMUM ABSOLUTE CEILING: No single RBG may contain findings from more than 4 audit batches.
-MINIMUM: No single RBG may contain fewer than 2 audit batches unless it is the final RBG.
-```
+##### 2. Deterministic Sizing Invariants
+1. **Minimum Workload Floor (Anti-Micro-Fragmentation):** An RBG MUST contain at least **8 findings** (or at least 4 substantive files), unless the total remaining uncompleted findings in the entire project are fewer than that. Light audit batches with only 1–2 minor findings MUST be consolidated together into a single RBG.
+2. **Maximum Safety Ceiling (Anti-Hallucination Firewall):** No single RBG may contain more than **25 findings** or touch more than **18 files** in one execution turn. This guarantees the model operates well within safe context memory and eliminates output token truncation.
+3. **Dependency Cohesion First:** Always respect dependency order. If fixing an architectural finding requires touching related state or contracts, keep them in the same RBG rather than splitting them artificially.
 
 #### RBG PRIORITY ORDER
 
 RBGs MUST be ordered by repair dependency, not by batch number:
 
 ```text
-RBG 1 — P0 Critical fixes (architecture blockers, broken flows, security, Rule 0B violations)
+RBG 1 — P0 Critical fixes (architecture blockers, broken flows, security, Rule 0B violations, hardware Keychain tokens)
 RBG 2 — P1 High fixes (state/API, forms, navigation, functional closure)
 RBG 3 — P2 Medium fixes (design tokens, loading/error states, tests, Rule 24 docs)
 RBG 4 — P3 Low fixes (naming, comments, tooling)
@@ -4147,18 +4345,47 @@ Reply "Begin RBG 1" to start controlled repair execution (Interactive Mode).
 Or reply "Adjust" to change the grouping.
 ```
 
-**Approval Policy:**
-- **Interactive Repair Mode:** Do NOT start any repair until the user approves the RBG Plan.
-- **Autonomous / Single-Shot Mode (Mode D / Headless CI / Batch Runner):** When invoked in autonomous execution mode or headless pipeline, the RBG Plan is pre-authorized. The AI automatically publishes the RBG Plan and immediately begins executing RBG 1 through RBG N in strict dependency order without blocking on user input.
+> ⛔ **HARD STOP: Do NOT execute a single fix until the user approves the RBG Plan.**
+>
+> 🖱️ **1-CLICK INTERACTIVE BUTTON & EXECUTABLE ARTIFACT PROTOCOL (ZERO-MANUAL-TYPING ACROSS ALL CHECKPOINTS):**
+> The AI MUST provide a 1-click interactive action button (via actionable artifact `RequestFeedback: true` or `ask_question` tool) at EVERY pause/checkpoint across the entire lifecycle:
+> 1. **Checkpoint 1 — STAGE 1 FREEZE TRANSITION:** After freezing the requirements baseline, render a 1-click button: `[👉 Proceed to Stage 2: Deep Audit]`. (In chat telemetry, explain clearly in Roman Hinglish: *"Stage 1 (Baseline Freeze) complete ho gaya hai. Abhi koi repair nahi hui hai kyunki pehle Stage 2 mein Full Audit chalega aur saare mobile bugs dhoonde jayenge. Audit ke baad RBG Plan aayega jisme [Approve RBG 1] button milega."*).
+> 2. **Checkpoint 2 — RBG PLAN APPROVAL:** After Stage 2 Audit completes and findings are grouped into RBGs, render a 1-click button: `[👉 Approve RBG 1 & Start Repairs]`.
+> 3. **Checkpoint 3 — RBG CHECKPOINTS:** After completing each RBG sprint, render a 1-click button: `[👉 Proceed with RBG N+1]`.
+> 4. **Flexible Text Affirmation Fallback:** For plain chat or CLI environments without UI buttons, any affirmative response (e.g., "Begin RBG 1", "Approved", "continue", "proceed", "start", "go ahead", "aage badho", "karo", "haan", "ok", "yes", "next") constitutes full valid approval. The AI MUST NOT halt, argue, or demand an exact phrase.
 
 #### RBG EXECUTION RULES
 
 1. **PRIOR RBG DEPENDENCY PRE-CHECK (MANDATORY for RBG N where N > 1):** Before executing any fix in RBG N, verify that every artifact from previous RBGs that the current RBG depends on is actually in place. If a prior RBG fix is missing or incomplete → repair it BEFORE starting the current RBG and record as `PRIOR_RBG_FIX_INCOMPLETE`. This is a targeted dependency check only — not a full re-audit of all previous RBGs.
 2. Execute ALL findings from the current RBG before moving to the next RBG.
 3. After completing each RBG, checkpoint and display the RBG Completion Dashboard.
-4. **Interactive vs Autonomous Progression:** In interactive mode, pause and await user "continue" or "Begin RBG N+1" before proceeding. In autonomous / single-shot mode (Mode D), automatically progress to the next RBG upon successful checkpoint validation.
+4. **Interactive Progression:** Do NOT start the next RBG until the user gives affirmative confirmation (via 1-click UI button or reply "continue", "next", "Begin RBG N+1", "aage badho", "karo", "go ahead").
 5. Within an RBG, apply fixes in dependency order (architecture → state → UI → tests → docs).
 6. Never apply a fix from RBG 3 while RBG 1 is still in progress.
+7. **INTERMEDIATE CHECKPOINT ZIP NAMING (ANTI-DECEPTION):** If the user requests an intermediate archive or the AI produces a ZIP checkpoint after completing RBG N while subsequent RBGs remain pending, the ZIP filename MUST be explicitly formatted as: `mobile-{role}-v{N}-PARTIAL-rbg{N}.zip`. The AI MUST NOT use the words `complete`, `final`, or `all-done` in the filename or description while any RBG is pending.
+8. **FINAL COMPLETE DELIVERY PREREQUISITE:** The final release ZIP named `mobile-{role}-v{N}-ALL-RBGS-COMPLETE.zip` is permitted ONLY after 100% of RBGs (RBG 1 to RBG N) are completed, zero unresolved actionable findings remain, and Section 67G Pre-Delivery Cross-Check Gate is passed 100% clean.
+9. **INTERACTIVE CLARIFICATION & DECISION MODAL PROTOCOL (1-CLICK RECOMMENDED SELECTION):**
+   - Whenever the AI encounters ANY confusion, ambiguity, missing design choice, architectural conflict, or needs a decision/clarification from the user:
+     - The AI **MUST NOT** output a long, open-ended technical essay asking the user to explain or write code.
+     - The AI **MUST** formulate a structured interactive modal / multiple-choice selection (using the `ask_question` tool in IDEs or selectable checkbox/radio options with a single-click confirmation button).
+     - **Mandatory `(Recommended)` Prefix:** Exactly ONE option MUST be listed first and prefixed with `(Recommended)` representing the safest, architecture-compliant default choice.
+     - **Default One-Click Confirmation:** If the user is unsure, they can simply select the default recommended option and click Confirm/Proceed with zero technical burden or manual typing.
+10. **LIVE PROGRESS HEARTBEAT TELEMETRY IN ROMAN HINGLISH (ANTI-HANG ASSURANCE):**
+    - During execution turns touching multiple files, the AI MUST NOT remain completely silent. A prolonged lack of visible response creates the false impression that the AI is frozen, hung, or stuck.
+    - After completing each substantive fix/file within the RBG, the AI MUST emit a concise, real-time telemetry line:
+      - **Language Rule (ZERO-ENGLISH BAN):** Strictly **Roman Hinglish** (English letters, NO Devanagari script). Pure English conversational updates, explanations, or telemetry are strictly FORBIDDEN and treated as a FORMAT VIOLATION.
+      - **Informational Only (Non-blocking):** It does NOT ask for user input or pause execution.
+      - **Format & Concrete Examples:**
+        ```text
+        BAD (Strictly Forbidden):
+        ✓ [Done]: I’ve completed updating the mobile touch targets and theme hooks.
+        ⚙️ [In Progress]: I’m validating the Maestro flow before creating the checkpoint.
+
+        GOOD (Mandatory):
+        ✓ [Done]: `[file_name]` me [brief fix in Hinglish - e.g. "React Native screen touch target aur useThemeTokens hook fix"] ho gaya hai.
+        ⚙️ [In Progress]: Ab `[next_file_name]` me [next fix in Hinglish - e.g. "Dedicated mutation hook aur single-flight 401 refresh"] start kar raha hoon...
+        ```
+      - This gives the user continuous real-time visibility into what was just fixed and what is currently being worked on, completely eliminating the "hang illusion".
 
 #### RBG CHECKPOINT TEMPLATE
 
@@ -4178,14 +4405,18 @@ After completing each RBG, display:
 ║   RBG [N+1]: Batches [A, B, C] — [N] findings               ║
 ║   RBG [N+2]: Batches [D, E, F] — [N] findings               ║
 ╠══════════════════════════════════════════════════════════════╣
+║ INTERMEDIATE ARCHIVE (IF PACKAGED):                          ║
+║   mobile-{role}-v{N}-PARTIAL-rbg[N].zip                      ║
+║   ⚠️ STATUS: PARTIAL FIX ONLY — RBG [N+1] PENDING            ║
+╠══════════════════════════════════════════════════════════════╣
 ║ VERIFICATION STATUS:                                         ║
 ║   TypeScript:  [PASS / FAIL / NOT_EXECUTED]                  ║
 ║   Lint:        [PASS / FAIL / NOT_EXECUTED]                  ║
 ║   Tests:       [PASS / FAIL / NOT_EXECUTED]                  ║
 ╠══════════════════════════════════════════════════════════════╣
-║ ACTION REQUIRED:                                             ║
-║ Reply "continue" to proceed to RBG [N+1].                    ║
-║ OR reply "Begin RBG [N+1]" to start the next group.          ║
+║ ACTION REQUIRED (1-CLICK BUTTON OR CHAT):                    ║
+║ 👉 Click [Proceed with RBG N+1] button in UI / artifact      ║
+║ OR reply "continue" / "Begin RBG [N+1]" to proceed.          ║
 ╚══════════════════════════════════════════════════════════════╝
 ```
 
@@ -4494,6 +4725,46 @@ Every feature's `_features.md` MUST include this Edge Case Matrix:
 | **Security** | PII masking in lists, clipboard restrictions, no credentials in logs/breadcrumbs, session expiration |
 | **Platform** | Android hardware back, iOS swipe back, notch/safe-area insets, app background/resume |
 
+### 67G — MANDATORY PRE-DELIVERY CROSS-CHECK VERIFICATION GATE (ZERO-EXCUSE AUDIT RECONCILIATION)
+
+> ⛔ **HARD STOP — PRE-DELIVERY MECHANICAL CROSS-CHECK GATE (NON-NEGOTIABLE)**
+> Before generating, offering, or delivering ANY 100% COMPLETE release ZIP (e.g., `mobile-{role}-v{N}-ALL-RBGS-COMPLETE.zip` or `mobile-{role}-v1.zip`), the AI MUST execute a mechanical, multi-point cross-check across the ACTUAL mobile filesystem and print the following **THREE VERIFICATION TABLES**.
+>
+> ⚠️ **THE ZERO-EXCUSE INVARIANT:** Outputting a mobile ZIP and subsequently stating: *"Oh sorry, maine cross-check nahi kiya and all"* or *"ye rule follow karna bhool gaya"* is classified as a **FATAL P0 WORKFLOW VIOLATION & AUDIT FRAUD**. Delivering a ZIP without physically verifying all submodules and all rules invalidates the entire deliverable.
+
+#### Table 1: Mobile RBG Execution & Finding Closure Reconciliation
+| RBG | Batches Covered | Total Findings | Fixed in Source | Skipped by User | Remaining Unfixed | Status |
+|---|---|---|---|---|---|---|
+| RBG 1 | [Batches] | [N] | [N] | [N] | 0 | COMPLETED |
+| RBG 2 | [Batches] | [N] | [N] | [N] | 0 | COMPLETED |
+| RBG N | [Batches] | [N] | [N] | [N] | 0 | COMPLETED |
+*(Rule: If Remaining Unfixed > 0 for ANY RBG, the deliverable is PARTIAL and MUST be named `mobile-{role}-v{N}-PARTIAL-rbg{X}.zip`. It is STRICTLY FORBIDDEN to label it COMPLETE).*
+
+#### Table 2: Submodule-by-Submodule Physical Audit Ledger (Zero Sampling)
+*(Every single authored mobile submodule in the role MUST be listed individually with filesystem proof):*
+| Submodule Path | Artifact Folders Verified | Doc Trio (22 Canonical Sections) | Screen Thinness (≤ 80 Lines) | Sibling Isolation (Zero Cross-Imports) | Anti-Lazy Scan (Zero TODO/Ellipsis) | Submodule Status |
+|---|---|---|---|---|---|---|
+| `{submodule-1}` | PASS (`screens/`, `components/`, `hooks/`, `api/`, `mocks/`) | PASS (`_features.md`, `_forbidden.md`, `_theme_contract.md`) | PASS (All screens ≤ 80 lines) | PASS (Zero cross-submodule imports) | PASS (Zero `// TODO`, zero `// ... rest unchanged`) | 100% VERIFIED |
+| `{submodule-2}` | PASS | PASS | PASS | PASS | PASS | 100% VERIFIED |
+
+#### Table 3: Mobile Canonical Rules Sweep Table
+| Rule Domain | Canonical Requirement | Verification Method | Result |
+|---|---|---|---|
+| 1:1 Primary Nav Mapping | Primary Bottom Tabs / Drawer map 1:1 to Tier 3 Domain Containers (`src/features/frontend_{role}/{role}_{domain}/`) | Physical directory tree | PASS |
+| Zero Flat Submodule Dumping | No granular screens or submodules dumped into primary navigation | Navigation config inspection | PASS |
+| Anti-Action Nano-Module Ban | No `*_add` or `*_create` submodules; action sheets in `components/` via `@gorhom/bottom-sheet` | File/folder scan | PASS |
+| Hardware Secure Storage | Auth tokens, refresh tokens, biometric keys stored in Keychain / Keystore; zero in AsyncStorage | Code grep `AsyncStorage` | PASS |
+| Design System Semantic Tokens | Zero raw hex/rgb colors or raw dp sizes; 100% semantic theme token hooks | Grep `#`, `rgb(`, raw sizes | PASS |
+| TanStack Query & Cache Invalidation | Query keys in `query_keys.ts`; screens not calling `useMutation` directly; `invalidateQueries` in `onSuccess` | File inspection | PASS |
+| Standalone Run Harness | Section 20 Standalone Harness with mock seeders in every submodule | Harness test verification | PASS |
+
+#### 4-Point Self-Audit Gate (Mandatory Before Packaging)
+Before generating any release ZIP archive, the AI MUST execute and attest to this final 4-point verification loop:
+1. `CONTRADICTION_CHECK`: Zero conflicting rules, zero conflicting naming taxonomies, zero legacy `-fix.zip` references.
+2. `AUTHORITY_CHECK`: Precedence order strictly observed; existing repository package.json honored; zero invented requirements.
+3. `MISSING_CONTRACT_CHECK`: Every unprovided behavior explicitly marked `CONTRACT_MISSING`; zero AI speculative guessing.
+4. `HALLUCINATION_CHECK`: Every file path, component name, and line reference cited exists physically in the delivered archive.
+
 ## Rule 68 — App Upgrade, Migration, and Backward Compatibility
 
 ### Mobile Build and Release Baseline
@@ -4535,7 +4806,7 @@ Requirements:
 is unavailable, the AI MUST report SOURCE_COMPLETE_ARTIFACT_PENDING_HOST_PACKAGING
 and MUST NOT claim that a ZIP was generated.
 > When all fixable source-level code within the supplied mobile scope is complete, the AI MUST deliver the final output per the Artifact Delivery Resolution Rule:
-> - If repository write access and archive-generation capability are available: create the required versioned ZIP artifact (`mobile-{role}-v{N}-fix.zip` or `mobile-{role}-v1.zip`) and report its exact file name and contents.
+> - If repository write access and archive-generation capability are available: create the required versioned ZIP artifact (`mobile-{role}-v{N}-ALL-RBGS-COMPLETE.zip` for complete repair, `mobile-{role}-v{N}-PARTIAL-rbg{X}.zip` for intermediate checkpoint, or `mobile-{role}-v1.zip` for first creation) and report its exact file name and contents.
 > - If repository write access or archive-generation capability is unavailable: do NOT claim that a ZIP was created; provide the complete source-level repair or generated file content within the interface; report status as `SOURCE_COMPLETE_ARTIFACT_PENDING_HOST_PACKAGING`; list the exact required archive name and artifact layout.
 > Missing host packaging capability MUST NOT downgrade valid source-level completion.
 > Host-dependent verification steps (`DEFERRED_TO_HOST_RUNTIME`), host infrastructure files (`OUTSIDE_SUPPLIED_SCOPE`), and external product decisions (`EXTERNAL_PRODUCT_DECISION_BLOCKED`) MUST be documented in `RE_AUDIT_CHECKLIST_RESULT.md` and `INTEGRATION_GUIDE.md`, but MUST NEVER trigger `BLOCKED_DELIVERY` or prevent source-level delivery.

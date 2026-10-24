@@ -45,6 +45,11 @@ When a rule is repeated for convenience:
 > ⛔⛔⛔ **AI MANDATORY BOOT SEQUENCE — EXECUTE BEFORE ANYTHING ELSE** ⛔⛔⛔
 >
 > **COMPLIANCE FAILURE HANDLING (EVIDENCE-BASED REPAIR):**
+> A compliance violation triggers a mandatory stop only for the affected workstream or file.
+> Non-dependent compliant workstreams MUST continue without interruption.
+> Missing runtime/host capability (dev server, live API, test runner, browser automation) is NEVER an architectural violation and MUST NOT cause execution to pause or stall (mark as `DEFERRED_TO_HOST_RUNTIME`).
+> Previously verified and unaffected work remains valid and must not be discarded.
+>
 > On detecting a violation of this boot sequence or any mandatory invariant, the AI MUST:
 > 1. Stop the affected implementation path immediately;
 > 2. Record the violated rule, affected file, and concrete evidence;
@@ -52,6 +57,34 @@ When a rule is repeated for convenience:
 > 4. Re-run relevant static compliance checks;
 > 5. Mark final status as compliant ONLY after file-level evidence is verified.
 > The AI MUST NOT silently continue after detecting a violation, and MUST NOT claim compliance without verifiable file evidence.
+>
+> This document and normative architecture rules are the **absolute authoritative standard for all architectural, design system, and code repair behavior**.
+>
+> ⛔ **ARCHITECTURAL & UI COMPLETENESS MANDATE (MUST REPAIR & COMPLETE):**
+> When source code has incomplete forms, missing Zod validation schemas, missing modals, raw browser alerts (`window.alert`, `Alert.alert`), missing loading skeletons, missing empty states, unstyled buttons, or unhandled UI flows:
+> - The AI **MUST ACTIVELY REPAIR, IMPLEMENT, AND COMPLETE THEM** using the Design System (`WEB_FRONTEND_UI_UX_DESIGN.md` / `MOBILE_UI_UX_DESIGN.md`) and Architecture Rules.
+> - Inappropriate alerts (`alert()`, `confirm()`, single-click deletes) MUST be replaced with the mandated luxury `useConfirm()` dialogs or bottom sheets.
+> - Forms MUST be fully wired with React Hook Form v7 + Zod v3 schemas and backend 400 validation error mapping.
+> - UI modals, empty states, error boundaries, and loading skeletons MUST be fully authored and completed.
+>
+> ⛔ **ANTI-DESTRUCTION & PARTIAL FEATURE COMPLETION LAW (ZERO FEATURE EVICTION):**
+> When source code contains partially implemented, half-built, or incomplete features (e.g., an unfinished filter drawer, an unwired export button, a half-implemented modal, a partially authored API hook, or an incomplete multi-step form flow):
+> - **ZERO FEATURE EVICTION (DO NOT DELETE):** The AI **MUST NOT** delete, remove, comment out, or strip away existing features, UI elements, buttons, form fields, modals, or business flows simply because they are half-built, incomplete, or currently causing type/test errors. Deleting half-built features to get a "clean audit pass" is strictly prohibited as DESTRUCTIVE MALPRACTICE.
+> - **MANDATORY ADDITIVE COMPLETION (ADD & CORRECT):** The AI **MUST actively COMPLETE the missing half**: add missing types, wire up API queries/mutations, implement missing Zod schemas, author missing loading/empty/error states, connect handlers, and correct all syntax or architectural violations until the feature is 100% functional and architecture-compliant.
+>
+> ⛔ **STRICT BOUNDARY OF `CONTRACT_MISSING` (EXTERNAL DOMAIN SPECS ONLY):**
+> `CONTRACT_MISSING` applies STRICTLY to **external business contracts that cannot be known from the code or architecture** (e.g., an unprovided external 3rd-party webhook secret, an unprovided backend API endpoint URL that has no specification, or an unknown financial tax formula).
+> `CONTRACT_MISSING` **MUST NEVER BE USED AS AN EXCUSE** to leave source code incomplete, leave crude `alert()` calls in place, skip form validation, or fail to build proper UI dialogs/modals!
+>
+> ⛔ **DETERMINISTIC CONFIDENCE TAXONOMY & EVIDENCE STANDARD:**
+> Every implementation decision, contract assertion, and audit claim MUST be classified into one of:
+> - `VERIFIED`: Proven by supplied source file path, exact line reference, verified API contract, schema, or explicit architecture rule.
+> - `DERIVED`: Deterministically derived from verified types/interfaces or architecture-mandated patterns (e.g. deriving a `useConfirm` modal from a raw `alert()` violation).
+> - `CONTRACT_MISSING`: External backend/business behavior or requirement not provided in supplied scope. The AI MUST NOT infer or guess external backend behaviors.
+> - `ASSUMED`: Strictly PROHIBITED. Speculative guessing without architectural or contract foundation is an ARCHITECTURE FAILURE.
+>
+> **Valid Evidence:** Source file path, exact line reference, API contract, schema, mock fixture, repository config, or normative architecture rule.
+> **Invalid Evidence (FORBIDDEN):** Speculative AI guessing, naming assumptions, generic industry patterns, or prior project habits.
 >
 > Before producing ANY analysis, code, audit findings, or repair content, you MUST output ALL of the following in your VERY FIRST response:
 >
@@ -86,7 +119,7 @@ When a rule is repeated for convenience:
 > [ ] Step 4: RBG PLAN published + user explicitly approves — not yet started
 > [ ] Step 5: STAGE 3 REPAIRS — execute repair batches in RBG order — not yet started
 > [ ] Step 6: Section 43P Anti-Skipping Checklist clean on repaired code — not yet started
-> [ ] Step 7: FINAL DELIVERY (frontend-{role}-v{N}-fix.zip + INTEGRATION_GUIDE.md + RE_AUDIT_CHECKLIST_RESULT.md + Playwright E2E) — not yet started
+> [ ] Step 7: FINAL DELIVERY (frontend-{role}-v{N}-ALL-RBGS-COMPLETE.zip or intermediate frontend-{role}-v{N}-PARTIAL-rbg{X}.zip + INTEGRATION_GUIDE.md + RE_AUDIT_CHECKLIST_RESULT.md + Playwright E2E) — not yet started
 >
 > ── MODE C (CROSS-PLATFORM MOBILE CREATE) EXECUTION ORDER ────────────────────
 > [ ] Step 1: Read MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md completely — not yet started
@@ -106,20 +139,48 @@ When a rule is repeated for convenience:
 > [ ] Step 6: RBG PLAN published + user explicitly approves — not yet started
 > [ ] Step 7: STAGE 3 REPAIRS — execute repair batches in RBG order — not yet started
 > [ ] Step 8: Section 43P MOBILE RULE CHECKLIST clean on repaired mobile code — not yet started
-> [ ] Step 9: FINAL DELIVERY (mobile-{role}-v{N}-fix.zip + compliance_manifest.json + INTEGRATION_GUIDE.md + RE_AUDIT_CHECKLIST_RESULT.md + Maestro E2E) — not yet started
+> [ ] Step 9: FINAL DELIVERY (mobile-{role}-v{N}-ALL-RBGS-COMPLETE.zip or intermediate mobile-{role}-v{N}-PARTIAL-rbg{X}.zip + compliance_manifest.json + INTEGRATION_GUIDE.md + RE_AUDIT_CHECKLIST_RESULT.md + Maestro E2E) — not yet started
 >
 > MANDATORY DELIVERABLES ACKNOWLEDGED:
-> - Mode A/B Web ZIP: frontend-{role}-v{N}[-fix].zip
-> - Mode C Mobile ZIP: mobile-{role}-v1.zip
-> - Mode D Mobile Fix ZIP: mobile-{role}-v{N}-fix.zip
+> - Mode A Web Create ZIP: frontend-{role}-v1.zip
+> - Mode B Web Repair: frontend-{role}-v{N}-ALL-RBGS-COMPLETE.zip (intermediate: frontend-{role}-v{N}-PARTIAL-rbg{X}.zip)
+> - Mode C Mobile Create ZIP: mobile-{role}-v1.zip
+> - Mode D Mobile Repair: mobile-{role}-v{N}-ALL-RBGS-COMPLETE.zip (intermediate: mobile-{role}-v{N}-PARTIAL-rbg{X}.zip)
 > - compliance_manifest.json (machine-readable compliance manifest for Mobile Modes C/D)
 > - INTEGRATION_GUIDE.md (consolidated master developer guide with Section 1 Changelog inside ZIP)
 > - RE_AUDIT_CHECKLIST_RESULT.md (Section 43P clean result inside ZIP)
 > - **Web mode (A/B):** `playwright_E2E/` test suite (inside ZIP)
 > - **Mobile mode (C/D):** `mobile_e2e/` Maestro YAML test suite (top-level mirrored; never stored inside src/features/)
 >
+> ── EXECUTIVE DIAMOND PROTOCOLS CONFIRMATION (ALL 6 MANDATORY) ─────────────
+> [ ] 1. Anti-Deception ZIP Naming: Intermediate *-PARTIAL-rbg{X}.zip vs Complete *-ALL-RBGS-COMPLETE.zip acknowledged
+> [ ] 2. Pre-Delivery Cross-Check Gate: 3 physical verification tables before packaging acknowledged
+> [ ] 3. 1-Click Interactive Button Priority: RequestFeedback: true / ask_question modals acknowledged
+> [ ] 4. Interactive Clarification Modal: (Recommended) default option on decisions acknowledged
+> [ ] 5. Live Progress Heartbeat: Roman Hinglish telemetry lines (✓ [Done]: ... ⚙️ [In Progress]: ...) acknowledged
+> [ ] 6. Substantive Workload Density: min 8 / max 25 findings per RBG sprint acknowledged
+>
+> ── CORE ARCHITECTURAL INVARIANTS CONFIRMATION ───────────────────────────────
+> [ ] Zero Cross-Module Business Imports: No sibling imports, no generic role buckets acknowledged
+> [ ] State Integrity: TanStack Query v5 isPending mandatory (isLoading forbidden), module Zustand store acknowledged
+> [ ] Defensive UX: React Hook Form v7 + Zod v3 co-located, 400 validation error mapping, useUnsavedChangesGuard acknowledged
+> [ ] Design & A11y: Luxury Gold theme (#FACC15 / #EAB308, onPrimary #111111), zero hardcoded colors, WCAG touch targets acknowledged
+> [ ] Multi-Tenancy & Safety: gymId/branchId from auth token never body, Idempotency-Key UUIDv4, en-dash displayValue acknowledged
+> [ ] Section 43P Anti-Skipping Checklist: ALL 84+ web architecture rules / 68 mobile rules MANDATORY — zero skipping, zero sampling acknowledged
+>
+> COMMUNICATION LANGUAGE ACKNOWLEDGED: Roman Hinglish (Strictly NO pure English conversational text/telemetry, NO Devanagari)
+>
 > FIRST ACTION: [State exact first action — e.g., Read supplied design and architecture rules]
 > ```
+>
+> ⛔⛔⛔ **EXECUTIVE CANONICAL DIAMOND PROTOCOLS (UNIVERSAL: WEB & MOBILE)** ⛔⛔⛔
+> The following diamond protocols are active from TURN 1 across ALL MODES (Web Mode A/B & Mobile Mode C/D):
+> 1. **Anti-Deception ZIP Naming:** Intermediate archives MUST be labeled `*-PARTIAL-rbg{X}.zip`. The label `*-ALL-RBGS-COMPLETE.zip` is strictly forbidden unless 100% of RBGs (RBG 1..N) are closed and verified.
+> 2. **Pre-Delivery Cross-Check Gate (Zero-Excuse Law):** Must execute and output the 3 physical verification tables (RBG Closure, Submodule Physical Ledger, Canonical Rules Sweep) before packaging. Post-delivery excuses ("Oh sorry, cross-check nahi kiya") are strictly banned as P0 audit fraud.
+> 3. **1-Click Interactive Button Priority:** Publish RBG Plans and Checkpoints as actionable artifacts (`RequestFeedback: true`) or modals (`ask_question`) so user can approve via 1-click button instead of manual typing.
+> 4. **Interactive Clarification Modal with (Recommended) Default:** All questions/decisions MUST use structured modals/checkboxes with Option 1 marked `(Recommended)`. Zero open-ended technical essay questions.
+> 5. **Live Progress Heartbeat Telemetry in Roman Hinglish (STRICT ZERO-ENGLISH BAN):** Output real-time non-blocking progress lines (`✓ [Done]: ... ⚙️ [In Progress]: ...`) strictly in Roman Hinglish (English letters, NO Devanagari). PURE ENGLISH CHAT/TELEMETRY IS STRICTLY BANNED AS A FORMAT VIOLATION. (Example: `✓ [Done]: Architecture rules verify ho chuke hain. ⚙️ [In Progress]: Abhi sub-module isolation check kar raha hoon.`). Code identifiers, file paths, and syntax remain in English.
+> 6. **Substantive Workload Density:** Calibrate RBGs by workload floor (min 8 findings / 4 files) and safety ceiling (max 25 findings / 18 files) for a balanced ~5–8 min sprint without token blowouts or hallucinations.
 >
 > ⛔ **You MUST NOT open or edit any implementation file before completing Stage 1 (requirement freeze).**
 > ⛔ **You MUST NOT start repairs before the RBG PLAN is published and the user explicitly approves it.**
@@ -198,7 +259,11 @@ A delivery/blocking status explains the final execution outcome.
 >    - Path alias `@/*` resolves to `src/*`.
 >    - Standard dependencies (Next.js, React, Tailwind v4, TanStack Query v5, Zustand, React Hook Form, Zod, Lucide React) exist in the host project.
 > 3. **PROCEED TO AUDIT & REPAIR IMMEDIATELY:** You MUST audit, repair, and complete 100% of the supplied in-scope source files, components, hooks, stores, schemas, URL configs, mock fixtures, and tests directly. Demanding host application root slices or declaring repairs "BLOCKED" due to absence of root files is a **CRITICAL SCOPE CREEP VIOLATION & AUDIT FAILURE**.
-> 4. **FEATURE MODULE IS THE PRIMARY AI REPAIR UNIT (THE 1-TO-1 SIDEBAR RULE):** This rule applies universally to EVERY role container (e.g., `frontend_admin`, `frontend_manager`, `frontend_superadmin`, `frontend_trainer`, `frontend_member`). Every primary clickable navigation destination in a role's sidebar/navigation shell maps strictly 1-to-1 to an autonomous feature module folder (`src/app/frontend_{role}/{role}_{feature}/`, e.g., `admin_billing/`, `manager_attendance/`, `superadmin_plans/`, `trainer_schedule/`). When a single feature module is supplied for repair or audit, the AI MUST audit and repair ONLY that module in complete isolation. Requesting, touching, or modifying files in sibling feature modules or root folders is STRICTLY FORBIDDEN.
+> 4. **FEATURE MODULE IS THE PRIMARY AI REPAIR UNIT (THE 1-TO-1 SIDEBAR RULE & DOMAIN GROUPING INVARIANT):** This rule applies universally to EVERY role container (e.g., `frontend_admin`, `frontend_manager`, `frontend_superadmin`, `frontend_trainer`, `frontend_member`). Every primary clickable navigation destination in a role's sidebar/navigation shell maps strictly 1-to-1 to an autonomous feature Domain Container (`src/app/frontend_{role}/{role}_{domain}/`, e.g., `manager_crm/`, `manager_attendance/`, `manager_accounting/`, `admin_billing/`, `superadmin_plans/`).
+>    - **Sidebar Anti-Clutter & Hierarchical Domain Grouping (Zero Flat Submodule Dumping):** Top-level sidebar navigation MUST represent cohesive, high-level Business Domains (e.g. Dashboard, Members, CRM, Attendance, Accounting, Settings). Dumping flat sub-modules or granular screens directly into the sidebar is a **CRITICAL ARCHITECTURE & UX DEFECT**. The number of domains is governed purely by the business bounded contexts of the role, with **ZERO rigid artificial count ceiling or lock** (neither 5, nor 6–10, nor any fixed count).
+>    - **Sub-Modules as Secondary Navigation:** Autonomous sub-modules inside a domain (e.g., inside `manager_crm/`: `crm_enquiries/`, `crm_leads/`, `crm_pipeline/`; inside `manager_accounting/`: `accounting_assets/`, `accounting_ledgers/`, `accounting_maintenance/`) MUST be exposed as Secondary Navigation (Top Tab Bar via `layout.tsx` or Collapsible Sidebar Accordion), NEVER as flat top-level sidebar items.
+>    - **Strict Anti-Action Nano-Module Ban:** Creating a separate sub-module or sidebar item for a CRUD action (e.g. `crm_enquiry_add/`, `crm_enquiry_edit/`, `accounting_asset_maintenance_add/`) is an immediate **P0 ARCHITECTURE FAILURE**. All creation forms, edit drawers, detail slide-outs, and wizard steps MUST live strictly INSIDE their parent sub-module (`components/` as modals/drawers or child route `create/page.tsx`).
+>    - When a single feature module or sub-module is supplied for repair or audit, the AI MUST audit and repair ONLY that module in complete isolation. Requesting, touching, or modifying files in sibling feature modules or root folders is STRICTLY FORBIDDEN.
 > 5. **UNIVERSAL DAY-1 SUB-MODULE ARCHITECTURE & GRANULAR AI REPAIR UNIT:**
 >    - Every feature module folder (`src/app/frontend_{role}/{role}_{feature}/` or `src/features/frontend_{role}/{role}_{feature}/`) is a **Pure Domain Container** containing ONLY a navigation shell (`layout.tsx` or `Navigator.tsx`), a default redirect (`page.tsx`), and one or more autonomous Sub-Modules (`{sub_module}/`).
 >    - **Zero Root Code In Domain Folder:** Creating loose `components/`, `hooks/`, `api/`, `mocks/`, or `utils/` directly at the feature root level is a **CRITICAL ARCHITECTURE VIOLATION**. 100% of executable source code, mocks, and tests MUST live inside `{sub_module}/`.
@@ -270,7 +335,7 @@ Every AI agent executing this prompt MUST strictly obey these invariants at all 
 > 4. RBG PLAN published + user explicitly approves → ONLY THEN execute any fix
 > 5. PRIOR RBG DEPENDENCY PRE-CHECK passed → ONLY THEN start next RBG
 > 6. Section 43P Anti-Skipping Checklist clean on repaired code → ONLY THEN package ZIP
-> 7. `INTEGRATION_GUIDE.md` + `RE_AUDIT_CHECKLIST_RESULT.md` + `playwright_E2E/` inside ZIP → ONLY THEN deliver `frontend-{role}-v{N}-fix.zip`
+> 7. `INTEGRATION_GUIDE.md` + `RE_AUDIT_CHECKLIST_RESULT.md` + `playwright_E2E/` inside ZIP → ONLY THEN deliver `frontend-{role}-v{N}-ALL-RBGS-COMPLETE.zip` (or intermediate `frontend-{role}-v{N}-PARTIAL-rbg{X}.zip`)
 >
 > **MODE C (CROSS-PLATFORM MOBILE CREATE):**
 > 1. Read MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md completely → ONLY THEN proceed
@@ -297,9 +362,9 @@ This document has exactly four operating modes. Any statement that this prompt h
 | Mode | Purpose | Source Scope | Test System | Delivery Artifacts |
 |---|---|---|---|---|
 | **A** | Web Create | Web feature specification | Playwright | `frontend-{role}-v1.zip` + `playwright_E2E/` |
-| **B** | Web Audit + Repair | Existing web module ZIP | Playwright | `frontend-{role}-v{N}-fix.zip` + `playwright_E2E/` |
+| **B** | Web Audit + Repair | Existing web module ZIP | Playwright | `frontend-{role}-v{N}-ALL-RBGS-COMPLETE.zip` (intermediate: `frontend-{role}-v{N}-PARTIAL-rbg{X}.zip`) + `playwright_E2E/` |
 | **C** | Mobile Create from Web Specification | Web ZIP as specification only | Maestro | `mobile-{role}-v1.zip` + `mobile_e2e/` (top-level mirrored Maestro suite; never inside `src/features/`) |
-| **D** | Mobile Audit + Repair | Existing React Native module ZIP | Maestro | `mobile-{role}-v{N}-fix.zip` + `mobile_e2e/` (top-level mirrored Maestro suite; never inside `src/features/`) |
+| **D** | Mobile Audit + Repair | Existing React Native module ZIP | Maestro | `mobile-{role}-v{N}-ALL-RBGS-COMPLETE.zip` (intermediate: `mobile-{role}-v{N}-PARTIAL-rbg{X}.zip`) + `mobile_e2e/` (top-level mirrored Maestro suite; never inside `src/features/`) |
 
 ## Canonical Mobile Maestro E2E Location
 
@@ -834,7 +899,7 @@ If web ZIP evidence for an endpoint, request field, response field, permission, 
 10. Deliver source-level completion result and artifact status truthfully per the Capability-Truth Delivery Rule.
 
 ### Mode D Delivery Name
-`mobile-{role}-v{N}-fix.zip`
+`mobile-{role}-v{N}-ALL-RBGS-COMPLETE.zip` (intermediate: `mobile-{role}-v{N}-PARTIAL-rbg{X}.zip`)
 
 ---
 
@@ -851,28 +916,36 @@ If web ZIP evidence for an endpoint, request field, response field, permission, 
 2. Identify every gap, missing file, UI issue, broken API contract, and missing architectural/design rule.
 3. Fix ALL found issues directly in code — no half-fixes, no skipping.
 4. Double-verify after repair by re-running the checklist.
-5. Deliver a **versioned fix ZIP**: `frontend-{role}-v{N}-fix.zip`
+5. Deliver a **versioned delivery ZIP**: `frontend-{role}-v{N}-ALL-RBGS-COMPLETE.zip` (or intermediate `frontend-{role}-v{N}-PARTIAL-rbg{X}.zip`)
 6. Include `INTEGRATION_GUIDE.md` inside the ZIP.
 
 ---
 
-## VERSIONING RULES
+## VERSIONING & ZIP NAMING TAXONOMY (ANTI-DECEPTION RULES)
 
 ```text
-Mode A — First creation (web):    frontend-{role}-v1.zip
-Mode A — First fix after v1:      frontend-{role}-v2-fix.zip
-Mode B — First fix after v1:      frontend-{role}-v2-fix.zip
-Mode C — First mobile creation:   mobile-{role}-v1.zip
-Mode C — First fix after v1:      mobile-{role}-v2-fix.zip
+Mode A — First creation (web):         frontend-{role}-v1.zip
+Mode C — First mobile creation:        mobile-{role}-v1.zip
+
+Mode B / Mode D (AUDIT + REPAIR):
+├── Intermediate RBG Checkpoint ZIP:   frontend-{role}-v{N}-PARTIAL-rbg{X}.zip  (e.g., frontend-manager-v2-PARTIAL-rbg1.zip)
+│                                      mobile-{role}-v{N}-PARTIAL-rbg{X}.zip    (e.g., mobile-manager-v2-PARTIAL-rbg1.zip)
+└── 100% COMPLETE Final Delivery ZIP:  frontend-{role}-v{N}-ALL-RBGS-COMPLETE.zip
+                                       mobile-{role}-v{N}-ALL-RBGS-COMPLETE.zip
 ```
+
+> ⛔ **STRICT PROHIBITION ON PREMATURE "COMPLETE" / "FINAL" LABELS (CRITICAL P0 ANTI-DECEPTION INVARIANT):**
+> 1. **Zero Premature "Complete" Claims:** The words `complete`, `final`, or `all-done` MUST NEVER appear in any ZIP filename, title, or delivery message unless **100% of planned RBGs (RBG 1 through RBG N)** are genuinely completed on the filesystem, 100% of fixable finding IDs are closed or explicitly user-overridden, and the Pre-Delivery Cross-Check Gate has passed 100% clean.
+> 2. **State-Reflective Naming for Intermediate Deliveries:** If a ZIP is produced or provided while ANY RBG is still pending (e.g., after completing RBG 1, while RBG 2 and RBG 3 are remaining), the ZIP **MUST BE EXPLICITLY NAMED** `frontend-{role}-v{N}-PARTIAL-rbg{X}.zip` (or `mobile-{role}-v{N}-PARTIAL-rbg{X}.zip`).
+> 3. **Audit Fraud Classification:** Delivering an intermediate or partial repair archive labeled as `complete` or allowing the user to mistakenly assume an incomplete fix is all-done is classified as **CRITICAL P0 AUDIT FRAUD & DISQUALIFICATION**.
 
 ### DETERMINISTIC VERSION ASSIGNMENT (ZERO-STALL RULE)
 
 In MODE B, determine the existing version from the supplied artifact name, project metadata, changelog, release manifest, or explicit version evidence:
 
-1. **If explicit version vN is identified:** Increment it to `v(N+1)-fix` (e.g. `frontend-trainer-v1.zip` → `frontend-trainer-v2-fix.zip`).
+1. **If explicit version vN is identified:** Increment it to `v(N+1)-fix` (e.g. `frontend-trainer-v1.zip` → `frontend-trainer-v2-ALL-RBGS-COMPLETE.zip` or intermediate `frontend-trainer-v2-PARTIAL-rbg1.zip`).
 2. **If no explicit version number is present in input filename:**
-   - Deterministically default to `v1-fix`: `frontend-{role}-v1-fix.zip`.
+   - Deterministically default to `v1-fix`: `frontend-{role}-v1-ALL-RBGS-COMPLETE.zip` (or `frontend-{role}-v1-PARTIAL-rbg{X}.zip` during intermediate steps).
    - Record `VERSION: v1-fix (Default assigned for initial repair release)` inside `INTEGRATION_GUIDE.md` (Section 1 Changelog).
 3. **ARTIFACT DELIVERY RESOLUTION RULE (ZERO-STALL):**
 The AI MUST complete all source-level work that is within its granted scope.
@@ -882,10 +955,11 @@ Missing host packaging capability MUST NOT downgrade valid source-level completi
 
 **MODE C VERSION ASSIGNMENT (ZERO-STALL):**
 - First mobile creation: always `mobile-{role}-v1.zip`. No version detection needed — it is always v1.
-- First fix after v1: `mobile-{role}-v2-fix.zip`.
+- First fix after v1: `mobile-{role}-v2-ALL-RBGS-COMPLETE.zip` (or `mobile-{role}-v2-PARTIAL-rbg{X}.zip` during intermediate steps).
 - The AI MUST NEVER stall on version naming for Mode C. It is always v1 for first creation.
 
 The AI MUST try so hard in its first pass that the user never needs to come back for a second fix. Treat every delivery as if it is the last chance to get it right.
+
 
 ---
 
@@ -1432,7 +1506,7 @@ A high PASS count does NOT override unresolved CRITICAL findings.
 ⛔ **SEPARATION OF PRODUCTION READINESS VERDICT FROM REPAIR ZIP DELIVERY:**
 - The Production Readiness verdict and Compliance statement accurately report whether unresolved external `SOURCE_CONFLICT`s or deferred host runtime checks exist.
 - However, reporting an unresolved `SOURCE_CONFLICT` or `DEFERRED_TO_HOST_RUNTIME` item **MUST NEVER BLOCK THE PACKAGING OR DELIVERY OF THE REPAIRED SOURCE ZIP**.
-- Once all fixable source-level code in the module is repaired, the AI MUST package and deliver the versioned repair ZIP (e.g., `frontend-{role}-v1-fix.zip`), with any unresolved external conflicts clearly documented in `RE_AUDIT_CHECKLIST_RESULT.md` and `INTEGRATION_GUIDE.md`. The AI is strictly forbidden from withholding the ZIP.
+- Once all fixable source-level code in the module is repaired, the AI MUST package and deliver the versioned repair ZIP (e.g., `frontend-{role}-v1-ALL-RBGS-COMPLETE.zip` or intermediate `frontend-{role}-v1-PARTIAL-rbg{X}.zip`), with any unresolved external conflicts clearly documented in `RE_AUDIT_CHECKLIST_RESULT.md` and `INTEGRATION_GUIDE.md`. The AI is strictly forbidden from withholding the ZIP.
 
 ---
 
@@ -1780,10 +1854,88 @@ Produce this table for every candidate feature or consolidated route:
 
 ### Core Tenets of the 1:1 Navigation-to-Folder Law:
 
-1. **Strict 1-to-1 Primary Navigation Mapping (Universal):**
-   - Every top-level clickable item defined in a role's sidebar/navigation configuration (e.g., in Manager: Dashboard, Inquiries, Members, Attendance, Plans, Finance, HR, Schedule, PT; in Admin: Gyms, Billing, Staff, Settings; in Superadmin: Tenants, Subscriptions, Platform Analytics; in Trainer: Schedule, Clients, Workouts) MUST have an exact corresponding dedicated feature domain container directly inside `src/app/frontend_{role}/` (e.g., `src/app/frontend_{role}/{role}_{feature}/`).
+1. **Strict 1-to-1 Primary Navigation Mapping & Sidebar Domain Grouping Principle (Universal):**
+   - **Domain Container as Sidebar Group:** Every top-level clickable item defined in a role's sidebar/navigation configuration (e.g., in Manager: Dashboard, Members, CRM, Attendance, Accounting, Settings; in Admin: Gyms, Billing, Staff, Settings; in Superadmin: Tenants, Subscriptions, Platform Analytics; in Trainer: Schedule, Clients, Workouts) MUST have an exact corresponding dedicated feature Domain Container directly inside `src/app/frontend_{role}/` (e.g., `src/app/frontend_{role}/{role}_{domain}/`).
+   - **Sidebar Anti-Clutter & Hierarchical Domain Grouping (Zero Flat Submodule Dumping):** Top-level sidebar navigation MUST represent cohesive, high-level Business Domains. Dumping flat sub-modules or granular screens directly into the primary sidebar is a **CRITICAL UX & ARCHITECTURE VIOLATION**. The number of domains is governed purely by the business bounded contexts of the role, with **ZERO rigid artificial count ceiling or lock** (neither 5, nor 6–10, nor any fixed count).
+   - **Sub-Modules as Secondary Navigation:** Autonomous sub-modules inside a domain (e.g., inside `manager_crm/`: `crm_enquiries/`, `crm_leads/`, `crm_pipeline/`; inside `manager_accounting/`: `accounting_assets/`, `accounting_ledgers/`, `accounting_maintenance/`) MUST be exposed as Secondary Navigation:
+     - **Option A (Canonical — Top Tab Bar):** Rendered by the Domain Container's `layout.tsx` across the top of the content area (`[ Enquiries ] [ Leads ] [ Follow-ups ]`), matching the modern Linear/Stripe design standard.
+     - **Option B (Collapsible Sidebar Accordion):** An expandable submenu under the parent sidebar item (e.g., `🎯 CRM [▼]` expands to reveal `↳ Enquiries`, `↳ Leads`, `↳ Follow-ups`).
+   - **STRICT PROHIBITION ON ACTION NANO-MODULES (THE ANTI-ACTION BAN):**
+     - Creating a sub-module or sidebar item for a single action, form, or modal (e.g. `crm_enquiry_add/`, `crm_enquiry_edit/`, `accounting_asset_maintenance_add/`, `member_add/`) is an immediate **P0 ARCHITECTURE FAILURE (NANO-MODULE VIOLATION)**.
+     - Creation forms, edit drawers, detail slide-outs, and wizard steps MUST live strictly INSIDE their parent sub-module (`components/` as modals/drawers or child route `create/page.tsx`), NEVER as independent sub-modules or sidebar links.
    - **NO MEGA-MODULE MERGING:** Merging separate sidebar destinations (e.g., combining `manager_finance` and `manager_expenses`, or `admin_billing` and `admin_plans`) into a single folder is STRICTLY PROHIBITED.
    - **NO ROOT-LEVEL FRACTURING:** A single sidebar destination MUST NOT spawn arbitrary multiple top-level folders for its internal tabs or workflows. All internal tabs, secondary workflows, and sub-pages belonging to that sidebar destination MUST be encapsulated as child sub-modules inside that domain container.
+
+### Deterministic 3-Question AI Domain Grouping Decision Tree
+
+Before writing ANY code or creating ANY folder, the AI MUST run this 3-question filter for every screen or feature requirement:
+
+```text
+Q1: Is this a core high-level Business Domain (e.g., CRM, Accounting, Members, Attendance)?
+    ├── YES ──> Create Tier 3 Domain Container: src/app/frontend_{role}/{role}_{domain}/
+    │           (Mounts in primary sidebar; contains layout.tsx tab shell + page.tsx redirect)
+    └── NO  ──> Proceed to Q2
+
+Q2: Is this a distinct operational capability with its own entity lifecycle, data table, and filters (5–20 files)?
+    ├── YES ──> Create Tier 4 Autonomous Sub-Module: {domain}_{capability}/ inside {role}_{domain}/
+    │           (Exposed as secondary tab or accordion item; e.g., crm_enquiries/, accounting_assets/)
+    └── NO  ──> Proceed to Q3
+
+Q3: Is this a single action, form, modal, detail drawer, or sub-step (e.g., "Add Enquiry", "Edit Asset")?
+    └── YES ──> Place inside parent sub-module: components/ (e.g., ManagerCrmEnquiryCreateModal.tsx)
+                or child route: create/page.tsx.
+                ⛔ STRICTLY FORBIDDEN to create a separate sub-module or top-level sidebar item!
+```
+
+### CANONICAL ERP DOMAIN TAXONOMY & ANTI-HALLUCINATION GROUPING INVARIANT (NON-NEGOTIABLE)
+
+To prevent AI agents from arbitrarily inventing nonsensical parent groups (e.g. creating `manager_operations/` or merging `CRM` and `Members`), all grouping MUST adhere strictly to Domain-Driven Design (DDD) Bounded Contexts and the Canonical Domain Taxonomy below.
+
+#### 1. The Bounded Context Affinity Rule (Zero Cross-Domain Smuggling):
+Two capabilities may ONLY reside in the same Tier 3 Domain Container if they share:
+1. **The exact same primary Aggregate Root & Entity Lifecycle** (e.g., all submodules in `manager_crm` operate on Leads/Prospects/Inquiries; all submodules in `manager_members` operate on Active Enrolled Members).
+2. **The same business domain boundary.**
+- ❌ **CROSS-DOMAIN SMUGGLING IS STRICTLY FORBIDDEN:**
+  - An AI MUST NOT put active member subscription management inside `CRM` (Members is post-sale; CRM is pre-sale).
+  - An AI MUST NOT put financial invoices or payment gateways inside `Attendance` or `Members` (Invoices belong to `Billing` / `Accounting`).
+  - An AI MUST NOT merge `Staff` and `Accounting` merely because staff gets paid (Staff manages shifts/profiles; Accounting manages financial ledger disbursements).
+
+#### 2. The Anti-Junk-Drawer / Anti-Mega-Bucket Law:
+AI agents are **ABSOLUTELY PROHIBITED** from creating generic, ambiguous, or dumping-ground domain names. 
+The following domain names are **PERMANENTLY BANNED**:
+- ❌ `*_operations/`
+- ❌ `*_management/`
+- ❌ `*_general/`
+- ❌ `*_miscellaneous/` or `*_misc/`
+- ❌ `*_tools/` or `*_actions/`
+- ❌ `*_hub/` or `*_portal/` or `*_workspace/`
+- ❌ `*_services/` or `*_data/`
+- ❌ Hyphenated mergers: `*_crm_and_members/`, `*_finance_and_expenses/`
+
+Creating ANY domain with a banned name is an immediate **P0 ARCHITECTURE FAILURE & MERGE BLOCKER**. Every domain container MUST be a specific business noun from the Canonical Domain Taxonomy below.
+
+#### 3. Canonical ERP Domain Taxonomy (Extensible Baseline Matrix):
+The domain containers below represent the canonical baseline for Smart Gym 360. 
+- **NO RIGID FIXED COUNT OR ARTIFICIAL CEILING:** Roles are NOT locked to any rigid number of domains (neither 5, nor 6–10, nor any fixed count). A role may contain as few or as many business domains as its authentic business aggregate roots require.
+- **Pure Hierarchical Invariant:** The architecture requires that top-level navigation represents cohesive **High-Level Business Domains (Tier 3 Domain Containers)**, while granular operational capabilities live inside domains as autonomous sub-modules. The violation is flat-dumping submodules/actions, NOT the number of domains.
+- **Extensibility:** New legitimate business domains (e.g., `manager_pos`, `manager_nutrition`, `manager_marketing`) MAY be introduced as long as they represent independent Aggregate Roots and avoid banned junk-drawer names.
+
+| Role Container | Approved Baseline Domain Containers (Canonical Reference) | Permitted Autonomous Sub-Modules (`{domain}_{capability}`) |
+|---|---|---|
+| **`frontend_manager`** | 1. `manager_dashboard`<br>2. `manager_members`<br>3. `manager_crm`<br>4. `manager_attendance`<br>5. `manager_accounting`<br>6. `manager_inventory`<br>7. `manager_staff`<br>8. `manager_settings` | • `crm` → `crm_enquiries`, `crm_leads`, `crm_pipeline`<br>• `members` → `members_directory`, `members_plans`, `members_detail`<br>• `attendance` → `attendance_dashboard`, `attendance_history`, `attendance_biometrics`<br>• `accounting` → `accounting_assets`, `accounting_ledgers`, `accounting_maintenance`<br>• `inventory` → `inventory_equipment`, `inventory_supplements`, `inventory_lockers`<br>• `staff` → `staff_directory`, `staff_roster`, `staff_payroll` |
+| **`frontend_superadmin`** | 1. `superadmin_dashboard`<br>2. `superadmin_tenants`<br>3. `superadmin_plans`<br>4. `superadmin_billing`<br>5. `superadmin_analytics`<br>6. `superadmin_audit`<br>7. `superadmin_settings` | • `tenants` → `tenants_directory`, `tenants_onboarding`, `tenants_branches`<br>• `plans` → `plans_tiers`, `plans_features`, `plans_pricing`<br>• `billing` → `billing_invoices`, `billing_payouts`, `billing_gateways`<br>• `audit` → `audit_logs`, `audit_security`, `audit_compliance` |
+| **`frontend_admin`** | 1. `admin_dashboard`<br>2. `admin_gyms`<br>3. `admin_billing`<br>4. `admin_staff`<br>5. `admin_reports`<br>6. `admin_settings` | • Standard enterprise branch and administrative capabilities |
+| **`frontend_trainer`** | 1. `trainer_dashboard`<br>2. `trainer_schedule`<br>3. `trainer_clients`<br>4. `trainer_workouts`<br>5. `trainer_earnings`<br>6. `trainer_settings` | • Personal trainer schedule, member workout logs, and PT commission logs |
+| **`frontend_member`** | 1. `member_dashboard`<br>2. `member_membership`<br>3. `member_attendance`<br>4. `member_bookings`<br>5. `member_payments`<br>6. `member_profile` | • Gym member portal views, QR check-in, class bookings, invoices |
+
+#### 4. The Aggregate Root Boundary Test (Dispute Resolution):
+If an AI agent is uncertain which domain owns a feature (e.g. "Trainer Payouts: does it belong in Staff or Accounting?"), apply the **Aggregate Root Mutation Test**:
+- *"Which core business entity's authoritative state is being created or modified?"*
+  - If the operation creates an accounting transaction, tax entry, or ledger disbursement → It belongs to **`accounting`**.
+  - If the operation updates trainer employee profiles, hourly rates, or roster status → It belongs to **`staff`**.
+  - Cross-references are resolved strictly via read-only API calls across gateway endpoints, NEVER by combining domain folders!
+
+---
 
 2. **Universal Day-1 Sub-Module Architecture & Domain Root Quarantine:**
    - Every feature module folder (`src/app/frontend_{role}/{role}_{domain}/` or `src/features/frontend_{role}/{role}_{domain}/`) is a **Pure Domain Container** containing ONLY:
@@ -4507,21 +4659,26 @@ After the full audit is complete and all findings are recorded in the Master Fin
 
 A Repair Batch Group is a set of 3–4 audit batches whose findings are repaired together in one controlled execution turn.
 
-## RBG SIZING RULE
+## RBG SIZING & WORKLOAD DENSITY (SUBSTANTIVE SPRINT CALIBRATION)
 
-```text
-IF total audit batches ≤ 6
-  → Group into RBGs of 3 batches each
+An RBG MUST represent a meaningful, substantive cluster of repair work calibrated by **Finding Weight, File Complexity, and Functional Cohesion**:
+- **The Anti-Micro-RBG Law (No Trivial-Fragment Babysitting):** Creating an RBG with only 2–4 trivial fixes that finishes in under 2 minutes is STRICTLY PROHIBITED. Light audit batches with few findings MUST be consolidated into a cohesive sprint so the user does not have to constantly babysit the screen and click approval buttons.
+- **The Token-Safety & Anti-Hallucination Ceiling (No Bloated Monoliths):** An RBG MUST NOT be bloated with 30+ files or 35+ findings. Overloading causes context memory saturation, output token truncation, git diff collisions, and hallucinations.
+- **Natural Cadence (Indicative Benchmark):** The workload targets below naturally yield a balanced sprint (~5 to 8 minutes of steady autonomous execution under typical conditions), giving the user uninterrupted time for other tasks while keeping execution strictly bounded and deterministic. *(Note: AI does not measure wall-clock timers; calibrate strictly by the finding and file metrics below).*
 
-IF total audit batches 7–12
-  → Group into RBGs of 3–4 batches each
+### 1. Deterministic Workload Calibration Matrix
 
-IF total audit batches > 12
-  → Group into RBGs of 4 batches each
+| RBG Category / Severity | Target Findings per RBG | Target Batches | Scope & Complexity Profile | Token & Safety Ceiling |
+|---|---|---|---|---|
+| **P0 Architectural & Structural** (Rule 0A/1 hierarchy, root quarantine, sibling isolation, auth/tenants) | **6–12 substantive findings / files** | 3–4 batches | Deep architectural refactoring, file moves, schema restructuring | Max 14 files |
+| **P1 Core Functional & State** (Forms, tables, TanStack Query, mutation flows, Zod validation) | **10–18 findings** | 3–5 batches | State management, queries, mutation hooks, form handlers | Max 18 files / 20 findings |
+| **P2 Design System, Tests & Docs** (Semantic tokens, Documentation Trio 22 sections, MSW mocks, unit tests) | **12–22 findings** | 4–6 batches | Design token replacement, mock scenarios, documentation trio | Max 22 findings |
+| **P3 Formatting & Minor Conventions** (Code comments, minor naming, formatting) | Bundle with P2 or bundle **15–25 findings** | 4–6 batches | Non-breaking cosmetic, comment, and convention fixes | Max 25 findings |
 
-MAXIMUM ABSOLUTE CEILING: No single RBG may contain findings from more than 4 audit batches.
-MINIMUM: No single RBG may contain fewer than 2 audit batches unless it is the final RBG.
-```
+### 2. Deterministic Sizing Invariants
+1. **Minimum Workload Floor (Anti-Micro-Fragmentation):** An RBG MUST contain at least **8 findings** (or at least 4 substantive files), unless the total remaining uncompleted findings in the entire project are fewer than that. Light audit batches with only 1–2 minor findings MUST be consolidated together into a single RBG.
+2. **Maximum Safety Ceiling (Anti-Hallucination Firewall):** No single RBG may contain more than **25 findings** or touch more than **18 files** in one execution turn. This guarantees the model operates well within safe context memory and eliminates output token truncation.
+3. **Dependency Cohesion First:** Always respect dependency order. If fixing an architectural finding requires touching related state or contracts, keep them in the same RBG rather than splitting them artificially.
 
 ## RBG PRIORITY ORDER
 
@@ -4574,7 +4731,12 @@ Or reply "Adjust" to change the grouping.
 
 > ⛔ **HARD STOP: Do NOT execute a single fix until the user approves the RBG Plan.**
 >
-> 💬 **FLEXIBLE AFFIRMATION PROTOCOL:** Any affirmative user response (e.g., "Begin RBG 1", "Approved", "continue", "proceed", "start", "go ahead", "aage badho", "karo", "haan", "ok", "yes", "next") constitutes full valid approval. The AI MUST NOT halt, argue, or demand an exact phrase.
+> 🖱️ **1-CLICK INTERACTIVE BUTTON & EXECUTABLE ARTIFACT PROTOCOL (ZERO-MANUAL-TYPING ACROSS ALL CHECKPOINTS):**
+> The AI MUST provide a 1-click interactive action button (via actionable artifact `RequestFeedback: true` or `ask_question` tool) at EVERY pause/checkpoint across the entire lifecycle:
+> 1. **Checkpoint 1 — STAGE 1 FREEZE TRANSITION:** After freezing the requirements baseline, render a 1-click button: `[👉 Proceed to Stage 2: Deep Audit]`. (In chat telemetry, explain clearly in Roman Hinglish: *"Stage 1 (Baseline Freeze) complete ho gaya hai. Abhi koi repair nahi hui hai kyunki pehle Stage 2 mein Full Audit chalega aur saare bugs dhoonde jayenge. Audit ke baad RBG Plan aayega jisme [Approve RBG 1] button milega."*).
+> 2. **Checkpoint 2 — RBG PLAN APPROVAL:** After Stage 2 Audit completes and findings are grouped into RBGs, render a 1-click button: `[👉 Approve RBG 1 & Start Repairs]`.
+> 3. **Checkpoint 3 — RBG CHECKPOINTS:** After completing each RBG sprint, render a 1-click button: `[👉 Proceed with RBG N+1]`.
+> 4. **Flexible Text Affirmation Fallback:** For plain chat or CLI environments without UI buttons, any affirmative response (e.g., "Begin RBG 1", "Approved", "continue", "proceed", "start", "go ahead", "aage badho", "karo", "haan", "ok", "yes", "next") constitutes full valid approval. The AI MUST NOT halt, argue, or demand an exact phrase.
 
 Do NOT start any repair until the user approves the RBG Plan.
 
@@ -4583,9 +4745,33 @@ Do NOT start any repair until the user approves the RBG Plan.
 1. **PRIOR RBG DEPENDENCY PRE-CHECK (MANDATORY for RBG N where N > 1):** Before executing any fix in RBG N, verify that every artifact from previous RBGs that the current RBG depends on is actually in place. If a prior RBG fix is missing or incomplete → repair it BEFORE starting the current RBG and record as `PRIOR_RBG_FIX_INCOMPLETE`. This is a targeted dependency check only — not a full re-audit of all previous RBGs.
 2. Execute ALL findings from the current RBG before moving to the next RBG.
 3. After completing each RBG, checkpoint and display the RBG Completion Dashboard.
-4. Do NOT start the next RBG until the user gives affirmative confirmation (e.g. "continue", "next", "Begin RBG N+1", "aage badho", "karo", "go ahead").
+4. Do NOT start the next RBG until the user gives affirmative confirmation (via 1-click UI button or reply "continue", "next", "Begin RBG N+1", "aage badho", "karo", "go ahead").
 5. Within an RBG, apply fixes in dependency order (architecture → state → UI → tests → docs).
 6. Never apply a fix from RBG 3 while RBG 1 is still in progress.
+7. **INTERMEDIATE CHECKPOINT ZIP NAMING (ANTI-DECEPTION):** If the user requests an intermediate archive or the AI produces a ZIP checkpoint after completing RBG N while subsequent RBGs remain pending, the ZIP filename MUST be explicitly formatted as: `frontend-{role}-v{N}-PARTIAL-rbg{N}.zip` (or `mobile-{role}-v{N}-PARTIAL-rbg{N}.zip`). The AI MUST NOT use the words `complete`, `final`, or `all-done` in the filename or description while any RBG is pending.
+8. **FINAL COMPLETE DELIVERY PREREQUISITE:** The final release ZIP named `frontend-{role}-v{N}-ALL-RBGS-COMPLETE.zip` (or `mobile-{role}-v{N}-ALL-RBGS-COMPLETE.zip`) is permitted ONLY after 100% of RBGs (RBG 1 to RBG N) are completed, zero unresolved actionable findings remain, and Section 45.4A Pre-Delivery Cross-Check Gate is passed 100% clean.
+9. **INTERACTIVE CLARIFICATION & DECISION MODAL PROTOCOL (1-CLICK RECOMMENDED SELECTION):**
+   - Whenever the AI encounters ANY confusion, ambiguity, missing design choice, architectural conflict, or needs a decision/clarification from the user:
+     - The AI **MUST NOT** output a long, open-ended technical essay asking the user to explain or write code.
+     - The AI **MUST** formulate a structured interactive modal / multiple-choice selection (using the `ask_question` tool in IDEs or selectable checkbox/radio options with a single-click confirmation button).
+     - **Mandatory `(Recommended)` Prefix:** Exactly ONE option MUST be listed first and prefixed with `(Recommended)` representing the safest, architecture-compliant default choice.
+     - **Default One-Click Confirmation:** If the user is unsure, they can simply select the default recommended option and click Confirm/Proceed with zero technical burden or manual typing.
+10. **LIVE PROGRESS HEARTBEAT TELEMETRY IN ROMAN HINGLISH (ANTI-HANG ASSURANCE):**
+    - During execution turns touching multiple files, the AI MUST NOT remain completely silent. A prolonged lack of visible response creates the false impression that the AI is frozen, hung, or stuck.
+    - After completing each substantive fix/file within the RBG, the AI MUST emit a concise, real-time telemetry line:
+      - **Language Rule (ZERO-ENGLISH BAN):** Strictly **Roman Hinglish** (English letters, NO Devanagari script). Pure English conversational updates, explanations, or telemetry are strictly FORBIDDEN and treated as a FORMAT VIOLATION.
+      - **Informational Only (Non-blocking):** It does NOT ask for user input or pause execution.
+      - **Format & Concrete Examples:**
+        ```text
+        BAD (Strictly Forbidden):
+        ✓ [Done]: I’ve now completed the architecture specification through its delivery-freeze.
+        ⚙️ [In Progress]: I’m completing the design-system workflow before freezing Stage 1.
+
+        GOOD (Mandatory):
+        ✓ [Done]: `[file_name]` me [brief fix in Hinglish - e.g. "TanStack Query v5 isPending aur query keys migrate"] ho gaya hai.
+        ⚙️ [In Progress]: Ab `[next_file_name]` me [next fix in Hinglish - e.g. "Zod schema aur 400 validation error mapping"] start kar raha hoon...
+        ```
+      - This gives the user continuous real-time visibility into what was just fixed and what is currently being worked on, completely eliminating the "hang illusion".
 
 ## RBG CHECKPOINT TEMPLATE
 
@@ -4605,14 +4791,18 @@ After completing each RBG, display:
 ║   RBG [N+1]: Batches [A, B, C] — [N] findings               ║
 ║   RBG [N+2]: Batches [D, E, F] — [N] findings               ║
 ╠══════════════════════════════════════════════════════════════╣
+║ INTERMEDIATE ARCHIVE (IF PACKAGED):                          ║
+║   frontend-{role}-v{N}-PARTIAL-rbg[N].zip                     ║
+║   ⚠️ STATUS: PARTIAL FIX ONLY — RBG [N+1] PENDING            ║
+╠══════════════════════════════════════════════════════════════╣
 ║ VERIFICATION STATUS:                                         ║
 ║   TypeScript:  [PASS / FAIL / NOT_EXECUTED]                  ║
 ║   Lint:        [PASS / FAIL / NOT_EXECUTED]                  ║
 ║   Tests:       [PASS / FAIL / NOT_EXECUTED]                  ║
 ╠══════════════════════════════════════════════════════════════╣
-║ ACTION REQUIRED:                                             ║
-║ Reply "continue" to proceed to RBG [N+1].                    ║
-║ OR reply "Begin RBG [N+1]" to start the next group.          ║
+║ ACTION REQUIRED (1-CLICK BUTTON OR CHAT):                    ║
+║ 👉 Click [Proceed with RBG N+1] button in UI / artifact      ║
+║ OR reply "continue" / "Begin RBG [N+1]" to proceed.          ║
 ╚══════════════════════════════════════════════════════════════╝
 ```
 
@@ -9833,7 +10023,7 @@ A checkpoint is NOT a product delivery.
 ## 45.2 Creation & Repair Release Delivery Mandate (Non-Negotiable)
 
 - **Mode A — Creation Delivery:** When all creation work units are complete and Section 43P checklist is clean, packaging and delivering `frontend-{role}-v1.zip` is **MANDATORY**.
-- **Mode B — Source Fix Completion vs Live Runtime:** When 100% of fixable `SOURCE_LEVEL_FIX` findings within the supplied scope have been repaired, packaging and delivering the versioned ZIP (`frontend-{role}-v1-fix.zip` or `frontend-{role}-v{N}-fix.zip`) is **MANDATORY**.
+- **Mode B — Source Fix Completion vs Live Runtime:** When 100% of fixable `SOURCE_LEVEL_FIX` findings within the supplied scope have been repaired, packaging and delivering the versioned ZIP (`frontend-{role}-v{N}-ALL-RBGS-COMPLETE.zip` or intermediate `frontend-{role}-v{N}-PARTIAL-rbg{X}.zip`) is **MANDATORY**.
 - **Mode C — Mobile Creation Delivery:** When all 5 extraction sections are complete, all mobile module files are created, and Section 43P MODE C + MOBILE RULE checklists are clean, packaging and delivering `mobile-{role}-v1.zip` is **MANDATORY**. Metro bundler unavailability and device/simulator unavailability are NOT blockers — mark as `DEFERRED_TO_HOST_RUNTIME` and deliver the ZIP.
 - **External Blockers & Runtime Deferrals:** If items remain deferred to host runtime (`DEFERRED_TO_HOST_RUNTIME`) or require external human product decisions (`EXTERNAL_PRODUCT_DECISION_BLOCKED` / `SOURCE_CONFLICT`), they are documented inside `RE_AUDIT_CHECKLIST_RESULT.md` and `INTEGRATION_GUIDE.md`. The archive is delivered as a **REPAIR RELEASE (SOURCE-VERIFIED)**.
 - **ZERO-WITHHOLDING INVARIANT:** The AI MUST NOT refuse to deliver the ZIP, withhold the archive, or declare delivery blocked due to deferred runtime verification, external document conflicts, or absence of host files. "PARTIAL DELIVERY = FORBIDDEN" strictly means do not deliver fragmented/split archives; it NEVER means withholding the complete repaired source ZIP!
@@ -9895,6 +10085,46 @@ final_reaudit_complete = true
 
 ONLY after every required verification work unit and the final checklist consolidation are complete.
 
+## 45.4A MANDATORY PRE-DELIVERY CROSS-CHECK VERIFICATION GATE (ZERO-EXCUSE AUDIT RECONCILIATION)
+
+> ⛔ **HARD STOP — PRE-DELIVERY MECHANICAL CROSS-CHECK GATE (NON-NEGOTIABLE)**
+> Before generating, offering, or delivering ANY 100% COMPLETE release ZIP (e.g., `frontend-{role}-v{N}-ALL-RBGS-COMPLETE.zip` or `mobile-{role}-v{N}-ALL-RBGS-COMPLETE.zip`), the AI MUST execute a mechanical, multi-point cross-check across the ACTUAL filesystem and print the following **THREE VERIFICATION TABLES**.
+>
+> ⚠️ **THE ZERO-EXCUSE INVARIANT:** Outputting a ZIP and subsequently stating: *"Oh sorry, maine cross-check nahi kiya and all"* or *"ye rule follow karna bhool gaya"* is classified as a **FATAL P0 WORKFLOW VIOLATION & AUDIT FRAUD**. Delivering a ZIP without physically verifying all submodules and all rules invalidates the entire deliverable.
+
+### Table 1: RBG Execution & Finding Closure Reconciliation
+| RBG | Batches Covered | Total Findings | Fixed in Source | Skipped by User | Remaining Unfixed | Status |
+|---|---|---|---|---|---|---|
+| RBG 1 | [Batches] | [N] | [N] | [N] | 0 | COMPLETED |
+| RBG 2 | [Batches] | [N] | [N] | [N] | 0 | COMPLETED |
+| RBG N | [Batches] | [N] | [N] | [N] | 0 | COMPLETED |
+*(Rule: If Remaining Unfixed > 0 for ANY RBG, the deliverable is PARTIAL and MUST be named `-PARTIAL-rbg{X}.zip`. It is STRICTLY FORBIDDEN to label it COMPLETE).*
+
+### Table 2: Submodule-by-Submodule Physical Audit Ledger
+*(Every single authored submodule in the role MUST be listed individually with filesystem proof — Zero Sampling permitted):*
+| Submodule Path | Artifact Folders Verified | Doc Trio (22 Canonical Sections) | Unit Tests + Mock Catalog (8 Scenarios) | Sibling Isolation (Zero Cross-Imports) | Anti-Lazy Scan (Zero TODO/Ellipsis) | Submodule Status |
+|---|---|---|---|---|---|---|
+| `{submodule-1}` | PASS (`components/`, `hooks/`, `api/`, `mocks/`) | PASS (`_features.md`, `_forbidden.md`, `_theme_contract.md`) | PASS (`mock-scenarios.ts` 8 states) | PASS (Zero cross-submodule imports) | PASS (Zero `// TODO`, zero `// ... rest unchanged`) | 100% VERIFIED |
+| `{submodule-2}` | PASS | PASS | PASS | PASS | PASS | 100% VERIFIED |
+
+### Table 3: Canonical Rules Sweep Table
+| Rule Domain | Canonical Requirement | Verification Method | Result |
+|---|---|---|---|
+| 4-Tier Hierarchy | Domain Container (Tier 3) ➔ Autonomous Submodule (Tier 4) | Physical directory tree | PASS |
+| Zero Flat Submodule Dumping | No granular submodules dumped directly under role container | Directory inspection | PASS |
+| Anti-Action Nano-Module Ban | No `*_add`, `*_edit`, `*_create` submodules or primary navigation links | File/folder scan | PASS |
+| Banned Generic Junk Drawers | No `*_operations`, `*_management`, `*_general`, `*_misc`, etc. | Directory scan | PASS |
+| Design System Token Compliance | Zero raw hex/rgb colors; 100% semantic theme token hooks | Grep `#`, `rgb(`, `hsl(` | PASS |
+| Strict Schema Validation | 100% forms & API responses validated with strict Zod | File inspection | PASS |
+| Standalone Run Harness | Section 20 Standalone Harness with mock seeders in every submodule | Harness test verification | PASS |
+
+### 4-Point Self-Audit Gate (Mandatory Before Packaging)
+Before generating any release ZIP archive, the AI MUST execute and attest to this final 4-point verification loop:
+1. `CONTRADICTION_CHECK`: Zero conflicting rules, zero conflicting naming taxonomies, zero legacy `-fix.zip` references.
+2. `AUTHORITY_CHECK`: Precedence order strictly observed; existing repository package.json honored; zero invented requirements.
+3. `MISSING_CONTRACT_CHECK`: Every unprovided behavior explicitly marked `CONTRACT_MISSING`; zero AI speculative guessing.
+4. `HALLUCINATION_CHECK`: Every file path, component name, and line reference cited exists physically in the delivered archive.
+
 ## 45.5 Final Packaging
 
 Before packaging:
@@ -9908,15 +10138,21 @@ Before packaging:
 Only then package:
 
 ```text
-Mode A:
+Mode A (Web Create):
 frontend-{role}-v1.zip
 
-Mode B:
-frontend-{role}-v{N}-fix.zip
+Mode B (Web Audit + Repair):
+├── Intermediate Checkpoint: frontend-{role}-v{N}-PARTIAL-rbg{X}.zip  (when any RBG is pending)
+└── 100% Complete Release:   frontend-{role}-v{N}-ALL-RBGS-COMPLETE.zip (only when all RBGs done & Section 45.4A clean)
 
-Mode C:
+Mode C (Mobile Create):
 mobile-{role}-v1.zip
+
+Mode D (Mobile Audit + Repair):
+├── Intermediate Checkpoint: mobile-{role}-v{N}-PARTIAL-rbg{X}.zip    (when any RBG is pending)
+└── 100% Complete Release:   mobile-{role}-v{N}-ALL-RBGS-COMPLETE.zip   (only when all RBGs done & Section 45.4A clean)
 ```
+
 
 The ZIP MUST contain:
 
@@ -10307,10 +10543,10 @@ EXECUTION ORDER — MODE D (ALL STEPS MANDATORY):
 [ ] Step 5: RBG PLAN published + user explicitly approves
 [ ] Step 6: STAGE 3 REPAIRS — execute repair batches in RBG order (Rule 67B)
 [ ] Step 7: Section 43P MOBILE RULE CHECKLIST clean on repaired code
-[ ] Step 8: FINAL DELIVERY — mobile-{role}-v{N}-fix.zip + INTEGRATION_GUIDE.md + RE_AUDIT_CHECKLIST_RESULT.md + Maestro E2E
+[ ] Step 8: FINAL DELIVERY — mobile-{role}-v{N}-ALL-RBGS-COMPLETE.zip (or intermediate mobile-{role}-v{N}-PARTIAL-rbg{X}.zip) + INTEGRATION_GUIDE.md + RE_AUDIT_CHECKLIST_RESULT.md + Maestro E2E
 
 MANDATORY DELIVERABLES:
-- mobile-{role}-v{N}-fix.zip (repaired React Native feature module)
+- mobile-{role}-v{N}-ALL-RBGS-COMPLETE.zip (or intermediate mobile-{role}-v{N}-PARTIAL-rbg{X}.zip) (repaired React Native feature module)
 - INTEGRATION_GUIDE.md (changelog + navigation wiring + npm install + host verification)
 - RE_AUDIT_CHECKLIST_RESULT.md (Section 43P MOBILE RULE CHECKLIST result)
 Mobile Maestro E2E tests MUST live only at:
@@ -10322,14 +10558,15 @@ They MUST NOT be stored inside src/features/.
 FIRST ACTION: Read MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md completely
 ```
 
-## MODE D — VERSIONING
+## MODE D — VERSIONING & ZIP NAMING (ANTI-DECEPTION)
 
 ```text
-Mode D — First fix of existing mobile v1:   mobile-{role}-v2-fix.zip
-Mode D — Second fix:                         mobile-{role}-v3-fix.zip
+Mode D (Mobile Audit + Repair Deliverable):
+├── Intermediate Checkpoint: mobile-{role}-v{N}-PARTIAL-rbg{X}.zip (when any subsequent RBG is pending)
+└── 100% Complete Release:   mobile-{role}-v{N}-ALL-RBGS-COMPLETE.zip (only when all RBGs done & Section 45.4A clean)
 ```
 
-If no explicit version in input filename → default to `v1-fix`: `mobile-{role}-v1-fix.zip`.
+> ⛔ **STRICT BAN ON PREMATURE "COMPLETE":** The words `complete`, `final`, or `all-done` MUST NEVER appear in any mobile repair ZIP unless 100% of RBGs are completed and Section 45.4A Pre-Delivery Cross-Check Gate is passed 100% clean. Labeling an intermediate mobile repair as `complete` is CRITICAL P0 AUDIT FRAUD.
 
 ## MODE D — AUDIT SCOPE
 
@@ -10667,7 +10904,7 @@ The Boot Declaration execution order block now includes Mode D:
 [ ] Step 5: RBG PLAN published + user explicitly approves — not yet started
 [ ] Step 6: STAGE 3 REPAIRS — execute repair batches in RBG order (Rule 67B) — not yet started
 [ ] Step 7: Section 43P MOBILE RULE CHECKLIST clean on repaired code — not yet started
-[ ] Step 8: FINAL DELIVERY (mobile-{role}-v{N}-fix.zip + INTEGRATION_GUIDE.md + RE_AUDIT_CHECKLIST_RESULT.md + Maestro E2E) — not yet started
+[ ] Step 8: FINAL DELIVERY (mobile-{role}-v{N}-ALL-RBGS-COMPLETE.zip or intermediate mobile-{role}-v{N}-PARTIAL-rbg{X}.zip + INTEGRATION_GUIDE.md + RE_AUDIT_CHECKLIST_RESULT.md + Maestro E2E) — not yet started
 ```
 
 ---

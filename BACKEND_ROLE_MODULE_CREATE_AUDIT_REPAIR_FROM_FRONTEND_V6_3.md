@@ -11,6 +11,39 @@
 >
 > The AI MUST report only capabilities that are actually available in the current execution environment. It MUST NOT claim file-write, command, test, database, archive, or runtime access unless such access is truly available.
 >
+> **COMPLIANCE FAILURE HANDLING (EVIDENCE-BASED REPAIR):**
+> A compliance violation triggers a mandatory stop only for the affected workstream or file.
+> Non-dependent compliant workstreams MUST continue without interruption.
+> Missing runtime/host capability (dev server, live database, test runner, Selenium browser) is NEVER an architectural violation and MUST NOT cause execution to pause or stall (mark as `DEFERRED_TO_HOST_RUNTIME`).
+>
+> This document and backend architecture rules are the **absolute authoritative standard for all backend architectural, API contract, and code repair behavior**.
+>
+> ⛔ **ARCHITECTURAL & CODE COMPLETENESS MANDATE (MUST REPAIR & COMPLETE):**
+> When backend source code has incomplete DTO validation, missing class-validators, missing multi-tenancy query filters (`gymId`), raw unhandled error throws, missing idempotency checks, missing database migrations, or missing test suites:
+> - The AI **MUST ACTIVELY REPAIR, IMPLEMENT, AND COMPLETE THEM** using the Backend Architecture Rules (`BACKEND_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md`).
+> - Raw errors (`throw new Error`) MUST be replaced with standardized `ApiResponse<T>` error envelopes.
+> - DTOs MUST be fully decorated with `class-validator` rules.
+> - Database repositories MUST be completed with dual-layer multi-tenancy predicates.
+>
+> ⛔ **ANTI-DESTRUCTION & PARTIAL FEATURE COMPLETION LAW (ZERO FEATURE EVICTION):**
+> When backend source code contains partially implemented, half-built, or incomplete features (e.g., an unfinished controller endpoint, an uncompleted service method, a half-authored repository query, or an incomplete transaction block):
+> - **ZERO FEATURE EVICTION (DO NOT DELETE):** The AI **MUST NOT** delete, remove, comment out, or strip away existing endpoints, service methods, entities, or business flows simply because they are half-built, incomplete, or currently failing tests/build. Deleting half-built backend features to get a "clean audit pass" is strictly prohibited as DESTRUCTIVE MALPRACTICE.
+> - **MANDATORY ADDITIVE COMPLETION (ADD & CORRECT):** The AI **MUST actively COMPLETE the missing half**: add missing DTOs, implement missing service business logic, write database repository queries, author unit/integration tests, and correct all architectural violations until the feature is 100% functional and architecture-compliant.
+>
+> ⛔ **STRICT BOUNDARY OF `CONTRACT_MISSING` (EXTERNAL UNKNOWN SPECS ONLY):**
+> `CONTRACT_MISSING` applies STRICTLY to **external business contracts that cannot be known from the code or architecture** (e.g., an unprovided external 3rd-party webhook secret, unprovided payment gateway API keys, or an unknown financial commission percentage).
+> `CONTRACT_MISSING` **MUST NEVER BE USED AS AN EXCUSE** to leave source code incomplete, skip DTO validations, leave raw exceptions unhandled, or fail to build proper services/repositories!
+>
+> ⛔ **DETERMINISTIC CONFIDENCE TAXONOMY & EVIDENCE STANDARD:**
+> Every implementation decision, contract assertion, and audit claim MUST be classified into one of:
+> - `VERIFIED`: Proven by supplied source file path, exact line reference, verified API contract, schema, or explicit architecture rule.
+> - `DERIVED`: Deterministically derived from verified types/interfaces or architecture-mandated patterns (e.g. deriving a DTO validation pipe from a raw payload).
+> - `CONTRACT_MISSING`: External third-party behavior or requirement not provided in supplied scope. The AI MUST NOT infer or guess external third-party behaviors.
+> - `ASSUMED`: Strictly PROHIBITED. Speculative guessing without architectural or contract foundation is an ARCHITECTURE FAILURE.
+>
+> **Valid Evidence:** Source file path, exact line reference, API contract, schema, mock fixture, repository config, or normative architecture rule.
+> **Invalid Evidence (FORBIDDEN):** Speculative AI guessing, naming assumptions, generic industry patterns, or prior project habits.
+>
 > When starting an execution task, output the following declaration:
 >
 > ```
@@ -36,13 +69,40 @@
 > [ ] Step 4: RBG PLAN + user approval — not yet started
 > [ ] Step 5: STAGE 3 REPAIRS — not yet started
 > [ ] Step 6: Dynamic Re-Audit Checklist — not yet started
-> [ ] Step 7: FINAL DELIVERY (ZIP + INTEGRATION_GUIDE.md) — not yet started
+> [ ] Step 7: FINAL DELIVERY (backend-{role}-v{N}-ALL-RBGS-COMPLETE.zip or intermediate backend-{role}-v{N}-PARTIAL-rbg{X}.zip + INTEGRATION_GUIDE.md) — not yet started
 >
 > FRONTEND WRITE PROHIBITION ACKNOWLEDGED: YES
 > (I WILL NOT create, edit, rename, or delete any frontend file under any circumstance)
 >
+> ── EXECUTIVE DIAMOND PROTOCOLS CONFIRMATION (ALL 6 MANDATORY) ─────────────
+> [ ] 1. Anti-Deception ZIP Naming: Intermediate backend-{role}-v{N}-PARTIAL-rbg{X}.zip vs Complete backend-{role}-v{N}-ALL-RBGS-COMPLETE.zip acknowledged
+> [ ] 2. Pre-Delivery Cross-Check Gate: 3 physical verification tables before packaging acknowledged
+> [ ] 3. 1-Click Interactive Button Priority: RequestFeedback: true / ask_question modals acknowledged
+> [ ] 4. Interactive Clarification Modal: (Recommended) default option on decisions acknowledged
+> [ ] 5. Live Progress Heartbeat: Roman Hinglish telemetry lines (✓ [Done]: ... ⚙️ [In Progress]: ...) acknowledged
+> [ ] 6. Substantive Workload Density: min 8 / max 25 findings per RBG sprint acknowledged
+>
+> ── CORE ARCHITECTURAL INVARIANTS CONFIRMATION ───────────────────────────────
+> [ ] Dual-Layer Multi-Tenancy: DB routing + mandatory gymId/branchId predicate in every repo query, gymId from auth token never body acknowledged
+> [ ] Production Safety: Idempotency-Key UUIDv4 on state mutations, distributed locking for concurrency, rate limiting acknowledged
+> [ ] Sub-Module Isolation: Autonomous sub-modules with {submodule}-{artifact}/ naming, zero business code in domain root acknowledged
+> [ ] Response Envelope: Standard discriminated union ApiResponse<T> = ApiSuccess<T> | ApiFailure with requestId acknowledged
+> [ ] Testing & Automation: Unit, integration, and API E2E test suites with standard mock scenario catalog acknowledged
+> [ ] Full 112-Item Anti-Skipping Checklist (Section 84): ALL 112 rules (Rule 1 to Rule 112) MANDATORY — zero skipping, zero sampling acknowledged
+>
+> COMMUNICATION LANGUAGE ACKNOWLEDGED: Roman Hinglish (Strictly NO pure English conversational text/telemetry, NO Devanagari)
+>
 > FIRST ACTION: [PROJECT STACK GATE / Read Stage 1 requirements / etc. — state exactly]
 > ```
+>
+> ⛔⛔⛔ **EXECUTIVE CANONICAL DIAMOND PROTOCOLS (BACKEND)** ⛔⛔⛔
+> The following diamond protocols are active from TURN 1 across ALL MODES (Mode A Create & Mode B Audit+Repair):
+> 1. **Anti-Deception ZIP Naming:** Intermediate archives MUST be labeled `backend-{role}-v{N}-PARTIAL-rbg{X}.zip`. The label `backend-{role}-v{N}-ALL-RBGS-COMPLETE.zip` is strictly forbidden unless 100% of RBGs (RBG 1..N) are closed and verified.
+> 2. **Pre-Delivery Cross-Check Gate (Zero-Excuse Law):** Must execute and output the 3 physical verification tables (RBG Closure, Submodule Physical Ledger, Canonical Rules Sweep) before packaging. Post-delivery excuses ("Oh sorry, cross-check nahi kiya") are strictly banned as P0 audit fraud.
+> 3. **1-Click Interactive Button Priority:** Publish RBG Plans and Checkpoints as actionable artifacts (`RequestFeedback: true`) or modals (`ask_question`) so user can approve via 1-click button instead of manual typing.
+> 4. **Interactive Clarification Modal with (Recommended) Default:** All questions/decisions MUST use structured modals/checkboxes with Option 1 marked `(Recommended)`. Zero open-ended technical essay questions.
+> 5. **Live Progress Heartbeat Telemetry in Roman Hinglish (STRICT ZERO-ENGLISH BAN):** Output real-time non-blocking progress lines (`✓ [Done]: ... ⚙️ [In Progress]: ...`) strictly in Roman Hinglish (English letters, NO Devanagari). PURE ENGLISH CHAT/TELEMETRY IS STRICTLY BANNED AS A FORMAT VIOLATION. (Example: `✓ [Done]: Controllers aur entities audit ho chuke hain. ⚙️ [In Progress]: Abhi transactional boundary verify kar raha hoon.`). Code identifiers, file paths, and syntax remain in English.
+> 6. **Substantive Workload Density:** Calibrate RBGs by workload floor (min 8 findings / 4 files) and safety ceiling (max 25 findings / 18 files) for a balanced ~5–8 min sprint without token blowouts or hallucinations.
 >
 > ⛔ **BACKEND FILE INSPECTION BOUNDARY BEFORE STAGE 1:**
 > Before Stage 1 is frozen, the AI may inspect only the minimum backend artifacts required to determine:
@@ -132,6 +192,20 @@ Stop only when:
 >        - Mega-Submodule Banned: Cramming 3+ distinct sub-domain entity lifecycles into one sub-module (> 25 files) is FORBIDDEN; split into sibling sub-modules under `{role}-{domain}/`.
 >      - **Gate 4 (Standalone Testability & Mockability):** Can this sub-module run isolated unit/integration tests with its own seeders and harness? If YES → **Autonomous Sub-Module**.
 >      - **Gate 5 (DI & Sibling Isolation Boundary):** Sibling sub-modules NEVER import each other's NestJS `@Module`, `@Injectable()` services, or repositories. Cross-domain side-effects use Domain Events (Transactional Outbox).
+>    - **Zero Flat Submodule Dumping Law (Tier 3 Domain Containers vs Tier 4 Submodules):**
+>      - Granular backend sub-modules (`crm-enquiries/`, `crm-leads/`, `accounting-assets/`, `accounting-asset-maintenance/`) MUST NEVER be dumped directly under `{role}-modules/` (e.g., dumping `backend-superadmin/superadmin-modules/accounting-assets/` directly under the role root is a critical architecture failure).
+>      - Every backend sub-module MUST be enclosed within its parent Tier 3 Domain Module (`backend-{role}/{role}-modules/{role}-{domain}/{submodule}/`, e.g., `backend-superadmin/superadmin-modules/superadmin-accounting/accounting-assets/`).
+>      - Tier 3 Domain Modules mirror Frontend Tier 3 Domain Containers 1-to-1, preserving strict domain bounded contexts and modular monolith boundaries.
+>    - **Strict Anti-Action Nano-Module Ban:**
+>      - Creating a backend sub-module or module for a single CRUD action, form, or UI interaction (e.g., `crm-enquiry-add/`, `crm-enquiry-create/`, `member-create/`, `asset-maintenance-add/`) is a **CRITICAL P0 ARCHITECTURE VIOLATION**.
+>      - In the backend, actions are NOT sub-modules. They are simply controller routes (`POST /api/v1/...`), controller methods (`createEnquiry`), service methods (`create`), and DTOs (`CreateEnquiryDto`) living directly inside the parent entity's autonomous sub-module (`crm-enquiries/`).
+>    - **Canonical ERP Domain Taxonomy & Anti-Junk-Drawer Law:**
+>      - Backend domain modules MUST align to standard cohesive business bounded contexts (e.g., CRM, Accounting, Attendance, Inventory, HR, Members, Billing, Subscriptions, Platform, Gyms, Reports).
+>      - **Permanently Banned Generic Junk-Drawer Names:** Never invent vague catch-all domain modules such as `*-operations/`, `*-management/`, `*-general/`, `*-misc/`, `*-tools/`, `*-actions/`, `*-hub/`, `*-portal/`, `*-services/`, `*-data/`, or hybrid merged domains like `crm-accounting/`.
+>      - **Aggregate Root Mutation Test for Bounded Context Affinity:** When resolving domain boundary disputes (e.g., where does subscription invoice payment belong?), the Aggregate Root that mutates the primary transactional record dictates the domain module. Invoices belong to Billing/Accounting; Member profiles belong to Members; Attendance check-ins belong to Attendance. Cross-domain entity smuggling is strictly forbidden.
+>    - **Zero Domain Count Lock (No Rigid Hardcoding):**
+>      - The number of domain containers per role is determined purely by the business domain bounded contexts of that role. There is **NO hardcoded number or artificial ceiling** (neither 5, nor 6–10, nor any fixed count). NEVER force-merge or artificially split domains to satisfy an arbitrary numeric range!
+
 
 
 ---
@@ -382,12 +456,12 @@ The AI MAY inspect every file inside the supplied backend scope, but MUST NOT in
    If the issue cannot be correctly resolved through backend-only changes and genuinely requires a frontend change, follow the FRONTEND_CHANGE_REQUIRED workflow defined in Section 2A.
 
 5. Double-verify after repair: re-run the full audit against the repaired code.
-6. Deliver a **versioned fix ZIP**: `backend-{role}-v{N}-fix.zip` (e.g., `backend-superadmin-v2-fix.zip`)
+6. Deliver a **versioned delivery ZIP**: `backend-{role}-v{N}-ALL-RBGS-COMPLETE.zip` (or intermediate `backend-{role}-v{N}-PARTIAL-rbg{X}.zip`)
 7. Include `INTEGRATION_GUIDE.md` inside the ZIP.
 
    **DETERMINISTIC VERSION ASSIGNMENT (ZERO-STALL RULE):**
-   - If explicit version `vN` is identified, increment to `v(N+1)-fix` (e.g. `backend-superadmin-v2-fix.zip`).
-   - If no explicit version number is present in the input filename, deterministically default to `v1-fix`: `backend-{role}-v1-fix.zip`.
+   - If explicit version `vN` is identified, increment to `v(N+1)`: `backend-{role}-v(N+1)-ALL-RBGS-COMPLETE.zip` (intermediate: `backend-{role}-v(N+1)-PARTIAL-rbg{X}.zip`).
+   - If no explicit version number is present in the input filename, deterministically default to `v1`: `backend-{role}-v1-ALL-RBGS-COMPLETE.zip` (intermediate: `backend-{role}-v1-PARTIAL-rbg{X}.zip`).
    - The AI MUST NEVER halt, stall, or refuse to package/deliver the ZIP due to absence of an input version tag. Packaging and delivering the repaired ZIP is MANDATORY.
 
 
@@ -417,17 +491,16 @@ The AI MAY inspect every file inside the supplied backend scope, but MUST NOT in
 ## VERSIONING RULES
 
 ```text
-First creation:          backend-{role}-v1.zip
-First fix after v1:      backend-{role}-v2-fix.zip
-Second fix after v2:     backend-{role}-v3-fix.zip
-... and so on
+Mode A First creation:                     backend-{role}-v1.zip
+Mode B Intermediate RBG Checkpoint ZIP:   backend-{role}-v{N}-PARTIAL-rbg{X}.zip  (e.g., backend-superadmin-v2-PARTIAL-rbg1.zip)
+Mode B 100% COMPLETE Final Delivery ZIP:   backend-{role}-v{N}-ALL-RBGS-COMPLETE.zip (e.g., backend-superadmin-v2-ALL-RBGS-COMPLETE.zip)
 ```
 
 ### VERSION NUMBER RULE
 
 For MODE A: use `v1` unless the supplied repository contains an explicit release/version registry requiring a different starting value.
 
-For MODE B: derive `{N}` from the highest existing `backend-{role}-v{N}-fix` archive or release record supplied in scope, then increment by 1.
+For MODE B: derive `{N}` from the highest existing `backend-{role}-v{N}` archive or release record supplied in scope, then increment by 1.
 
 If no prior version evidence exists in the supplied inputs:
 - do NOT assign `v2` as a default — `v2` implicitly claims a prior `v1` release which may not exist;
@@ -447,7 +520,7 @@ Delivery artifacts belong at the archive root, not inside the feature-module sou
 Example:
 
 ```text
-backend-admin-v2-fix.zip
+backend-admin-v2-ALL-RBGS-COMPLETE.zip (or intermediate: backend-admin-v2-PARTIAL-rbg1.zip)
 ├── INTEGRATION_GUIDE.md
 ├── RE_AUDIT_CHECKLIST_RESULT.md
 ├── FRONTEND_CHANGE_REQUIRED.md              # only when applicable
@@ -627,7 +700,7 @@ The frontend is read-only evidence for backend requirement discovery.
 
 > **MODE DECISION RULE:**
 > - **Frontend ZIP given + NO backend ZIP given** → **MODE A (CREATE)** — AI builds the backend from scratch and delivers `backend-{role}-v1.zip`.
-> - **Frontend ZIP given + Backend ZIP given** → **MODE B (AUDIT+REPAIR)** — AI audits the existing backend, fixes all actionable backend issues within the supplied writable scope, documents any genuinely required frontend changes, and delivers `backend-{role}-v{N}-fix.zip`.
+> - **Frontend ZIP given + Backend ZIP given** → **MODE B (AUDIT+REPAIR)** — AI audits the existing backend, fixes all actionable backend issues within the supplied writable scope, documents any genuinely required frontend changes, and delivers `backend-{role}-v{N}-ALL-RBGS-COMPLETE.zip` (or intermediate `backend-{role}-v{N}-PARTIAL-rbg{X}.zip`).
 >
 > **The frontend ZIP is ALWAYS required in both modes** — it is the source from which backend requirements are discovered.
 
@@ -3469,9 +3542,23 @@ DEFERRED_TO_HOST_RUNTIME
 
 Never state a test "passes" unless it was actually executed and produced a passing result in the current session.
 
-### PACKAGE DELIVERY RULE
+### PACKAGE DELIVERY RULE & ZIP NAMING TAXONOMY (ANTI-DECEPTION PROTOCOL)
 
-When archive creation and file delivery are available in the current environment, package the final deliverables as: `backend-{role}-v1.zip`.
+```text
+Mode A (CREATE):
+└── backend-{role}-v1.zip
+
+Mode B (AUDIT + REPAIR):
+├── Intermediate Checkpoint: backend-{role}-v{N}-PARTIAL-rbg{X}.zip  (when subsequent RBGs are still pending)
+└── 100% Complete Release:   backend-{role}-v{N}-ALL-RBGS-COMPLETE.zip (ONLY when ALL RBGs 1..N are done & Section 6.12A clean)
+```
+
+> ⛔ **STRICT PROHIBITION ON PREMATURE "COMPLETE" / "FINAL" LABELS (CRITICAL P0 ANTI-DECEPTION INVARIANT):**
+> 1. **Zero Premature "Complete" Claims:** The words `complete`, `final`, or `all-done` MUST NEVER appear in any ZIP filename, title, or delivery message unless **100% of planned RBGs (RBG 1 through RBG N)** are genuinely completed on the filesystem, 100% of fixable finding IDs are closed or explicitly user-overridden, and the Pre-Delivery Cross-Check Gate (Section 6.12A) has passed 100% clean.
+> 2. **State-Reflective Naming for Intermediate Deliveries:** If a ZIP is produced or provided while ANY RBG is still pending (e.g., after completing RBG 1, while RBG 2 and RBG 3 are remaining), the ZIP **MUST BE EXPLICITLY NAMED** `backend-{role}-v{N}-PARTIAL-rbg{X}.zip`.
+> 3. **Audit Fraud Classification:** Delivering an intermediate or partial repair archive labeled as `complete` or allowing the user to mistakenly assume an incomplete fix is all-done is classified as **CRITICAL P0 AUDIT FRAUD & DISQUALIFICATION**.
+
+When archive creation and file delivery are available in the current environment, package deliverables using the exact state-reflective naming above.
 
 When archive creation is unavailable, provide:
 - the complete intended package manifest (all files and their paths);
@@ -3479,6 +3566,7 @@ When archive creation is unavailable, provide:
 - a clear explicit statement that the archive itself was NOT produced in the current environment.
 
 Never claim a ZIP was created, attached, or validated unless that actually occurred.
+
 
 ### FINAL DELIVERABLE MANIFEST
 
@@ -3565,7 +3653,7 @@ After repairs:
 3. verify frontend-derived requirements;
 4. generate API E2E and UI automation deliverables (MANDATORY — see API E2E AND UI AUTOMATION DELIVERABLE RULE in Section 6.10);
 5. generate final documentation;
-6. only then package `backend-{role}-v{N}-fix.zip` — see PACKAGE DELIVERY RULE in Section 6.10.
+6. only then package `backend-{role}-v{N}-ALL-RBGS-COMPLETE.zip` (or intermediate `backend-{role}-v{N}-PARTIAL-rbg{X}.zip`) — see PACKAGE DELIVERY RULE in Section 6.10.
 
 When archive creation is unavailable for MODE B, provide the complete intended package manifest, all generated file contents or patches, and a clear statement that the archive was NOT produced in the current environment.
 
@@ -3587,21 +3675,26 @@ After the full audit is complete and all findings are recorded, the AI MUST grou
 
 A Repair Batch Group is a set of 3–4 audit batches whose findings are repaired together in one controlled execution turn.
 
-## RBG SIZING RULE
+## RBG SIZING & WORKLOAD DENSITY (SUBSTANTIVE SPRINT CALIBRATION)
 
-```text
-IF total audit batches ≤ 6
-  → Group into RBGs of 3 batches each
+An RBG MUST represent a meaningful, substantive cluster of repair work calibrated by **Finding Weight, File Complexity, and Functional Cohesion**:
+- **The Anti-Micro-RBG Law (No Trivial-Fragment Babysitting):** Creating an RBG with only 2–4 trivial fixes that finishes in under 2 minutes is STRICTLY PROHIBITED. Light audit batches with few findings MUST be consolidated into a cohesive sprint so the user does not have to constantly babysit the screen and click approval buttons.
+- **The Token-Safety & Anti-Hallucination Ceiling (No Bloated Monoliths):** An RBG MUST NOT be bloated with 30+ files or 35+ findings. Overloading causes context memory saturation, output token truncation, git diff collisions, and hallucinations.
+- **Natural Cadence (Indicative Benchmark):** The workload targets below naturally yield a balanced sprint (~5 to 8 minutes of steady autonomous execution under typical conditions), giving the user uninterrupted time for other tasks while keeping execution strictly bounded and deterministic. *(Note: AI does not measure wall-clock timers; calibrate strictly by the finding and file metrics below).*
 
-IF total audit batches 7–12
-  → Group into RBGs of 3–4 batches each
+### 1. Deterministic Workload Calibration Matrix
 
-IF total audit batches > 12
-  → Group into RBGs of 4 batches each
+| RBG Category / Severity | Target Findings per RBG | Target Batches | Scope & Complexity Profile | Token & Safety Ceiling |
+|---|---|---|---|---|
+| **P0 Architectural & Structural** (Rule 0A/0A.2 4-tier normalization, domain quarantine, sibling isolation, security/auth/tenants) | **6–12 substantive findings / files** | 3–4 batches | Deep architecture refactoring, entity/migration decoupling, DI boundaries | Max 14 files |
+| **P1 Core Functional & Business Logic** (Services, repositories, entities, DTOs, migrations, transactional outbox) | **10–18 findings** | 3–5 batches | CRUD services, repositories, validations, domain event publishing | Max 18 files / 20 findings |
+| **P2 Documentation Trio & Test Harness** (Autonomous sub-module docs 22 sections, unit/integration tests, Section 20 seeders) | **12–22 findings** | 4–6 batches | Submodule documentation trio, standalone mock seeders, test suite | Max 22 findings |
+| **P3 Formatting & Minor Conventions** (Code comments, minor naming, formatting) | Bundle with P2 or bundle **15–25 findings** | 4–6 batches | Non-breaking cosmetic, comment, and convention fixes | Max 25 findings |
 
-MAXIMUM ABSOLUTE CEILING: No single RBG may contain findings from more than 4 audit batches.
-MINIMUM: No single RBG may contain fewer than 2 audit batches unless it is the final RBG.
-```
+### 2. Deterministic Sizing Invariants
+1. **Minimum Workload Floor (Anti-Micro-Fragmentation):** An RBG MUST contain at least **8 findings** (or at least 4 substantive files), unless the total remaining uncompleted findings in the entire project are fewer than that. Light audit batches with only 1–2 minor findings MUST be consolidated together into a single RBG.
+2. **Maximum Safety Ceiling (Anti-Hallucination Firewall):** No single RBG may contain more than **25 findings** or touch more than **18 files** in one execution turn. This guarantees the model operates well within safe context memory and eliminates output token truncation.
+3. **Dependency Cohesion First:** Always respect dependency order. If fixing an architectural finding requires touching related entities or migrations, keep them in the same RBG rather than splitting them artificially.
 
 ## RBG PRIORITY ORDER
 
@@ -3654,7 +3747,12 @@ Or reply "Adjust" to change the grouping.
 
 > ⛔ **HARD STOP: Do NOT execute a single fix until the user approves the RBG Plan.**
 >
-> 💬 **FLEXIBLE AFFIRMATION PROTOCOL:** Any affirmative user response (e.g., "Begin RBG 1", "Approved", "continue", "proceed", "start", "go ahead", "aage badho", "karo", "haan", "ok", "yes", "next") constitutes full valid approval. The AI MUST NOT halt, argue, or demand an exact phrase.
+> 🖱️ **1-CLICK INTERACTIVE BUTTON & EXECUTABLE ARTIFACT PROTOCOL (ZERO-MANUAL-TYPING ACROSS ALL CHECKPOINTS):**
+> The AI MUST provide a 1-click interactive action button (via actionable artifact `RequestFeedback: true` or `ask_question` tool) at EVERY pause/checkpoint across the entire lifecycle:
+> 1. **Checkpoint 1 — STAGE 1 FREEZE TRANSITION:** After freezing the requirements baseline, render a 1-click button: `[👉 Proceed to Stage 2: Deep Audit]`. (In chat telemetry, explain clearly in Roman Hinglish: *"Stage 1 (Baseline Freeze) complete ho gaya hai. Abhi koi repair nahi hui hai kyunki pehle Stage 2 mein Full Audit chalega aur saare backend bugs dhoonde jayenge. Audit ke baad RBG Plan aayega jisme [Approve RBG 1] button milega."*).
+> 2. **Checkpoint 2 — RBG PLAN APPROVAL:** After Stage 2 Audit completes and findings are grouped into RBGs, render a 1-click button: `[👉 Approve RBG 1 & Start Repairs]`.
+> 3. **Checkpoint 3 — RBG CHECKPOINTS:** After completing each RBG sprint, render a 1-click button: `[👉 Proceed with RBG N+1]`.
+> 4. **Flexible Text Affirmation Fallback:** For plain chat or CLI environments without UI buttons, any affirmative response (e.g., "Begin RBG 1", "Approved", "continue", "proceed", "start", "go ahead", "aage badho", "karo", "haan", "ok", "yes", "next") constitutes full valid approval. The AI MUST NOT halt, argue, or demand an exact phrase.
 
 Do NOT start any repair until the user approves the RBG Plan.
 
@@ -3664,11 +3762,35 @@ Do NOT start any repair until the user approves the RBG Plan.
 1. **PRIOR RBG DEPENDENCY PRE-CHECK (MANDATORY for RBG N where N > 1):** Before executing any fix in RBG N, verify that every artifact from previous RBGs that the current RBG depends on is actually in place. If a prior RBG fix is missing or incomplete → repair it BEFORE starting the current RBG and record as `PRIOR_RBG_FIX_INCOMPLETE`. This is a targeted dependency check only — not a full re-audit of all previous RBGs.
 2. Execute ALL findings from the current RBG before moving to the next RBG.
 3. After completing each RBG, checkpoint and display the RBG Completion Dashboard.
-4. **MANDATORY APPROVAL GATE AFTER EACH RBG:** Do NOT start the next RBG until the user gives affirmative confirmation (e.g. "continue", "next", "Begin RBG N+1", "aage badho", "karo", "go ahead"). Multi-batch auto-chaining without human pause is strictly prohibited — pausing after each RBG keeps the AI laser-focused on a bounded scope, preserves context integrity, and prevents compounding multi-file errors.
+4. **MANDATORY APPROVAL GATE AFTER EACH RBG:** Do NOT start the next RBG until the user gives affirmative confirmation (via 1-click UI button or reply "continue", "next", "Begin RBG N+1", "aage badho", "karo", "go ahead"). Multi-batch auto-chaining without human pause is strictly prohibited — pausing after each RBG keeps the AI laser-focused on a bounded scope, preserves context integrity, and prevents compounding multi-file errors.
 5. Within an RBG, apply fixes in dependency order:
    - Migrations/entities first → repositories → services → controllers/DTOs → tests → docs.
 6. Never apply a fix from RBG 3 while RBG 1 is still in progress.
 7. Security/auth/tenant fixes MUST always be in RBG 1 regardless of which audit batch found them.
+8. **INTERMEDIATE CHECKPOINT ZIP NAMING (ANTI-DECEPTION):** If the user requests an intermediate archive or the AI produces a ZIP checkpoint after completing RBG N while subsequent RBGs remain pending, the ZIP filename MUST be explicitly formatted as: `backend-{role}-v{N}-PARTIAL-rbg{N}.zip`. The AI MUST NOT use the words `complete`, `final`, or `all-done` in the filename or description while any RBG is pending.
+9. **FINAL COMPLETE DELIVERY PREREQUISITE:** The final release ZIP named `backend-{role}-v{N}-ALL-RBGS-COMPLETE.zip` is permitted ONLY after 100% of RBGs (RBG 1 to RBG N) are completed, zero unresolved actionable findings remain, and Section 6.12A Pre-Delivery Cross-Check Gate is passed 100% clean.
+10. **INTERACTIVE CLARIFICATION & DECISION MODAL PROTOCOL (1-CLICK RECOMMENDED SELECTION):**
+   - Whenever the AI encounters ANY confusion, ambiguity, missing design choice, architectural conflict, or needs a decision/clarification from the user:
+     - The AI **MUST NOT** output a long, open-ended technical essay asking the user to explain or write code.
+     - The AI **MUST** formulate a structured interactive modal / multiple-choice selection (using the `ask_question` tool in IDEs or selectable checkbox/radio options with a single-click confirmation button).
+     - **Mandatory `(Recommended)` Prefix:** Exactly ONE option MUST be listed first and prefixed with `(Recommended)` representing the safest, architecture-compliant default choice.
+     - **Default One-Click Confirmation:** If the user is unsure, they can simply select the default recommended option and click Confirm/Proceed with zero technical burden or manual typing.
+11. **LIVE PROGRESS HEARTBEAT TELEMETRY IN ROMAN HINGLISH (ANTI-HANG ASSURANCE):**
+    - During execution turns touching multiple files, the AI MUST NOT remain completely silent. A prolonged lack of visible response creates the false impression that the AI is frozen, hung, or stuck.
+    - After completing each substantive fix/file within the RBG, the AI MUST emit a concise, real-time telemetry line:
+      - **Language Rule (ZERO-ENGLISH BAN):** Strictly **Roman Hinglish** (English letters, NO Devanagari script). Pure English conversational updates, explanations, or telemetry are strictly FORBIDDEN and treated as a FORMAT VIOLATION.
+      - **Informational Only (Non-blocking):** It does NOT ask for user input or pause execution.
+      - **Format & Concrete Examples:**
+        ```text
+        BAD (Strictly Forbidden):
+        ✓ [Done]: I have audited the NestJS controllers and DTO validation pipes.
+        ⚙️ [In Progress]: I’m verifying the dual-layer multi-tenancy filters before proceeding.
+
+        GOOD (Mandatory):
+        ✓ [Done]: `[file_name]` me [brief fix in Hinglish - e.g. "NestJS controller aur DTO validation pipe repair"] ho gaya hai.
+        ⚙️ [In Progress]: Ab `[next_file_name]` me [next fix in Hinglish - e.g. "Dual-layer multi-tenancy filter aur query predicate"] start kar raha hoon...
+        ```
+      - This gives the user continuous real-time visibility into what was just fixed and what is currently being worked on, completely eliminating the "hang illusion".
 
 ## RBG CHECKPOINT TEMPLATE
 
@@ -3688,16 +3810,21 @@ After completing each RBG, display:
 ║   RBG [N+1]: Batches [A, B, C] — [N] findings               ║
 ║   RBG [N+2]: Batches [D, E, F] — [N] findings               ║
 ╠══════════════════════════════════════════════════════════════╣
+║ INTERMEDIATE ARCHIVE (IF PACKAGED):                          ║
+║   backend-{role}-v{N}-PARTIAL-rbg[N].zip                     ║
+║   ⚠️ STATUS: PARTIAL FIX ONLY — RBG [N+1] PENDING            ║
+╠══════════════════════════════════════════════════════════════╣
 ║ VERIFICATION STATUS:                                         ║
 ║   TypeScript:  [PASS / FAIL / NOT_EXECUTED]                  ║
 ║   Lint:        [PASS / FAIL / NOT_EXECUTED]                  ║
 ║   Unit Tests:  [PASS / FAIL / NOT_EXECUTED]                  ║
 ║   Migrations:  [VERIFIED / NOT_EXECUTED]                     ║
 ╠══════════════════════════════════════════════════════════════╣
-║ ACTION REQUIRED:                                             ║
-║ Reply "continue" to proceed to RBG [N+1].                    ║
-║ OR reply "Begin RBG [N+1]" to start the next group.          ║
+║ ACTION REQUIRED (1-CLICK BUTTON OR CHAT):                    ║
+║ 👉 Click [Proceed with RBG N+1] button in UI / artifact      ║
+║ OR reply "continue" / "Begin RBG [N+1]" to proceed.          ║
 ╚══════════════════════════════════════════════════════════════╝
+
 ```
 
 ## RBG ANTI-RANDOM-FIX RULE (NON-NEGOTIABLE)
@@ -3780,7 +3907,51 @@ Add to the existing `progress.json` structure:
 > - [ ] `INTEGRATION_GUIDE.md` generated and included in ZIP (consolidating changelog, endpoint preservation matrix, schema migrations, and host verification)
 > - [ ] Self-contained backend source module files and automated test suites included in ZIP
 > - [ ] ZERO loose markdown files clutter rule confirmed (no separate `stage-*.md` or loose changelogs at ZIP root)
-> **Delivering a ZIP missing any mandatory artifact = incomplete delivery. Add the missing artifact before delivering.**
+> - [ ] Section 6.12A Pre-Delivery Mechanical Cross-Check Ledger printed and 100% verified clean
+> **Delivering a ZIP missing any mandatory artifact or without printing the Section 6.12A Cross-Check Ledger = incomplete delivery. Complete the ledger before delivering.**
+
+## 6.12A MANDATORY PRE-DELIVERY CROSS-CHECK VERIFICATION GATE (ZERO-EXCUSE AUDIT RECONCILIATION)
+
+> ⛔ **HARD STOP — PRE-DELIVERY MECHANICAL CROSS-CHECK GATE (NON-NEGOTIABLE)**
+> Before generating, offering, or delivering ANY 100% COMPLETE release ZIP (`backend-{role}-v{N}-ALL-RBGS-COMPLETE.zip`), the AI MUST execute a mechanical, multi-point cross-check across the ACTUAL filesystem and print the following **THREE VERIFICATION TABLES**.
+>
+> ⚠️ **THE ZERO-EXCUSE INVARIANT:** Outputting a ZIP and subsequently stating: *"Oh sorry, maine cross-check nahi kiya and all"* or *"ye rule follow karna bhool gaya"* is classified as a **FATAL P0 WORKFLOW VIOLATION & AUDIT FRAUD**. Delivering a ZIP without physically verifying all submodules and all rules invalidates the entire deliverable.
+
+### Table 1: RBG Execution & Finding Closure Reconciliation
+| RBG | Batches Covered | Total Findings | Fixed in Source | Skipped by User | Remaining Unfixed | Status |
+|---|---|---|---|---|---|---|
+| RBG 1 | [Batches] | [N] | [N] | [N] | 0 | COMPLETED |
+| RBG 2 | [Batches] | [N] | [N] | [N] | 0 | COMPLETED |
+| RBG N | [Batches] | [N] | [N] | [N] | 0 | COMPLETED |
+*(Rule: If Remaining Unfixed > 0 for ANY RBG, the deliverable is PARTIAL and MUST be named `backend-{role}-v{N}-PARTIAL-rbg{X}.zip`. It is STRICTLY FORBIDDEN to label it COMPLETE).*
+
+### Table 2: Submodule-by-Submodule Physical Audit Ledger
+*(Every single authored backend submodule in the role MUST be listed individually with filesystem proof — Zero Sampling permitted):*
+| Submodule Path | Artifact Folders Verified | Doc Trio (22 Canonical Sections) | Unit Tests + Harness Mock Catalog (8 Scenarios) | Sibling Isolation (Zero Cross-Imports / Strict WET) | Anti-Lazy Scan (Zero TODO/Ellipsis) | Submodule Status |
+|---|---|---|---|---|---|---|
+| `{submodule-1}` | PASS (`controllers/`, `services/`, `dto/`, `repositories/`) | PASS (`-backend-feature.md`, `-backend-forbidden.md`, `-backend-contract.md`) | PASS (`mock-scenarios.ts` 8 states) | PASS (Zero sibling imports) | PASS (Zero `// TODO`, zero `// ... rest unchanged`) | 100% VERIFIED |
+| `{submodule-2}` | PASS | PASS | PASS | PASS | PASS | 100% VERIFIED |
+
+### Table 3: Canonical Architecture Rules Sweep Table
+| Rule Domain | Canonical Requirement | Verification Method | Result |
+|---|---|---|---|
+| 4-Tier Hierarchy | Domain Container (Tier 3) ➔ Autonomous Submodule (Tier 4) | Physical directory tree | PASS |
+| Zero Flat Submodule Dumping | No granular submodules dumped directly under `{role}-modules/` | Directory inspection | PASS |
+| Anti-Action Nano-Module Ban | No `*-add`, `*-edit`, `*-create` submodules; actions live in entity submodule | File/folder scan | PASS |
+| Banned Generic Junk Drawers | No `*-operations`, `*-management`, `*-general`, `*-misc`, etc. | Directory scan | PASS |
+| Strict DTO Validation | Class-validator with whitelist & forbidNonWhitelisted | File inspection | PASS |
+| Database-per-Tenant Isolation | TenantContext resolved via JWT; queries filter by tenant | File inspection | PASS |
+| Two-Phase Migrations | Every migration exports `up()` and `down()`; down() reverts up() | Migration code scan | PASS |
+| Canonical Response Envelope | Discriminated union ApiResponse<T>; data null on error | Interceptor & controller scan | PASS |
+| Standalone Run Harness | Section 20 Standalone Harness with seeders in every submodule | Harness test verification | PASS |
+
+### 4-Point Self-Audit Gate (Mandatory Before Packaging)
+Before generating any release ZIP archive, the AI MUST execute and attest to this final 4-point verification loop:
+1. `CONTRADICTION_CHECK`: Zero conflicting rules, zero conflicting naming taxonomies, zero legacy `-fix.zip` references.
+2. `AUTHORITY_CHECK`: Precedence order strictly observed; existing repository package.json honored; zero invented requirements.
+3. `MISSING_CONTRACT_CHECK`: Every unprovided behavior explicitly marked `CONTRACT_MISSING`; zero AI speculative guessing.
+4. `HALLUCINATION_CHECK`: Every file path, component name, and line reference cited exists physically in the delivered archive.
+
 
 ```text
 ALL WORK UNITS COMPLETE
@@ -6779,12 +6950,21 @@ Also verify:
 
 Verify:
 
-- backend domain grouping;
-- frontend feature/module semantic name is preserved;
-- backend feature folder mirrors frontend semantic name;
-- route naming mirrors domain grouping;
-- no silent semantic rename such as `auth` → `identity`;
-- casing may change only where framework convention requires it.
+- **1-to-1 Domain Grouping Isomorphism:** Backend folder hierarchy mirrors frontend 4-tier domain hierarchy (`backend-{role}/{role}-modules/{role}-{domain}/{submodule}/`).
+- **Zero Flat Submodule Dumping Law:** Granular sub-modules (`crm-enquiries/`, `accounting-assets/`) MUST NEVER be dumped directly under `{role}-modules/`. Every sub-module MUST live inside its respective parent Tier 3 Domain Module (`backend-{role}/{role}-modules/{role}-{domain}/{submodule}/`).
+  - *Violation Finding:* If sub-modules are dumped flatly into `{role}-modules/` without their parent domain container → emit `FINDING: BACKEND_FLAT_SUBMODULE_POLLUTION`.
+- **Strict Anti-Action Nano-Module Ban:** Sub-modules named after single CRUD actions or forms (`*-add`, `*-edit`, `*-create`, `*-delete`) are STRICTLY FORBIDDEN. All actions belong inside the parent entity's autonomous sub-module as controller endpoints, service methods, and DTOs.
+  - *Violation Finding:* If any action nano-module exists → emit `FINDING: BACKEND_ACTION_NANO_MODULE_VIOLATION`.
+- **Canonical ERP Domain Taxonomy & Anti-Junk-Drawer Law:** Domain modules must represent standard business bounded contexts (CRM, Accounting, Attendance, Inventory, HR, Members, Billing, Subscriptions, Platform, Gyms, Reports).
+  - *Permanently Banned Generic Junk-Drawer Names:* `*-operations/`, `*-management/`, `*-general/`, `*-misc/`, `*-tools/`, `*-actions/`, `*-hub/`, `*-portal/`, `*-services/`, `*-data/`, or hybrid merged domains like `crm-accounting/`.
+  - *Violation Finding:* If a domain module uses a banned generic or merged name → emit `FINDING: BANNED_JUNK_DRAWER_DOMAIN_VIOLATION`.
+- **Bounded Context Affinity & Aggregate Root Mutation Test:** Domain ownership is governed by which Aggregate Root mutates the primary transactional database record. Invoices belong to Billing/Accounting; Member profiles belong to Members; Attendance check-ins belong to Attendance. Cross-domain entity smuggling is strictly forbidden.
+  - *Violation Finding:* If an entity/API is placed in the wrong domain context → emit `FINDING: BOUNDED_CONTEXT_AFFINITY_VIOLATION`.
+- **Zero Domain Count Lock (No Rigid Hardcoding):** The number of domain containers per role is determined purely by the business domain bounded contexts of that role. There is **NO hardcoded number or artificial ceiling** (neither 5, nor 6–10, nor any fixed count). The AI MUST NOT force-merge or artificially split domains to satisfy an arbitrary numeric range.
+- **Frontend Semantic Name Preservation:** Frontend feature/module semantic name is preserved; backend feature folder mirrors frontend semantic name in kebab-case.
+- **Route Naming Mirrors Domain Grouping:** Canonical route namespace follows `/api/v1/{role}/{domain}/{submodule}/...` for role-scoped endpoints.
+- **No Silent Rename:** No silent semantic renames (e.g., `auth` → `identity`). Casing changes only per framework conventions.
+
 
 ---
 
@@ -7442,6 +7622,11 @@ Detect:
 ---
 
 ## RULE 77 — DEPENDENCY-ADDITION GUARDRAIL
+
+> ⛔ **DEPENDENCY PRECEDENCE HIERARCHY:**
+> 1. **Existing Repository `package.json` / `requirements.txt` (Highest Authority):** Packages already present and actively used in the supplied codebase are classified as `LEGACY_REPOSITORY_APPROVED`. The AI MUST NOT flag them as unauthorized violations.
+> 2. **Locked Architecture Registry (Rule 0G-A):** Authoritative for all new feature additions, scaffolding, or clean-slate modules.
+> 3. **AI Speculative Package Hallucination:** STRICTLY PROHIBITED.
 
 For new packages verify:
 
@@ -10240,6 +10425,9 @@ Before producing the final verdict, verify:
 [ ] Migrations checked
 [ ] N+1 checked
 [ ] Every dynamically discovered backend architecture rule checked
+[ ] Rule 38 (Hierarchical Domain Grouping & Zero Flat Submodule Dumping) — All sub-modules enclosed in parent Tier 3 Domain Module; zero flat dumping under {role}-modules/
+[ ] Anti-Action Nano-Module Ban — No sub-modules created for single CRUD actions (*-add, *-edit, *-create); all actions live inside parent entity sub-module
+[ ] Anti-Junk-Drawer Law & Bounded Context Affinity — No banned generic junk drawers (*-operations, *-management, *-general); Aggregate Root mutation ownership respected; zero domain count lock confirmed (no rigid numeric ceilings)
 [ ] Rules added after prior Universal prompt versions included
 [ ] Latest extended architecture checks completed
 [ ] Rule 78 (Forbidden Patterns File) — `-forbidden.md` present, specific, rule-cited, and consequence-explained (not generic)
@@ -10810,7 +10998,7 @@ The AI MUST immediately answer with a clear, concise **Progress Snapshot** based
 
 ## 86B.3.2 Repair Release Delivery Mandate (Non-Negotiable)
 
-- **Source Fix Completion vs Live Runtime:** When 100% of fixable `SOURCE_LEVEL_FIX` findings within the supplied scope have been repaired, packaging and delivering the versioned ZIP (`backend-{role}-v1-fix.zip` or `backend-{role}-v{N}-fix.zip`) is **MANDATORY**.
+- **Source Fix Completion vs Live Runtime:** When 100% of fixable `SOURCE_LEVEL_FIX` findings within the supplied scope have been repaired, packaging and delivering the versioned ZIP (`backend-{role}-v{N}-ALL-RBGS-COMPLETE.zip` or intermediate `backend-{role}-v{N}-PARTIAL-rbg{X}.zip`) is **MANDATORY**.
 - **External Blockers & Runtime Deferrals:** If items remain deferred to host runtime (`DEFERRED_TO_HOST_RUNTIME`) or require external human product decisions (`EXTERNAL_PRODUCT_DECISION_BLOCKED`), they are documented inside `RE_AUDIT_CHECKLIST_RESULT.md` and `INTEGRATION_GUIDE.md`. The archive is delivered as a **REPAIR RELEASE (SOURCE-VERIFIED)**.
 - **ZERO-WITHHOLDING INVARIANT:** The AI MUST NOT refuse to deliver the ZIP, withhold the archive, or declare delivery blocked due to deferred runtime verification, external document conflicts, or absence of host files. "DO NOT deliver partial ZIPs" strictly means do not deliver fragmented/split archives; it NEVER means withholding the complete repaired source ZIP!
 
@@ -10922,11 +11110,11 @@ Only after all final verification passes:
 Mode A:
 backend-{role}-v1.zip
 
-Mode B first repair:
-backend-{role}-v2-fix.zip
+Mode B intermediate checkpoint:
+backend-{role}-v{N}-PARTIAL-rbg{X}.zip
 
-Mode B second repair:
-backend-{role}-v3-fix.zip
+Mode B 100% complete repair:
+backend-{role}-v{N}-ALL-RBGS-COMPLETE.zip
 ```
 
 The ZIP MUST contain the required final artifacts already mandated by this prompt:

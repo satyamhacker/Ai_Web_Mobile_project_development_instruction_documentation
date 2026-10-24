@@ -31,7 +31,35 @@ The AI must stop only when:
 Previously verified and unaffected work remains valid and MUST NOT be discarded.
 The AI MUST NOT silently continue after detecting a violation.
 >
-> This document is the **absolute normative authority** for all backend code in this project. Every rule is MANDATORY unless the rule itself defines a named `NOT_APPLICABLE` condition with explicit evidence. The following words in this document carry their STRICTEST possible meaning:
+> This document is the **absolute normative authority for all backend architectural, API contract, and code repair behavior**.
+>
+> ⛔ **ARCHITECTURAL & CODE COMPLETENESS MANDATE (MUST REPAIR & COMPLETE):**
+> When backend source code has incomplete DTO validation, missing class-validators, missing multi-tenancy query filters (`gymId`), raw unhandled error throws, missing idempotency checks, missing database migrations, or missing test suites:
+> - The AI **MUST ACTIVELY REPAIR, IMPLEMENT, AND COMPLETE THEM** using the Backend Architecture Rules (`BACKEND_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md`).
+> - Raw errors (`throw new Error`) MUST be replaced with standardized `ApiResponse<T>` error envelopes.
+> - DTOs MUST be fully decorated with `class-validator` rules.
+> - Database repositories MUST be completed with dual-layer multi-tenancy predicates.
+>
+> ⛔ **ANTI-DESTRUCTION & PARTIAL FEATURE COMPLETION LAW (ZERO FEATURE EVICTION):**
+> When backend source code contains partially implemented, half-built, or incomplete features (e.g., an unfinished controller endpoint, an uncompleted service method, a half-authored repository query, or an incomplete transaction block):
+> - **ZERO FEATURE EVICTION (DO NOT DELETE):** The AI **MUST NOT** delete, remove, comment out, or strip away existing endpoints, service methods, entities, or business flows simply because they are half-built, incomplete, or currently failing tests/build. Deleting half-built backend features to get a "clean audit pass" is strictly prohibited as DESTRUCTIVE MALPRACTICE.
+> - **MANDATORY ADDITIVE COMPLETION (ADD & CORRECT):** The AI **MUST actively COMPLETE the missing half**: add missing DTOs, implement missing service business logic, write database repository queries, author unit/integration tests, and correct all architectural violations until the feature is 100% functional and architecture-compliant.
+>
+> ⛔ **STRICT BOUNDARY OF `CONTRACT_MISSING` (EXTERNAL UNKNOWN SPECS ONLY):**
+> `CONTRACT_MISSING` applies STRICTLY to **external business contracts that cannot be known from the code or architecture** (e.g., an unprovided external 3rd-party webhook secret, unprovided payment gateway API keys, or an unknown financial commission percentage).
+> `CONTRACT_MISSING` **MUST NEVER BE USED AS AN EXCUSE** to leave source code incomplete, skip DTO validations, leave raw exceptions unhandled, or fail to build proper services/repositories!
+>
+> ⛔ **DETERMINISTIC CONFIDENCE TAXONOMY & EVIDENCE STANDARD:**
+> Every implementation decision, contract assertion, and audit claim MUST be classified into one of:
+> - `VERIFIED`: Proven by supplied source file path, exact line reference, verified API contract, schema, or explicit architecture rule.
+> - `DERIVED`: Deterministically derived from verified types/interfaces or architecture-mandated patterns (e.g. deriving a DTO validation pipe from a raw payload).
+> - `CONTRACT_MISSING`: External third-party behavior or requirement not provided in supplied scope. The AI MUST NOT infer or guess external third-party behaviors.
+> - `ASSUMED`: Strictly PROHIBITED. Speculative guessing without architectural or contract foundation is an ARCHITECTURE FAILURE.
+>
+> **Valid Evidence:** Source file path, exact line reference, API contract, schema, mock fixture, repository config, or normative architecture rule.
+> **Invalid Evidence (FORBIDDEN):** Speculative AI guessing, naming assumptions, generic industry patterns, or prior project habits.
+>
+> The following words in this document carry their STRICTEST possible meaning:
 >
 > | Word | Meaning |
 > |------|---------|
@@ -56,6 +84,15 @@ The AI MUST NOT silently continue after detecting a violation.
 > ```
 > **Failure to complete the above = the affected item MUST NOT be marked COMPLIANT.**
 > The AI must record the missing evidence and continue only where safe and within scope.
+>
+> ⛔⛔⛔ **EXECUTIVE CANONICAL DIAMOND PROTOCOLS (BACKEND ARCHITECTURE)** ⛔⛔⛔
+> The following diamond protocols are active from TURN 1 across ALL execution modes:
+> 1. **Anti-Deception ZIP Naming:** Intermediate archives MUST be labeled `backend-{role}-v{N}-PARTIAL-rbg{X}.zip`. The label `backend-{role}-v{N}-ALL-RBGS-COMPLETE.zip` is strictly forbidden unless 100% of RBGs (RBG 1..N) are closed and verified.
+> 2. **Pre-Delivery Cross-Check Gate (Zero-Excuse Law):** Must execute and output the 3 physical verification tables (RBG Closure Ledger, Autonomous Submodule Physical Ledger, Canonical Rules Sweep) before packaging. Post-delivery excuses ("Oh sorry, cross-check nahi kiya") are strictly banned as P0 audit fraud.
+> 3. **1-Click Interactive Button Priority:** Publish RBG Plans and Checkpoints as actionable artifacts (`RequestFeedback: true`) or modals (`ask_question`) so user can approve via 1-click button instead of manual typing across all checkpoints (Stage 1 Freeze, RBG Plan, and RBG sprints).
+> 4. **Interactive Clarification Modal with (Recommended) Default:** All questions/decisions MUST use structured modals/checkboxes with Option 1 marked `(Recommended)`. Zero open-ended technical essay questions.
+> 5. **Live Progress Heartbeat Telemetry in Roman Hinglish (STRICT ZERO-ENGLISH BAN):** Output real-time non-blocking progress lines (`✓ [Done]: ... ⚙️ [In Progress]: ...`) strictly in Roman Hinglish (English letters, NO Devanagari). PURE ENGLISH CHAT/TELEMETRY IS STRICTLY BANNED AS A FORMAT VIOLATION. Code identifiers, file paths, and syntax remain in English.
+> 6. **Substantive Workload Density:** Calibrate RBGs by workload floor (min 8 findings / 4 files) and safety ceiling (max 25 findings / 18 files) for a balanced ~5–8 min sprint without token blowouts or hallucinations.
 
 ## The Core Philosophy
 This document outlines the strict architectural rules for building the backend using the approved project framework, primarily **NestJS (TypeScript)** or **Django (Python)**, while preserving the same isolation and architectural principles. The primary goal is **Extreme Isolation**.
@@ -108,6 +145,8 @@ Before generating, auditing, or repairing ANY backend role module, verify ALL of
 [ ] Standard Mock Scenario Catalog: Sub-module test harness/mocks implement the 8 standard scenarios (ACTIVE, EMPTY, UNAUTHORIZED, FORBIDDEN, NOT_FOUND, VALIDATION_ERROR, SERVER_500, TIMEOUT)
 [ ] Dual-Layer Multi-Tenancy Invariant: Database-per-tenant connection routing + mandatory gymId/branchId query predicate in every repository query
 [ ] Production Safety Guards: Idempotency-Key: UUIDv4 header on state mutations (accepts Idempotency-Key or X-Idempotency-Key), distributed locking for concurrent resources, rate-limiting, and zero raw secrets
+[ ] EXECUTIVE DIAMOND PROTOCOLS CONFIRMED (Anti-Deception ZIP Naming, 3-Table Cross-Check Gate, 1-Click Buttons, Clarification Modals, Roman Hinglish Telemetry, Workload Density)
+[ ] COMMUNICATION LANGUAGE CONFIRMED: Roman Hinglish (Strictly NO pure English conversational text/telemetry, NO Devanagari)
 ```
 
 **✅ COMPLIANT structure (Universal Day-1 Sub-Module Hierarchy):**
@@ -430,6 +469,24 @@ To prevent architectural drift and eliminate monolithic backend sprawl, the back
 >    - Every backend submodule folder MUST follow the exact semantic formula: `{submodule}` where `{submodule}` matches `{domain}-{capability}` (e.g., `attendance-dashboard/`, `attendance-history/`, `profile-overview/`, `billing-invoices/`).
 >    - **The 5-Second Comprehension Invariant:** Anyone inspecting ONLY the submodule folder name MUST instantly know within 5 seconds its parent domain and exact business capability/API intent.
 >    - **Strictly Banned Lazy/Ambiguous Names:** Never use generic or lazy names such as `tab1/`, `main/`, `default/`, `api/`, `details/` (must be `members-detail`), `common/`, `shared/`, `temp/`, or `misc/`. Lazy names are treated as **Critical Naming Violations**.
+>
+> 11. **Zero Flat Submodule Dumping Law (Tier 3 Domain Containers vs Tier 4 Submodules):**
+>    - Granular backend sub-modules (`crm-enquiries/`, `crm-leads/`, `accounting-assets/`, `accounting-asset-maintenance/`) MUST NEVER be dumped directly under `{role}-modules/` (e.g., dumping `backend-superadmin/superadmin-modules/accounting-assets/` directly under the role root is a critical architecture failure).
+>    - Every backend sub-module MUST be enclosed within its parent Tier 3 Domain Module (`backend-{role}/{role}-modules/{role}-{domain}/{submodule}/`, e.g., `backend-superadmin/superadmin-modules/superadmin-accounting/accounting-assets/`).
+>    - Tier 3 Domain Modules mirror Frontend Tier 3 Domain Containers 1-to-1, preserving strict domain bounded contexts and modular monolith boundaries.
+>
+> 12. **Strict Anti-Action Nano-Module Ban:**
+>    - Creating a backend sub-module or module for a single CRUD action, form, or UI interaction (e.g., `crm-enquiry-add/`, `crm-enquiry-create/`, `member-create/`, `asset-maintenance-add/`) is a **CRITICAL P0 ARCHITECTURE VIOLATION**.
+>    - In the backend, actions are NOT sub-modules. They are simply controller routes (`POST /api/v1/...`), controller methods (`createEnquiry`), service methods (`create`), and DTOs (`CreateEnquiryDto`) living directly inside the parent entity's autonomous sub-module (`crm-enquiries/`).
+>
+> 13. **Canonical ERP Domain Taxonomy & Anti-Junk-Drawer Law:**
+>    - Backend domain modules MUST align to standard cohesive business bounded contexts (e.g., CRM, Accounting, Attendance, Inventory, HR, Members, Billing, Subscriptions, Platform, Gyms, Reports).
+>    - **Permanently Banned Generic Junk-Drawer Names:** Never invent vague catch-all domain modules such as `*-operations/`, `*-management/`, `*-general/`, `*-misc/`, `*-tools/`, `*-actions/`, `*-hub/`, `*-portal/`, `*-services/`, `*-data/`, or hybrid merged domains like `crm-accounting/`.
+>    - **Aggregate Root Mutation Test for Bounded Context Affinity:** When resolving domain boundary disputes (e.g., where does subscription invoice payment belong?), the Aggregate Root that mutates the primary transactional record dictates the domain module. Invoices belong to Billing/Accounting; Member profiles belong to Members; Attendance check-ins belong to Attendance. Cross-domain entity smuggling is strictly forbidden.
+>
+> 14. **Zero Domain Count Lock (No Rigid Hardcoding):**
+>    - The number of domain containers per role is determined purely by the business domain bounded contexts of that role. There is **NO hardcoded number or artificial ceiling** (neither 5, nor 6–10, nor any fixed count). NEVER force-merge or artificially split domains to satisfy an arbitrary numeric range!
+
 
 ### Cross-Feature Workflow Exception
 
@@ -2091,7 +2148,16 @@ Before marking any migration PASS, ALL of the following MUST be verified with ev
 * **Frontend-First Naming Lock:** Since this project follows a frontend-first workflow (UI built with mock data before backend), the frontend feature folder names are the canonical source of truth. When backend development begins, the backend AI/developer MUST reuse the EXACT same folder/module name as the frontend, but translated to kebab-case. Renaming a feature's core semantic meaning during backend development is strictly forbidden.
 * **Casing Translation Rule (CRITICAL):** The semantic name stays identical across frontend/backend; ONLY the casing style changes per language/framework convention. The frontend uses `snake_case` and the backend uses `kebab-case` for folders (e.g., frontend `admin_billing`, backend `backend-admin/admin-modules/admin-billing`). This enforces a hard visual boundary between stacks through the mandatory `backend-` namespace prefix (Rule 0D) and the strict casing difference.
 * **API Route Grouping & Mirroring:** The API endpoint URLs must strictly mirror this domain grouping (e.g., `/api/v1/superadmin/stats`, `/api/v1/admin/members`). *(Naming Rule: The semantic module name stays identical to the frontend module name — the backend physical namespace only adds the mandatory role prefix. Example: frontend `manager_billing/` → backend folder `manager-billing/`, files `manager-billing-*.ts`, route `/api/v1/manager/billing/...`.)* The **canonical route namespace** is `/api/v1/{role}/{module}/...` for role-scoped routes (e.g., `/api/v1/manager/billing/invoices`) and `/api/v1/{module}/...` for genuinely public/shared endpoints (e.g., `/api/v1/auth/login`). Avoid mixing these two forms within the same module. Furthermore, page-to-endpoint naming must mirror exactly: if the frontend `/auth/` module calls an API, the route MUST be `/api/v1/auth/...`, not `/api/v1/session/...`. This ensures the debugging flow from UI page -> Frontend Folder -> Backend Folder -> Backend Route is 100% identically named (modulo dashes/underscores).
-* **1:1 Mirror Mapping:** The backend folder structure (AND the `e2e/` test folder structure) MUST strictly mirror the frontend route structure. If the frontend `frontend_superadmin` domain has 5 feature folders (e.g., `superadmin_broadcasts`, `superadmin_coupons`, `superadmin_affiliates`), the backend `backend-superadmin` domain MUST have exactly 5 matching modules.
+* **1:1 Mirror Mapping:** The backend folder structure (AND the `e2e/` test folder structure) MUST strictly mirror the frontend 4-tier domain hierarchy:
+  - Frontend Role Container (`frontend_{role}`) ➔ Backend Role Container (`backend-{role}/`)
+  - Frontend Tier 3 Domain Container (`{role}_{domain}`) ➔ Backend Tier 3 Feature Domain Module (`{role}-modules/{role}-{domain}/`)
+  - Frontend Tier 4 Autonomous Submodule (`{submodule}`) ➔ Backend Tier 4 Autonomous Sub-Module (`{submodule}/`)
+* **Zero Flat Submodule Dumping Law:** Granular sub-modules (e.g., `crm-enquiries`, `crm-leads`, `accounting-assets`, `accounting-invoices`) MUST NEVER be dumped flatly directly under `{role}-modules/`. They MUST be nested inside their owning Tier 3 Feature Domain Module (e.g., `backend-superadmin/superadmin-modules/superadmin-accounting/accounting-assets/`). Flat dumping of sub-modules into the role module root is a **P0 Architecture Violation**.
+* **Strict Anti-Action Nano-Module Ban:** Creating a backend module or sub-module for a single CRUD action or form (e.g., `crm-enquiry-add/`, `member-create/`, `asset-maintenance-add/`) is a **CRITICAL P0 ARCHITECTURE VIOLATION**. Actions are NOT modules; they are endpoints, controller methods, service methods, and DTOs within the parent entity's autonomous sub-module (`crm-enquiries/`).
+* **Canonical ERP Domain Taxonomy & Anti-Junk-Drawer Law:** Backend domain modules MUST align to standard cohesive business bounded contexts (CRM, Accounting, Attendance, Inventory, HR, Members, Billing, Subscriptions, Platform, Gyms, Reports).
+  - **Permanently Banned Generic Junk-Drawer Names:** Never create vague catch-all domain modules such as `*-operations/`, `*-management/`, `*-general/`, `*-misc/`, `*-tools/`, `*-actions/`, `*-hub/`, `*-portal/`, `*-services/`, `*-data/`, or hybrid merged domains like `crm-accounting/`.
+  - **Aggregate Root Mutation Test for Bounded Context Affinity:** Domain ownership disputes are resolved by which Aggregate Root owns and mutates the transactional record. Invoices belong to Billing/Accounting; Member profiles belong to Members; Attendance check-ins belong to Attendance. Cross-domain entity smuggling is strictly forbidden.
+* **Zero Domain Count Lock (No Rigid Hardcoding):** The number of domain containers per role is determined purely by the business domain bounded contexts of that role. There is **NO hardcoded number or artificial ceiling** (neither 5, nor 6–10, nor any fixed count). NEVER force-merge or artificially split domains to satisfy an arbitrary numeric range!
 
 #### Top-Level Role Structure (MANDATORY — See also Rule 2)
 
@@ -2103,28 +2169,53 @@ backend-{role}/
 └── {role}-modules/
 ```
 
-Feature modules MUST always be children of `{role}-modules/`. Direct placement of any feature module under `backend-{role}/` is forbidden.
+Feature domain modules MUST always be children of `{role}-modules/`. Direct placement of any feature domain module or sub-module under `backend-{role}/` is forbidden.
 
-❌ **FORBIDDEN:**
+❌ **FORBIDDEN (Flat Dumping / Missing Role Modules / Action Nano-Modules):**
 ```text
 backend-manager/
 ├── manager-core/
-├── manager-members/    <-- VIOLATION
-├── manager-billing/    <-- VIOLATION
-└── manager-attendance/ <-- VIOLATION
+├── manager-members/             <-- VIOLATION (Missing manager-modules/ parent)
+├── member-add/                  <-- VIOLATION (Action nano-module)
+└── crm-enquiry-add/             <-- VIOLATION (Action nano-module)
+
+backend-superadmin/
+└── superadmin-modules/
+    ├── accounting-assets/       <-- VIOLATION (Flat submodule dump; missing superadmin-accounting/)
+    ├── accounting-invoices/     <-- VIOLATION (Flat submodule dump; missing superadmin-accounting/)
+    └── superadmin-operations/   <-- VIOLATION (Banned junk-drawer domain)
 ```
 
-✅ **REQUIRED:**
+✅ **REQUIRED (Strict 4-Tier Hierarchical Domain Grouping):**
 ```text
-backend-manager/
-├── manager-core/
-└── manager-modules/
-    ├── manager-members/
-    ├── manager-billing/
-    └── manager-attendance/
+backend-superadmin/
+├── superadmin-core/
+└── superadmin-modules/
+    ├── superadmin-accounting/                           <-- Tier 3 Feature Domain Module Container
+    │   ├── superadmin-accounting.module.ts              <-- Domain Aggregator Module
+    │   ├── superadmin-accounting-backend-feature.md
+    │   ├── superadmin-accounting-backend-forbidden.md
+    │   ├── superadmin-accounting-dependencies.md
+    │   ├── accounting-assets/                           <-- Tier 4 Autonomous Sub-Module
+    │   │   ├── assets-controllers/
+    │   │   ├── assets-services/
+    │   │   ├── assets-dto/
+    │   │   ├── assets-repositories/
+    │   │   └── accounting-assets.module.ts
+    │   └── accounting-invoices/                         <-- Tier 4 Autonomous Sub-Module
+    │       ├── invoices-controllers/
+    │       ├── invoices-services/
+    │       ├── invoices-dto/
+    │       ├── invoices-repositories/
+    │       └── accounting-invoices.module.ts
+    └── superadmin-crm/                                  <-- Tier 3 Feature Domain Module Container
+        ├── superadmin-crm.module.ts
+        ├── crm-enquiries/                               <-- Tier 4 Autonomous Sub-Module (Add is an endpoint here!)
+        └── crm-leads/                                   <-- Tier 4 Autonomous Sub-Module
 ```
 
 * **Why:** This creates a perfect 1:1 mapped architecture. If a bug occurs in the "Coupons" feature, you provide the AI with exactly two things: `frontend/.../frontend_superadmin/superadmin_coupons/` and `backend/.../backend-superadmin/superadmin-modules/superadmin-coupons/`. The AI gets the complete vertical slice (Frontend UI + Backend Logic) for that specific feature without seeing the rest of the application. This guarantees zero hallucination, massive token savings, and perfect separation of concerns.
+
 
 
 
@@ -2494,7 +2585,13 @@ Instead, the AI MUST follow this controlled exception process:
 > **An AI agent MUST NOT add any new dependency without explicit human approval.**
 > **Consequence of violation:** A new dependency may conflict with the approved package registry (Rule 0G-A), introduce a known CVE (Rule 90 Gate 2), or duplicate an already-approved library — all of which block the CI/CD pipeline and require a full revert.
 
-* **The Rule:** Before proposing any new library, the AI MUST:
+* **The Rule & Dependency Precedence Hierarchy:**
+  When determining package validity, the AI MUST apply this strict authority order:
+  1. **Existing Repository `package.json` / `requirements.txt` (Highest Authority):** If the supplied repository already contains and actively uses a dependency not listed in the locked reference registry table, the existing repository manifest takes precedence. The AI classifies it as `LEGACY_REPOSITORY_APPROVED` and MUST NOT flag it as an unauthorized violation or refuse to audit/repair.
+  2. **Locked Architecture Dependency Registry (Rule 0G-A):** Authoritative for all new feature additions, scaffolding, or clean-slate modules.
+  3. **AI Speculative Package Hallucination:** STRICTLY PROHIBITED. The AI MUST NOT invent, guess, or install unapproved packages.
+
+  Before proposing any new library, the AI MUST:
   1. Check `package.json` or `requirements.txt` to verify the package is not already present.
   2. Check Rule 0G-A (Approved Backend NPM Package Registry) to verify the package is approved.
   3. If not in the approved registry: STOP. Record `DEPENDENCY_NOT_APPROVED`. Do NOT add it. Propose it to the human owner for explicit approval before proceeding.
