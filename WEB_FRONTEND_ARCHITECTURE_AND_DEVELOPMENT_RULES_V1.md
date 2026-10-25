@@ -854,18 +854,28 @@ src/app/frontend_manager/
 
 To prevent AI agents from arbitrarily inventing nonsensical parent groups (e.g. creating `manager_operations/` or merging `CRM` and `Members`), all grouping MUST adhere strictly to Domain-Driven Design (DDD) Bounded Contexts and the Canonical Domain Taxonomy below.
 
-#### 1. The Bounded Context Affinity Rule (Zero Cross-Domain Smuggling):
+#### 1. The Bounded Context Affinity Rule & The Anti-Force-Fitting Law (Zero Jabardasti Fit Karna):
 Two capabilities may ONLY reside in the same Tier 3 Domain Container if they share:
 1. **The exact same primary Aggregate Root & Entity Lifecycle** (e.g., all submodules in `manager_crm` operate on Leads/Prospects/Inquiries; all submodules in `manager_members` operate on Active Enrolled Members).
-2. **The same business domain boundary.**
+2. **The same authentic business domain boundary.**
+
+- ❌ **FORCE-FITTING UNRELATED FEATURES IS STRICTLY FORBIDDEN (ZERO JABARDASTI FIT KARNA):**
+  - An AI MUST NOT force-fit an existing feature into an arbitrary domain simply because it doesn't know where to put it or fears creating a new domain.
+  - **Concrete Anti-Pattern (Holiday Calendar inside Attendance):** Shoving `holiday_calendar` inside `superadmin_attendance` is a **CRITICAL P0 BOUNDED CONTEXT VIOLATION**. Attendance manages daily biometric check-ins, punches, and live verification; a Holiday Calendar manages organization-wide operational schedule dates, gazetted holidays, and branch exceptions! They are completely different lifecycles and business domains!
+  - **The Mandate:** If an authentic business feature does not cleanly and 100% logically belong to an existing domain's Aggregate Root, the AI **MUST CREATE A DEDICATED TIER 3 DOMAIN CONTAINER** (e.g., `superadmin_holiday_calendar/` or `superadmin_operational_calendar/`). Remember: **Roles have ZERO NUMERIC LOCK on domains**—never corrupt domain boundaries by force-fitting to keep domain count low!
 - ❌ **CROSS-DOMAIN SMUGGLING IS STRICTLY FORBIDDEN:**
   - An AI MUST NOT put active member subscription management inside `CRM` (Members is post-sale; CRM is pre-sale).
   - An AI MUST NOT put financial invoices or payment gateways inside `Attendance` or `Members` (Invoices belong to `Billing` / `Accounting`).
   - An AI MUST NOT merge `Staff` and `Accounting` merely because staff gets paid (Staff manages shifts/profiles; Accounting manages financial ledger disbursements).
 
-#### 2. The Anti-Junk-Drawer Law & Self-Evident Domain Naming Invariant (Zero Mystery Buckets):
-AI agents are **ABSOLUTELY PROHIBITED** from creating generic, ambiguous, or dumping-ground domain names. 
+#### 2. The Anti-Junk-Drawer, Anti-Buzzword Law & Code-First Forensic Inspection Invariant:
+AI agents are **ABSOLUTELY PROHIBITED** from creating generic, ambiguous, dumping-ground, or abstract corporate buzzword domain names. 
 
+- **The Code-First Forensic Inspection Invariant (Zero Guesswork Naming):**
+  - Before proposing or naming ANY domain or submodule, the AI **MUST deeply inspect the actual source code, forms, tables, schemas, and API endpoints first**.
+  - If the code contains SMS triggers, push broadcasts, and email templates ➔ Name it `superadmin_push_and_sms_notifications/` (Sidebar: `"Push & SMS Notifications"`), **NEVER** `superadmin_engagement`!
+  - If the code contains member gamification challenges and leaderboards ➔ Name it `superadmin_challenges_and_leaderboards/`!
+  - Naming MUST be a direct, faithful reflection of the discovered code entities and tables, NEVER an abstract hallucination.
 - **The Self-Evident Sidebar Naming Invariant:** Every Tier 3 Domain Container (`{role}_{domain}/`) and its Primary Sidebar label MUST be **100% self-evident and descriptive**. A user or developer looking at the sidebar name MUST know within 1 second exactly what capabilities exist inside without opening folders or clicking tabs.
 - **Explicit Composite Domain Naming (Canonical for Multi-Resource Domains):**
   - In business verticals where multiple operational resources form a single cohesive lifecycle (e.g., Study Library / Co-working Space / Facility ERPs where Seats, Shifts, and Lockers are allocated together):
@@ -875,20 +885,20 @@ AI agents are **ABSOLUTELY PROHIBITED** from creating generic, ambiguous, or dum
       - Secondary Nav Tabs (`layout.tsx`): `[ 🪑 Seats ]  [ ⏱️ Shifts ]  [ 🔒 Lockers ]`
       - Autonomous Child Sub-Modules: `seat_allocation/`, `shift_timings/`, `locker_assignments/`
     - Why this is superior: Reading `"Seats, Shifts & Lockers"` instantly communicates the entire feature scope, eliminating any ambiguity.
-- **Permanently Banned Generic Junk-Drawer Names:**
+- **Permanently Banned Generic Junk-Drawer & Abstract Buzzword Names:**
   The following domain names are **PERMANENTLY BANNED**:
-  - ❌ `*_operations/`
-  - ❌ `*_management/`
-  - ❌ `*_general/`
+  - ❌ `*_engagement/` (Banned Abstract Buzzword — does it mean push notifications, SMS, challenges, or feedback? Name the specific capability!)
+  - ❌ `*_retention/` or `*_growth/` or `*_experience/` (Banned Abstract Buzzwords)
+  - ❌ `*_insights/` or `*_intelligence/` (Banned Abstract Buzzwords — must be `*_analytics` or specific reports)
+  - ❌ `*_activity/` or `*_workspace/`
+  - ❌ `*_operations/` or `*_management/` or `*_general/`
   - ❌ `*_facilities/` (vague black-box — must be explicit like `*_seat_shift_locker/` or `*_equipment_and_rooms/`)
   - ❌ `*_resources/` (vague black-box — must explicitly name what resources)
-  - ❌ `*_miscellaneous/` or `*_misc/`
-  - ❌ `*_tools/` or `*_actions/`
-  - ❌ `*_hub/` or `*_portal/` or `*_workspace/`
-  - ❌ `*_services/` or `*_data/`
+  - ❌ `*_miscellaneous/` or `*_misc/` or `*_tools/` or `*_actions/`
+  - ❌ `*_hub/` or `*_portal/` or `*_services/` or `*_data/`
   - ❌ Unrelated domain mergers: `*_crm_and_members/` (merging pre-sale CRM with post-sale Members is banned), `*_finance_and_expenses/`
 
-Creating ANY domain with a banned generic name or hidden mystery bucket is an immediate **P0 ARCHITECTURE FAILURE & MERGE BLOCKER**. Every domain container MUST be either a recognized business noun or an explicit self-descriptive composite from the Canonical Domain Taxonomy below.
+Creating ANY domain with a banned generic name, abstract buzzword, or hidden mystery bucket is an immediate **P0 ARCHITECTURE FAILURE & MERGE BLOCKER**. Every domain container MUST be either a recognized business noun or an explicit self-descriptive composite from the Canonical Domain Taxonomy below.
 
 #### 3. Canonical ERP Domain Taxonomy (Extensible Baseline Matrix):
 The domain containers below represent the canonical baseline for Smart Gym 360. 
