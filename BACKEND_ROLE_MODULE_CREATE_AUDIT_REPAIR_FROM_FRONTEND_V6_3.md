@@ -202,12 +202,26 @@ Stop only when:
 >    - **Strict Anti-Action Nano-Module Ban:**
 >      - Creating a backend sub-module or module for a single CRUD action, form, or UI interaction (e.g., `crm-enquiry-add/`, `crm-enquiry-create/`, `member-create/`, `asset-maintenance-add/`) is a **CRITICAL P0 ARCHITECTURE VIOLATION**.
 >      - In the backend, actions are NOT sub-modules. They are simply controller routes (`POST /api/v1/...`), controller methods (`createEnquiry`), service methods (`create`), and DTOs (`CreateEnquiryDto`) living directly inside the parent entity's autonomous sub-module (`crm-enquiries/`).
->    - **Canonical ERP Domain Taxonomy, Anti-Junk-Drawer Law & The Anti-Force-Fitting Law (Zero Jabardasti Fit Karna):**
->      - Backend domain modules MUST align to standard cohesive business bounded contexts (e.g., CRM, Accounting, Attendance, Inventory, HR, Members, Billing, Subscriptions, Platform, Gyms, Reports).
+>    - **The Single Responsibility Domain Grouping Law & Bounded Context Integrity (1-Domain = 1-Responsibility Mandate):**
+>      - Every Tier 3 Backend Domain Module (`backend-{role}/{role}-modules/{role}-{domain}/`) MUST focus strictly on a **SINGLE BUSINESS RESPONSIBILITY & UNIFIED AGGREGATE ROOT** (Single Responsibility Principle applied to Architectural Domains).
+>      - ⛔ **THE UNIVERSAL BAN ON CONJOINED-TWIN DOMAIN MERGERS (The Universal "X-and-Y" Anti-Pattern):**
+>        - An AI agent is **STRICTLY PROHIBITED** from conjoining or merging ANY two distinct business domains, departments, or responsibilities into a single hybrid domain module (e.g., using `*-and-*`, `*-*`, or composite names combining two separate bounded contexts).
+>        - **The Universal Law:** A mere operational relationship, common database foreign key, or loose thematic connection between two business areas (e.g., *"both touch money"*, *"both touch staff"*, *"both touch members"*) **DOES NOT JUSTIFY MERGING THEM INTO ONE DOMAIN MODULE!**
+>        - **The 3-Point Deterministic Domain Independence Test:**
+>          Before proposing or creating ANY backend domain module, the AI MUST verify these 3 gates. If ANY gate is true, the capabilities **MUST BE SPLIT INTO SEPARATE SIBLING DOMAIN MODULES**:
+>          1. *Different Entity Lifecycles / Tables:* Do they mutate different core database tables or transactional state machines? (e.g., Invoices vs Ledger Entries; Leads vs Enrolled Members; Shifts vs Payroll).
+>          2. *Different Operational Personas / API Consumers:* Are they consumed by different client roles or for completely different operational intents? (e.g., Customer Checkout Gateway vs Accountant Audit API; Check-in Punch vs Holiday Schedule).
+>          3. *Different External Services:* Do they integrate with different third-party vendors/protocols? (e.g., Stripe/Razorpay vs Accounting ERPs; Biometric Hardware vs Calendar).
+>      - ❌ **UNIVERSAL CONJOINED-TWIN MERGER EXAMPLES (Illustrative, NOT Exhaustive — The Law Applies Universally To ALL Modules):**
+>        - **Billing vs Accounting:** `*-billing-and-finance/`, `*-finance-and-billing/` ➔ **STRICTLY BANNED!** (Billing = Customer invoices/subscriptions/gateways; Accounting = Ledgers/P&L/balance sheet/taxes).
+>        - **Pre-Sale vs Post-Sale:** `*-crm-and-members/`, `*-leads-and-members/` ➔ **STRICTLY BANNED!** (CRM = Pre-sale leads; Members = Enrolled users).
+>        - **HR vs Payroll:** `*-staff-and-payroll/`, `*-staff-and-accounting/` ➔ **STRICTLY BANNED!** (Staff = Profiles/shifts; Payroll = Disbursements).
+>        - **Check-ins vs Calendar:** `*-attendance-and-calendar/` ➔ **STRICTLY BANNED!** (Attendance = Punches; Calendar = Holiday schedules).
+>        - **Physical Stock vs Financial Valuation:** `*-inventory-and-accounting/` ➔ **STRICTLY BANNED!**
+>        - **ANY OTHER CONJOINED HYBRID:** Creating `*-{domainA}-and-{domainB}/` for ANY two bounded contexts is an **IMMEDIATE CRITICAL P0 ARCHITECTURE FAILURE**.
 >      - ❌ **FORCE-FITTING UNRELATED FEATURES IS STRICTLY FORBIDDEN (ZERO JABARDASTI FIT KARNA):**
->        - An AI MUST NOT force-fit an existing feature into an arbitrary domain simply because it doesn't know where to put it or fears creating a new domain.
->        - **Concrete Anti-Pattern (Holiday Calendar inside Attendance):** Shoving `holiday-calendar` inside `superadmin-attendance` is a **CRITICAL P0 BOUNDED CONTEXT VIOLATION**. Attendance manages daily biometric check-ins and punches; a Holiday Calendar manages organization-wide operational schedule dates, gazetted holidays, and branch exceptions! They are completely different lifecycles and business domains!
->        - **The Mandate:** If an authentic business feature does not cleanly and 100% logically belong to an existing domain's Aggregate Root, the AI **MUST CREATE A DEDICATED TIER 3 DOMAIN MODULE** (e.g., `superadmin-holiday-calendar/`). Remember: **Roles have ZERO NUMERIC LOCK on domains**—never corrupt domain boundaries by force-fitting to keep domain count low!
+>        - An AI MUST NOT force-fit an existing feature into an arbitrary domain simply because it doesn't know where to put it or fears creating a new domain (e.g., shoving `holiday-calendar` into `attendance` is a P0 failure).
+>        - **The Mandate:** If an authentic business feature does not cleanly and 100% logically belong to an existing domain's Aggregate Root, the AI **MUST CREATE A DEDICATED TIER 3 DOMAIN MODULE** (e.g., `superadmin-holiday-calendar/`). Roles have ZERO NUMERIC DOMAIN LOCKS!
 >      - **The Code-First Forensic Inspection Invariant (Zero Guesswork Naming):**
 >        - Before proposing or naming ANY backend domain or submodule, the AI **MUST deeply inspect the actual source code, database tables, schemas, entities, and controller routes first**.
 >        - If the code contains SMS triggers and push notification templates ➔ Name it `superadmin-push-and-sms-notifications/`, **NEVER** `superadmin-engagement`!
@@ -220,12 +234,11 @@ Stop only when:
 >            - Backend Domain Module: `backend-{role}/{role}-modules/{role}-seat-shift-locker/` (e.g., `backend-admin/admin-modules/admin-seat-shift-locker/`)
 >            - Child Autonomous Sub-Modules: `seat-allocation/`, `shift-timings/`, `locker-assignments/`
 >          - Why this is superior: Reading `admin-seat-shift-locker` immediately tells developers and API consumers that this domain encapsulates seat allocations, shift timings, and locker assignments.
->      - **Permanently Banned Generic Junk-Drawer & Abstract Buzzword Names:**
->        - ❌ `*-engagement/` (Banned Abstract Buzzword — does it mean push notifications, SMS, challenges, or feedback? Name the specific capability!)
->        - ❌ `*-retention/`, `*-growth/`, `*-experience/` (Banned Abstract Buzzwords)
->        - ❌ `*-insights/`, `*-intelligence/` (Banned Abstract Buzzwords — must be `*-analytics` or specific reports)
->        - ❌ `*-operations/`, `*-management/`, `*-general/`, `*-facilities/`, `*-resources/`, `*-misc/`, `*-tools/`, `*-actions/`, `*-hub/`, `*-portal/`, `*-services/`, `*-data/`, or hybrid mergers of unrelated aggregates like `crm-accounting/`.
->      - **Aggregate Root Mutation Test for Bounded Context Affinity:** When resolving domain boundary disputes (e.g., where does subscription invoice payment belong?), the Aggregate Root that mutates the primary transactional record dictates the domain module. Invoices belong to Billing/Accounting; Member profiles belong to Members; Attendance check-ins belong to Attendance. Cross-domain entity smuggling is strictly forbidden.
+>      - **Permanently Banned Generic Junk-Drawer, Abstract Buzzword & Conjoined-Twin Mergers:**
+>        - ❌ ANY conjoined-twin domain merger (`*-billing-and-finance/`, `*-crm-and-members/`, `*-staff-and-payroll/`, `*-inventory-and-accounting/`).
+>        - ❌ Abstract buzzwords (`*-engagement/`, `*-retention/`, `*-growth/`, `*-insights/`).
+>        - ❌ Junk-drawer catch-alls (`*-operations/`, `*-management/`, `*-general/`, `*-facilities/`, `*-resources/`, `*-misc/`, `*-tools/`, `*-actions/`, `*-hub/`, `*-portal/`, `*-services/`, `*-data/`).
+>      - **Aggregate Root Mutation Test for Bounded Context Affinity (Single Responsibility Enforcement):** When resolving domain boundary disputes, the Aggregate Root that mutates the primary transactional record dictates the domain module. Invoices belong to `billing`; Ledgers/Taxes belong to `accounting`; Member profiles belong to `members`; Attendance check-ins belong to `attendance`. Merging distinct responsibilities into a single conjoined module is strictly forbidden. Cross-domain entity smuggling is strictly forbidden.
 >    - **Zero Domain Count Lock (No Rigid Hardcoding):**
 >      - The number of domain containers per role is determined purely by the business domain bounded contexts of that role. There is **NO hardcoded number or artificial ceiling** (neither 5, nor 6–10, nor any fixed count). NEVER force-merge or artificially split domains to satisfy an arbitrary numeric range!
 >    - **The Domain Promotion Law (When a Dense Capability Promotes to a Primary Backend Domain):**

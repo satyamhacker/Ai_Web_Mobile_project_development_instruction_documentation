@@ -605,18 +605,34 @@ src/features/frontend_manager/
 
 To prevent AI agents from arbitrarily inventing nonsensical parent groups (e.g. creating `manager_operations/` or merging `CRM` and `Members`), all mobile domain grouping MUST adhere strictly to Domain-Driven Design (DDD) Bounded Contexts and the Canonical Domain Taxonomy below.
 
-#### 1. The Bounded Context Affinity Rule (Zero Cross-Domain Smuggling):
-Two capabilities may ONLY reside in the same Tier 3 Domain Container if they share:
-1. **The exact same primary Aggregate Root & Entity Lifecycle** (e.g., all submodules in `manager_crm` operate on Leads/Prospects/Inquiries; all submodules in `manager_members` operate on Active Enrolled Members).
-2. **The same business domain boundary.**
+#### 1. The Universal Single-Domain Purity Law & Bounded Context Integrity (1-Domain = 1-Bounded-Context Mandate):
+Every Tier 3 Domain Container (`src/features/frontend_{role}/{role}_{domain}/`) MUST focus strictly on a **SINGLE, UNIFIED BUSINESS BOUNDED CONTEXT & PRIMARY AGGREGATE ROOT** (Single Responsibility Principle applied to Mobile Domains). 
+
+- ⛔ **THE UNIVERSAL BAN ON CONJOINED-TWIN DOMAIN MERGERS (The Universal "X-and-Y" Anti-Pattern):**
+  - An AI agent is **STRICTLY PROHIBITED** from conjoining or merging ANY two distinct business domains, departments, or capabilities into a single hybrid domain container (e.g., using `*_and_*`, `*_*`, or composite names combining two separate bounded contexts).
+  - **The Universal Law:** A mere operational relationship, common data reference, or loose thematic connection between two business areas (e.g., *"both touch money"*, *"both touch staff"*, *"both touch members"*) **DOES NOT JUSTIFY MERGING THEM INTO ONE DOMAIN!**
+  - **The 3-Point Deterministic Domain Independence Test:**
+    Before proposing or creating ANY mobile domain container, the AI MUST verify these 3 gates. If ANY gate is true, the capabilities **MUST BE SPLIT INTO SEPARATE SIBLING DOMAIN CONTAINERS**:
+    1. *Different Entity Lifecycles / Tables:* Do they mutate different core database entities or transactional state machines? (e.g., Invoices vs Ledger Entries; Leads vs Enrolled Members; Shifts vs Payroll).
+    2. *Different Operational Personas / User Workflows:* Are they used by different roles or for completely different operational intents? (e.g., Customer Checkout vs Accountant Ledger Audit; Member Punch vs Holiday Planner).
+    3. *Different External Integrations / Protocols:* Do they integrate with different third-party systems? (e.g., Stripe/Razorpay vs Accounting Tally; Biometric Hardware vs Calendar).
+
+- ❌ **UNIVERSAL CONJOINED-TWIN MERGER EXAMPLES (Illustrative, NOT Exhaustive — The Law Applies to ALL Modules):**
+  - **Customer Billing vs Internal Accounting:** `*_billing_and_finance/` or `*_finance_and_billing/` ➔ **STRICTLY BANNED!** (Billing = Customer invoices, subscriptions, payment gateways, checkouts; Accounting/Finance = Internal general ledgers, P&L, balance sheets, tax/GST). Must be separate: `admin_billing/` AND `admin_accounting/`!
+  - **Pre-Sale Prospects vs Enrolled Members:** `*_crm_and_members/` or `*_leads_and_members/` ➔ **STRICTLY BANNED!** (CRM = Pre-sale inquiries/leads; Members = Post-sale active enrolled users).
+  - **HR Schedules vs Fiscal Payroll:** `*_staff_and_payroll/` or `*_staff_and_accounting/` ➔ **STRICTLY BANNED!** (Staff = Profiles, shifts, attendance; Payroll = Financial disbursements).
+  - **Operational Check-ins vs Calendar Configs:** `*_attendance_and_calendar/` or `*_attendance_and_holidays/` ➔ **STRICTLY BANNED!** (Attendance = Daily check-ins/punches; Calendar = Gazetted holiday schedules).
+  - **Physical Equipment vs Balance Sheet Valuation:** `*_inventory_and_accounting/` ➔ **STRICTLY BANNED!**
+  - **ANY OTHER HYBRID CONJOINED DOMAIN:** Creating `*_{domainA}_and_{domainB}/` for ANY two bounded contexts is an **IMMEDIATE CRITICAL P0 ARCHITECTURE FAILURE**.
+
 - ❌ **FORCE-FITTING UNRELATED FEATURES IS STRICTLY FORBIDDEN (ZERO JABARDASTI FIT KARNA):**
   - An AI MUST NOT force-fit an existing feature into an arbitrary domain simply because it doesn't know where to put it or fears creating a new domain.
-  - **Concrete Anti-Pattern (Holiday Calendar inside Attendance):** Shoving `holiday_calendar` inside `superadmin_attendance` is a **CRITICAL P0 BOUNDED CONTEXT VIOLATION**. Attendance manages daily biometric check-ins, punches, and live verification; a Holiday Calendar manages organization-wide operational schedule dates, gazetted holidays, and branch exceptions! They are completely different lifecycles and business domains!
-  - **The Mandate:** If an authentic business feature does not cleanly and 100% logically belong to an existing domain's Aggregate Root, the AI **MUST CREATE A DEDICATED TIER 3 DOMAIN CONTAINER** (e.g., `src/features/frontend_{role}/{role}_holiday_calendar/`). Remember: **Roles have ZERO NUMERIC LOCK on domains**—never corrupt domain boundaries by force-fitting to keep domain count low!
-- ❌ **CROSS-DOMAIN SMUGGLING IS STRICTLY FORBIDDEN:**
+  - **The Mandate:** If an authentic business feature does not cleanly and 100% logically belong to an existing domain's single Aggregate Root, the AI **MUST CREATE A DEDICATED TIER 3 DOMAIN CONTAINER** (e.g., `src/features/frontend_{role}/{role}_holiday_calendar/`). Remember: **Roles have ZERO NUMERIC LOCK on domains**—never corrupt domain purity by force-fitting or conjoining domains to keep domain count low!
+
+- ❌ **CROSS-DOMAIN ENTITY SMUGGLING IS STRICTLY FORBIDDEN:**
+  - An AI MUST NOT put customer billing invoices or payment gateways inside `Attendance` or `Members` (Invoices belong to `Billing`).
   - An AI MUST NOT put active member subscription management inside `CRM` (Members is post-sale; CRM is pre-sale).
-  - An AI MUST NOT put financial invoices or payment gateways inside `Attendance` or `Members` (Invoices belong to `Billing` / `Accounting`).
-  - An AI MUST NOT merge `Staff` and `Accounting` merely because staff gets paid (Staff manages shifts/profiles; Accounting manages financial ledger disbursements).
+  - An AI MUST NOT merge `Staff` and `Accounting` merely because staff gets paid.
 
 #### 2. The Anti-Junk-Drawer, Anti-Buzzword Law & Code-First Forensic Inspection Invariant:
 AI agents are **ABSOLUTELY PROHIBITED** from creating generic, ambiguous, dumping-ground, or abstract corporate buzzword domain names. 
@@ -627,16 +643,17 @@ AI agents are **ABSOLUTELY PROHIBITED** from creating generic, ambiguous, dumpin
   - If the code contains member gamification challenges and leaderboards ➔ Name it `superadmin_challenges_and_leaderboards/`!
   - Naming MUST be a direct, faithful reflection of the discovered code entities and tables, NEVER an abstract hallucination.
 - **The Self-Evident Navigation Naming Invariant:** Every Tier 3 Domain Container (`src/features/frontend_{role}/{role}_{domain}/`) and its Primary Mobile Navigation label (Bottom Tab or Drawer) MUST be **100% self-evident and descriptive**. A user or developer looking at the navigation name MUST know within 1 second exactly what capabilities exist inside without opening folders or tapping destinations.
-- **Explicit Composite Domain Naming (Canonical for Multi-Resource Domains):**
-  - In business verticals where multiple operational resources form a single cohesive lifecycle (e.g., Study Library / Co-working Space / Facility ERPs where Seats, Shifts, and Lockers are allocated together):
-    - ✅ **APPROVED & CANONICAL:** Explicit composite naming where internal capabilities are directly telegraphed in the name:
-      - Domain Container: `src/features/frontend_{role}/{role}_seat_shift_locker/` (e.g., `admin_seat_shift_locker/`)
-      - Navigation Title: `"Seats, Shifts & Lockers"` or `"Seat • Shift • Locker"`
-      - Secondary Nav Tabs (Top Segmented Bar or Domain Hub): `[ 🪑 Seats ]  [ ⏱️ Shifts ]  [ 🔒 Lockers ]`
-      - Autonomous Child Sub-Modules: `seat_allocation/`, `shift_timings/`, `locker_assignments/`
-    - Why this is superior: Reading `"Seats, Shifts & Lockers"` instantly communicates the entire feature scope, eliminating any ambiguity on mobile screens.
-- **Permanently Banned Generic Junk-Drawer & Abstract Buzzword Names:**
-  The following domain names are **PERMANENTLY BANNED**:
+- **The Physical Resource Composite Exception (Carefully Delimited):**
+  - *When is composite naming permitted?* ONLY when multiple physical resources share the exact same atomic reservation/booking transaction (e.g. `admin_seat_shift_locker/`). Conjoining two distinct business departments or bounded contexts is 100% PROHIBITED.
+- **Permanently Banned Generic Junk-Drawer, Abstract Buzzwords & Conjoined-Twin Mergers:**
+  The following domain patterns are **PERMANENTLY BANNED ACROSS ALL ROLES**:
+  - ❌ **ANY Conjoined-Twin Domain Merger (`*_{domainA}_and_{domainB}/` or `*_{domainA}_{domainB}/` combining two distinct bounded contexts):**
+    - `*_billing_and_finance/`, `*_finance_and_billing/` (BANNED — Billing is customer invoices/gateways; Finance is general ledgers/P&L/taxes)
+    - `*_crm_and_members/`, `*_leads_and_members/` (BANNED — CRM is pre-sale; Members is post-sale)
+    - `*_staff_and_payroll/`, `*_staff_and_accounting/` (BANNED — Staff is profiles/schedules; Payroll is disbursements)
+    - `*_attendance_and_calendar/` (BANNED — Attendance is check-ins; Calendar is holiday schedules)
+    - `*_inventory_and_accounting/` (BANNED — Inventory is physical stock; Accounting is fiscal valuation)
+    - ANY hybrid merger joining two distinct aggregate roots = BANNED.
   - ❌ `*_engagement/` (Banned Abstract Buzzword — does it mean push notifications, SMS, challenges, or feedback? Name the specific capability!)
   - ❌ `*_retention/` or `*_growth/` or `*_experience/` (Banned Abstract Buzzwords)
   - ❌ `*_insights/` or `*_intelligence/` (Banned Abstract Buzzwords — must be `*_analytics` or specific reports)
@@ -646,7 +663,6 @@ AI agents are **ABSOLUTELY PROHIBITED** from creating generic, ambiguous, dumpin
   - ❌ `*_resources/` (vague black-box — must explicitly name what resources)
   - ❌ `*_miscellaneous/` or `*_misc/` or `*_tools/` or `*_actions/`
   - ❌ `*_hub/` or `*_portal/` or `*_services/` or `*_data/`
-  - ❌ Unrelated domain mergers: `*_crm_and_members/` (merging pre-sale CRM with post-sale Members is banned), `*_finance_and_expenses/`
 
 Creating ANY domain with a banned generic name, abstract buzzword, or hidden mystery bucket is an immediate **P0 ARCHITECTURE FAILURE & MERGE BLOCKER**. Every domain container MUST be either a recognized business noun or an explicit self-descriptive composite from the Canonical Domain Taxonomy below.
 
