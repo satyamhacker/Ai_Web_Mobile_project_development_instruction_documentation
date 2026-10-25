@@ -2420,6 +2420,10 @@ Audit whether the role container's sidebar navigation aligns strictly 1-to-1 wit
    - Can any single sub-module (e.g., `attendance_history/`) or complete feature domain (e.g., `manager_attendance/`) be extracted as a standalone ZIP and audited/repaired by an AI agent in 100% isolation?
    - Does the sub-module import ANY business components, domain hooks, stores, domain types, or utilities from a sibling sub-module or sibling feature module?
      → If YES: Flag as `FINDING: CROSS_FEATURE_BUSINESS_IMPORT` (Severity: CRITICAL). Remediation: Duplicate business logic per sub-module (Strict WET Principle).
+   - **Mandatory Ambient Host Stubs Audit (`contracts/host-stubs.d.ts`):** Does the sub-module declare ambient host stubs in `contracts/host-stubs.d.ts` (stubbing `@/lib/api`, `@/lib/logger`, `@/components/ui/*`, `@/lib/socket`, `@/lib/display_value`) guaranteeing 100% standalone TypeScript compilation (`tsc --noEmit`) when zipped?
+     → If NO: Flag as `FINDING: MISSING_AMBIENT_HOST_STUBS` (Severity: MAJOR). Remediation: Add `contracts/host-stubs.d.ts` with generic fallback stubs.
+   - **External Infrastructure Dependency Budget Audit (Hard Ceiling ≤ 7):** Does the sub-module import from more than 7 distinct core application infrastructure files?
+     → If > 7: Flag as `FINDING: EXTERNAL_DEPENDENCY_BUDGET_EXCEEDED` (Severity: MAJOR). Remediation: Internalize helper logic locally (Strict WET) or split sub-modules.
 
 4. **Navigation Shell Isolation Audit:**
    - Are Sidebar, Header, Breadcrumbs, and Layout components isolated inside that role's navigation module (`{role}_navigation/`)?
@@ -2452,6 +2456,10 @@ Audit whether the mobile primary navigation (Bottom Tab Navigator / Drawer Navig
    - **Bounded Context Data Integrity & Cross-Domain Mutation Audit:**
      Does a mobile component, hook, or store directly mutate state or database records owned by an unrelated domain (e.g., Attendance screen directly mutating Invoices or Payments instead of consuming Billing APIs)?
      → If direct unauthorized mutation found: Flag as `FINDING: BOUNDED_CONTEXT_DATA_CORRUPTION_VIOLATION` (Severity: CRITICAL). Remediation: Route through the owning domain's API or domain events. (Note: The Auditor is STRICTLY FORBIDDEN from using this check to demand arbitrary reorganization of established, working mobile screens).
+   - **Literal Conjoined-Twin Domain Folder Naming Audit (Zero Subjective Re-Grouping):**
+     Does any mobile domain container folder literally use a conjoined name combining two distinct bounded contexts (e.g., `billing_and_finance`, `finance_and_billing`, `crm_and_members`, `staff_and_payroll`, `attendance_and_calendar`, `inventory_and_accounting`)?
+     → If YES (literal conjoined folder name found): Flag as `FINDING: CONJOINED_TWIN_DOMAIN_MERGER_VIOLATION` (Severity: CRITICAL). Remediation: Split into two independent Tier 3 Domain Containers.
+     → If NO: The established mobile domain container is COMPLIANT. The Auditor is strictly prohibited from proposing arbitrary re-grouping of working domain containers.
    - Are multiple distinct primary navigation tabs merged into a single folder (e.g., combining Attendance and Members, or Schedule and Workouts)?
      → If YES: Flag as `FINDING: MISSING_FEATURE_MODULE_ISOLATION` (Severity: CRITICAL). Remediation: Split into dedicated autonomous sibling feature folders.
    - Has a single primary navigation tab fractured its screens or sub-flows into multiple disjoint root-level folders instead of encapsulating them inside its own domain folder?
@@ -2465,12 +2473,30 @@ Audit whether the mobile primary navigation (Bottom Tab Navigator / Drawer Navig
      → If YES: Flag as `FINDING: SIBLING_SUBMODULE_COUPLING` (Severity: CRITICAL). Remediation: Enforce local duplication (Strict WET).
    - **Sub-Module Maximum Nesting Depth Audit (Strict Depth = 1):** Are there sub-submodules nested inside `{domain}_{capability}/`?
      → If YES: Flag as `FINDING: SUBMODULE_DEEP_NESTING_VIOLATION` (Severity: CRITICAL). Remediation: Flatten hierarchy to depth = 1. Internal sub-views must live in `components/`.
-   - **Sub-Module Granularity & Qualification Audit (5-Gate Matrix & Goldilocks Rule):** Check for `NANO_MODULE_VIOLATION` (< 3 files) and `MEGA_SUBMODULE_VIOLATION` (> 25 files multi-workflow).
+   - **Sub-Module Granularity & Qualification Audit (Deterministic 5-Gate Matrix & Goldilocks Rule):**
+     Every sub-module candidate MUST satisfy all 5 gates to qualify as an autonomous sub-module:
+     | Gate | Verification Requirement | Violation Finding | Remediation |
+     |---|---|---|---|
+     | **Gate 1: Navigation / Route** | Maps to a distinct secondary tab, segmented bar index, or drilldown stack screen | `FINDING: UNQUALIFIED_SUBMODULE_FRAGMENTATION` (Severity: MAJOR) | Collapse internal bottom sheet/modal into owning sub-module `components/` |
+     | **Gate 2: State & Lifecycle Independence** | Independent data lifecycle, unique query keys, zero coupled mutation locks | `FINDING: COUPLED_LIFECYCLE_SUBMODULE` (Severity: CRITICAL) | Decouple state/query keys or merge |
+     | **Gate 3: Granularity & Anti-Bloat** | Distinct operational workflow. Strictly < 3 files for a full module = `NANO_MODULE_VIOLATION` (should be an internal component/sheet). Cramming multiple unrelated workflows (> 25 files across multiple disparate entities) = `MEGA_SUBMODULE_VIOLATION`. A single cohesive workflow with complete tests/types/mocks is NEVER penalized solely for file count. | `FINDING: NANO_MODULE_VIOLATION` or `FINDING: MEGA_SUBMODULE_VIOLATION` (Severity: MAJOR) | Move single-action nano-modules into owning sub-module `components/`; split multi-workflow mega-submodules |
+     | **Gate 4: Standalone Mockability** | Owns complete MSW mock handlers & fixtures, fully testable in isolated React Native test runner | `FINDING: UNMOCKABLE_SUBMODULE_VIOLATION` (Severity: CRITICAL) | Generate local MSW mocks and tests |
+     | **Gate 5: Import Firewall & WET Isolation** | Zero imports from sibling sub-modules, zero parent shared folders (`common/`, `shared/`), strict WET duplication | `FINDING: SIBLING_SUBMODULE_COUPLING` (Severity: CRITICAL) | Duplicate shared business logic locally (Strict WET) |
 
 3. **Autonomous AI Repair Hand-off Audit & Sub-Module ZIP Guarantee:**
    - Can the target mobile sub-module folder (e.g., `attendance_history/`) or feature domain folder be extracted as a standalone ZIP and audited/repaired by an AI agent in 100% isolation?
    - Does the sub-module import ANY business components, domain hooks, stores, domain types, or utilities from a sibling sub-module or sibling feature module?
      → If YES: Flag as `FINDING: CROSS_FEATURE_BUSINESS_IMPORT` (Severity: CRITICAL). Remediation: Enforce strict WET duplication per sub-module folder.
+   - **Mandatory Ambient Host Stubs Audit (`contracts/host-stubs.d.ts`):** Does the mobile sub-module declare ambient host stubs in `contracts/host-stubs.d.ts` (stubbing `@/core/api`, `@/core/logger`, `@/components/ui/*`, `@/core/display_value`, `@/core/keychain`) guaranteeing 100% standalone TypeScript compilation (`tsc --noEmit`) when extracted into an empty React Native host or zipped?
+     → If NO: Flag as `FINDING: MISSING_AMBIENT_HOST_STUBS` (Severity: MAJOR). Remediation: Add `contracts/host-stubs.d.ts` with generic fallback stubs.
+   - **Mobile External Infrastructure Dependency Budget Audit (Hard Ceiling ≤ 7):** Does the sub-module import from more than 7 distinct core application infrastructure files?
+     → If > 7: Flag as `FINDING: EXTERNAL_DEPENDENCY_BUDGET_EXCEEDED` (Severity: MAJOR). Remediation: Internalize helper logic locally (Strict WET) or split sub-modules.
+   - **Standalone Submodule Mounting Harness & Preview Audit (`tests/harness/bootstrap.ts` & `[Role][Submodule]Harness.tsx`):** Does the sub-module provide a standalone mounting harness allowing an AI agent or test runner to mount, preview, and test the sub-module in 100% isolation without host app root wrappers?
+     → If NO: Flag as `FINDING: MISSING_STANDALONE_TEST_HARNESS` (Severity: MAJOR). Remediation: Add `tests/harness/bootstrap.ts` and `[Role][Submodule]Harness.tsx`.
+   - **The Mobile Copy-Paste Test & Feature Removal Test (Deletion Safety Audit):**
+     1. Can the feature folder be copied into a fresh React Native host with the standard 7 core stubs and run `npm test` with zero compilation errors?
+     2. If the feature folder is completely deleted, does the rest of the application continue to compile with zero missing import errors?
+     → If NO: Flag as `FINDING: PORTABILITY_DELETION_SAFETY_VIOLATION` (Severity: CRITICAL). Remediation: Decouple dependencies so the module passes both tests.
 
 4. **Navigation Shell Isolation Audit:**
    - Are root navigation orchestrators (`RootNavigator`, `BottomTabNavigator`, `DrawerNavigator`) isolated inside core navigation (`src/core/navigation/` or `{role}_navigation/`)?
@@ -2488,6 +2514,10 @@ Audit whether the mobile primary navigation (Bottom Tab Navigator / Drawer Navig
 Audit whether the backend architecture enforces strict 1-to-1 isomorphism with frontend feature modules per Rule 0A.1, Rule 0A.2, and the WET Principle:
 1. **1-to-1 Feature Isomorphism Audit (Rule 0A.1):**
    - Does every primary feature module exposed on the frontend across ANY role map strictly 1-to-1 to a dedicated autonomous backend feature domain module under the corresponding role container (`backend-{role}/{role}-modules/{role}-{feature}/`)?
+   - **Literal Conjoined-Twin Domain Folder Naming Audit (Zero Subjective Re-Grouping):**
+     Does any backend domain module folder literally use a conjoined name combining two distinct bounded contexts (e.g., `billing-and-finance`, `finance-and-billing`, `crm-and-members`, `staff-and-payroll`, `attendance-and-calendar`, `inventory-and-accounting`)?
+     → If YES (literal conjoined folder name found): Flag as `FINDING: CONJOINED_TWIN_DOMAIN_MERGER_VIOLATION` (Severity: CRITICAL). Remediation: Split into two independent backend feature modules.
+     → If NO: The established backend domain module is COMPLIANT. The Auditor is strictly prohibited from proposing arbitrary re-grouping of working domain modules.
    - Are multiple distinct frontend features merged into a monolithic backend mega-module (e.g., combining `manager-finance` and `manager-expenses`, or `admin-billing` and `admin-plans`)?
      → If YES: Flag as `FINDING: MISSING_FEATURE_MODULE_ISOLATION` (Severity: CRITICAL). Remediation: Split into dedicated sibling backend feature modules per frontend feature.
    - Are endpoints, controllers, or services for a single feature scattered across arbitrary or shared role-level controllers?
@@ -2502,7 +2532,7 @@ Audit whether the backend architecture enforces strict 1-to-1 isomorphism with f
      → If YES: Flag as `FINDING: DOMAIN_ROOT_QUARANTINE_VIOLATION` (Severity: CRITICAL). Remediation: Move 100% of executable source code, entities, DTOs, and tests into child sub-modules (`{submodule}/`).
    - **Backend Sub-Module Maximum Nesting Depth Audit (Strict Depth = 1):** Are there sub-submodules nested inside `{submodule}/` (e.g., `attendance-history/history-export/`)?
      → If YES: Flag as `FINDING: SUBMODULE_DEEP_NESTING_VIOLATION` (Severity: CRITICAL). Remediation: Flatten hierarchy to depth = 1 below domain module. All internal artifact categorization MUST use `{submodule}-{artifact}/` folders.
-   - **Backend Sub-Module Sizing & Qualification Audit (5-Gate Matrix):** Verify that each sub-module aligns with an autonomous sub-domain entity/workflow. Check for `NANO_MODULE_VIOLATION` (< 3 files) and `MEGA_SUBMODULE_VIOLATION` (> 25 files multi-workflow).
+   - **Backend Sub-Module Sizing & Qualification Audit (5-Gate Matrix):** Verify that each sub-module aligns with an autonomous sub-domain entity/workflow. Check for `NANO_MODULE_VIOLATION` (< 3 files) and `MEGA_SUBMODULE_VIOLATION` (> 25 files multi-workflow). A single cohesive workflow with complete tests, contracts, and mocks is NEVER penalized solely for file count.
 
 3. **Sibling Sub-Module Isolation Firewall, Sibling DI Boundary & WET Principle:**
    - Do sibling sub-modules (e.g., `attendance-dashboard` and `attendance-history`) import each other's `@Module`, `@Injectable()` services, repositories, entities, or DTOs directly?
@@ -2519,6 +2549,16 @@ Audit whether the backend architecture enforces strict 1-to-1 isomorphism with f
    - Can any single sub-module (e.g., `attendance-history/`) or feature domain module (e.g., `manager-attendance/`) be extracted as a standalone ZIP and audited/repaired by an AI agent in 100% isolation?
    - Does the module depend on host application root files (`app.module.ts`, `main.ts`) for its internal domain integrity?
      → If YES: Flag as `FINDING: HOST_BOOTSTRAP_COUPLING` (Severity: MAJOR). Remediation: The module MUST export its self-contained NestJS/framework module with internal provider wiring.
+   - **Mandatory Ambient Host Contract Stubs Audit (`contracts/core-contracts.stub.ts` & `required-core-contracts.json`):** Does the backend sub-module declare ambient host stubs in `contracts/core-contracts.stub.ts` and manifest required host contracts in `required-core-contracts.json` (stubbing `@core/database`, `@core/logger`, `@core/event-bus`, `@core/auth`) guaranteeing 100% standalone TypeScript compilation (`tsc --noEmit`) and mock testability when extracted into a fresh NestJS project or zipped?
+     → If NO: Flag as `FINDING: MISSING_AMBIENT_HOST_STUBS` (Severity: MAJOR). Remediation: Add `contracts/core-contracts.stub.ts` and `required-core-contracts.json`.
+   - **Backend External Infrastructure Dependency Budget Audit (Hard Ceiling ≤ 7):** Does the sub-module import from more than 7 distinct core application infrastructure files?
+     → If > 7: Flag as `FINDING: EXTERNAL_DEPENDENCY_BUDGET_EXCEEDED` (Severity: MAJOR). Remediation: Internalize helper logic locally (Strict WET) or split sub-modules.
+   - **Standalone NestJS Submodule Mounting Harness & Microservice Boot Test (`tests/harness/`):** Does the sub-module provide a standalone test harness with seeder scripts (`[submodule].seed.ts`) allowing an AI agent to boot the sub-module as an independent NestJS micro-context with zero dependency on the host `app.module.ts`?
+     → If NO: Flag as `FINDING: MISSING_STANDALONE_TEST_HARNESS` (Severity: MAJOR). Remediation: Add `tests/harness/` with local test bootstrap.
+   - **The Backend Copy-Paste Test & Feature Removal Test (Deletion Safety Audit):**
+     1. Can the sub-module be copied into a fresh NestJS project with core contract stubs and compile cleanly with zero errors?
+     2. If the sub-module is deleted, does the rest of the backend compile cleanly without missing import errors?
+     → If NO: Flag as `FINDING: PORTABILITY_DELETION_SAFETY_VIOLATION` (Severity: CRITICAL). Remediation: Remove inter-submodule imports and enforce event-driven / DTO isolation.
 
 ---
 

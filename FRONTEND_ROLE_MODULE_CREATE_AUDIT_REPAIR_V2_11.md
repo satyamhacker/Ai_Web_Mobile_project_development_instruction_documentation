@@ -275,7 +275,15 @@ A delivery/blocking status explains the final execution outcome.
 >      - `[role]_[submodule]_features.md` (Complete 22-section specification containing Purpose, User Stories, UI Data Requirements, Frozen API Contracts, Offline Mock Scenarios, Section 20 Standalone Run/Mock Harness, and Section 21 Portability Guide). Reading this file gives 100% complete clarity on the sub-module without reading source code.
 >      - `[role]_[submodule]_forbidden.md` (Anti-patterns & forbidden imports).
 >      - `[role]_[submodule]_theme_contract.md` (Design tokens & responsive contract).
->    - **The Sub-Module ZIP Guarantee (Granular AI Repair Unit):** When repairing or auditing a sub-feature (e.g., `attendance_history`), the developer zips **ONLY `attendance_history/`** and gives it to any AI. The AI receives a laser-focused 10-15 file context, complete working mocks, and repairs the issue in one shot with 0% risk of breaking sibling sub-modules or the host app.
+>    - **The Sub-Module ZIP Guarantee & Standalone Compilation Guarantee:**
+>      - When repairing or auditing a sub-feature (e.g., `attendance_history`), the developer zips **ONLY `attendance_history/`** and gives it to any AI. The AI receives a laser-focused 10-15 file context, complete working mocks, and repairs the issue in one shot with 0% risk of breaking sibling sub-modules or the host app.
+>      - **Mandatory Ambient Host Stubs (`contracts/host-stubs.d.ts`):** To guarantee that `tsc --noEmit` and mock tests compile and run with 100% mathematical certainty when extracted into a fresh project or zipped, every sub-module MUST include ambient TypeScript type stubs inside `contracts/host-stubs.d.ts`:
+>        - **Web Mode:** Declaring ambient fallback modules for `@/lib/api`, `@/lib/logger`, `@/components/ui/*`, `@/lib/socket`, `@/lib/display_value`.
+>        - **Mobile Mode:** Declaring ambient fallback modules for `@/core/api`, `@/core/logger`, `@/core/keychain`, `@/core/display_value`, `@/components/ui/*`.
+>      - **External Infrastructure Dependency Budget (Hard Ceiling ≤ 7):** A sub-module MUST NOT import from more than **7 distinct core application infrastructure files**. Any excess coupling indicates architectural leakage and must be resolved by local WET duplication or splitting sub-modules.
+>      - **The Copy-Paste Test & Feature Removal Test (Deletion Safety):**
+>        1. *Copy-Paste Test:* Copying the sub-module into an empty host application that supplies only the 7 standard core infrastructure contracts allows `npm test` and `tsc --noEmit` to pass immediately with zero compilation errors.
+>        2. *Feature Removal Test (Deletion Safety):* Completely deleting the sub-module from the project leaves the host TypeScript build passing with 100% clean compilation and zero broken sibling imports.
 >    - **Folder vs File Naming Formula:** Subfolders use canonical standard names (`components/`, `hooks/`, `api/`, `mocks/`, `utils/`, `tests/`), while file names MUST be globally unique with `[Role][Submodule][Name]` prefix (e.g., `ManagerAttendanceHistoryFilterBar.tsx`, `useManagerAttendanceHistoryList.ts`). Sibling sub-modules are 100% decoupled in source code.
 >    - **Meaningful Domain-Prefixed Submodule Naming Standard & The Clarity-Over-Brevity Law:**
 >      - **The Clarity-Over-Brevity Law (Zero Penalty for Long Descriptive Names):** Clarity is King; Brevity is strictly subordinated. Never artificially shorten, compress, or truncate module or submodule folder names. There is **ZERO PENALTY for long descriptive names**. If a submodule needs multiple descriptive words to convey 100% of its internal capabilities and business purpose (e.g. `seat_allocation_and_booking/`, `shift_timings_and_slot_management/`, `locker_assignment_and_key_tracking/`, `attendance_biometric_device_synchronization/`, `accounting_asset_depreciation_and_maintenance/`), **IT MUST BE FULLY EXPANDED**. A developer or AI looking ONLY at the directory tree in a terminal (`ls` or `tree`) MUST instantly know 100% of what is inside without opening a single file.
@@ -294,6 +302,7 @@ A delivery/blocking status explains the final execution outcome.
 >        - **Healthy Sub-Module Range:** 5 to 20 files.
 >        - **Anti-Pattern 1 (Nano-Module BANNED):** Creating a sub-module for a single component, badge, dropdown, or simple card (< 3 files) is STRICTLY FORBIDDEN. Keep it in `components/`.
 >        - **Anti-Pattern 2 (Mega-Submodule BANNED):** Cramming multiple distinct operational workflows into one giant sub-module (> 25 files) is STRICTLY FORBIDDEN. Split into sibling sub-modules under that domain container.
+>        - **Anti-Bloat Invariant:** A single cohesive workflow with complete tests, types, and mocks is NEVER penalized solely for file count.
 >      - **Gate 4 (Standalone Testability & Mockability):** Can this capability run in isolation with its own MSW handlers, mock dataset, and test harness? If YES → **Autonomous Sub-Module**.
 >      - **Gate 5 (Backend Entity Alignment):** Sub-modules map 1:1 to cohesive sub-domain entities or aggregate roots. New CRUD operations or filters on existing entities belong inside the existing sub-module, NOT a new sub-module.
 
@@ -412,6 +421,8 @@ No global shared business E2E helper directory is permitted.
 - `INTEGRATION_GUIDE.md` (consolidated developer guide)
 - `RE_AUDIT_CHECKLIST_RESULT.md` (Section 43P clean result — every item evaluated)
 - `playwright_E2E/frontend_{role}_e2e/{module}/{module}.spec.ts` (Playwright E2E test suite)
+- `contracts/host-stubs.d.ts` (Mandatory ambient stubs inside every sub-module for standalone compilation)
+- `tests/harness/bootstrap.ts` (Standalone mounting and execution harness inside every sub-module)
 
 > **NOT Mode A if:** User supplies a web ZIP and asks for mobile creation → that is **MODE C**.
 
@@ -766,6 +777,7 @@ src/features/frontend_{role}/{role}_{domain}/
     ├── config/           ← config/{role}_{submodule}.url_config.ts
     ├── mocks/            ← {role}_{submodule}.fixtures.ts + {role}_{submodule}.handlers.ts + scenarios/{role}_{submodule}.scenarios.ts (MUTABLE)
     ├── state/            ← {role}_{submodule}.store.ts
+    ├── contracts/        ← contracts/host-stubs.d.ts (Mandatory ambient stubs for standalone compilation)
     ├── tests/            ← integration tests + harness/bootstrap.ts & {Role}{Submodule}Harness.tsx
     ├── utils/            ← {role}{Submodule}FormatCurrency.ts (WET)
     ├── _locales/         ← {role}_{submodule}_en.json + _hi.json
@@ -780,6 +792,9 @@ src/features/frontend_{role}/{role}_{domain}/
 3. Zod schemas from web `*_schemas/` → mobile `schemas/{role}_{submodule}.schema.ts` (same validation)
 4. MSW fixtures from web `*_mocks/` → mobile `mocks/{role}_{submodule}.fixtures.ts` (MUTABLE in-memory)
 5. Business enums from web `*_constants/` → mobile `types/{role}_{submodule}.types.ts` (same values)
+6. Ambient host stubs: `contracts/host-stubs.d.ts` (ambient declarations for `@/core/api`, `@/core/logger`, `@/core/keychain`, `@/core/display_value`, `@/components/ui/*` guaranteeing 100% standalone `tsc --noEmit` compilation)
+7. External infrastructure dependency budget: Maximum 7 distinct core application infrastructure files
+8. Portability & Deletion Safety: Sub-module must pass the Mobile Copy-Paste Test and Feature Removal Test
 
 ---
 
@@ -921,6 +936,7 @@ If web ZIP evidence for an endpoint, request field, response field, permission, 
 4. Double-verify after repair by re-running the checklist.
 5. Deliver a **versioned delivery ZIP**: `frontend-{role}-v{N}-ALL-RBGS-COMPLETE.zip` (or intermediate `frontend-{role}-v{N}-PARTIAL-rbg{X}.zip`)
 6. Include `INTEGRATION_GUIDE.md` inside the ZIP.
+7. Include `contracts/host-stubs.d.ts` and `tests/harness/bootstrap.ts` inside every repaired sub-module to guarantee 100% standalone TypeScript compilation and isolated test execution.
 
 ---
 
@@ -2021,6 +2037,19 @@ If an AI agent is uncertain which domain owns a feature (e.g. "Trainer Payouts: 
      - The developer or host system provides **ONLY that single sub-module folder** (e.g., `attendance_history/`) or feature domain container to the AI agent.
      - The AI agent receives a laser-focused 10-15 file context, complete local mocks, and repairs the issue in one shot with 0% risk of breaking sibling sub-modules or the host app.
      - Demanding host application root slices (`package.json`, root `tsconfig.json`, root `layout.tsx`) or sibling sub-modules when auditing an isolated sub-module is a **CRITICAL SCOPE CREEP VIOLATION & AUDIT FAILURE**.
+   - **The Sub-Module Standalone Compilation Guarantee & Ambient Host Stubs (`contracts/host-stubs.d.ts`):**
+     - When an autonomous sub-module (e.g., `attendance_history/`) is extracted into an isolated ZIP or pasted into a fresh Next.js or React Native project, it MUST compile (`tsc --noEmit`) and run its test harness without relying on physical global files.
+     - Every sub-module MUST provide `contracts/host-stubs.d.ts` declaring ambient host contracts:
+       - **Web Stubs:** Ambient declarations for `@/lib/api`, `@/lib/logger`, `@/components/ui/*`, `@/lib/socket`, `@/lib/display_value`.
+       - **Mobile Stubs:** Ambient declarations for `@/core/api`, `@/core/logger`, `@/core/keychain`, `@/core/display_value`, `@/components/ui/*`.
+   - **External Infrastructure Dependency Budget (Hard Ceiling ≤ 7):**
+     - Every feature sub-module operates under a strict budget: It MUST NOT import from more than **7 distinct core application infrastructure files**.
+     - If more than 7 external infrastructure imports are required, helper logic MUST be internalized locally (Strict WET) or the sub-module must be split.
+   - **The Copy-Paste Test & Feature Removal Test (Deletion Safety):**
+     1. *Copy-Paste Test:* If the sub-module folder is pasted into a brand new host application supplying only the 7 standard core infrastructure contracts and `npm test` is executed, all unit tests and MSW scenarios MUST pass immediately with zero compilation errors.
+     2. *Feature Removal Test (Deletion Safety):* If an engineer deletes the sub-module folder completely, the project TypeScript build (`tsc --noEmit`) MUST STILL PASS cleanly with zero broken imports in sibling features.
+   - **Codebase Stability & Anti-Subjective Re-Grouping Law:**
+     - AI agents are STRICTLY FORBIDDEN from proposing arbitrary re-grouping, renaming, or refactoring of established, working domain containers based on subjective opinions. If a domain container does not violate an objective physical rule (e.g., literal conjoined name `*_and_*`), it is COMPLIANT and MUST NOT be destabilized.
 
 4. **Navigation Shell & Layout Isolation:**
    - The Sidebar, Header, Breadcrumbs, Command Palette, and Shell layout themselves MUST reside in that role's own dedicated navigation module (e.g., `src/app/frontend_{role}/{role}_navigation/`).
@@ -2058,6 +2087,7 @@ If an AI agent is uncertain which domain owns a feature (e.g. "Trainer Payouts: 
         - **Target Range:** 5 to 20 files per sub-module (orchestrator + 2-4 UI components + 1-2 hooks + 1 api client + 1 store + 1 mock + 1 test + doc trio).
         - **Anti-Pattern 1 (Nano-Module BANNED):** Creating a sub-module for a single button, badge, chip, or static card (< 3 files) is STRICTLY FORBIDDEN. Keep it in `components/`.
         - **Anti-Pattern 2 (Mega-Submodule BANNED):** Cramming 3+ completely distinct operational workflows (e.g., Attendance Clock-in + Biometric Sync + Payroll Export + Shift Calendar) into one giant sub-module (> 25 files) is STRICTLY FORBIDDEN. Split into separate sibling sub-modules under that domain container.
+        - **Anti-Bloat Guard:** A single cohesive workflow with complete tests, types, and mocks is NEVER penalized solely for file count.
      4. **Gate 4 (Standalone Testability & Mockability — ZIP Guarantee):** Can this capability be extracted, supplied with mock data, and tested in total isolation using its own MSW handlers and local harness?
         - If YES → **Autonomous Sub-Module**.
      5. **Gate 5 (Backend Entity Lifecycle Alignment):** In Backend, a Sub-Module maps 1:1 to an autonomous sub-domain entity or aggregate root. Additional CRUD actions or filters on the existing entity belong inside the existing sub-module, NEVER as a new sub-module.
@@ -7714,6 +7744,10 @@ NO UNKNOWN REQUIREMENT
 [ ] Mobile Rule 1 — Screen+MainView pattern; 80-line screen ceiling; Role+Module prefixed files
 [ ] Mobile Rule 1 — Canonical path: src/features/frontend_{role}/{role}_{domain}/{domain}_{capability}/
 [ ] Mobile Rule 1 — Root Quarantine: only 3 doc files at sub-module root
+[ ] Mobile Rule 1 — Ambient Host Stubs: contracts/host-stubs.d.ts present with ambient stubs for @/core/api, @/core/logger, @/core/keychain, @/core/display_value, @/components/ui/* (100% standalone tsc --noEmit)
+[ ] Mobile Rule 1 — External Dependency Budget: Sub-module imports from at most 7 distinct core application infrastructure files
+[ ] Mobile Rule 1 — Portability & Deletion Safety: Sub-module passes Copy-Paste Test & Feature Removal Test
+[ ] Mobile Rule 1 — Universal Nesting Depth: Strict Depth = 1 below domain container; sub-submodules strictly BANNED; internal views/modals in components/
 [ ] Mobile Rule 1 — Mocks: fixtures.ts + handlers.ts with mutable in-memory state (Rule 7A)
 [ ] Mobile Rule 3 — Zero magic values; all tokens from MOBILE_UI_UX_DESIGN.md
 [ ] Mobile Rule 4 — TanStack Query v5 for server state; isPending not isLoading; onSuccess in useQuery BANNED
@@ -7796,6 +7830,10 @@ Before final delivery, the AI MUST literally verify:
 [ ] All source conflicts reported
 [ ] Web Rule 1, 1B & 1C — Universal Day-1 Sub-Module Architecture, Domain Root Quarantine, Sibling Isolation Firewall, Parent Shared Folder Ban, and Strict WET Principle checked
 [ ] Web Rule 1C.1 & Section 5B — Sidebar navigation 1-to-1 feature domain mapping and Sub-Module ZIP Guarantee checked
+[ ] Web Rule 1C.1 — Ambient Host Stubs: contracts/host-stubs.d.ts present with ambient stubs for @/lib/api, @/lib/logger, @/components/ui/*, @/lib/socket, @/lib/display_value (100% standalone tsc --noEmit)
+[ ] Web Rule 1C.1 — External Dependency Budget: Sub-module imports from at most 7 distinct core application infrastructure files
+[ ] Web Rule 1C.1 — Portability & Deletion Safety: Sub-module passes Copy-Paste Test & Feature Removal Test
+[ ] Web Rule 1C.1 — Universal Nesting Depth: Strict Depth = 1 below domain container; sub-submodules strictly BANNED; internal views/drawers in components/
 [ ] Web Rule 1D — Canonical Next.js routing, layout.tsx shell, and filesystem structure checked
 [ ] Web Rule 2 checked
 [ ] Web Rule 3 checked
@@ -10400,7 +10438,11 @@ The AI MUST evaluate every item below against the created mobile module and reco
 - [ ] **43P-ARCH-15:** Exported component name matches filename exactly
 - [ ] **43P-ARCH-16:** App Upgrade & Backward Compatibility (Rule 68) — MMKV schema versioned (`version: number`); secure storage migrations handled safely; cached query payloads use optional chaining (`data?.field ?? fallback`) to prevent runtime crashes on API drift
 - [ ] **43P-ARCH-17:** Universal Sub-Module Nesting Depth Law — Maximum folder depth below `{role}_{module}/` is strictly 1 level (`{domain}_{capability}/`). Zero sub-submodules allowed (e.g., `attendance_history/details/` is FORBIDDEN). Submodules qualify strictly by secondary navigation tabs, distinct sub-routes, or independent lifecycle per the 5-Gate Matrix; internal modals, slide-overs, and wizard steps MUST live in `components/` (`[Submodule]Views/`, `[Submodule]Modals/`)
-- [ ] **43P-ARCH-18:** Sub-Module Sizing & Qualification (Goldilocks Rule) — Submodule file count is 5–20 files; zero nano-modules (< 3 files / single badge, button, or chip); zero mega-submodules (> 25 files spanning multi-workflow sprawl; must be split into peer sub-modules)
+- [ ] **43P-ARCH-18:** Sub-Module Sizing & Qualification (Goldilocks Rule) — Submodule file count is 5–20 files; zero nano-modules (< 3 files / single badge, button, or chip); zero mega-submodules (> 25 files spanning multi-workflow sprawl; must be split into peer sub-modules). Cohesive workflow with complete tests/types/mocks is NEVER penalized solely for file count.
+- [ ] **43P-ARCH-19:** Ambient Host Contract Stubs (`contracts/host-stubs.d.ts`) — `contracts/host-stubs.d.ts` exists inside sub-module declaring ambient stubs for `@/core/api`, `@/core/logger`, `@/core/keychain`, `@/core/display_value`, `@/components/ui/*`, guaranteeing 100% standalone TypeScript compilation (`tsc --noEmit`) when extracted into an empty React Native host or zipped.
+- [ ] **43P-ARCH-20:** External Infrastructure Dependency Budget (Hard Ceiling ≤ 7) — Sub-module imports from at most 7 distinct core application infrastructure files. Zero excessive external coupling; strictly WET internal duplication for domain utilities and components.
+- [ ] **43P-ARCH-21:** The Mobile Copy-Paste Test & Feature Removal Test (Deletion Safety) — Sub-module cleanly compiles in isolation without host app root files, and deleting the sub-module leaves the project compiling with zero broken sibling imports.
+- [ ] **43P-ARCH-22:** Standalone Submodule Mounting Harness & Preview (`tests/harness/bootstrap.ts` & `[Role][Submodule]Harness.tsx`) — Standalone mounting harness present allowing isolated execution and test isolation without host app root wrappers.
 
 ## 43P-API — API Contract & URL Config
 
