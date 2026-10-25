@@ -656,6 +656,27 @@ The domain containers below represent the canonical baseline for Smart Gym 360 M
 - **Pure Hierarchical Invariant:** The architecture requires that top-level primary navigation represents cohesive **High-Level Business Domains (Tier 3 Domain Containers)**, while granular operational capabilities live inside domains as autonomous sub-modules. The violation is flat-dumping submodules/actions, NOT the number of domains.
 - **Extensibility:** New legitimate business domains (e.g., `manager_pos`, `manager_nutrition`, `manager_marketing`) MAY be introduced as long as they represent independent Aggregate Roots and avoid banned junk-drawer names.
 
+#### 4. The Domain Promotion Law (When a Dense Mobile Capability Promotes to a Primary Navigation Domain):
+Enterprise mobile architecture establishes the **Domain Promotion Law**:
+> *"When a capability grows so large that it encompasses 3 or more distinct, complex operational workflows, it is NO LONGER a mere sub-module—it has matured into an autonomous High-Level Business Domain!"*
+
+- **The Architectural Trap to Avoid:** Developers or AI agents facing a high-density capability (e.g. "Seats") often make two critical architectural mistakes:
+  1. *Sub-submodule nesting trap:* Nesting folders (`seat/designer/canvas/`), which violates the Strict Maximum Nesting Depth Law.
+  2. *Mega-submodule bloat:* Cramming 30+ files into a single sub-module.
+- **The Canonical Solution (Domain Promotion):**
+  Because mobile roles have **ZERO RIGID DOMAIN COUNT LOCKS**, the AI is authorized and mandated to **PROMOTE** that capability to a dedicated Tier 3 Domain Container:
+  1. 🪑 **Seats & Floor Layout (`admin_seats/`):**
+     - Mobile Navigation Title: `"Seats & Floor Layout"`
+     - Secondary Navigation (Segmented Bar or Domain Hub):
+       - `[ 🗺️ Floor Designer ]` ➔ `seat_floor_layout_designer/`
+       - `[ 🪑 Daily Allocation & Booking ]` ➔ `seat_allocation_and_booking/`
+       - `[ 🛠️ Seat Maintenance & Repairs ]` ➔ `seat_maintenance_and_repair/`
+  2. ⏱️ **Shifts & Lockers (`admin_shift_and_locker/`):**
+     - Mobile Navigation Title: `"Shifts & Lockers"`
+     - Secondary Navigation:
+       - `[ ⏱️ Shift Timings ]` ➔ `shift_timings_and_slot_management/`
+       - `[ 🔒 Locker Assignments ]` ➔ `locker_assignment_and_key_tracking/`
+
 | Role Container | Approved Baseline Domain Containers (Canonical Reference) | Permitted Autonomous Sub-Modules (`{domain}_{capability}`) |
 |---|---|---|
 | **`frontend_manager`** | 1. `manager_dashboard`<br>2. `manager_members`<br>3. `manager_crm`<br>4. `manager_attendance`<br>5. `manager_accounting`<br>6. `manager_inventory`<br>7. `manager_staff`<br>8. `manager_settings` | • `crm` → `crm_enquiries`, `crm_leads`, `crm_pipeline`<br>• `members` → `members_directory`, `members_plans`, `members_detail`<br>• `attendance` → `attendance_dashboard`, `attendance_history`, `attendance_biometrics`<br>• `accounting` → `accounting_assets`, `accounting_ledgers`, `accounting_maintenance`<br>• `inventory` → `inventory_equipment`, `inventory_supplements`, `inventory_lockers`<br>• `staff` → `staff_directory`, `staff_roster`, `staff_payroll` |

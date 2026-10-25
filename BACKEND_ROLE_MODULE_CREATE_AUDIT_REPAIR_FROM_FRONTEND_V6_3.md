@@ -228,6 +228,12 @@ Stop only when:
 >      - **Aggregate Root Mutation Test for Bounded Context Affinity:** When resolving domain boundary disputes (e.g., where does subscription invoice payment belong?), the Aggregate Root that mutates the primary transactional record dictates the domain module. Invoices belong to Billing/Accounting; Member profiles belong to Members; Attendance check-ins belong to Attendance. Cross-domain entity smuggling is strictly forbidden.
 >    - **Zero Domain Count Lock (No Rigid Hardcoding):**
 >      - The number of domain containers per role is determined purely by the business domain bounded contexts of that role. There is **NO hardcoded number or artificial ceiling** (neither 5, nor 6–10, nor any fixed count). NEVER force-merge or artificially split domains to satisfy an arbitrary numeric range!
+>    - **The Domain Promotion Law (When a Dense Capability Promotes to a Primary Backend Domain):**
+>      - When a capability grows so large that it encompasses 3 or more distinct, complex operational backend workflows, entities, and API contracts (e.g. Floor Designer, Daily Allocations, Maintenance Logs), it is NO LONGER a mere sub-module—it has matured into an autonomous High-Level Business Domain Module (`backend-{role}/{role}-modules/{role}-{promoted-domain}/`).
+>      - **Concrete Scaling Example:**
+>        - `admin-seats/` (Sub-modules: `seat-floor-layout-designer/`, `seat-allocation-and-booking/`, `seat-maintenance-and-repair/`)
+>        - `admin-shift-and-locker/` (Sub-modules: `shift-timings-and-slot-management/`, `locker-assignment-and-key-tracking/`)
+>      - This mirrors the Frontend Domain Promotion 1-to-1, maintaining strict bounded context purity without sub-submodule nesting.
 
 
 
