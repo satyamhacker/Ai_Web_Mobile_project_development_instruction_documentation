@@ -614,19 +614,32 @@ Two capabilities may ONLY reside in the same Tier 3 Domain Container if they sha
   - An AI MUST NOT put financial invoices or payment gateways inside `Attendance` or `Members` (Invoices belong to `Billing` / `Accounting`).
   - An AI MUST NOT merge `Staff` and `Accounting` merely because staff gets paid (Staff manages shifts/profiles; Accounting manages financial ledger disbursements).
 
-#### 2. The Anti-Junk-Drawer / Anti-Mega-Bucket Law:
+#### 2. The Anti-Junk-Drawer Law & Self-Evident Domain Naming Invariant (Zero Mystery Buckets):
 AI agents are **ABSOLUTELY PROHIBITED** from creating generic, ambiguous, or dumping-ground domain names. 
-The following domain names are **PERMANENTLY BANNED**:
-- ❌ `*_operations/`
-- ❌ `*_management/`
-- ❌ `*_general/`
-- ❌ `*_miscellaneous/` or `*_misc/`
-- ❌ `*_tools/` or `*_actions/`
-- ❌ `*_hub/` or `*_portal/` or `*_workspace/`
-- ❌ `*_services/` or `*_data/`
-- ❌ Hyphenated mergers: `*_crm_and_members/`, `*_finance_and_expenses/`
 
-Creating ANY domain with a banned name is an immediate **P0 ARCHITECTURE FAILURE & MERGE BLOCKER**. Every domain container MUST be a specific business noun from the Canonical Domain Taxonomy below.
+- **The Self-Evident Navigation Naming Invariant:** Every Tier 3 Domain Container (`src/features/frontend_{role}/{role}_{domain}/`) and its Primary Mobile Navigation label (Bottom Tab or Drawer) MUST be **100% self-evident and descriptive**. A user or developer looking at the navigation name MUST know within 1 second exactly what capabilities exist inside without opening folders or tapping destinations.
+- **Explicit Composite Domain Naming (Canonical for Multi-Resource Domains):**
+  - In business verticals where multiple operational resources form a single cohesive lifecycle (e.g., Study Library / Co-working Space / Facility ERPs where Seats, Shifts, and Lockers are allocated together):
+    - ✅ **APPROVED & CANONICAL:** Explicit composite naming where internal capabilities are directly telegraphed in the name:
+      - Domain Container: `src/features/frontend_{role}/{role}_seat_shift_locker/` (e.g., `admin_seat_shift_locker/`)
+      - Navigation Title: `"Seats, Shifts & Lockers"` or `"Seat • Shift • Locker"`
+      - Secondary Nav Tabs (Top Segmented Bar or Domain Hub): `[ 🪑 Seats ]  [ ⏱️ Shifts ]  [ 🔒 Lockers ]`
+      - Autonomous Child Sub-Modules: `seat_allocation/`, `shift_timings/`, `locker_assignments/`
+    - Why this is superior: Reading `"Seats, Shifts & Lockers"` instantly communicates the entire feature scope, eliminating any ambiguity on mobile screens.
+- **Permanently Banned Generic Junk-Drawer Names:**
+  The following domain names are **PERMANENTLY BANNED**:
+  - ❌ `*_operations/`
+  - ❌ `*_management/`
+  - ❌ `*_general/`
+  - ❌ `*_facilities/` (vague black-box — must be explicit like `*_seat_shift_locker/` or `*_equipment_and_rooms/`)
+  - ❌ `*_resources/` (vague black-box — must explicitly name what resources)
+  - ❌ `*_miscellaneous/` or `*_misc/`
+  - ❌ `*_tools/` or `*_actions/`
+  - ❌ `*_hub/` or `*_portal/` or `*_workspace/`
+  - ❌ `*_services/` or `*_data/`
+  - ❌ Unrelated domain mergers: `*_crm_and_members/` (merging pre-sale CRM with post-sale Members is banned), `*_finance_and_expenses/`
+
+Creating ANY domain with a banned generic name or hidden mystery bucket is an immediate **P0 ARCHITECTURE FAILURE & MERGE BLOCKER**. Every domain container MUST be either a recognized business noun or an explicit self-descriptive composite from the Canonical Domain Taxonomy below.
 
 #### 3. Canonical ERP Domain Taxonomy (Extensible Baseline Matrix):
 The domain containers below represent the canonical baseline for Smart Gym 360 Mobile. 

@@ -199,9 +199,16 @@ Stop only when:
 >    - **Strict Anti-Action Nano-Module Ban:**
 >      - Creating a backend sub-module or module for a single CRUD action, form, or UI interaction (e.g., `crm-enquiry-add/`, `crm-enquiry-create/`, `member-create/`, `asset-maintenance-add/`) is a **CRITICAL P0 ARCHITECTURE VIOLATION**.
 >      - In the backend, actions are NOT sub-modules. They are simply controller routes (`POST /api/v1/...`), controller methods (`createEnquiry`), service methods (`create`), and DTOs (`CreateEnquiryDto`) living directly inside the parent entity's autonomous sub-module (`crm-enquiries/`).
->    - **Canonical ERP Domain Taxonomy & Anti-Junk-Drawer Law:**
+>    - **Canonical ERP Domain Taxonomy, Anti-Junk-Drawer Law & Self-Evident Domain Naming Invariant:**
 >      - Backend domain modules MUST align to standard cohesive business bounded contexts (e.g., CRM, Accounting, Attendance, Inventory, HR, Members, Billing, Subscriptions, Platform, Gyms, Reports).
->      - **Permanently Banned Generic Junk-Drawer Names:** Never invent vague catch-all domain modules such as `*-operations/`, `*-management/`, `*-general/`, `*-misc/`, `*-tools/`, `*-actions/`, `*-hub/`, `*-portal/`, `*-services/`, `*-data/`, or hybrid merged domains like `crm-accounting/`.
+>      - **The Self-Evident Domain Naming Invariant:** Every Tier 3 Backend Domain Module (`backend-{role}/{role}-modules/{role}-{domain}/`) MUST be **100% self-evident, descriptive, and transparent**. Anyone inspecting the domain name MUST know within 1 second exactly what capabilities exist inside without reading internal controller files.
+>      - **Explicit Composite Domain Naming (Canonical for Multi-Resource Domains):**
+>        - In business verticals where multiple operational resources form a single cohesive lifecycle (e.g., Study Library / Co-working Space / Facility ERPs where Seats, Shifts, and Lockers are allocated and scheduled together):
+>          - ✅ **APPROVED & CANONICAL:** Explicit composite naming mirroring Frontend 1-to-1:
+>            - Backend Domain Module: `backend-{role}/{role}-modules/{role}-seat-shift-locker/` (e.g., `backend-admin/admin-modules/admin-seat-shift-locker/`)
+>            - Child Autonomous Sub-Modules: `seat-allocation/`, `shift-timings/`, `locker-assignments/`
+>          - Why this is superior: Reading `admin-seat-shift-locker` immediately tells developers and API consumers that this domain encapsulates seat allocations, shift timings, and locker assignments.
+>      - **Permanently Banned Generic Junk-Drawer Names:** Never invent vague catch-all domain modules such as `*-operations/`, `*-management/`, `*-general/`, `*-facilities/` (must be explicit like `*-seat-shift-locker/`), `*-resources/`, `*-misc/`, `*-tools/`, `*-actions/`, `*-hub/`, `*-portal/`, `*-services/`, `*-data/`, or hybrid mergers of unrelated aggregates like `crm-accounting/`.
 >      - **Aggregate Root Mutation Test for Bounded Context Affinity:** When resolving domain boundary disputes (e.g., where does subscription invoice payment belong?), the Aggregate Root that mutates the primary transactional record dictates the domain module. Invoices belong to Billing/Accounting; Member profiles belong to Members; Attendance check-ins belong to Attendance. Cross-domain entity smuggling is strictly forbidden.
 >    - **Zero Domain Count Lock (No Rigid Hardcoding):**
 >      - The number of domain containers per role is determined purely by the business domain bounded contexts of that role. There is **NO hardcoded number or artificial ceiling** (neither 5, nor 6–10, nor any fixed count). NEVER force-merge or artificially split domains to satisfy an arbitrary numeric range!
