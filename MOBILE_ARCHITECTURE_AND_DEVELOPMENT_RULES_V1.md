@@ -776,10 +776,12 @@ If an AI agent is uncertain which domain owns a feature (e.g. "Trainer Payouts: 
    ```
    The domain root contains ONLY `screens/Manager[Domain]Navigator.tsx` (navigation wrapper). 100% of feature code lives inside sub-modules.
 
-   #### Meaningful Domain-Prefixed Submodule Naming Standard (Strict Ban on Lazy / Ambiguous Names):
+   #### Meaningful Domain-Prefixed Submodule Naming Standard & The Clarity-Over-Brevity Law:
    Every mobile submodule folder MUST follow the exact semantic formula: `{domain}_{capability}` or `{domain}_{screen_intent}`:
-   - ✅ **Compliant Examples:** `attendance_dashboard/`, `attendance_history/`, `attendance_analytics/`, `attendance_biometrics/`, `profile_overview/`, `profile_security/`, `billing_invoices/`, `billing_subscriptions/`, `members_directory/`, `members_detail/`.
+   - **The Clarity-Over-Brevity Law (Zero Penalty for Long Descriptive Names):** Clarity is King; Brevity is strictly subordinated. Never artificially shorten, compress, or truncate mobile module or submodule folder names. There is **ZERO PENALTY for long descriptive names**. If a submodule needs multiple descriptive words to convey 100% of its internal capabilities and business purpose (e.g. `seat_allocation_and_booking/`, `shift_timings_and_slot_management/`, `locker_assignment_and_key_tracking/`, `attendance_biometric_device_synchronization/`, `accounting_asset_depreciation_and_maintenance/`), **IT MUST BE FULLY EXPANDED**. A developer or AI inspecting the directory tree MUST instantly know 100% of what is inside without opening a single file.
+   - ✅ **Compliant Examples:** `attendance_dashboard/`, `attendance_history/`, `attendance_biometrics/`, `seat_allocation_and_booking/`, `shift_timings_and_slot_management/`, `locker_assignment_and_key_tracking/`, `profile_overview/`, `billing_invoices/`, `members_directory/`, `members_detail/`.
    - **The 5-Second Comprehension Invariant:** Anyone (developer or AI agent) inspecting ONLY the submodule folder name MUST instantly know within 5 seconds its parent domain and exact business capability/screen intent.
+   - ❌ **Strictly Banned Cryptic Abbreviations & Truncations:** Never use lazy truncated shorthands (e.g., `seat_alloc/`, `crm_enq/`, `acc_ast/`, `stf_rost/`, `inv_eqp/`, `bio_sync/`).
    - ❌ **Strictly Banned Lazy/Ambiguous Names:** Never use generic or lazy names such as `tab1/`, `tab2/`, `main/`, `default/`, `home/`, `view/`, `details/` (must be `members_detail`), `common/`, `shared/`, `temp/`, or `misc/`. Lazy names are treated as **Critical Naming Violations**.
 
    - **Zero Cross-Sub-Module Imports (Absolute Decoupling):**
