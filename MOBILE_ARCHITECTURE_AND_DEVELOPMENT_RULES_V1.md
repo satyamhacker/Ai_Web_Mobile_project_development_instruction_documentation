@@ -503,7 +503,7 @@ If a required mobile behavior is not defined by these mobile documents or the su
 To guarantee that any AI agent or mobile developer can repair, test, or expand a mobile feature without app-wide regression, the mobile architecture enforces strict 1-to-1 isomorphism between primary navigation destinations and filesystem feature modules:
 
 1. **The 1:1 Navigation Law & Mobile Domain Grouping Principle (Bottom Tabs / Drawer Items):**
-   - **Domain Container as Primary Navigation Destination:** Every primary destination present in ANY mobile role's primary navigation (Bottom Tab Bar or Role Drawer: e.g., in Manager: Dashboard, Members, CRM, Attendance, Accounting, Inventory, Staff, Settings; in Admin: Dashboard, Gyms, Billing, Staff, Reports, Settings; in Superadmin: Dashboard, Tenants, Plans, Billing, Analytics, Audit, Settings; in Trainer: Dashboard, Schedule, Clients, Workouts, Earnings, Settings; in Member: Dashboard, Membership, Attendance, Bookings, Payments, Profile) MUST map strictly 1-to-1 to an autonomous Tier 3 Domain Container directly under that role container: `src/features/frontend_{role}/{role}_{domain}/` (e.g., `src/features/frontend_manager/manager_crm/`).
+   - **Domain Container as Primary Navigation Destination & Self-Evident UI Label:** Every primary destination present in ANY mobile role's primary navigation (Bottom Tab Bar or Role Drawer: e.g., in Manager: Dashboard, Members, CRM, Attendance, Accounting, Inventory, Staff, Settings; in Admin: Dashboard, Gyms, Billing, Staff, Seats • Shifts • Lockers, Reports, Settings; in Superadmin: Dashboard, Tenants, Plans, Billing, Analytics, Audit, Settings; in Trainer: Dashboard, Schedule, Clients, Workouts, Earnings, Settings; in Member: Dashboard, Membership, Attendance, Bookings, Payments, Profile) MUST map strictly 1-to-1 to an autonomous Tier 3 Domain Container directly under that role container: `src/features/frontend_{role}/{role}_{domain}/` (e.g., `src/features/frontend_manager/manager_crm/`). Furthermore, its **human-facing Navigation Display Label (Bottom Tab / Drawer Title) MUST be 100% self-evident, descriptive, and polished Title Case** (e.g., 🪑 `"Seats, Shifts & Lockers"`, 💰 `"Assets & Maintenance"`). Vague umbrella labels (`"Facilities"`, `"Operations"`, `"Resources"`, `"Others"`) are **STRICTLY BANNED**.
    - **Mobile Domain Grouping Principle (Zero Flat Submodule Dumping — NO Numeric Lock):** Top-level primary navigation MUST represent cohesive, high-level Business Domains (Tier 3 Domain Containers). Flat-dumping granular screens, sub-modules, or actions directly into primary navigation or bottom tabs is a **CRITICAL UX & ARCHITECTURE VIOLATION**. On mobile devices, bottom tabs hold primary core domains with remaining domains accessible via the Role Drawer or a "More" domain hub. The domain count is NOT locked to any artificial number — roles may have as few or as many domains as their authentic business aggregate roots demand.
    - **Sub-Modules as Secondary Navigation:** Autonomous sub-modules inside a domain container (e.g., inside `manager_crm/`: `crm_enquiries/`, `crm_leads/`, `crm_pipeline/`; inside `manager_accounting/`: `accounting_assets/`, `accounting_ledgers/`, `accounting_maintenance/`) MUST be accessed via Secondary Navigation:
      - **Pattern A (Mobile Secondary Top Tab / Segmented Bar):** Rendered by `Manager[Domain]Navigator.tsx` across the top of the screen (`[ Enquiries ] [ Leads ] [ Pipeline ]`) using `@react-navigation/material-top-tabs` or custom segmented bar.
@@ -614,19 +614,32 @@ Two capabilities may ONLY reside in the same Tier 3 Domain Container if they sha
   - An AI MUST NOT put financial invoices or payment gateways inside `Attendance` or `Members` (Invoices belong to `Billing` / `Accounting`).
   - An AI MUST NOT merge `Staff` and `Accounting` merely because staff gets paid (Staff manages shifts/profiles; Accounting manages financial ledger disbursements).
 
-#### 2. The Anti-Junk-Drawer / Anti-Mega-Bucket Law:
+#### 2. The Anti-Junk-Drawer Law & Self-Evident Domain Naming Invariant (Zero Mystery Buckets):
 AI agents are **ABSOLUTELY PROHIBITED** from creating generic, ambiguous, or dumping-ground domain names. 
-The following domain names are **PERMANENTLY BANNED**:
-- ❌ `*_operations/`
-- ❌ `*_management/`
-- ❌ `*_general/`
-- ❌ `*_miscellaneous/` or `*_misc/`
-- ❌ `*_tools/` or `*_actions/`
-- ❌ `*_hub/` or `*_portal/` or `*_workspace/`
-- ❌ `*_services/` or `*_data/`
-- ❌ Hyphenated mergers: `*_crm_and_members/`, `*_finance_and_expenses/`
 
-Creating ANY domain with a banned name is an immediate **P0 ARCHITECTURE FAILURE & MERGE BLOCKER**. Every domain container MUST be a specific business noun from the Canonical Domain Taxonomy below.
+- **The Self-Evident Navigation Naming Invariant:** Every Tier 3 Domain Container (`src/features/frontend_{role}/{role}_{domain}/`) and its Primary Mobile Navigation label (Bottom Tab or Drawer) MUST be **100% self-evident and descriptive**. A user or developer looking at the navigation name MUST know within 1 second exactly what capabilities exist inside without opening folders or tapping destinations.
+- **Explicit Composite Domain Naming (Canonical for Multi-Resource Domains):**
+  - In business verticals where multiple operational resources form a single cohesive lifecycle (e.g., Study Library / Co-working Space / Facility ERPs where Seats, Shifts, and Lockers are allocated together):
+    - ✅ **APPROVED & CANONICAL:** Explicit composite naming where internal capabilities are directly telegraphed in the name:
+      - Domain Container: `src/features/frontend_{role}/{role}_seat_shift_locker/` (e.g., `admin_seat_shift_locker/`)
+      - Navigation Title: `"Seats, Shifts & Lockers"` or `"Seat • Shift • Locker"`
+      - Secondary Nav Tabs (Top Segmented Bar or Domain Hub): `[ 🪑 Seats ]  [ ⏱️ Shifts ]  [ 🔒 Lockers ]`
+      - Autonomous Child Sub-Modules: `seat_allocation/`, `shift_timings/`, `locker_assignments/`
+    - Why this is superior: Reading `"Seats, Shifts & Lockers"` instantly communicates the entire feature scope, eliminating any ambiguity on mobile screens.
+- **Permanently Banned Generic Junk-Drawer Names:**
+  The following domain names are **PERMANENTLY BANNED**:
+  - ❌ `*_operations/`
+  - ❌ `*_management/`
+  - ❌ `*_general/`
+  - ❌ `*_facilities/` (vague black-box — must be explicit like `*_seat_shift_locker/` or `*_equipment_and_rooms/`)
+  - ❌ `*_resources/` (vague black-box — must explicitly name what resources)
+  - ❌ `*_miscellaneous/` or `*_misc/`
+  - ❌ `*_tools/` or `*_actions/`
+  - ❌ `*_hub/` or `*_portal/` or `*_workspace/`
+  - ❌ `*_services/` or `*_data/`
+  - ❌ Unrelated domain mergers: `*_crm_and_members/` (merging pre-sale CRM with post-sale Members is banned), `*_finance_and_expenses/`
+
+Creating ANY domain with a banned generic name or hidden mystery bucket is an immediate **P0 ARCHITECTURE FAILURE & MERGE BLOCKER**. Every domain container MUST be either a recognized business noun or an explicit self-descriptive composite from the Canonical Domain Taxonomy below.
 
 #### 3. Canonical ERP Domain Taxonomy (Extensible Baseline Matrix):
 The domain containers below represent the canonical baseline for Smart Gym 360 Mobile. 
@@ -763,10 +776,12 @@ If an AI agent is uncertain which domain owns a feature (e.g. "Trainer Payouts: 
    ```
    The domain root contains ONLY `screens/Manager[Domain]Navigator.tsx` (navigation wrapper). 100% of feature code lives inside sub-modules.
 
-   #### Meaningful Domain-Prefixed Submodule Naming Standard (Strict Ban on Lazy / Ambiguous Names):
+   #### Meaningful Domain-Prefixed Submodule Naming Standard & The Clarity-Over-Brevity Law:
    Every mobile submodule folder MUST follow the exact semantic formula: `{domain}_{capability}` or `{domain}_{screen_intent}`:
-   - ✅ **Compliant Examples:** `attendance_dashboard/`, `attendance_history/`, `attendance_analytics/`, `attendance_biometrics/`, `profile_overview/`, `profile_security/`, `billing_invoices/`, `billing_subscriptions/`, `members_directory/`, `members_detail/`.
+   - **The Clarity-Over-Brevity Law (Zero Penalty for Long Descriptive Names):** Clarity is King; Brevity is strictly subordinated. Never artificially shorten, compress, or truncate mobile module or submodule folder names. There is **ZERO PENALTY for long descriptive names**. If a submodule needs multiple descriptive words to convey 100% of its internal capabilities and business purpose (e.g. `seat_allocation_and_booking/`, `shift_timings_and_slot_management/`, `locker_assignment_and_key_tracking/`, `attendance_biometric_device_synchronization/`, `accounting_asset_depreciation_and_maintenance/`), **IT MUST BE FULLY EXPANDED**. A developer or AI inspecting the directory tree MUST instantly know 100% of what is inside without opening a single file.
+   - ✅ **Compliant Examples:** `attendance_dashboard/`, `attendance_history/`, `attendance_biometrics/`, `seat_allocation_and_booking/`, `shift_timings_and_slot_management/`, `locker_assignment_and_key_tracking/`, `profile_overview/`, `billing_invoices/`, `members_directory/`, `members_detail/`.
    - **The 5-Second Comprehension Invariant:** Anyone (developer or AI agent) inspecting ONLY the submodule folder name MUST instantly know within 5 seconds its parent domain and exact business capability/screen intent.
+   - ❌ **Strictly Banned Cryptic Abbreviations & Truncations:** Never use lazy truncated shorthands (e.g., `seat_alloc/`, `crm_enq/`, `acc_ast/`, `stf_rost/`, `inv_eqp/`, `bio_sync/`).
    - ❌ **Strictly Banned Lazy/Ambiguous Names:** Never use generic or lazy names such as `tab1/`, `tab2/`, `main/`, `default/`, `home/`, `view/`, `details/` (must be `members_detail`), `common/`, `shared/`, `temp/`, or `misc/`. Lazy names are treated as **Critical Naming Violations**.
 
    - **Zero Cross-Sub-Module Imports (Absolute Decoupling):**

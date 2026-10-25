@@ -277,9 +277,12 @@ A delivery/blocking status explains the final execution outcome.
 >      - `[role]_[submodule]_theme_contract.md` (Design tokens & responsive contract).
 >    - **The Sub-Module ZIP Guarantee (Granular AI Repair Unit):** When repairing or auditing a sub-feature (e.g., `attendance_history`), the developer zips **ONLY `attendance_history/`** and gives it to any AI. The AI receives a laser-focused 10-15 file context, complete working mocks, and repairs the issue in one shot with 0% risk of breaking sibling sub-modules or the host app.
 >    - **Folder vs File Naming Formula:** Subfolders use canonical standard names (`components/`, `hooks/`, `api/`, `mocks/`, `utils/`, `tests/`), while file names MUST be globally unique with `[Role][Submodule][Name]` prefix (e.g., `ManagerAttendanceHistoryFilterBar.tsx`, `useManagerAttendanceHistoryList.ts`). Sibling sub-modules are 100% decoupled in source code.
->    - **Meaningful Domain-Prefixed Submodule Naming Standard (No Lazy Names):** Every submodule folder MUST follow the exact semantic formula: `{domain}_{capability}` or `{domain}_{screen_intent}` (e.g., `attendance_dashboard`, `attendance_history`, `profile_overview`, `profile_security`, `billing_invoices`).
+>    - **Meaningful Domain-Prefixed Submodule Naming Standard & The Clarity-Over-Brevity Law:**
+>      - **The Clarity-Over-Brevity Law (Zero Penalty for Long Descriptive Names):** Clarity is King; Brevity is strictly subordinated. Never artificially shorten, compress, or truncate module or submodule folder names. There is **ZERO PENALTY for long descriptive names**. If a submodule needs multiple descriptive words to convey 100% of its internal capabilities and business purpose (e.g. `seat_allocation_and_booking/`, `shift_timings_and_slot_management/`, `locker_assignment_and_key_tracking/`, `attendance_biometric_device_synchronization/`, `accounting_asset_depreciation_and_maintenance/`), **IT MUST BE FULLY EXPANDED**. A developer or AI looking ONLY at the directory tree in a terminal (`ls` or `tree`) MUST instantly know 100% of what is inside without opening a single file.
+>      - Every submodule folder MUST follow the exact semantic formula: `{domain}_{capability}` or `{domain}_{screen_intent}` (e.g., `attendance_dashboard`, `attendance_history`, `seat_allocation_and_booking`, `shift_timings_and_slot_management`, `profile_overview`, `profile_security`, `billing_invoices`).
 >      - **The 5-Second Comprehension Invariant:** Anyone inspecting ONLY the submodule folder name MUST instantly know within 5 seconds its parent domain and exact business capability/screen intent.
->      - **Strictly Banned Lazy/Ambiguous Names:** Never use generic or lazy names such as `tab1/`, `tab2/`, `main/`, `default/`, `home/`, `view/`, `details/` (must be `members_detail`), `common/`, `shared/`, `temp/`, or `misc/`. Lazy names are treated as **Critical Naming Violations**.
+>      - ❌ **Strictly Banned Cryptic Abbreviations & Truncations:** Never use lazy truncated shorthands (e.g., `seat_alloc/`, `crm_enq/`, `acc_ast/`, `stf_rost/`, `inv_eqp/`, `bio_sync/`).
+>      - ❌ **Strictly Banned Lazy/Ambiguous Names:** Never use generic or lazy names such as `tab1/`, `tab2/`, `main/`, `default/`, `home/`, `view/`, `details/` (must be `members_detail`), `common/`, `shared/`, `temp/`, or `misc/`. Lazy names are treated as **Critical Naming Violations**.
 >    - **Strict Maximum Nesting Depth Law (The Depth Limit Invariant — Sub-Submodules Strictly BANNED):**
 >      - Hierarchy depth below the Domain Container (`{role}_{domain}/`) is **STRICTLY BOUNDED TO EXACTLY 1 LEVEL** (`{domain}_{capability}/`).
 >      - Tier 4 (`{domain}_{capability}/`) is the **absolute terminal leaf feature execution unit**.
@@ -1855,9 +1858,9 @@ Produce this table for every candidate feature or consolidated route:
 ### Core Tenets of the 1:1 Navigation-to-Folder Law:
 
 1. **Strict 1-to-1 Primary Navigation Mapping & Sidebar Domain Grouping Principle (Universal):**
-   - **Domain Container as Sidebar Group:** Every top-level clickable item defined in a role's sidebar/navigation configuration (e.g., in Manager: Dashboard, Members, CRM, Attendance, Accounting, Settings; in Admin: Gyms, Billing, Staff, Settings; in Superadmin: Tenants, Subscriptions, Platform Analytics; in Trainer: Schedule, Clients, Workouts) MUST have an exact corresponding dedicated feature Domain Container directly inside `src/app/frontend_{role}/` (e.g., `src/app/frontend_{role}/{role}_{domain}/`).
+   - **Domain Container as Sidebar Group & Self-Evident UI Label:** Every top-level clickable item defined in a role's sidebar/navigation configuration (e.g., in Manager: Dashboard, Members, CRM, Attendance, Accounting, Settings; in Admin: Gyms, Billing, Staff, Seats • Shifts • Lockers, Settings; in Superadmin: Tenants, Subscriptions, Platform Analytics) MUST have an exact corresponding dedicated feature Domain Container directly inside `src/app/frontend_{role}/` (e.g., `src/app/frontend_{role}/{role}_{domain}/`). Furthermore, its **human-facing Sidebar Display Label (UI Title) MUST be 100% self-evident, descriptive, and polished Title Case** (e.g., 🪑 `"Seats, Shifts & Lockers"`, 💰 `"Assets & Maintenance"`). Vague umbrella labels (`"Facilities"`, `"Operations"`, `"Resources"`, `"Others"`) are **STRICTLY BANNED**.
    - **Sidebar Anti-Clutter & Hierarchical Domain Grouping (Zero Flat Submodule Dumping):** Top-level sidebar navigation MUST represent cohesive, high-level Business Domains. Dumping flat sub-modules or granular screens directly into the primary sidebar is a **CRITICAL UX & ARCHITECTURE VIOLATION**. The number of domains is governed purely by the business bounded contexts of the role, with **ZERO rigid artificial count ceiling or lock** (neither 5, nor 6–10, nor any fixed count).
-   - **Sub-Modules as Secondary Navigation:** Autonomous sub-modules inside a domain (e.g., inside `manager_crm/`: `crm_enquiries/`, `crm_leads/`, `crm_pipeline/`; inside `manager_accounting/`: `accounting_assets/`, `accounting_ledgers/`, `accounting_maintenance/`) MUST be exposed as Secondary Navigation:
+   - **Sub-Modules as Secondary Navigation & Self-Evident Naming Invariant:** Autonomous sub-modules inside a domain (e.g., inside `admin_seat_shift_locker/`: `seat_allocation_and_booking/`, `shift_timings_and_slot_management/`, `locker_assignment_and_key_tracking/`; inside `manager_crm/`: `crm_enquiries/`, `crm_leads/`, `crm_pipeline/`) MUST follow the **Clarity-Over-Brevity Law** (fully expanded descriptive names, zero penalty for length, zero cryptic abbreviations like `seat_alloc/` or `crm_enq/`), ensuring anyone reading the folder name immediately understands its entire business capability. They MUST be exposed as Secondary Navigation:
      - **Option A (Canonical — Top Tab Bar):** Rendered by the Domain Container's `layout.tsx` across the top of the content area (`[ Enquiries ] [ Leads ] [ Follow-ups ]`), matching the modern Linear/Stripe design standard.
      - **Option B (Collapsible Sidebar Accordion):** An expandable submenu under the parent sidebar item (e.g., `🎯 CRM [▼]` expands to reveal `↳ Enquiries`, `↳ Leads`, `↳ Follow-ups`).
    - **STRICT PROHIBITION ON ACTION NANO-MODULES (THE ANTI-ACTION BAN):**
@@ -1900,19 +1903,32 @@ Two capabilities may ONLY reside in the same Tier 3 Domain Container if they sha
   - An AI MUST NOT put financial invoices or payment gateways inside `Attendance` or `Members` (Invoices belong to `Billing` / `Accounting`).
   - An AI MUST NOT merge `Staff` and `Accounting` merely because staff gets paid (Staff manages shifts/profiles; Accounting manages financial ledger disbursements).
 
-#### 2. The Anti-Junk-Drawer / Anti-Mega-Bucket Law:
+#### 2. The Anti-Junk-Drawer Law & Self-Evident Domain Naming Invariant (Zero Mystery Buckets):
 AI agents are **ABSOLUTELY PROHIBITED** from creating generic, ambiguous, or dumping-ground domain names. 
-The following domain names are **PERMANENTLY BANNED**:
-- ❌ `*_operations/`
-- ❌ `*_management/`
-- ❌ `*_general/`
-- ❌ `*_miscellaneous/` or `*_misc/`
-- ❌ `*_tools/` or `*_actions/`
-- ❌ `*_hub/` or `*_portal/` or `*_workspace/`
-- ❌ `*_services/` or `*_data/`
-- ❌ Hyphenated mergers: `*_crm_and_members/`, `*_finance_and_expenses/`
 
-Creating ANY domain with a banned name is an immediate **P0 ARCHITECTURE FAILURE & MERGE BLOCKER**. Every domain container MUST be a specific business noun from the Canonical Domain Taxonomy below.
+- **The Self-Evident Sidebar Naming Invariant:** Every Tier 3 Domain Container (`{role}_{domain}/`) and its Primary Sidebar label MUST be **100% self-evident and descriptive**. A user or developer looking at the sidebar name MUST know within 1 second exactly what capabilities exist inside without opening folders or clicking tabs.
+- **Explicit Composite Domain Naming (Canonical for Multi-Resource Domains):**
+  - In business verticals where multiple operational resources form a single cohesive lifecycle (e.g., Study Library / Co-working Space / Facility ERPs where Seats, Shifts, and Lockers are allocated together):
+    - ✅ **APPROVED & CANONICAL:** Explicit composite naming where internal capabilities are directly telegraphed in the name:
+      - Domain Container: `src/app/frontend_{role}/{role}_seat_shift_locker/` (e.g., `admin_seat_shift_locker/`)
+      - Sidebar Navigation Title: `"Seats, Shifts & Lockers"` or `"Seat • Shift • Locker"`
+      - Secondary Nav Tabs (`layout.tsx`): `[ 🪑 Seats ]  [ ⏱️ Shifts ]  [ 🔒 Lockers ]`
+      - Autonomous Child Sub-Modules: `seat_allocation/`, `shift_timings/`, `locker_assignments/`
+    - Why this is superior: Reading `"Seats, Shifts & Lockers"` instantly communicates the entire feature scope, eliminating any ambiguity.
+- **Permanently Banned Generic Junk-Drawer Names:**
+  The following domain names are **PERMANENTLY BANNED**:
+  - ❌ `*_operations/`
+  - ❌ `*_management/`
+  - ❌ `*_general/`
+  - ❌ `*_facilities/` (vague black-box — must be explicit like `*_seat_shift_locker/` or `*_equipment_and_rooms/`)
+  - ❌ `*_resources/` (vague black-box — must explicitly name what resources)
+  - ❌ `*_miscellaneous/` or `*_misc/`
+  - ❌ `*_tools/` or `*_actions/`
+  - ❌ `*_hub/` or `*_portal/` or `*_workspace/`
+  - ❌ `*_services/` or `*_data/`
+  - ❌ Unrelated domain mergers: `*_crm_and_members/` (merging pre-sale CRM with post-sale Members is banned), `*_finance_and_expenses/`
+
+Creating ANY domain with a banned generic name or hidden mystery bucket is an immediate **P0 ARCHITECTURE FAILURE & MERGE BLOCKER**. Every domain container MUST be either a recognized business noun or an explicit self-descriptive composite from the Canonical Domain Taxonomy below.
 
 #### 3. Canonical ERP Domain Taxonomy (Extensible Baseline Matrix):
 The domain containers below represent the canonical baseline for Smart Gym 360. 
