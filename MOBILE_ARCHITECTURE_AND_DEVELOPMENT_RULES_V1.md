@@ -136,6 +136,7 @@ Before generating, auditing, or repairing ANY mobile feature module, verify ALL 
 | **Root Quarantine** | Feature domain root (`src/features/frontend_{role}/{role}_{module}/`) contains ONLY `screens/Manager[Domain]Navigator.tsx` (pure navigation shell) and autonomous sub-module directories `{submodule}/`. 100% of feature business code lives inside autonomous sub-modules. Inside each autonomous sub-module, the sub-module root contains ONLY canonical subfolders (`screens/`, `components/`, `hooks/`, `api/`, `state/`, `types/`, `schemas/`, `mocks/`, `utils/`, `tests/`, `_locales/`, `config/`) and the Documentation Trio (`[role]_[submodule]_features.md`, `[role]_[submodule]_forbidden.md`, `[role]_[submodule]_theme_contract.md`). Route screens live strictly inside `screens/`, never loose at sub-module root. | Any business code in domain root or loose screen/code file at sub-module root = NON_COMPLIANT. In repair: move to correct subfolder in RBG 1. |
 | **Central Hardware Secure Storage** | Auth tokens, refresh tokens, biometric keys MUST use iOS Keychain / Android Keystore via `react-native-keychain`. NEVER `AsyncStorage`. | Tokens in AsyncStorage = CRITICAL SECURITY AUDIT FAILURE. In repair: replace with `react-native-keychain` wrapper in RBG 1. |
 | **Sub-Module Documentation Trio** | Every autonomous sub-module MUST contain `[role]_[submodule]_features.md` (with all 22 canonical sections, Section 20 Standalone Harness, Section 21 Portability Guide), `[role]_[submodule]_forbidden.md`, and `[role]_[submodule]_theme_contract.md`. | Missing doc artifact = INCOMPLETE MODULE. In repair: generate missing docs from source in RBG 1. |
+| **Ambient Host Contract Stubs** | Every autonomous sub-module MUST declare or include `contracts/host-stubs.d.ts` (stubbing `@/core/api`, `@/core/logger`, `@/components/ui/*`, `@/core/keychain`, `@/core/display_value`) guaranteeing 100% standalone TypeScript compilation (`tsc --noEmit`) and mock test execution when zipped. | Missing ambient stubs for external host contracts = PORTABILITY VIOLATION (P1). In repair: add `contracts/host-stubs.d.ts` in RBG 1. |
 | **Centralized URL Config** | `config/[role]_[submodule].url_config.ts` MUST exist inside each sub-module and define all routes and API endpoints as `as const`. | Missing URL config = HARDCODED ROUTE RISK. In repair: generate centralized URL config in RBG 1. |
 | **Query Key Registry** | `api/[role]_[submodule].query_keys.ts` or `config/[role]_[submodule].query_keys.ts` MUST exist and namespace all TanStack Query keys with resource identity. | Missing query key factory = CACHE INCONSISTENCY RISK. In repair: create query key registry in RBG 1. |
 | **Zero Cross-Feature Imports** | A feature MUST NOT import business components, hooks, or state from sibling features. | Sibling import = VIOLATION OF RULE 28 (WET PRINCIPAL). In repair: duplicate the required business artifact locally inside the owning feature module (Strict WET Principal) in RBG 1. Moving business logic to `src/core/` is STRICTLY FORBIDDEN. |
@@ -379,6 +380,7 @@ The same principle applies to every role and every domain.
 | `[role]_[submodule]_features.md` (or `_features.md`) | **MANDATORY FOR ALL SUB-MODULES** | Every single autonomous sub-module (all 22 canonical sections) | `NON_COMPLIANT` — Sub-module lacks architectural map |
 | `[role]_[submodule]_forbidden.md` (or `_forbidden.md`) | **MANDATORY FOR ALL SUB-MODULES** | Every single autonomous sub-module | `NON_COMPLIANT` — Sub-module lacks safety boundaries & WET rules |
 | `[role]_[submodule]_theme_contract.md` (or `_theme_contract.md`) | **MANDATORY FOR ALL SUB-MODULES** | Every single autonomous sub-module | `NON_COMPLIANT` — Visual portability contract unverified |
+| `contracts/host-stubs.d.ts` | **MANDATORY FOR ALL SUB-MODULES** | Every single autonomous sub-module | `NON_COMPLIANT` — Missing ambient host stubs for standalone compilation |
 | `config/[role]_[submodule].url_config.ts` | **MANDATORY FOR ALL SUB-MODULES** | Every sub-module with routes or API calls | `NON_COMPLIANT` — URL centralization contract broken |
 | `api/[role]_[submodule].query_keys.ts` (or `config/`) | **MANDATORY FOR ALL MODULES** | Every module with API calls | `NON_COMPLIANT` — Cache key consistency broken |
 | `screens/` | **MANDATORY FOR ALL MODULES** | Every feature module with UI | `NON_COMPLIANT` — Missing screen entry points |
@@ -424,6 +426,89 @@ src/features/frontend_manager/manager_members/members_directory/
 ```
 
 the preferred AI context under the Sub-Module ZIP Guarantee is ONLY that autonomous sub-module folder — NOT the parent domain container `manager_members/`, NOT the role container `frontend_manager/`, and NOT the entire application.
+
+### Mandatory Ambient Host Stubs (`contracts/host-stubs.d.ts`)
+
+> ⛔ **THE SUB-MODULE STANDALONE COMPILATION GUARANTEE (REACT NATIVE):**
+> When an autonomous mobile sub-module (e.g., `attendance_dashboard/`) is extracted, zipped, and handed to an external AI agent or isolated CI environment, the host application files (`@/core/api`, `@/core/logger`, `@/components/ui/*`, `@/core/keychain`, `@/core/display_value`) may not physically exist inside the zip.
+> To guarantee that `tsc --noEmit` and mock tests compile and run with 100% mathematical certainty, every sub-module MUST declare or include ambient TypeScript type stubs inside `contracts/host-stubs.d.ts`:
+
+```typescript
+// contracts/host-stubs.d.ts
+// Ambient host contracts enabling 100% standalone compilation & execution when zipped
+declare module '@/core/api' {
+  export interface ApiSuccess<T> {
+    success: true;
+    message: string;
+    data: T;
+    meta?: { total: number; page: number; limit: number; totalPages: number; hasNextPage: boolean; hasPrevPage: boolean };
+    requestId: string;
+  }
+  export interface ApiFailure {
+    success: false;
+    message: string;
+    data: null;
+    error?: string;
+    errorCode: string;
+    statusCode: number;
+    requestId: string;
+    validationErrors?: Array<{ field: string; message: string }>;
+  }
+  export type ApiResponse<T> = ApiSuccess<T> | ApiFailure;
+  export function apiFetch<T>(endpoint: string, options?: RequestInit): Promise<ApiResponse<T>>;
+}
+
+declare module '@/core/logger' {
+  export const logger: {
+    info: (message: string, ...args: unknown[]) => void;
+    error: (message: string, ...args: unknown[]) => void;
+    warn: (message: string, ...args: unknown[]) => void;
+    debug: (message: string, ...args: unknown[]) => void;
+  };
+}
+
+declare module '@/core/keychain' {
+  export const secureStorage: {
+    getItem: (key: string) => Promise<string | null>;
+    setItem: (key: string, value: string) => Promise<void>;
+    removeItem: (key: string) => Promise<void>;
+  };
+}
+
+declare module '@/core/display_value' {
+  export function displayValue(value: unknown): string;
+}
+
+declare module '@/components/ui/*' {
+  import type React from 'react';
+  // Ambient fallback stubs for host React Native UI primitives during isolated compilation.
+  export type StubComponentProps = React.PropsWithChildren<Record<string, unknown>>;
+  const Component: React.FC<StubComponentProps>;
+  export default Component;
+  export const Button: React.FC<StubComponentProps>;
+  export const Dialog: React.FC<StubComponentProps>;
+  export const Input: React.FC<StubComponentProps>;
+  export const Card: React.FC<StubComponentProps>;
+  export const BottomSheet: React.FC<StubComponentProps>;
+}
+```
+
+### Mobile Feature Dependency Budget (Maximum 7 Core Infrastructure Dependencies)
+
+To guarantee portability and prevent spaghetti coupling, every mobile feature module operates under a strict **External Dependency Budget**:
+- A feature module MUST NOT import from more than **7 distinct core application infrastructure files** (e.g., `@/core/api`, `@/core/logger`, `@/core/keychain`, `@/components/ui/button`, `@/components/ui/input`, `@/core/display_value`, `@/core/theme`).
+- If a feature module requires more than 7 external infrastructure imports, it indicates that the module is over-coupled or trying to do too many unrelated things. It MUST either:
+  1. Internalize helper logic locally (Strict WET), or
+  2. Split into distinct sub-feature modules.
+
+### The Mobile Copy-Paste Test & Feature Removal Test (Deletion Safety)
+
+Every mobile feature module must pass two mechanical portability tests before it is approved for production:
+1. **The Mobile Copy-Paste Test:** If you copy the feature folder `src/features/frontend_{role}/{role}_{domain}/{domain}_{capability}/` into an empty React Native host application that supplies only the 7 standard core infrastructure contracts and run `npm test`, all module unit tests and MSW mock scenarios MUST pass immediately with zero compilation errors.
+2. **The Feature Removal Test (Deletion Safety):** If an engineer completely deletes the feature folder from the project:
+   - The project TypeScript build (`tsc --noEmit`) MUST STILL PASS.
+   - All sibling modules continue to run with zero missing import errors.
+   - If deleting a feature breaks another feature's build, the architecture has FAILED the isolation invariant.
 
 ---
 
@@ -785,6 +870,7 @@ If an AI agent is uncertain which domain owns a feature (e.g. "Trainer Payouts: 
                  │    │    │    ├── bootstrap.ts                   # Standalone harness bootstrap
                  │    │    │    └── [Role][Submodule]Harness.tsx   # Standalone isolated test harness
                  │    │    └── [role]_[submodule].integration.test.ts
+                 │    ├── contracts/host-stubs.d.ts                # Ambient host stubs for standalone compilation
                  │    ├── config/[role]_[submodule].url_config.ts
                  │    ├── _locales/[role]_[submodule]_en.json
                  │    ├── [role]_[submodule]_features.md
