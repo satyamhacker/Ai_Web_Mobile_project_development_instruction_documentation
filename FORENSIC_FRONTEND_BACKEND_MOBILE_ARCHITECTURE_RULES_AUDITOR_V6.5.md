@@ -2501,7 +2501,7 @@ Audit whether the mobile primary navigation (Bottom Tab Navigator / Drawer Navig
 4. **Navigation Shell Isolation Audit:**
    - Are root navigation orchestrators (`RootNavigator`, `BottomTabNavigator`, `DrawerNavigator`) isolated inside core navigation (`src/core/navigation/` or `{role}_navigation/`)?
    - Do navigation orchestrators import business state, business components, or domain hooks from feature modules (violating shell isolation)?
-     → If YES: Flag as `FINDING: NAVIGATION_SHELL_DOMAIN_POLLUTION` (Severity: CRITICAL). Remediation: Navigation shell must consume only the route-contract export approved by the active frontend architecture document. For the current web architecture, navigation may consume `[SUBMODULE]_ROUTES` from the owning feature's `[role]_[submodule]_url_config.ts` (or `url_config.ts`). Navigation MUST NOT import feature business components, hooks, stores, schemas, API clients, fixtures, handlers, or business constants.
+     → If YES: Flag as `FINDING: NAVIGATION_SHELL_DOMAIN_POLLUTION` (Severity: CRITICAL). Remediation: Navigation shell must consume only the route-contract export approved by the mobile architecture document (`MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md` Rule 35). For mobile architecture, navigation orchestrators consume only the domain navigator or secondary tab navigator, importing `[SUBMODULE]_SCREEN_ROUTES` and `[SUBMODULE]_LINKING_CONFIG` from the feature's `config/[role]_[submodule].url_config.ts`. Navigation MUST NOT import feature business components, hooks, stores, schemas, API clients, fixtures, handlers, or business constants.
 
 ---
 

@@ -176,6 +176,9 @@ This document defines the canonical architecture and development rules for a Rea
 | **Navigation** | `@react-navigation/native-stack` | Native stack navigator |
 | **Navigation** | `@react-navigation/bottom-tabs` | Bottom tab navigator |
 | **Navigation** | `@react-navigation/drawer` | Drawer navigator |
+| **Navigation** | `@react-navigation/material-top-tabs` | Top tab navigator for Pattern A secondary domain sub-navigation |
+| **Navigation** | `react-native-tab-view` | Required peer dependency for material-top-tabs |
+| **Navigation** | `react-native-pager-view` | Native pager view for tab views and carousels |
 | **Safe Area** | `react-native-safe-area-context` | SafeAreaView + useSafeAreaInsets |
 | **Screens** | `react-native-screens` | Required by React Navigation |
 | **Lists** | `@shopify/flash-list` | Virtualized lists (preferred over FlatList for >20 items) |
@@ -191,6 +194,9 @@ This document defines the canonical architecture and development rules for a Rea
 | **Animations** | `react-native-reanimated` | UI-thread animations |
 | **Gestures** | `react-native-gesture-handler` | Swipe/pan/pinch gestures |
 | **Server State** | `@tanstack/react-query` | TanStack Query v5 |
+| **Cache Persistence** | `@tanstack/react-query-persist-client` + `@tanstack/query-sync-storage-persister` | Offline server state persistence with MMKV |
+| **Network & Sync** | `@react-native-community/netinfo` | Network connectivity detection & TanStack Query onlineManager sync |
+| **Push Notifications** | `@react-native-firebase/app` + `@react-native-firebase/messaging` | Enterprise push notifications, background message handling, and APNs/FCM tokens |
 | **Client State** | `zustand` | Feature-scoped stores |
 | **Forms** | `react-hook-form` | v7 only |
 | **Validation** | `zod` | Schema validation |
@@ -201,6 +207,7 @@ This document defines the canonical architecture and development rules for a Rea
 | **E2E** | `maestro` | E2E YAML test runner |
 | **Clipboard** | `@react-native-clipboard/clipboard` | Copy to clipboard |
 | **Status Bar** | `react-native` (built-in StatusBar) | Use built-in StatusBar component |
+| **Masked View** | `@react-native-masked-view/masked-view` | Required for skeleton shimmers, masked gradient indicators, and tab bars |
 | **Fonts** | `react-native` font linking | Link fonts via native build — no expo-font |
 | **Crash Reporting** | `@sentry/react-native` | Crash monitoring |
 | **i18n** | `react-i18next` + `i18next` | Internationalization |
@@ -1405,6 +1412,62 @@ State Ownership
 **Hard rule:** never copy API response data into the shared client-state
 container "just in case." Components read server state directly through the
 data-fetching layer, which handles request de-duplication and caching itself.
+
+### Mobile TanStack Query Focus & Network Lifecycle Contract (AppState + NetInfo)
+
+> ⛔ **CRITICAL BARE-METAL MOBILE RUNTIME INVARIANT:**
+> Web browsers automatically fire `window.addEventListener('visibilitychange')` and `window.addEventListener('online')`. React Native bare-metal has **NO browser DOM window events**.
+> Without explicit wiring, TanStack Query will NEVER auto-refetch when a user returns to the mobile app, and queries will NEVER auto-retry upon network reconnect.
+
+Every mobile role application root MUST initialize TanStack Query's `focusManager` and `onlineManager` globally in `src/core/api/queryClient.ts`:
+
+```typescript
+import { AppState, Platform } from 'react-native';
+import type { AppStateStatus } from 'react-native';
+import { focusManager, onlineManager, QueryClient } from '@tanstack/react-query';
+import NetInfo from '@react-native-community/netinfo';
+import { MMKV } from 'react-native-mmkv';
+import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister';
+
+// 1. Mobile Network Reconnect Synchronization
+onlineManager.setEventListener((setOnline) => {
+  return NetInfo.addEventListener((state) => {
+    setOnline(Boolean(state.isConnected && state.isInternetReachable !== false));
+  });
+});
+
+// 2. Mobile AppState Focus Synchronization (auto-refetch on app foreground)
+function onAppStateChange(status: AppStateStatus) {
+  if (Platform.OS !== 'web') {
+    focusManager.setFocused(status === 'active');
+  }
+}
+
+const appStateSubscription = AppState.addEventListener('change', onAppStateChange);
+
+// 3. Central QueryClient Configuration
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 2, // 2 minutes
+      gcTime: 1000 * 60 * 60 * 24, // 24 hours (for persistence)
+      retry: 2,
+      refetchOnReconnect: true,
+      refetchOnWindowFocus: true, // Powered by focusManager.setFocused above
+    },
+  },
+});
+
+// 4. Canonical Offline Cache Persister (MMKV)
+const storage = new MMKV({ id: 'react-query-cache' });
+export const clientPersister = createSyncStoragePersister({
+  storage: {
+    setItem: (key, value) => storage.set(key, value),
+    getItem: (key) => storage.getString(key) ?? null,
+    removeItem: (key) => storage.delete(key),
+  },
+});
+```
 
 ## Rule 4A — Derived Data Ownership Rule
 Derived calculations (e.g., `fullName`, `membershipStatus`, `expiryIndicator`) MUST have exactly one owner.
@@ -3224,7 +3287,7 @@ Cross-reference: Rule 7 and the feature API contract.
 Navigation route names are split into two layers:
 
 1. **Top-level tab/drawer routes** (e.g., `MANAGER_TAB.MEMBERS`) MUST be defined in `src/core/navigation/routes.ts`. This file contains ONLY the top-level tab/drawer entry names — never internal screen names.
-2. **Feature-internal screen routes** (e.g., `MANAGER_MEMBERS_ROUTES.LIST`, `MANAGER_MEMBERS_ROUTES.DETAIL`, `MANAGER_MEMBERS_ROUTES.ADD`) and their `ParamList` types MUST live exclusively in the feature's own `config/{role_module}.url_config.ts`. No screen, hook, or component may contain a hardcoded route string literal.
+2. **Feature-internal screen routes & deep-linking patterns** (e.g., `MANAGER_MEMBERS_ROUTES.LIST`, `MANAGER_MEMBERS_ROUTES.DETAIL`, `MANAGER_MEMBERS_ROUTES.ADD`, along with `MANAGER_MEMBERS_LINKING`) and their `ParamList` types MUST live exclusively in the feature's own `config/{role_module}.url_config.ts`. No screen, hook, or component may contain a hardcoded route string literal.
 
 ```typescript
 // src/core/navigation/routes.ts
@@ -3248,17 +3311,50 @@ export type RootStackParamList = {
 ```
 
 ```typescript
+// Canonical Sub-Module URL & Deep Linking Contract:
+// src/features/frontend_manager/manager_members/members_list/config/manager_members_list.url_config.ts
+import type { PathConfig } from '@react-navigation/native';
+
+export const MANAGER_MEMBERS_LIST_ROUTES = {
+  LIST:   'ManagerMembersListScreen',
+  DETAIL: 'ManagerMembersDetailScreen',
+  CREATE: 'ManagerMembersCreateScreen',
+} as const;
+
+export type ManagerMembersListStackParamList = {
+  [MANAGER_MEMBERS_LIST_ROUTES.LIST]:   undefined;
+  [MANAGER_MEMBERS_LIST_ROUTES.DETAIL]: { memberId: string };
+  [MANAGER_MEMBERS_LIST_ROUTES.CREATE]: undefined;
+};
+
+// Deep linking and push notification payload URL configuration
+export const MANAGER_MEMBERS_LIST_LINKING: Record<
+  keyof ManagerMembersListStackParamList,
+  string | PathConfig<ManagerMembersListStackParamList>
+> = {
+  [MANAGER_MEMBERS_LIST_ROUTES.LIST]: 'members',
+  [MANAGER_MEMBERS_LIST_ROUTES.DETAIL]: {
+    path: 'members/:memberId',
+    parse: {
+      memberId: (id: string) => id,
+    },
+  },
+  [MANAGER_MEMBERS_LIST_ROUTES.CREATE]: 'members/create',
+};
+```
+
+```typescript
 // ❌ BAD — hardcoded string in a component
 navigation.navigate('MembersDetailScreen', { memberId: id });
 
 // ✅ GOOD — typed constant
-navigation.navigate(ROUTES.MEMBERS.DETAIL, { memberId: id });
+navigation.navigate(MANAGER_MEMBERS_LIST_ROUTES.DETAIL, { memberId: id });
 ```
 
 Consequence of violation: a renamed screen breaks navigation silently at runtime
-with no TypeScript error. The constants file makes renames a compiler error.
+with no TypeScript error. The constants file makes renames a compiler error. Providing `LINKING_CONFIG` in `url_config.ts` guarantees that push notification routing and Universal/App Links function autonomously when the sub-module is mounted or extracted.
 
-Cross-reference: Rule 2 (navigation), Rule 28 (zero cross-feature imports — routes
+Cross-reference: Rule 2 (navigation), Rule 15 (push notifications), Rule 28 (zero cross-feature imports — routes
 constants are a `core/` primitive, not a feature file).
 
 ---
@@ -3645,6 +3741,47 @@ export type NetworkState<T> =
 // Use ONLY for: camera, Bluetooth, file system, biometrics — NOT for API calls
 ```
 
+### Mobile Offline Connectivity Hook & Banner Standard
+To render cached data safely with an offline indicator, mobile screens consume `@react-native-community/netinfo` and display an `OfflineBanner`:
+
+```typescript
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import { useNetInfo } from '@react-native-community/netinfo';
+import { useThemeTokens } from '@/theme/useThemeTokens';
+import { WifiOff } from 'lucide-react-native';
+
+export function OfflineBanner() {
+  const { isConnected } = useNetInfo();
+  const tokens = useThemeTokens();
+
+  if (isConnected !== false) return null;
+
+  return (
+    <View style={[styles.banner, { backgroundColor: tokens.color.warningSubtle, borderBottomColor: tokens.color.border }]}>
+      <WifiOff size={16} color={tokens.color.warning} style={styles.icon} />
+      <Text style={[styles.text, { color: tokens.color.foreground }]}>
+        You are offline. Showing cached data. Actions requiring sync are disabled.
+      </Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  banner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+  },
+  icon: { marginRight: 8 },
+  text: { fontSize: 12, fontWeight: '500', flex: 1 },
+});
+```
+
+Cross-reference: Rule 4 (AppState and NetInfo TanStack Query lifecycle sync).
+
 ## Rule 46 — Background Task / Scheduled Job Documentation
 
 Any background task, scheduled job, periodic sync, or push-notification handler
@@ -4030,6 +4167,68 @@ For sensitive screens:
 - Clear sensitive in-memory state immediately on logout and tenant switch.
 - Re-authorize deep links and notification routes before rendering protected data.
 - Never trust role, tenant, permission, or record ownership coming from local route parameters.
+
+#### Canonical App-Switcher Privacy Curtain Implementation Pattern
+
+To prevent sensitive financial, payroll, or PII data from leaking into the OS app switcher (iOS multitasking carousel or Android overview screen):
+
+```typescript
+// src/core/security/PrivacyCurtain.tsx
+import React, { useEffect, useState } from 'react';
+import { AppState, StyleSheet, View } from 'react-native';
+import type { AppStateStatus } from 'react-native';
+import { useThemeTokens } from '@/theme/useThemeTokens';
+import { ShieldAlert } from 'lucide-react-native';
+
+interface PrivacyCurtainProps {
+  children: React.ReactNode;
+  isSensitive?: boolean;
+}
+
+export function PrivacyCurtain({ children, isSensitive = false }: PrivacyCurtainProps) {
+  const [isMasked, setIsMasked] = useState(false);
+  const tokens = useThemeTokens();
+
+  useEffect(() => {
+    if (!isSensitive) return;
+
+    const handleAppStateChange = (nextState: AppStateStatus) => {
+      // 'inactive' on iOS (multitasking carousel) or 'background' on Android/iOS
+      const shouldMask = nextState === 'inactive' || nextState === 'background';
+      setIsMasked(shouldMask);
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    return () => subscription.remove();
+  }, [isSensitive]);
+
+  return (
+    <View style={styles.container}>
+      {children}
+      {isMasked && (
+        <View
+          style={[styles.curtain, { backgroundColor: tokens.color.background }]}
+          testID="app-switcher-privacy-curtain"
+          accessibilityElementsHidden={true}
+          importantForAccessibility="no-hide-descendants"
+        >
+          <ShieldAlert size={48} color={tokens.color.primary} />
+        </View>
+      )}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  curtain: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 99999,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});
+```
 
 ---
 
