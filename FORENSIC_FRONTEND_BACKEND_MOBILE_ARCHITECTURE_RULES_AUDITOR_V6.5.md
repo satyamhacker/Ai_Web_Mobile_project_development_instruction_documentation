@@ -15,7 +15,7 @@ When instructions conflict across documents or supplied sources, apply this exac
 3. Explicit user-approved scope and verified API contracts
 4. Normative architecture rules (`MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md` / `WEB_FRONTEND_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md` / `BACKEND_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md`)
 5. Design-system rules (`MOBILE_UI_UX_DESIGN.md` / `WEB_FRONTEND_UI_UX_DESIGN.md`) for visual/token decisions
-6. Execution workflow documents (`FRONTEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_V2_11.md` / `BACKEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_FROM_FRONTEND_V6_3.md`) for audit sequencing, delivery artifacts, and reporting
+6. Execution workflow documents (`FRONTEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_V2_11.md` / `BACKEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_FROM_FRONTEND_V6_4.md`) for audit sequencing, delivery artifacts, and reporting
 7. Feature-local documentation trio (`_features.md`, `_forbidden.md`, `_theme_contract.md`)
 8. Existing implementation conventions
 
@@ -95,7 +95,7 @@ rather than creating a parallel hardcoded rule copy.
 >
 > The auditor MUST NOT silently continue after a forensic-process violation.
 >
-> The normative architecture documents are the **absolute authoritative standard only for explicitly defined behavior**. Any undefined, unprovided, or ambiguous behavior remains `CONTRACT_MISSING` and MUST NOT be inferred, assumed, or guessed.
+> The normative architecture documents are the **absolute authoritative standard only for explicitly defined behavior**. Classify an unresolved contradiction as `SOURCE_CONFLICT` or `CONTRACT_CONFLICT`; classify absent out-of-scope evidence as `BLOCKED_BY_SUPPLIED_SCOPE`; classify insufficient available evidence as `NOT_VERIFIED`; and use `CONTRACT_MISSING` only for an undefined external business behavior. None may be inferred, assumed, or guessed.
 >
 > ⛔ **DETERMINISTIC CONFIDENCE TAXONOMY & EVIDENCE STANDARD:**
 > Every implementation decision, contract assertion, and audit claim MUST be classified into one of:
@@ -130,7 +130,7 @@ rather than creating a parallel hardcoded rule copy.
 >
 > INPUT INTEGRITY STATUS:          [VERIFIED / PARTIAL / BLOCKED]
 >
-> COMMUNICATION LANGUAGE ACKNOWLEDGED: Roman Hinglish (Strictly NO pure English conversational text/telemetry, NO Devanagari)
+> COMMUNICATION FORMAT ACKNOWLEDGED: Structured reports, evidence fields, statuses, and code identifiers use English; analytical narrative may use concise Roman Hinglish when useful (NO Devanagari).
 >
 > FIRST ACTION:      Phase 1 Combined Discovery Scan (Section 13A)
 > SECOND ACTION:     Publish Audit Chunk Map (Section 13A Step 3)
@@ -177,7 +177,7 @@ rather than creating a parallel hardcoded rule copy.
 > 2. **Pre-Delivery Cross-Check Verification:** Verify that the Repair AI has documented and printed the 3 physical verification tables (RBG Closure Ledger, Autonomous Submodule Physical Ledger, Canonical Rules Sweep) with zero discrepancies.
 > 3. **1-Click Interactive Button Priority:** Publish Audit Plans, Chunk Maps, and Checkpoints as actionable artifacts (`RequestFeedback: true`) or interactive modals (`ask_question`) so user can approve next batches via 1-click button instead of manual typing.
 > 4. **Interactive Clarification Modal with (Recommended) Default:** All questions/decisions MUST use structured modals/checkboxes with Option 1 marked `(Recommended)`. Zero open-ended technical essay questions.
-> 5. **Live Progress Heartbeat Telemetry in Roman Hinglish (STRICT ZERO-ENGLISH BAN):** Output real-time non-blocking progress lines (`✓ [Done]: ... ⚙️ [In Progress]: ...`) strictly in Roman Hinglish (English letters, NO Devanagari). PURE ENGLISH CHAT/TELEMETRY IS STRICTLY BANNED AS A FORMAT VIOLATION. (Example: `✓ [Done]: Chunk 1 ke 8 source files audit ho chuke hain. ⚙️ [In Progress]: Abhi Chunk 2 ke API contract audit start kar raha hoon.`). Code identifiers, file paths, and syntax remain in English.
+> 5. **Live Progress Heartbeat Telemetry:** Output concise, non-blocking progress lines (`✓ [Done]: ... ⚙️ [In Progress]: ...`). Keep structured statuses, evidence labels, code identifiers, file paths, and syntax in English; conversational narrative may use Roman Hinglish when it improves clarity.
 > 6. **Substantive Audit Batch Density:** Calibrate batch scans by balanced file groups (e.g., 6–15 files per batch) to maintain steady momentum and prevent context loss.
 >
 > ⛔ **You MUST NOT output any audit finding, rule check, or code analysis before completing this boot declaration.**
@@ -474,7 +474,7 @@ When multiple supplied sources or rules conflict, resolve them in this exact can
 3. Explicit user-approved scope and verified API contracts
 4. Normative architecture rules (`MOBILE_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md` / `WEB_FRONTEND_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md` / `BACKEND_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md`)
 5. Design-system rules (`MOBILE_UI_UX_DESIGN.md` / `WEB_FRONTEND_UI_UX_DESIGN.md`) for visual/token decisions
-6. Execution workflow documents (`FRONTEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_V2_11.md` / `BACKEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_FROM_FRONTEND_V6_3.md`) for execution workflow, audit sequencing, delivery artifacts, and reporting
+6. Execution workflow documents (`FRONTEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_V2_11.md` / `BACKEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_FROM_FRONTEND_V6_4.md`) for execution workflow, audit sequencing, delivery artifacts, and reporting
 7. Feature-local documentation trio (`_features.md`, `_forbidden.md`, `_theme_contract.md`)
 8. Existing implementation conventions
 

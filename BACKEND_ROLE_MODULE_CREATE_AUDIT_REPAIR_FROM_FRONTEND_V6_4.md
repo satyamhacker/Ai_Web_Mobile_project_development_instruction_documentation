@@ -90,7 +90,7 @@
 > [ ] Testing & Automation: Unit, integration, and API E2E test suites with standard mock scenario catalog acknowledged
 > [ ] Full 112-Item Anti-Skipping Checklist (Section 84): ALL 112 rules (Rule 1 to Rule 112) MANDATORY — zero skipping, zero sampling acknowledged
 >
-> COMMUNICATION LANGUAGE ACKNOWLEDGED: Roman Hinglish (Strictly NO pure English conversational text/telemetry, NO Devanagari)
+> COMMUNICATION FORMAT ACKNOWLEDGED: Structured artifacts, statuses, evidence, and code identifiers use English; conversational telemetry may use concise Roman Hinglish when useful (NO Devanagari).
 >
 > FIRST ACTION: [PROJECT STACK GATE / Read Stage 1 requirements / etc. — state exactly]
 > ```
@@ -101,7 +101,7 @@
 > 2. **Pre-Delivery Cross-Check Gate (Zero-Excuse Law):** Must execute and output the 3 physical verification tables (RBG Closure, Submodule Physical Ledger, Canonical Rules Sweep) before packaging. Post-delivery excuses ("Oh sorry, cross-check nahi kiya") are strictly banned as P0 audit fraud.
 > 3. **1-Click Interactive Button Priority:** Publish RBG Plans and Checkpoints as actionable artifacts (`RequestFeedback: true`) or modals (`ask_question`) so user can approve via 1-click button instead of manual typing.
 > 4. **Interactive Clarification Modal with (Recommended) Default:** All questions/decisions MUST use structured modals/checkboxes with Option 1 marked `(Recommended)`. Zero open-ended technical essay questions.
-> 5. **Live Progress Heartbeat Telemetry in Roman Hinglish (STRICT ZERO-ENGLISH BAN):** Output real-time non-blocking progress lines (`✓ [Done]: ... ⚙️ [In Progress]: ...`) strictly in Roman Hinglish (English letters, NO Devanagari). PURE ENGLISH CHAT/TELEMETRY IS STRICTLY BANNED AS A FORMAT VIOLATION. (Example: `✓ [Done]: Controllers aur entities audit ho chuke hain. ⚙️ [In Progress]: Abhi transactional boundary verify kar raha hoon.`). Code identifiers, file paths, and syntax remain in English.
+> 5. **Live Progress Heartbeat Telemetry:** Output concise, non-blocking progress lines (`✓ [Done]: ... ⚙️ [In Progress]: ...`). Use Roman Hinglish when conversational context benefits from it; keep statuses, evidence labels, code identifiers, file paths, and syntax in English so downstream tools can parse them reliably.
 > 6. **Substantive Workload Density:** Calibrate RBGs by workload floor (min 8 findings / 4 files) and safety ceiling (max 25 findings / 18 files) for a balanced ~5–8 min sprint without token blowouts or hallucinations.
 >
 > ⛔ **BACKEND FILE INSPECTION BOUNDARY BEFORE STAGE 1:**
@@ -205,7 +205,7 @@ Stop only when:
 >    - **The Single Responsibility Domain Grouping Law & Bounded Context Integrity (1-Domain = 1-Responsibility Mandate):**
 >      - Every Tier 3 Backend Domain Module (`backend-{role}/{role}-modules/{role}-{domain}/`) MUST focus strictly on a **SINGLE BUSINESS RESPONSIBILITY & UNIFIED AGGREGATE ROOT** (Single Responsibility Principle applied to Architectural Domains).
 >      - ⛔ **THE UNIVERSAL BAN ON CONJOINED-TWIN DOMAIN MERGERS (The Universal "X-and-Y" Anti-Pattern):**
->        - An AI agent is **STRICTLY PROHIBITED** from conjoining or merging ANY two distinct business domains, departments, or responsibilities into a single hybrid domain module (e.g., using `*-and-*`, `*-*`, or composite names combining two separate bounded contexts).
+>        - An AI agent is **STRICTLY PROHIBITED** from conjoining or merging ANY two distinct business domains, departments, or responsibilities into a single hybrid domain module (e.g., using a composite name containing `-and-` or otherwise combining two separate bounded contexts). Ordinary hyphenated names such as `admin-members` and `members-directory` remain valid.
 >        - **The Universal Law:** A mere operational relationship, common database foreign key, or loose thematic connection between two business areas (e.g., *"both touch money"*, *"both touch staff"*, *"both touch members"*) **DOES NOT JUSTIFY MERGING THEM INTO ONE DOMAIN MODULE!**
 >        - **The 3-Point Deterministic Domain Independence Test:**
 >          Before proposing or creating ANY backend domain module, the AI MUST verify these 3 gates. If ANY gate is true, the capabilities **MUST BE SPLIT INTO SEPARATE SIBLING DOMAIN MODULES**:
@@ -3820,7 +3820,7 @@ Do NOT start any repair until the user approves the RBG Plan.
 11. **LIVE PROGRESS HEARTBEAT TELEMETRY IN ROMAN HINGLISH (ANTI-HANG ASSURANCE):**
     - During execution turns touching multiple files, the AI MUST NOT remain completely silent. A prolonged lack of visible response creates the false impression that the AI is frozen, hung, or stuck.
     - After completing each substantive fix/file within the RBG, the AI MUST emit a concise, real-time telemetry line:
-      - **Language Rule (ZERO-ENGLISH BAN):** Strictly **Roman Hinglish** (English letters, NO Devanagari script). Pure English conversational updates, explanations, or telemetry are strictly FORBIDDEN and treated as a FORMAT VIOLATION.
+      - **Language Rule:** Structured outputs remain in English for reliable parsing. Conversational updates may use Roman Hinglish (English letters, NO Devanagari) when it improves clarity; pure English is allowed for technical evidence, identifiers, and status labels.
       - **Informational Only (Non-blocking):** It does NOT ask for user input or pause execution.
       - **Format & Concrete Examples:**
         ```text

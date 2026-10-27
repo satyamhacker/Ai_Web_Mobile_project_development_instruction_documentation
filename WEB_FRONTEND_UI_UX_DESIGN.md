@@ -14,7 +14,7 @@ When instructions conflict across documents, apply this exact order of authority
 8. Existing implementation conventions
 
 A lower-priority rule MUST NOT override a higher-priority rule.
-Any unresolved conflict MUST be recorded as `BLOCKED_BY_SUPPLIED_CONTRACT` rather than resolved through invention.
+Classify unresolved evidence consistently: use `SOURCE_CONFLICT` for conflicting supplied rules, `CONTRACT_CONFLICT` for a supplied product/API contract that conflicts with an applicable rule, `BLOCKED_BY_SUPPLIED_SCOPE` when required evidence is outside the supplied scope, and `NOT_VERIFIED` when available evidence is insufficient. Reserve `BLOCKED_BY_SUPPLIED_CONTRACT` for a verified contract that makes safe execution impossible. Never resolve a conflict through invention.
 
 ## Canonical Rule Reference Policy
 
@@ -1160,7 +1160,7 @@ Theme tokens required:
 
 ---
 
-*END OF GLOBAL DESIGN SYSTEM — Feature modules reference this system through their theme contract; the complete document is not required as module repair context.*
+*END OF GLOBAL DESIGN SYSTEM — The complete document is required during the initial requirements baseline. After that baseline is frozen, a feature module may use its local theme contract as the focused implementation context, provided the contract references this document as the canonical visual source.*
 
 ---
 

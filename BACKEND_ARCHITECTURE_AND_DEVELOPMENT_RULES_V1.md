@@ -91,7 +91,7 @@ The AI MUST NOT silently continue after detecting a violation.
 > 2. **Pre-Delivery Cross-Check Gate (Zero-Excuse Law):** Must execute and output the 3 physical verification tables (RBG Closure Ledger, Autonomous Submodule Physical Ledger, Canonical Rules Sweep) before packaging. Post-delivery excuses ("Oh sorry, cross-check nahi kiya") are strictly banned as P0 audit fraud.
 > 3. **1-Click Interactive Button Priority:** Publish RBG Plans and Checkpoints as actionable artifacts (`RequestFeedback: true`) or modals (`ask_question`) so user can approve via 1-click button instead of manual typing across all checkpoints (Stage 1 Freeze, RBG Plan, and RBG sprints).
 > 4. **Interactive Clarification Modal with (Recommended) Default:** All questions/decisions MUST use structured modals/checkboxes with Option 1 marked `(Recommended)`. Zero open-ended technical essay questions.
-> 5. **Live Progress Heartbeat Telemetry in Roman Hinglish (STRICT ZERO-ENGLISH BAN):** Output real-time non-blocking progress lines (`✓ [Done]: ... ⚙️ [In Progress]: ...`) strictly in Roman Hinglish (English letters, NO Devanagari). PURE ENGLISH CHAT/TELEMETRY IS STRICTLY BANNED AS A FORMAT VIOLATION. Code identifiers, file paths, and syntax remain in English.
+> 5. **Live Progress Heartbeat Telemetry:** Output concise, non-blocking progress lines (`✓ [Done]: ... ⚙️ [In Progress]: ...`). Use Roman Hinglish when conversational context benefits from it; keep statuses, evidence labels, code identifiers, file paths, and syntax in English so downstream tools can parse them reliably.
 > 6. **Substantive Workload Density:** Calibrate RBGs by workload floor (min 8 findings / 4 files) and safety ceiling (max 25 findings / 18 files) for a balanced ~5–8 min sprint without token blowouts or hallucinations.
 
 ## The Core Philosophy
@@ -111,13 +111,13 @@ When instructions conflict across documents or layers, apply this exact order of
 2. Database constraint, migration backward compatibility, and transactional integrity rules
 3. Explicit user-approved scope and verified API / domain contracts
 4. `BACKEND_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md`
-5. `BACKEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_FROM_FRONTEND_V6_3.md` for audit sequencing, RBG planning, and repair execution
+5. `BACKEND_ROLE_MODULE_CREATE_AUDIT_REPAIR_FROM_FRONTEND_V6_4.md` for audit sequencing, RBG planning, and repair execution
 6. Frontend API client/network behavior and verified contract fixtures
 7. Feature-local documentation (`_features.md`, `_forbidden.md`)
 8. Existing repository implementation conventions
 
 A lower-priority rule MUST NOT override a higher-priority rule.
-Any unresolved conflict MUST be recorded as `BLOCKED_BY_SUPPLIED_CONTRACT` or `AUTHORITATIVE_CONFLICT` rather than resolved through invention.
+Classify unresolved evidence consistently: use `SOURCE_CONFLICT` for conflicting supplied rules, `CONTRACT_CONFLICT` for a supplied product/API contract that conflicts with an applicable rule, `BLOCKED_BY_SUPPLIED_SCOPE` when required evidence is outside the supplied scope, and `NOT_VERIFIED` when available evidence is insufficient. Reserve `BLOCKED_BY_SUPPLIED_CONTRACT` for a verified contract that makes safe execution impossible. Never resolve a conflict through invention.
 
 ---
 
@@ -146,7 +146,7 @@ Before generating, auditing, or repairing ANY backend role module, verify ALL of
 [ ] Dual-Layer Multi-Tenancy Invariant: Database-per-tenant connection routing + mandatory gymId/branchId query predicate in every repository query
 [ ] Production Safety Guards: Idempotency-Key: UUIDv4 header on state mutations (accepts Idempotency-Key or X-Idempotency-Key), distributed locking for concurrent resources, rate-limiting, and zero raw secrets
 [ ] EXECUTIVE DIAMOND PROTOCOLS CONFIRMED (Anti-Deception ZIP Naming, 3-Table Cross-Check Gate, 1-Click Buttons, Clarification Modals, Roman Hinglish Telemetry, Workload Density)
-[ ] COMMUNICATION LANGUAGE CONFIRMED: Roman Hinglish (Strictly NO pure English conversational text/telemetry, NO Devanagari)
+[ ] COMMUNICATION FORMAT CONFIRMED: Structured artifacts, statuses, evidence, and code identifiers use English; conversational telemetry may use concise Roman Hinglish when useful (NO Devanagari).
 ```
 
 **✅ COMPLIANT structure (Universal Day-1 Sub-Module Hierarchy):**
@@ -484,7 +484,7 @@ To prevent architectural drift and eliminate monolithic backend sprawl, the back
 > 13. **The Universal Single-Domain Purity Law & Bounded Context Integrity (1-Domain = 1-Bounded-Context Mandate):**
 >    - Every Tier 3 Backend Domain Module (`backend-{role}/{role}-modules/{role}-{domain}/`) MUST focus strictly on a **SINGLE, UNIFIED BUSINESS BOUNDED CONTEXT & PRIMARY AGGREGATE ROOT**.
 >    - ⛔ **THE UNIVERSAL BAN ON CONJOINED-TWIN DOMAIN MERGERS (The Universal "X-and-Y" Anti-Pattern):**
->      - An AI agent is **STRICTLY PROHIBITED** from conjoining or merging ANY two distinct business domains, departments, or capabilities into a single hybrid domain module (e.g., using `*-and-*`, `*-*`, or composite names combining two separate bounded contexts).
+>      - An AI agent is **STRICTLY PROHIBITED** from conjoining or merging ANY two distinct business domains, departments, or capabilities into a single hybrid domain module (e.g., using a composite name containing `-and-` or otherwise combining two separate bounded contexts). Ordinary hyphenated names such as `admin-members` and `members-directory` remain valid.
 >      - **The Universal Law:** A mere operational relationship, common database foreign key, or loose thematic connection between two business areas (e.g., *"both touch money"*, *"both touch staff"*, *"both touch members"*) **DOES NOT JUSTIFY MERGING THEM INTO ONE DOMAIN MODULE!**
 >      - **The 3-Point Deterministic Domain Independence Test:**
 >        Before proposing or creating ANY backend domain module, the AI MUST verify these 3 gates. If ANY gate is true, the capabilities **MUST BE SPLIT INTO SEPARATE SIBLING DOMAIN MODULES**:
@@ -539,7 +539,7 @@ Rules:
 ### 0D. BACKEND NAMESPACE PREFIXING (MANDATORY)
 
 Because the project contains a 1-to-1 mapping of frontend and backend roles, the AI MUST explicitly separate backend folders from frontend folders. 
-- **The Rule:** EVERY top-level backend role container or domain folder MUST be prefixed with `backend-`.
+- **The Rule:** Every top-level backend role container MUST be prefixed with `backend-`; its child domain folders use the canonical `{role}-{domain}` pattern. Do not add a second `backend-` prefix to child domains.
 - **Primary Examples:** `backend-admin/`, `backend-manager/`, `backend-superadmin/`.
 - **E2E / Selenium Testing Folders:** If tests are grouped in a separate root directory, the test root AND the role subfolders inside it MUST carry the namespace to maintain context.
   - Example E2E: `backend-e2e/backend-admin-e2e/`, `backend-e2e/backend-manager-e2e/`

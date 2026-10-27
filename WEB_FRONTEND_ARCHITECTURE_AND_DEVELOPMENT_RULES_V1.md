@@ -14,7 +14,7 @@ When instructions conflict across documents, apply this exact order of authority
 8. Existing implementation conventions
 
 A lower-priority rule MUST NOT override a higher-priority rule.
-Any unresolved conflict MUST be recorded as `BLOCKED_BY_SUPPLIED_CONTRACT` rather than resolved through invention.
+Classify unresolved evidence consistently: use `SOURCE_CONFLICT` for conflicting supplied rules, `CONTRACT_CONFLICT` for a supplied product/API contract that conflicts with an applicable rule, `BLOCKED_BY_SUPPLIED_SCOPE` when required evidence is outside the supplied scope, and `NOT_VERIFIED` when available evidence is insufficient. Reserve `BLOCKED_BY_SUPPLIED_CONTRACT` for a verified contract that makes safe execution impossible. Never resolve a conflict through invention.
 
 ## Canonical Rule Reference Policy
 
@@ -85,7 +85,7 @@ When a rule is repeated for convenience:
 > [ ] ROOT QUARANTINE verified — only permitted files in feature root
 > [ ] FRONTEND DELIVERY FREEZE GATE & DEFINITION OF DONE loaded into context
 > [ ] EXECUTIVE DIAMOND PROTOCOLS CONFIRMED (Anti-Deception ZIP Naming, 3-Table Cross-Check Gate, 1-Click Buttons, Clarification Modals, Roman Hinglish Telemetry, Workload Density)
-> [ ] COMMUNICATION LANGUAGE CONFIRMED: Roman Hinglish (Strictly NO pure English conversational text/telemetry, NO Devanagari)
+> [ ] COMMUNICATION FORMAT CONFIRMED: Structured artifacts, statuses, evidence, and code identifiers use English; conversational telemetry may use concise Roman Hinglish when useful (NO Devanagari).
 > ```
 > **Failure to confirm the above = verification incomplete. Do not proceed until baseline is verified.**
 >
@@ -105,7 +105,7 @@ When a rule is repeated for convenience:
 > 2. **Pre-Delivery Cross-Check Gate (Zero-Excuse Law):** Must execute and output the 3 physical verification tables (RBG Closure Ledger, Autonomous Submodule Physical File Ledger, and Canonical Rules Verification Sweep) before packaging. Post-delivery excuses ("Oh sorry, cross-check nahi kiya") are strictly banned as P0 audit fraud.
 > 3. **1-Click Interactive Button Priority:** Publish RBG Plans and Checkpoints as actionable artifacts (`RequestFeedback: true`) or modals (`ask_question`) so user can approve via 1-click button instead of manual typing.
 > 4. **Interactive Clarification Modal with (Recommended) Default:** All questions/decisions MUST use structured modals/checkboxes with Option 1 marked `(Recommended)`. Zero open-ended technical essay questions.
-> 5. **Live Progress Heartbeat Telemetry in Roman Hinglish (STRICT ZERO-ENGLISH BAN):** Output real-time non-blocking progress lines (`✓ [Done]: ... ⚙️ [In Progress]: ...`) strictly in Roman Hinglish (English letters, NO Devanagari). PURE ENGLISH CHAT/TELEMETRY IS STRICTLY BANNED AS A FORMAT VIOLATION. (Example: `✓ [Done]: Autonomous sub-module directory structure aur URL config verify ho gaya hai. ⚙️ [In Progress]: Abhi TanStack Query v5 hooks aur MSW fixtures check kar raha hoon.`). Code identifiers, file paths, and syntax remain in English.
+> 5. **Live Progress Heartbeat Telemetry:** Output concise, non-blocking progress lines (`✓ [Done]: ... ⚙️ [In Progress]: ...`). Use Roman Hinglish when conversational context benefits from it; keep statuses, evidence labels, code identifiers, file paths, and syntax in English so downstream tools can parse them reliably.
 > 6. **Substantive Workload Density:** Calibrate RBGs by workload floor (min 8 findings / 4 files) and safety ceiling (max 25 findings / 18 files) for a balanced ~5–8 min sprint without token blowouts or hallucinations.
 
 ## RULE ENFORCEMENT & SEVERITY MODEL
@@ -206,7 +206,7 @@ Deviations from this hierarchy MUST be documented in the affected module's `[mod
 > - **Backend Architectural Patterns Out of Scope for Frontend:** Server-side event-driven architecture patterns (including the Transactional Outbox Pattern, Redis Streams, Kafka event topics, Saga workflow orchestrators, CQRS write/read model segregation, database transaction boundaries, and NestJS/Django service layers) are strictly governed by their dedicated specification: `BACKEND_ARCHITECTURE_AND_DEVELOPMENT_RULES_V1.md`.
 > - **Frontend Interaction Boundaries:** The Web Frontend client interacts with backend services strictly via:
 >   1. **RESTful / RPC Command Endpoints:** Mutation operations MUST attach an `Idempotency-Key: UUIDv4` HTTP header (preventing double-submission / race conditions) and conform to the canonical `ApiResponse<T>` envelope.
->   2. **Server-Sent Events (SSE) / WebSockets:** Real-time data streams (e.g., live attendance tracking, notifications) are consumed exclusively through the centralized socket client adapter (`@/lib/socket`).
+>   2. **WebSockets:** Real-time data streams (e.g., live attendance tracking, notifications) are consumed exclusively through the centralized `socket.io-client` adapter (`@/lib/socket`). SSE is not part of the approved frontend transport baseline.
 >   3. **Strict Isolation:** The frontend client NEVER interacts directly with backend database stores, cache layers, or message brokers. All communication crosses the API Gateway boundary.
 
 ---

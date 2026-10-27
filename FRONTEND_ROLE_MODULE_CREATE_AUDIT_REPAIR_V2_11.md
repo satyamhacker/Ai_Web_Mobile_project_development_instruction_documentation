@@ -29,7 +29,7 @@ Apply the following order only for the active platform.
 
 A document for the inactive platform MUST NOT be loaded, applied, or used as a tie-breaker.
 A lower-priority rule MUST NOT override a higher-priority rule.
-Any unresolved conflict MUST be recorded as `BLOCKED_BY_SUPPLIED_CONTRACT` rather than resolved through invention.
+Classify unresolved evidence consistently: use `SOURCE_CONFLICT` for conflicting supplied rules, `CONTRACT_CONFLICT` for a supplied product/API contract that conflicts with an applicable rule, `BLOCKED_BY_SUPPLIED_SCOPE` when required evidence is outside the supplied scope, and `NOT_VERIFIED` when available evidence is insufficient. Reserve `BLOCKED_BY_SUPPLIED_CONTRACT` for a verified contract that makes safe execution impossible. Never resolve a conflict through invention.
 
 ## Canonical Rule Reference Policy
 
@@ -168,7 +168,7 @@ When a rule is repeated for convenience:
 > [ ] Multi-Tenancy & Safety: gymId/branchId from auth token never body, Idempotency-Key UUIDv4, en-dash displayValue acknowledged
 > [ ] Section 43P Anti-Skipping Checklist: ALL 84+ web architecture rules / 68 mobile rules MANDATORY — zero skipping, zero sampling acknowledged
 >
-> COMMUNICATION LANGUAGE ACKNOWLEDGED: Roman Hinglish (Strictly NO pure English conversational text/telemetry, NO Devanagari)
+> COMMUNICATION FORMAT ACKNOWLEDGED: Structured artifacts, statuses, evidence, and code identifiers use English; conversational telemetry may use concise Roman Hinglish when useful (NO Devanagari).
 >
 > FIRST ACTION: [State exact first action — e.g., Read supplied design and architecture rules]
 > ```
@@ -179,7 +179,7 @@ When a rule is repeated for convenience:
 > 2. **Pre-Delivery Cross-Check Gate (Zero-Excuse Law):** Must execute and output the 3 physical verification tables (RBG Closure, Submodule Physical Ledger, Canonical Rules Sweep) before packaging. Post-delivery excuses ("Oh sorry, cross-check nahi kiya") are strictly banned as P0 audit fraud.
 > 3. **1-Click Interactive Button Priority:** Publish RBG Plans and Checkpoints as actionable artifacts (`RequestFeedback: true`) or modals (`ask_question`) so user can approve via 1-click button instead of manual typing.
 > 4. **Interactive Clarification Modal with (Recommended) Default:** All questions/decisions MUST use structured modals/checkboxes with Option 1 marked `(Recommended)`. Zero open-ended technical essay questions.
-> 5. **Live Progress Heartbeat Telemetry in Roman Hinglish (STRICT ZERO-ENGLISH BAN):** Output real-time non-blocking progress lines (`✓ [Done]: ... ⚙️ [In Progress]: ...`) strictly in Roman Hinglish (English letters, NO Devanagari). PURE ENGLISH CHAT/TELEMETRY IS STRICTLY BANNED AS A FORMAT VIOLATION. (Example: `✓ [Done]: Architecture rules verify ho chuke hain. ⚙️ [In Progress]: Abhi sub-module isolation check kar raha hoon.`). Code identifiers, file paths, and syntax remain in English.
+> 5. **Live Progress Heartbeat Telemetry:** Output concise, non-blocking progress lines (`✓ [Done]: ... ⚙️ [In Progress]: ...`). Use Roman Hinglish when conversational context benefits from it; keep statuses, evidence labels, code identifiers, file paths, and syntax in English so downstream tools can parse them reliably.
 > 6. **Substantive Workload Density:** Calibrate RBGs by workload floor (min 8 findings / 4 files) and safety ceiling (max 25 findings / 18 files) for a balanced ~5–8 min sprint without token blowouts or hallucinations.
 >
 > ⛔ **You MUST NOT open or edit any implementation file before completing Stage 1 (requirement freeze).**
@@ -1623,7 +1623,7 @@ Every audit finding MUST be categorized before repair. The SOURCE-LEVEL vs HOST-
 
 | Category | Definition | Required Action |
 |---|---|---|
-| **AUTO-REPAIRABLE** | Naming violations, token violations, null safety, comment gaps, import order, missing types, broken imports, missing mock fields, minor test additions, missing error boundaries, missing loading states, hardcoded values | **Fix directly in code — NO approval needed. Runtime unavailability does NOT change this.** |
+| **AUTO-REPAIRABLE** | Naming violations, token violations, null safety, comment gaps, import order, missing types, broken imports, missing mock fields, minor test additions, missing error boundaries, missing loading states, hardcoded values | **Fix directly in code within the user-approved RBG; no additional per-finding approval is needed. Runtime unavailability does NOT change this.** |
 | **REPAIRABLE WITH ASSUMPTIONS** | Logic gaps where a safe default exists; assumption is clearly documented | Repair + document assumption; flag for human review |
 | **BLOCKED — EXTERNAL PRODUCT DECISION REQUIRED** | Breaking API changes that require backend schema or controller changes, permission-model redesigns, business-rule changes that require product owner decision, visual redesigns that require design team sign-off | Do NOT invent a solution; document the blocker; escalate clearly. **This category MUST NOT be used for host/runtime verification gaps — those are SOURCE_LEVEL_FIX + DEFERRED_TO_HOST_RUNTIME.** |
 | **HOST_RUNTIME_BLOCKED_VERIFICATION** | The source fix is complete; only the runtime verification step (running build, running tests, browser E2E, live API check) is unavailable | Fix the source completely, mark verification as `DEFERRED_TO_HOST_RUNTIME`, provide exact commands | 
@@ -4171,13 +4171,13 @@ Do not mark everything P0.
 
 # 31A. AUDIT REPORT LANGUAGE
 
-The complete audit report MUST be written in clear Roman Hinglish:
+The complete audit report MUST use clear, consistent language. Structured fields, status codes, evidence schemas, and machine-readable tables MUST remain in English; explanatory narrative may use concise Roman Hinglish when useful:
 
 * Hindi MUST be written using English/Roman letters.
 * Do NOT use Devanagari script.
 * Technical terms such as React, Next.js, TypeScript, TanStack Query, Zustand, Zod, API, MSW, accessibility, pagination, etc. may remain in English.
 * Keep file names, route names, component names, code symbols, API endpoints, and documentation headings exactly as they appear in the repository.
-* Explanations, findings, reasons, repair instructions, verification steps, and final summary MUST be understandable in Roman Hinglish.
+* Explanations, findings, reasons, repair instructions, verification steps, and final summary MUST be understandable; use English for structured content and Roman Hinglish only where it improves conversational clarity.
 
 Example:
 
@@ -4855,7 +4855,7 @@ Do NOT start any repair until the user approves the RBG Plan.
 10. **LIVE PROGRESS HEARTBEAT TELEMETRY IN ROMAN HINGLISH (ANTI-HANG ASSURANCE):**
     - During execution turns touching multiple files, the AI MUST NOT remain completely silent. A prolonged lack of visible response creates the false impression that the AI is frozen, hung, or stuck.
     - After completing each substantive fix/file within the RBG, the AI MUST emit a concise, real-time telemetry line:
-      - **Language Rule (ZERO-ENGLISH BAN):** Strictly **Roman Hinglish** (English letters, NO Devanagari script). Pure English conversational updates, explanations, or telemetry are strictly FORBIDDEN and treated as a FORMAT VIOLATION.
+      - **Language Rule:** Structured outputs remain in English for reliable parsing. Conversational updates may use Roman Hinglish (English letters, NO Devanagari) when it improves clarity; pure English is allowed for technical evidence, identifiers, and status labels.
       - **Informational Only (Non-blocking):** It does NOT ask for user input or pause execution.
       - **Format & Concrete Examples:**
         ```text
@@ -7758,7 +7758,7 @@ NO UNKNOWN REQUIREMENT
 [ ] Mobile Rule 7A — Mock covers 100% of UI fields; mutable in-memory state; no toast-only mutations
 [ ] Mobile Rule 7B — config/[module].url_config.ts present; no hardcoded URLs in api files
 [ ] Mobile Rule 7C — api/[module].query_keys.ts present; dedicated mutation hooks; no inline useMutation in screens
-[ ] Mobile Rule 8 — FlatList/FlashList for >20 items; 300ms debounce on search
+[ ] Mobile Rule 8 — FlatList/FlashList for lists with potential >50 items; 300ms debounce on search
 [ ] Mobile Rule 10 — lucide-react-native only; no mixed icon sets
 [ ] Mobile Rule 10A — KeyboardAvoidingView + keyboardShouldPersistTaps on all form screens
 [ ] Mobile Rule 10B — Pull-to-refresh wired on all user-browsable lists
@@ -10517,7 +10517,7 @@ The AI MUST evaluate every item below against the created mobile module and reco
 - [ ] **43P-RULES-07:** Sensitive data masked in list/card views via `maskSensitiveData()` — phone: `98****2310`, national ID: last 4 only (Rule 30)
 - [ ] **43P-RULES-08:** Pessimistic UI on ALL financial/destructive mutations — UI updates ONLY after 2xx response (Rule 32)
 - [ ] **43P-RULES-09:** Search/filter inputs debounced ≥300ms before API call via `useDebounce` from `src/core/hooks/useDebounce.ts` (Rule 15 â€” Performance & Optimization)
-- [ ] **43P-RULES-10:** Lists with >20 items use `@shopify/flash-list` with `React.memo` item renderers — never `ScrollView` wrapping `.map()` (Rule 8)
+- [ ] **43P-RULES-10:** Lists with potential >50 items use `@shopify/flash-list` with `React.memo` item renderers — never `ScrollView` wrapping `.map()` (Rule 8)
 - [ ] **43P-RULES-11:** All list items keyed by stable entity ID — zero array index keys (Rule 49)
 - [ ] **43P-RULES-12:** Every async-submit button has `minWidth` from `tokens.layout.buttonMinWidth` — no layout shift on loading state (Rule 39)
 - [ ] **43P-RULES-13:** Token refresh is single-flight — concurrent 401s share the same refresh promise (Rule 54)

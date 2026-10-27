@@ -14,7 +14,7 @@ When instructions conflict across documents, apply this exact order of authority
 8. Existing implementation conventions
 
 A lower-priority rule MUST NOT override a higher-priority rule.
-Any unresolved conflict MUST be recorded as `BLOCKED_BY_SUPPLIED_CONTRACT` rather than resolved through invention.
+Classify unresolved evidence consistently: use `SOURCE_CONFLICT` for conflicting supplied rules, `CONTRACT_CONFLICT` for a supplied product/API contract that conflicts with an applicable rule, `BLOCKED_BY_SUPPLIED_SCOPE` when required evidence is outside the supplied scope, and `NOT_VERIFIED` when available evidence is insufficient. Reserve `BLOCKED_BY_SUPPLIED_CONTRACT` for a verified contract that makes safe execution impossible. Never resolve a conflict through invention.
 
 ## Canonical Rule Reference Policy
 
@@ -96,7 +96,7 @@ When a rule is repeated for convenience:
 > [ ] File size ceilings verified (Screen 80 lines, Component 200 lines, Hooks/API 150 lines, Store 180 lines, Util 120 lines)
 > [ ] MOBILE DELIVERY FREEZE GATE & DEFINITION OF DONE loaded into context
 > [ ] EXECUTIVE DIAMOND PROTOCOLS CONFIRMED (Anti-Deception ZIP Naming, 3-Table Cross-Check Gate, 1-Click Buttons, Clarification Modals, Roman Hinglish Telemetry, Workload Density)
-> [ ] COMMUNICATION LANGUAGE CONFIRMED: Roman Hinglish (Strictly NO pure English conversational text/telemetry, NO Devanagari)
+> [ ] COMMUNICATION FORMAT CONFIRMED: Structured artifacts, statuses, evidence, and code identifiers use English; conversational telemetry may use concise Roman Hinglish when useful (NO Devanagari).
 > ```
 > **Failure to complete the above = mandatory compliance stop until evidence is established.**
 >
@@ -114,7 +114,7 @@ When a rule is repeated for convenience:
 > 2. **Pre-Delivery Cross-Check Gate (Zero-Excuse Law):** Must execute and output the 3 physical verification tables (Section 67G) before packaging. Post-delivery excuses ("Oh sorry, cross-check nahi kiya") are strictly banned as P0 audit fraud.
 > 3. **1-Click Interactive Button Priority:** Publish RBG Plans and Checkpoints as actionable artifacts (`RequestFeedback: true`) or modals (`ask_question`) so user can approve via 1-click button instead of manual typing.
 > 4. **Interactive Clarification Modal with (Recommended) Default:** All questions/decisions MUST use structured modals/checkboxes with Option 1 marked `(Recommended)`. Zero open-ended technical essay questions.
-> 5. **Live Progress Heartbeat Telemetry in Roman Hinglish (STRICT ZERO-ENGLISH BAN):** Output real-time non-blocking progress lines (`✓ [Done]: ... ⚙️ [In Progress]: ...`) strictly in Roman Hinglish (English letters, NO Devanagari). PURE ENGLISH CHAT/TELEMETRY IS STRICTLY BANNED AS A FORMAT VIOLATION. (Example: `✓ [Done]: Mobile screen touch targets aur hook-form Zod mapping complete ho gaya. ⚙️ [In Progress]: Abhi Maestro E2E test suite verify kar raha hoon.`). Code identifiers, file paths, and syntax remain in English.
+> 5. **Live Progress Heartbeat Telemetry:** Output concise, non-blocking progress lines (`✓ [Done]: ... ⚙️ [In Progress]: ...`). Use Roman Hinglish when conversational context benefits from it; keep statuses, evidence labels, code identifiers, file paths, and syntax in English so downstream tools can parse them reliably.
 > 6. **Substantive Workload Density:** Calibrate RBGs by workload floor (min 8 findings / 4 files) and safety ceiling (max 25 findings / 18 files) for a balanced ~5–8 min sprint without token blowouts or hallucinations.
 
 ## CRITICAL MOBILE STRUCTURE GATE (NON-NEGOTIABLE)
@@ -178,7 +178,7 @@ This document defines the canonical architecture and development rules for a Rea
 | **Navigation** | `@react-navigation/drawer` | Drawer navigator |
 | **Safe Area** | `react-native-safe-area-context` | SafeAreaView + useSafeAreaInsets |
 | **Screens** | `react-native-screens` | Required by React Navigation |
-| **Lists** | `@shopify/flash-list` | Virtualized lists (preferred over FlatList for >20 items) |
+| **Lists** | `@shopify/flash-list` | Virtualized lists (preferred for collections with potential >50 items; optimized `FlatList` is an approved alternative) |
 | **Images** | `react-native-fast-image` | Cached, optimized image loading |
 | **Haptics** | `react-native-haptic-feedback` | Haptic feedback (NOT expo-haptics) |
 | **Permissions** | `react-native-permissions` | All device permissions (NOT expo-permissions) |
@@ -591,7 +591,7 @@ To guarantee that any AI agent or mobile developer can repair, test, or expand a
    - **Domain Container as Primary Navigation Destination & Self-Evident UI Label:** Every primary destination present in ANY mobile role's primary navigation (Bottom Tab Bar or Role Drawer: e.g., in Manager: Dashboard, Members, CRM, Attendance, Accounting, Inventory, Staff, Settings; in Admin: Dashboard, Gyms, Billing, Staff, Seats • Shifts • Lockers, Reports, Settings; in Superadmin: Dashboard, Tenants, Plans, Billing, Analytics, Audit, Settings; in Trainer: Dashboard, Schedule, Clients, Workouts, Earnings, Settings; in Member: Dashboard, Membership, Attendance, Bookings, Payments, Profile) MUST map strictly 1-to-1 to an autonomous Tier 3 Domain Container directly under that role container: `src/features/frontend_{role}/{role}_{domain}/` (e.g., `src/features/frontend_manager/manager_crm/`). Furthermore, its **human-facing Navigation Display Label (Bottom Tab / Drawer Title) MUST be 100% self-evident, descriptive, and polished Title Case** (e.g., 🪑 `"Seats, Shifts & Lockers"`, 💰 `"Assets & Maintenance"`). Vague umbrella labels (`"Facilities"`, `"Operations"`, `"Resources"`, `"Others"`) are **STRICTLY BANNED**.
    - **Mobile Domain Grouping Principle (Zero Flat Submodule Dumping — NO Numeric Lock):** Top-level primary navigation MUST represent cohesive, high-level Business Domains (Tier 3 Domain Containers). Flat-dumping granular screens, sub-modules, or actions directly into primary navigation or bottom tabs is a **CRITICAL UX & ARCHITECTURE VIOLATION**. On mobile devices, bottom tabs hold primary core domains with remaining domains accessible via the Role Drawer or a "More" domain hub. The domain count is NOT locked to any artificial number — roles may have as few or as many domains as their authentic business aggregate roots demand.
    - **Sub-Modules as Secondary Navigation:** Autonomous sub-modules inside a domain container (e.g., inside `manager_crm/`: `crm_enquiries/`, `crm_leads/`, `crm_pipeline/`; inside `manager_accounting/`: `accounting_assets/`, `accounting_ledgers/`, `accounting_maintenance/`) MUST be accessed via Secondary Navigation:
-     - **Pattern A (Mobile Secondary Top Tab / Segmented Bar):** Rendered by `Manager[Domain]Navigator.tsx` across the top of the screen (`[ Enquiries ] [ Leads ] [ Pipeline ]`) using `@react-navigation/material-top-tabs` or custom segmented bar.
+      - **Pattern A (Mobile Secondary Top Tab / Segmented Bar):** Rendered by `Manager[Domain]Navigator.tsx` across the top of the screen (`[ Enquiries ] [ Leads ] [ Pipeline ]`) using the documented custom tokenized segmented bar. `@react-navigation/material-top-tabs` is not in the locked registry and MUST NOT be imported without the approval process in the Dependency Classification Contract.
      - **Pattern B (Domain Hub / Stack Screen Navigation):** The domain navigator mounts stack screens where the domain index screen presents operational cards or list links to sub-modules.
    - **STRICT PROHIBITION ON ACTION NANO-MODULES (THE ANTI-ACTION BAN):**
      - Creating a sub-module or navigation tab for a single action, form, or modal (e.g. `crm_enquiry_add/`, `crm_enquiry_edit/`, `accounting_asset_maintenance_add/`, `member_add/`) is an immediate **P0 ARCHITECTURE FAILURE (NANO-MODULE VIOLATION)**.
@@ -3128,7 +3128,7 @@ inline — always import from this central hook.
    - Forms using library + schema validator? (Rule 5)
    - API calls through central client, typed verb names? (Rule 7)
    - Search/filter inputs debounced at 300ms? (Rule 32)
-   - Lists virtualized for >20 items? (Rule 8)
+    - Lists virtualized for >50 items? (Rule 8)
    - User messages from `response.message`, never hardcoded? (Rule 7)
    - Auth tokens in hardware-backed secure storage only? (Rule 6)
    - Sensitive data masked in list/card views? (Rule 30)
@@ -4047,7 +4047,7 @@ For sensitive screens:
    - Forms using library + schema validator? (Rule 5)
    - API calls through central client, typed verb names? (Rule 7)
    - Search/filter inputs debounced at 300ms? (Rule 32)
-   - Lists virtualized for >20 items? (Rule 8)
+    - Lists virtualized for >50 items? (Rule 8)
    - User messages from `response.message`, never hardcoded? (Rule 7)
    - Auth tokens in hardware-backed secure storage only? (Rule 6)
    - Sensitive data masked in list/card views? (Rule 30)
@@ -4520,7 +4520,7 @@ Or reply "Adjust" to change the grouping.
 10. **LIVE PROGRESS HEARTBEAT TELEMETRY IN ROMAN HINGLISH (ANTI-HANG ASSURANCE):**
     - During execution turns touching multiple files, the AI MUST NOT remain completely silent. A prolonged lack of visible response creates the false impression that the AI is frozen, hung, or stuck.
     - After completing each substantive fix/file within the RBG, the AI MUST emit a concise, real-time telemetry line:
-      - **Language Rule (ZERO-ENGLISH BAN):** Strictly **Roman Hinglish** (English letters, NO Devanagari script). Pure English conversational updates, explanations, or telemetry are strictly FORBIDDEN and treated as a FORMAT VIOLATION.
+      - **Language Rule:** Structured outputs remain in English for reliable parsing. Conversational updates may use Roman Hinglish (English letters, NO Devanagari) when it improves clarity; pure English is allowed for technical evidence, identifiers, and status labels.
       - **Informational Only (Non-blocking):** It does NOT ask for user input or pause execution.
       - **Format & Concrete Examples:**
         ```text
@@ -5018,7 +5018,7 @@ and MUST NOT claim that a ZIP was generated.
 - [ ] **Maestro E2E Tests:** Critical mobile CRUD and auth flows covered in YAML-based Maestro test suite (`mobile_e2e/`). — *STOP if E2E missing for critical flows.*
 
 ### 6. Performance & UX Gate
-- [ ] **Virtualized Lists (Rule 8):** Any list rendering >20 items uses `FlatList` or `@shopify/flash-list` with `React.memo` item renderers. Never `ScrollView` wrapping `.map()`. — *STOP if mapped ScrollView used.*
+- [ ] **Virtualized Lists (Rule 8):** Any list with potential >50 items uses `FlatList` or `@shopify/flash-list` with `React.memo` item renderers. Never `ScrollView` wrapping `.map()`. — *STOP if mapped ScrollView used.*
 - [ ] **Search & Filter Debounce:** Search inputs debounced ≥300ms before triggering API/query calls. — *STOP if API flooded on every keystroke.*
 - [ ] **Button Loading Stability (Rule 39):** Submit buttons have explicit `minWidth` to prevent layout shift during loading state. — *STOP if button shrinks on submit.*
 

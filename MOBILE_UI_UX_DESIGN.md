@@ -14,7 +14,7 @@ When instructions conflict across documents, apply this exact order of authority
 8. Existing implementation conventions
 
 A lower-priority rule MUST NOT override a higher-priority rule.
-Any unresolved conflict MUST be recorded as `BLOCKED_BY_SUPPLIED_CONTRACT` rather than resolved through invention.
+Classify unresolved evidence consistently: use `SOURCE_CONFLICT` for conflicting supplied rules, `CONTRACT_CONFLICT` for a supplied product/API contract that conflicts with an applicable rule, `BLOCKED_BY_SUPPLIED_SCOPE` when required evidence is outside the supplied scope, and `NOT_VERIFIED` when available evidence is insufficient. Reserve `BLOCKED_BY_SUPPLIED_CONTRACT` for a verified contract that makes safe execution impossible. Never resolve a conflict through invention.
 
 ## Canonical Rule Reference Policy
 
@@ -551,7 +551,7 @@ When a user taps a Domain Container from the Bottom Tab or Drawer (e.g. `CRM`), 
 #### Pattern A: The Native Top Segmented Bar / Material Top Tabs (Canonical)
 - **Mount Point:** Rendered by `Manager[Domain]Navigator.tsx` across the top of the screen directly beneath the safe-area header.
 - **Visual Design:**
-  - Container: `height: 44pt`, `backgroundColor: tokens.color.background`, `flexDirection: 'row'`, `paddingHorizontal: tokens.spacing.md`, `borderBottomWidth: 1`, `borderBottomColor: tokens.color.border`.
+  - Container: `height: tokens.layout.submoduleTabHeight`, `backgroundColor: tokens.color.background`, `flexDirection: 'row'`, `paddingHorizontal: tokens.space[4]`, `borderBottomWidth: StyleSheet.hairlineWidth`, `borderBottomColor: tokens.color.border`.
   - Active Segment: Pill background `tokens.color.primary` (`#FACC15`), label text `tokens.color.onPrimary` (`#111111`, font-weight: 600, font-size: 13pt), active slide spring animation (`spring-medium`).
   - Inactive Segment: Transparent background, label text `tokens.color.muted` (`#A1A1AA`), font-weight: 500.
   - Badge Count: Pill indicator with `backgroundColor: tokens.color.primarySubtle`, text `tokens.color.primaryText`, font-size: 11pt, bold.
@@ -561,7 +561,7 @@ When a user taps a Domain Container from the Bottom Tab or Drawer (e.g. `CRM`), 
 - **Mount Point:** The domain navigator starts with `Manager[Domain]IndexScreen.tsx`.
 - **Visual Design:**
   - Screen displays high-level operational metric cards and navigable list items leading to sub-modules via `navigation.navigate('SubmoduleScreen')`.
-  - Cards use `backgroundColor: tokens.color.card`, `borderRadius: tokens.radius.lg`, with right chevron `lucide-react-native` (`ChevronRight`, 18pt, `tokens.color.muted`).
+  - Cards use `backgroundColor: tokens.color.card`, `borderRadius: tokens.radius.lg`, with right chevron `lucide-react-native` (`ChevronRight`, `tokens.icon.md`, `tokens.color.muted`).
   - Tapping any card executes a native stack push animation (`duration-slow`).
 
 ---
@@ -573,11 +573,11 @@ When a user taps a Domain Container from the Bottom Tab or Drawer (e.g. `CRM`), 
 > They MUST live inside the owning sub-module's `components/` folder as `@gorhom/bottom-sheet` panels or child stack screens.
 
 #### Canonical Action Bottom Sheet Specification (`@gorhom/bottom-sheet`):
-- **Snap Points:** `['50%', '90%']` for creation/edit forms; `['40%']` for quick confirmation or filter sheets.
+- **Snap Points:** `['50%', '90%']` for creation/edit forms; `['40%']` for quick confirmation or filter sheets. These are library snap-point strings, not visual size tokens.
 - **Surface Token:** `backgroundColor: tokens.color.card` (`#111111` dark / `#FFFFFF` light), `borderTopLeftRadius: tokens.radius.xl`, `borderTopRightRadius: tokens.radius.xl`.
-- **Handle Indicator:** Centered pill, `width: 36`, `height: 4`, `borderRadius: 2`, `backgroundColor: tokens.color.border`.
+- **Handle Indicator:** Centered pill, `width: tokens.layout.bottomSheetHandleWidth`, `height: tokens.layout.bottomSheetHandleHeight`, `borderRadius: tokens.layout.bottomSheetHandleRadius`, `backgroundColor: tokens.color.border`.
 - **Backdrop:** `tokens.color.overlay` (`rgba(0,0,0,0.7)`), tap outside dismisses sheet unless uncommitted dirty form state exists.
-- **Header:** Title in `heading-sm` (bold, `tokens.color.foreground`), right close icon button `lucide-react-native` (`X`, 20pt, `tokens.color.muted`, hitSlop: 12).
+- **Header:** Title in `heading-sm` (bold, `tokens.color.foreground`), right close icon button `lucide-react-native` (`X`, `tokens.icon.md`, `tokens.color.muted`, `hitSlop: tokens.layout.bottomSheetCloseHitSlop`).
 - **Primary CTA:** Full-width button, `backgroundColor: tokens.color.primary`, text `tokens.color.onPrimary` (`#111111`, bold), height: 48pt (WCAG touch-target compliant).
 
 ---
@@ -776,8 +776,8 @@ Every state MUST be deterministically testable via the module's `mocks/scenarios
 | **Empty** | `EMPTY_DATA` | Fetch succeeded, zero results (`data: []`) | A dedicated `[Feature]EmptyState` component with a contextual icon, a short human-readable message, and a primary CTA (e.g. "Add your first member"). Never a blank white screen. |
 | **Error** | `SERVER_500_ERROR` | Fetch failed or network error (500) | A `[Feature]ErrorFallback` component showing a safe user-facing message, a "Try again" retry button, and optionally a help link. Use backend `response.message` only when the API contract explicitly guarantees that it is user-safe and localized for the active app locale. Otherwise show a feature-specific translated fallback through `t('...')`. Never expose raw Axios errors, JavaScript errors, stack traces, raw `error.message`, or unvalidated server text. |
 | **Permission denied** | `UNAUTHORIZED_401` | User lacks role access to the resource (401/403) | A `[Feature]PermissionDenied` component explaining the access restriction. Never show a blank screen or a cryptic error code. |
-| **Offline** | `NETWORK_TIMEOUT` | No network detected (if offline is a declared feature) | An inline `OfflineBanner` (not a full-screen takeover) with the last-cached data still visible. Only for features that explicitly declare offline support in `_features.md`. |
-| **Offline Blocker** | `NETWORK_TIMEOUT` | No network AND feature has no cached data to show | A full-screen `[Feature]OfflineBlocker` component that blocks interaction and explains the feature requires connectivity. Use ONLY when the feature cannot function at all without network (e.g., payment processing). Never use `OfflineBlocker` for features that can show cached data — use `OfflineBanner` instead. |
+| **Offline** | `OFFLINE` | No network detected (if offline is a declared feature) | An inline `OfflineBanner` (not a full-screen takeover) with the last-cached data still visible. Only for features that explicitly declare offline support in `_features.md`. |
+| **Offline Blocker** | `OFFLINE_NO_CACHE` | No network AND feature has no cached data to show | A full-screen `[Feature]OfflineBlocker` component that blocks interaction and explains the feature requires connectivity. Use ONLY when the feature cannot function at all without network (e.g., payment processing). Never use `OfflineBlocker` for features that can show cached data — use `OfflineBanner` instead. |
 
 ## 14. Safe Area & Notch Handling
 
@@ -1059,7 +1059,12 @@ export interface Tokens {
     bottomTabHeight:        60,
     contentPadding:         16,
     cardPadding:            16,
-    fabSize:                56,
+   fabSize:                56,
+   submoduleTabHeight:     44,
+   bottomSheetHandleWidth: 36,
+   bottomSheetHandleHeight: 4,
+   bottomSheetHandleRadius: 2,
+   bottomSheetCloseHitSlop: 12,
   },
   duration: {
     fast:   150,
