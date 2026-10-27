@@ -663,6 +663,11 @@ After extraction, the AI MUST translate web patterns to mobile equivalents. This
 ║ @media print                   │ NOT APPLICABLE                      ║
 ║ localStorage / sessionStorage  │ react-native-mmkv (non-sensitive)   ║
 ║ JWT in localStorage            │ react-native-keychain ONLY          ║
+║ window.focus / window.online    │ focusManager (AppState) + onlineManager (NetInfo) ║
+║ window.onbeforeunload           │ navigation.addListener('beforeRemove') ║
+║ Secondary <Tabs> component      │ @react-navigation/material-top-tabs ║
+║ Web URL routes & query params   │ SCREEN_ROUTES + LINKING_CONFIG in url_config.ts ║
+║ App switcher / blur shield      │ PrivacyCurtain (AppState inactive/background) ║
 ╚══════════════════════════════════════════════════════════════════════╝
 ```
 
